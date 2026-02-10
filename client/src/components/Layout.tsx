@@ -12,6 +12,7 @@ import {
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import logo from "@assets/LOGO_1770751298475.png";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
@@ -25,21 +26,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 font-body">
-      <header className="sticky top-0 z-50 w-full bg-[#111827] border-b border-white/10 shadow-lg shadow-black/20">
+      <header className="sticky top-0 z-50 w-full bg-[#354388] border-b border-white/10 shadow-lg shadow-black/20">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-10">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative">
-                <Plane className="h-7 w-7 text-accent transform -rotate-45 group-hover:rotate-0 transition-transform duration-300" strokeWidth={2.5} />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-bold font-display tracking-tight text-primary leading-none uppercase">
-                  Michels Travel
-                </span>
-                <span className="text-[10px] tracking-[0.3em] font-medium text-slate-400 uppercase leading-none mt-1">
-                    Opção Eficiente
-                </span>
-              </div>
+              <img 
+                src={logo} 
+                alt="Michels Travel" 
+                className="h-16 w-auto object-contain"
+              />
             </Link>
 
             <nav className="hidden md:flex items-center gap-8">
@@ -163,8 +158,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div className="col-span-1 md:col-span-1">
               <div className="flex items-center gap-2 mb-4">
-                <Plane className="h-6 w-6 text-primary" />
-                <span className="text-xl font-bold font-display text-primary uppercase">Michels Travel</span>
+                <img 
+                    src={logo} 
+                    alt="Michels Travel" 
+                    className="h-12 w-auto object-contain"
+                />
               </div>
               <p className="text-sm leading-relaxed text-slate-400">
                 Opção Eficiente. Your trusted companion for finding the best flight deals worldwide.
