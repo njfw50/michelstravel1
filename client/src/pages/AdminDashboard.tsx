@@ -3,11 +3,13 @@ import { useAdminStats, useAllBookings } from "@/hooks/use-admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Loader2, DollarSign, Users, Plane, TrendingUp } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export default function AdminDashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const { data: stats, isLoading: statsLoading } = useAdminStats();
   const { data: bookings } = useAllBookings();
+  const { t } = useI18n();
 
   if (authLoading || statsLoading) {
     return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>;
@@ -19,13 +21,12 @@ export default function AdminDashboard() {
   }
 
   const statCards = [
-    { title: "Total Revenue", value: `$${stats?.totalRevenue.toLocaleString()}`, icon: DollarSign, color: "text-green-600", bg: "bg-green-50" },
-    { title: "Commissions", value: `$${stats?.totalCommission.toLocaleString()}`, icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-50" },
-    { title: "Total Bookings", value: stats?.totalBookings, icon: Plane, color: "text-purple-600", bg: "bg-purple-50" },
-    { title: "Recent Searches", value: stats?.recentSearches, icon: Users, color: "text-orange-600", bg: "bg-orange-50" },
+    { title: t("admin.total_revenue"), value: `$${stats?.totalRevenue.toLocaleString()}`, icon: DollarSign, color: "text-emerald-400" },
+    { title: t("admin.commissions"), value: `$${stats?.totalCommission.toLocaleString()}`, icon: TrendingUp, color: "text-amber-400" },
+    { title: t("admin.total_bookings"), value: stats?.totalBookings, icon: Plane, color: "text-teal-400" },
+    { title: t("admin.recent_searches"), value: stats?.recentSearches, icon: Users, color: "text-orange-400" },
   ];
 
-  // Mock data for the chart since we don't have historical data aggregated in the API response yet
   const chartData = [
     { name: 'Mon', revenue: 4000 },
     { name: 'Tue', revenue: 3000 },
@@ -41,8 +42,8 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold font-display text-white drop-shadow-md">Dashboard</h1>
-            <p className="text-white/60">Welcome back, {user.firstName || 'Admin'}. Here is what is happening.</p>
+            <h1 className="text-3xl font-bold font-display text-white drop-shadow-md">{t("admin.dashboard")}</h1>
+            <p className="text-white/60">{t("admin.welcome")}, {user.firstName || 'Admin'}. {t("admin.happening")}</p>
           </div>
         </div>
 
@@ -65,7 +66,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <Card className="lg:col-span-2 border border-white/10 shadow-lg bg-white/5 backdrop-blur-md">
             <CardHeader>
-              <CardTitle className="text-white">Revenue Overview</CardTitle>
+              <CardTitle className="text-white">{t("admin.revenue_overview")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[300px] w-full">
@@ -78,7 +79,7 @@ export default function AdminDashboard() {
                       cursor={{fill: 'rgba(255,255,255,0.05)'}}
                       contentStyle={{borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(15, 23, 42, 0.9)', color: 'white', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3)'}} 
                     />
-                    <Bar dataKey="revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="revenue" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -87,14 +88,14 @@ export default function AdminDashboard() {
 
           <Card className="border border-white/10 shadow-lg bg-white/5 backdrop-blur-md">
             <CardHeader>
-              <CardTitle className="text-white">Recent Bookings</CardTitle>
+              <CardTitle className="text-white">{t("admin.recent_bookings")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {bookings?.slice(0, 5).map((booking: any) => (
                   <div key={booking.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-white/10 rounded-full flex items-center justify-center text-blue-400 border border-white/10 shadow-inner">
+                      <div className="h-10 w-10 bg-white/10 rounded-full flex items-center justify-center text-amber-400 border border-white/10 shadow-inner">
                         <Plane className="h-4 w-4" />
                       </div>
                       <div>
@@ -110,7 +111,7 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 ))}
-                {!bookings?.length && <p className="text-white/40 text-sm text-center py-4">No bookings yet.</p>}
+                {!bookings?.length && <p className="text-white/40 text-sm text-center py-4">{t("admin.no_bookings")}</p>}
               </div>
             </CardContent>
           </Card>

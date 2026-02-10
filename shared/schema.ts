@@ -117,4 +117,9 @@ export interface FlightOffer {
   currency: string;
   stops: number;
   logoUrl?: string | null;
+  aircraftType?: string | null;
+  originCity?: string | null;
+  destinationCity?: string | null;
+  originCode?: string | null;
+  destinationCode?: string | null;
 }

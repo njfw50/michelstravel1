@@ -12,28 +12,30 @@ import {
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { useI18n } from "@/lib/i18n";
 import logo from "@assets/LOGO_1770751298475.png";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [location] = useLocation();
+  const { t } = useI18n();
 
   const navLinks = [
-    { href: "/", label: "Flights" },
-    { href: "/blog", label: "Travel Guide" },
+    { href: "/", label: t("nav.flights") },
+    { href: "/blog", label: t("nav.blog") },
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-transparent font-body selection:bg-blue-500/30 selection:text-white">
-      <header className="sticky top-0 z-50 w-full bg-black/20 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-black/10">
+    <div className="min-h-screen flex flex-col bg-transparent font-body selection:bg-amber-500/30 selection:text-white">
+      <header className="sticky top-0 z-50 w-full bg-black/30 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-black/10">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-10">
             <Link href="/" className="flex items-center gap-3 group">
               <img 
                 src={logo} 
                 alt="Michels Travel" 
-                className="h-16 w-auto object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]"
+                className="h-16 w-auto object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.15)]"
               />
             </Link>
 
@@ -43,7 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   key={link.href} 
                   href={link.href}
                   className={cn(
-                    "text-sm font-semibold transition-all hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] relative py-1 tracking-wide",
+                    "text-sm font-semibold transition-all hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] relative py-1 tracking-wide",
                     location === link.href ? "text-white" : "text-white/60"
                   )}
                 >
@@ -51,7 +53,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   {location === link.href && (
                     <motion.div 
                       layoutId="activeNav"
-                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-blue-400 shadow-[0_0_10px_#60a5fa]"
+                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.5)]"
                     />
                   )}
                 </Link>
@@ -64,32 +66,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="gap-2 rounded-full pl-2 pr-4 h-10 border border-white/10 hover:bg-white/10 text-white/80 hover:text-white backdrop-blur-sm">
-                      <div className="h-7 w-7 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-300 ring-1 ring-blue-500/30">
+                    <Button variant="ghost" className="gap-2 rounded-full pl-2 pr-4 h-10 border border-white/10 hover:bg-white/10 text-white/80 hover:text-white backdrop-blur-sm" data-testid="button-user-menu">
+                      <div className="h-7 w-7 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-300 ring-1 ring-amber-500/30">
                         <User className="h-4 w-4" />
                       </div>
                       <span className="font-medium text-sm">{user.firstName || "User"}</span>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-2xl border-white/10 p-2 bg-slate-900/95 backdrop-blur-xl text-white">
-                    <DropdownMenuItem className="rounded-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white" onClick={() => window.location.href = '/admin'}>
-                      <LayoutDashboard className="mr-2 h-4 w-4" /> Admin Dashboard
+                  <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-2xl border-white/10 p-2 bg-[hsl(220,18%,10%)]/95 backdrop-blur-xl text-white">
+                    <DropdownMenuItem className="rounded-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white" onClick={() => window.location.href = '/admin'} data-testid="link-admin">
+                      <LayoutDashboard className="mr-2 h-4 w-4" /> {t("nav.admin")}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-white/10" />
                     <DropdownMenuItem 
                       className="text-red-400 focus:text-red-300 focus:bg-red-500/10 rounded-lg cursor-pointer"
                       onClick={() => logout()}
+                      data-testid="button-logout"
                     >
-                      <LogOut className="mr-2 h-4 w-4" /> Log out
+                      <LogOut className="mr-2 h-4 w-4" /> {t("nav.logout")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
                 <Button 
                   onClick={() => window.location.href = '/api/login'}
-                  className="rounded-full px-6 font-semibold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all hover:-translate-y-0.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0"
+                  className="rounded-full px-6 font-semibold shadow-lg shadow-amber-900/20 hover:shadow-amber-500/30 transition-all hover:-translate-y-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0"
+                  data-testid="button-signin"
                 >
-                  Sign In
+                  {t("nav.signin")}
                 </Button>
               )}
             </div>
@@ -97,6 +101,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <button 
               className="md:hidden p-2 text-white/70 hover:text-white"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              data-testid="button-mobile-menu"
             >
               {isMobileMenuOpen ? <X /> : <Menu />}
             </button>
@@ -104,14 +109,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-slate-900/95 backdrop-blur-xl border-b border-white/10 overflow-hidden"
+            className="md:hidden bg-[hsl(220,18%,10%)]/95 backdrop-blur-xl border-b border-white/10 overflow-hidden"
           >
             <div className="container mx-auto px-4 py-4 space-y-4">
               {navLinks.map((link) => (
@@ -127,20 +131,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="pt-4 border-t border-white/10">
                 {user ? (
                   <>
-                    <Link href="/admin" className="block py-2 text-base font-medium text-white/80 hover:bg-white/5 rounded-lg px-2">Admin Dashboard</Link>
+                    <Link href="/admin" className="block py-2 text-base font-medium text-white/80 hover:bg-white/5 rounded-lg px-2">{t("nav.admin")}</Link>
                     <button 
                       onClick={() => logout()}
                       className="block w-full text-left py-2 text-base font-medium text-red-400 hover:bg-red-500/10 rounded-lg px-2"
                     >
-                      Log out
+                      {t("nav.logout")}
                     </button>
                   </>
                 ) : (
                   <Button 
                     onClick={() => window.location.href = '/api/login'}
-                    className="w-full justify-center bg-blue-600 hover:bg-blue-500"
+                    className="w-full justify-center bg-amber-500 hover:bg-amber-400 text-white border-0"
                   >
-                    Sign In
+                    {t("nav.signin")}
                   </Button>
                 )}
               </div>
@@ -153,7 +157,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
-      <footer className="bg-black/40 backdrop-blur-lg text-slate-300 py-12 border-t border-white/5">
+      <footer className="bg-black/40 backdrop-blur-lg text-white/70 py-12 border-t border-white/5">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div className="col-span-1 md:col-span-1">
@@ -165,43 +169,44 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 />
               </div>
               <p className="text-sm leading-relaxed text-white/40">
-                Opção Eficiente. Your trusted companion for finding the best flight deals worldwide.
+                {t("footer.slogan")}
               </p>
             </div>
             
             <div>
-              <h4 className="font-bold text-white mb-4">Company</h4>
+              <h4 className="font-bold text-white mb-4">{t("footer.company")}</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-white/60 hover:text-white transition-colors">About Us</a></li>
-                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Careers</a></li>
-                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Press</a></li>
+                <li><a href="#" className="text-white/50 hover:text-amber-300 transition-colors">{t("footer.about")}</a></li>
+                <li><a href="#" className="text-white/50 hover:text-amber-300 transition-colors">{t("footer.careers")}</a></li>
+                <li><a href="#" className="text-white/50 hover:text-amber-300 transition-colors">{t("footer.press")}</a></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-white mb-4">Support</h4>
+              <h4 className="font-bold text-white mb-4">{t("footer.support")}</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Help Center</a></li>
-                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="text-white/60 hover:text-white transition-colors">Privacy Policy</a></li>
+                <li><a href="#" className="text-white/50 hover:text-amber-300 transition-colors">{t("footer.help")}</a></li>
+                <li><a href="#" className="text-white/50 hover:text-amber-300 transition-colors">{t("footer.terms")}</a></li>
+                <li><a href="#" className="text-white/50 hover:text-amber-300 transition-colors">{t("footer.privacy")}</a></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-bold text-white mb-4">Newsletter</h4>
-              <p className="text-sm text-white/40 mb-3">Subscribe for exclusive deals.</p>
+              <h4 className="font-bold text-white mb-4">{t("footer.newsletter")}</h4>
+              <p className="text-sm text-white/40 mb-3">{t("footer.subscribe")}</p>
               <div className="flex gap-2">
                 <input 
                   type="email" 
-                  placeholder="Email address" 
-                  className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm w-full focus:ring-1 focus:ring-blue-500 text-white placeholder:text-white/20"
+                  placeholder={t("footer.email_placeholder")}
+                  className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm w-full focus:ring-1 focus:ring-amber-500 text-white placeholder:text-white/20"
+                  data-testid="input-newsletter-email"
                 />
-                <Button size="sm" className="bg-blue-600 hover:bg-blue-500 text-white border-0">Go</Button>
+                <Button size="sm" className="bg-amber-500 hover:bg-amber-400 text-white border-0" data-testid="button-newsletter">{t("footer.go")}</Button>
               </div>
             </div>
           </div>
           <div className="border-t border-white/5 pt-8 text-center text-xs text-white/30">
-            © {new Date().getFullYear()} Michels Travel. All rights reserved.
+            &copy; {new Date().getFullYear()} Michels Travel. {t("footer.rights")}
           </div>
         </div>
       </footer>

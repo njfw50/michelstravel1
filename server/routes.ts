@@ -6,7 +6,7 @@ import { getUncachableStripeClient } from './stripeClient';
 import { db } from "./db";
 import { flightSearches, bookings, type FlightSearchParams } from "@shared/schema";
 import { desc, eq } from "drizzle-orm";
-import { searchFlights, getFlight, searchPlaces } from "./services/duffel";
+import { searchFlights, getFlight, searchPlaces, getAirlines, getAirports, getAircraft, initializeReferenceData } from "./services/duffel";
 
 /**
  * Register all application routes
@@ -103,6 +103,83 @@ export function registerRoutes(app: Express) {
         res.status(500).json({ error: "Failed to fetch flight details" });
     }
   });
+
+  // === REFERENCE DATA ROUTES ===
+
+  app.get('/api/airlines', async (req, res) => {
+    try {
+      const airlines = await getAirlines();
+      const { search, limit } = req.query;
+      let filtered = airlines;
+      
+      if (search && typeof search === 'string') {
+        const q = search.toLowerCase();
+        filtered = airlines.filter(a => 
+          a.name.toLowerCase().includes(q) || 
+          (a.iataCode && a.iataCode.toLowerCase().includes(q))
+        );
+      }
+      
+      const maxResults = limit ? parseInt(limit as string) : 100;
+      res.json(filtered.slice(0, maxResults));
+    } catch (error) {
+      console.error('Airlines fetch error:', error);
+      res.status(500).json({ error: 'Failed to fetch airlines' });
+    }
+  });
+
+  app.get('/api/airports', async (req, res) => {
+    try {
+      const airports = await getAirports();
+      const { search, limit, featured } = req.query;
+      let filtered = airports;
+      
+      if (search && typeof search === 'string') {
+        const q = search.toLowerCase();
+        filtered = airports.filter(a => 
+          a.name.toLowerCase().includes(q) || 
+          (a.iataCode && a.iataCode.toLowerCase().includes(q)) ||
+          (a.cityName && a.cityName.toLowerCase().includes(q))
+        );
+      }
+      
+      if (featured === 'true') {
+        const featuredCodes = ['JFK', 'LAX', 'LHR', 'CDG', 'GRU', 'MIA', 'MCO', 'EWR', 'ORD', 'SFO', 'NRT', 'DXB', 'FCO', 'BCN', 'LIS', 'CUN'];
+        filtered = airports.filter(a => a.iataCode && featuredCodes.includes(a.iataCode));
+      }
+      
+      const maxResults = limit ? parseInt(limit as string) : 100;
+      res.json(filtered.slice(0, maxResults));
+    } catch (error) {
+      console.error('Airports fetch error:', error);
+      res.status(500).json({ error: 'Failed to fetch airports' });
+    }
+  });
+
+  app.get('/api/aircraft', async (req, res) => {
+    try {
+      const aircraft = await getAircraft();
+      const { search, limit } = req.query;
+      let filtered = aircraft;
+      
+      if (search && typeof search === 'string') {
+        const q = search.toLowerCase();
+        filtered = aircraft.filter(a => 
+          a.name.toLowerCase().includes(q) || 
+          (a.iataCode && a.iataCode.toLowerCase().includes(q))
+        );
+      }
+      
+      const maxResults = limit ? parseInt(limit as string) : 100;
+      res.json(filtered.slice(0, maxResults));
+    } catch (error) {
+      console.error('Aircraft fetch error:', error);
+      res.status(500).json({ error: 'Failed to fetch aircraft' });
+    }
+  });
+
+  // Initialize reference data cache on startup (non-blocking)
+  initializeReferenceData().catch(err => console.error("Reference data init failed:", err));
 
   // === BOOKING ROUTES ===
 

@@ -85,8 +85,8 @@ export function LocationSearch({ label, placeholder, value, onChange, className 
   return (
     <div className={cn("relative", className)} ref={wrapperRef}>
       <Label className="text-xs font-bold text-white/70 uppercase tracking-wider block mb-1">{label}</Label>
-      <div className="flex items-center bg-white/10 border border-white/10 rounded-xl px-3 h-14 focus-within:ring-2 focus-within:ring-blue-400/50 focus-within:border-blue-400/50 transition-all shadow-lg backdrop-blur-sm hover:bg-white/15 relative">
-        <MapPin className="h-5 w-5 text-blue-300 mr-3 shrink-0" />
+      <div className="flex items-center bg-white/10 border border-white/10 rounded-xl px-3 h-14 focus-within:ring-2 focus-within:ring-amber-400/50 focus-within:border-amber-400/50 transition-all shadow-lg backdrop-blur-sm hover:bg-white/15 relative">
+        <MapPin className="h-5 w-5 text-amber-300 mr-3 shrink-0" />
         <Input 
             placeholder={placeholder || "City or Airport"} 
             className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-lg font-medium placeholder:text-white/30 w-full bg-transparent truncate text-white"
@@ -109,7 +109,7 @@ export function LocationSearch({ label, placeholder, value, onChange, className 
 
       {/* Results Dropdown */}
       {isOpen && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 border border-white/10 rounded-xl shadow-2xl backdrop-blur-xl z-50 max-h-64 overflow-y-auto overflow-x-hidden">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-[hsl(220,18%,10%)]/95 border border-white/10 rounded-xl shadow-2xl backdrop-blur-xl z-50 max-h-64 overflow-y-auto overflow-x-hidden">
           <div className="p-2 space-y-1">
             {results.map((place) => (
               <button
@@ -119,12 +119,12 @@ export function LocationSearch({ label, placeholder, value, onChange, className 
                 data-testid={`place-option-${place.iataCode}`}
                 className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 transition-colors flex items-center gap-3 group"
               >
-                <div className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-blue-500/20 transition-colors">
-                    {place.type === 'airport' ? <Plane className="h-4 w-4 text-blue-300" /> : <MapPin className="h-4 w-4 text-blue-300" />}
+                <div className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-amber-500/20 transition-colors">
+                    {place.type === 'airport' ? <Plane className="h-4 w-4 text-amber-300" /> : <MapPin className="h-4 w-4 text-teal-300" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-white text-sm truncate">
-                    {place.name} <span className="text-blue-400">({place.iataCode})</span>
+                    {place.name} <span className="text-amber-400">({place.iataCode})</span>
                   </div>
                   <div className="text-xs text-white/50 truncate">
                     {place.cityName ? `${place.cityName}, ` : ''}{place.countryName}
