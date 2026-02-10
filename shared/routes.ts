@@ -28,6 +28,10 @@ export const api = {
         date: z.string(),
         returnDate: z.string().optional(),
         passengers: z.string().optional(),
+        adults: z.string().optional(),
+        children: z.string().optional(),
+        infants: z.string().optional(),
+        cabinClass: z.string().optional(),
       }),
       responses: {
         200: z.array(z.object({

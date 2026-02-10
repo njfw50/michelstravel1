@@ -15,6 +15,10 @@ export interface SearchParams {
   departureDate: string;
   returnDate?: string;
   passengers: number;
+  adults?: number;
+  children?: number;
+  infants?: number;
+  cabinClass?: string;
 }
 
 export interface FlightOffer {
@@ -32,6 +36,12 @@ export interface FlightOffer {
 
 export async function searchFlights(params: SearchParams): Promise<FlightOffer[]> {
   try {
+    const passengers = [
+      ...Array(params.adults || params.passengers || 1).fill({ type: "adult" }),
+      ...Array(params.children || 0).fill({ type: "child" }),
+      ...Array(params.infants || 0).fill({ type: "infant_without_seat" }),
+    ];
+
     const offerRequest = await duffel.offerRequests.create({
       slices: [
         {
@@ -49,8 +59,8 @@ export async function searchFlights(params: SearchParams): Promise<FlightOffer[]
             ]
           : []),
       ],
-      passengers: Array(params.passengers).fill({ type: "adult" }),
-      cabin_class: "economy",
+      passengers,
+      cabin_class: (params.cabinClass as any) || "economy",
     });
 
     const offers = await duffel.offers.list({

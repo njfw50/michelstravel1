@@ -15,6 +15,10 @@ export const flightSearches = pgTable("flight_searches", {
   departureDate: text("departure_date").notNull(), // YYYY-MM-DD
   returnDate: text("return_date"),
   passengers: integer("passengers").default(1),
+  adults: integer("adults").default(1),
+  children: integer("children").default(0),
+  infants: integer("infants").default(0),
+  cabinClass: text("cabin_class").default("economy"),
   searchCount: integer("search_count").default(1),
   lastSearchedAt: timestamp("last_searched_at").defaultNow(),
 });
@@ -91,6 +95,12 @@ export interface FlightSearchParams {
   date: string; // YYYY-MM-DD
   returnDate?: string;
   passengers?: string;
+  adults?: string;
+  children?: string;
+  infants?: string;
+  cabinClass?: string;
+  // Multi-city support could be added here later as an array of slices
+  // slices?: Array<{ origin: string; destination: string; date: string }>;
 }
 
 // Mock Flight Result Type (since we don't have real API yet)

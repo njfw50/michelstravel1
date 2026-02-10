@@ -71,6 +71,10 @@ export async function registerRoutes(
         departureDate: input.date,
         returnDate: input.returnDate,
         passengers: input.passengers ? parseInt(input.passengers) : 1,
+        adults: input.adults ? parseInt(input.adults) : undefined,
+        children: input.children ? parseInt(input.children) : undefined,
+        infants: input.infants ? parseInt(input.infants) : undefined,
+        cabinClass: input.cabinClass,
       });
 
       // Cache the search for SEO/Popularity
@@ -80,6 +84,10 @@ export async function registerRoutes(
         departureDate: input.date,
         returnDate: input.returnDate,
         passengers: input.passengers ? parseInt(input.passengers) : 1,
+        adults: input.adults ? parseInt(input.adults) : 1,
+        children: input.children ? parseInt(input.children) : 0,
+        infants: input.infants ? parseInt(input.infants) : 0,
+        cabinClass: input.cabinClass || "economy",
       });
 
       res.json(flights);
