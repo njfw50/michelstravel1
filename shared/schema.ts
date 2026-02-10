@@ -34,6 +34,8 @@ export const bookings = pgTable("bookings", {
   commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).default("0.05"), // 5% default
   commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }),
   status: text("status").default("pending"), // pending, confirmed, cancelled
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  stripePaymentStatus: text("stripe_payment_status").default("pending"),
   contactEmail: text("contact_email").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
