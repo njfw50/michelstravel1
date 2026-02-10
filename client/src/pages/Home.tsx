@@ -37,12 +37,12 @@ export default function Home() {
               ✨ The easiest way to travel
             </Badge>
             <h1 className="text-5xl md:text-7xl font-display font-bold text-white mb-6 leading-[1.1] tracking-tight">
-              Discover Your Next <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-cyan-200 to-white">Dream Destination</span>
+              Opção Eficiente <br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-orange-300 to-white">Para Viajar</span>
             </h1>
             <p className="text-xl text-slate-300 max-w-2xl mx-auto font-light leading-relaxed">
-              Compare prices from hundreds of airlines and book with confidence. 
-              Secure payments, 24/7 support, and instant confirmation.
+              Descubra os melhores destinos com a Michels Travel.
+              Compare preços, reserve com segurança e viaje com tranquilidade.
             </p>
           </motion.div>
 

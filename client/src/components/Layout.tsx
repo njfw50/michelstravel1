@@ -25,33 +25,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 font-body">
-      <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-slate-200">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="bg-primary p-2 rounded-xl text-white group-hover:scale-110 transition-transform duration-300">
-                <Plane className="h-5 w-5" />
+      <header className="sticky top-0 z-50 w-full bg-[#111827] border-b border-white/10 shadow-lg shadow-black/20">
+        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-10">
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="relative">
+                <Plane className="h-7 w-7 text-accent transform -rotate-45 group-hover:rotate-0 transition-transform duration-300" strokeWidth={2.5} />
               </div>
-              <span className="text-xl font-bold font-display tracking-tight text-slate-900">
-                SkyBooker<span className="text-primary">.</span>
-              </span>
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold font-display tracking-tight text-primary leading-none uppercase">
+                  Michels Travel
+                </span>
+                <span className="text-[10px] tracking-[0.3em] font-medium text-slate-400 uppercase leading-none mt-1">
+                    Opção Eficiente
+                </span>
+              </div>
             </Link>
 
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-8">
               {navLinks.map((link) => (
                 <Link 
                   key={link.href} 
                   href={link.href}
                   className={cn(
-                    "text-sm font-medium transition-colors hover:text-primary relative py-1",
-                    location === link.href ? "text-primary" : "text-slate-600"
+                    "text-sm font-semibold transition-all hover:text-primary relative py-1 tracking-wide",
+                    location === link.href ? "text-white" : "text-slate-300"
                   )}
                 >
                   {link.label}
                   {location === link.href && (
                     <motion.div 
                       layoutId="activeNav"
-                      className="absolute -bottom-5 left-0 right-0 h-0.5 bg-primary"
+                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary shadow-[0_0_10px_var(--primary)]"
                     />
                   )}
                 </Link>
@@ -64,8 +69,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="gap-2 rounded-full pl-2 pr-4 h-10 border border-slate-200 hover:bg-slate-50">
-                      <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <Button variant="ghost" className="gap-2 rounded-full pl-2 pr-4 h-10 border border-white/10 hover:bg-white/10 text-slate-200 hover:text-white">
+                      <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center text-primary ring-1 ring-primary/50">
                         <User className="h-4 w-4" />
                       </div>
                       <span className="font-medium text-sm">{user.firstName || "User"}</span>
@@ -87,7 +92,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               ) : (
                 <Button 
                   onClick={() => window.location.href = '/api/login'}
-                  className="rounded-full px-6 font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all hover:-translate-y-0.5"
+                  className="rounded-full px-6 font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all hover:-translate-y-0.5 bg-primary text-white hover:bg-primary/90"
                 >
                   Sign In
                 </Button>
@@ -95,7 +100,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
 
             <button 
-              className="md:hidden p-2 text-slate-600"
+              className="md:hidden p-2 text-slate-300 hover:text-white"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X /> : <Menu />}
@@ -157,12 +162,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div className="col-span-1 md:col-span-1">
-              <div className="flex items-center gap-2 mb-4 text-white">
-                <Plane className="h-6 w-6" />
-                <span className="text-xl font-bold font-display">SkyBooker.</span>
+              <div className="flex items-center gap-2 mb-4">
+                <Plane className="h-6 w-6 text-primary" />
+                <span className="text-xl font-bold font-display text-primary uppercase">Michels Travel</span>
               </div>
               <p className="text-sm leading-relaxed text-slate-400">
-                Your trusted companion for finding the best flight deals worldwide. Simple, secure, and fast.
+                Opção Eficiente. Your trusted companion for finding the best flight deals worldwide.
               </p>
             </div>
             
@@ -198,7 +203,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div className="border-t border-slate-800 pt-8 text-center text-xs text-slate-500">
-            © {new Date().getFullYear()} SkyBooker Inc. All rights reserved.
+            © {new Date().getFullYear()} Michels Travel. All rights reserved.
           </div>
         </div>
       </footer>

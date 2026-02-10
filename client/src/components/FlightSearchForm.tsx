@@ -87,19 +87,19 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                         value="round-trip" 
                         className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:font-bold text-slate-500 rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-0 pb-2 transition-all"
                     >
-                        Round Trip
+                        Ida e Volta
                     </TabsTrigger>
                     <TabsTrigger 
                         value="one-way" 
                         className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:font-bold text-slate-500 rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-0 pb-2 transition-all"
                     >
-                        One Way
+                        Só Ida
                     </TabsTrigger>
                     <TabsTrigger 
                         value="multi-city" 
                         className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:font-bold text-slate-500 rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-0 pb-2 transition-all"
                     >
-                        Multi-City
+                        Vários Destinos
                     </TabsTrigger>
                 </TabsList>
             </Tabs>
@@ -111,11 +111,11 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
             {/* Location Group */}
             <div className="flex-1 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-2 items-center bg-white p-2 rounded-2xl border border-slate-200 shadow-sm relative group focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                 <div className="relative pl-4">
-                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">From</Label>
+                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Origem</Label>
                     <div className="flex items-center">
                         <MapPin className="h-4 w-4 text-slate-400 mr-2" />
                         <Input 
-                            placeholder="City or Airport" 
+                            placeholder="Cidade ou Aeroporto" 
                             className="border-none shadow-none focus-visible:ring-0 p-0 h-7 text-base font-semibold placeholder:text-slate-300 w-full bg-transparent truncate"
                             value={origin}
                             onChange={(e) => setOrigin(e.target.value)}
@@ -139,11 +139,11 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                 </div>
 
                 <div className="relative pl-4 md:pl-2">
-                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">To</Label>
+                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Destino</Label>
                     <div className="flex items-center">
                         <MapPin className="h-4 w-4 text-slate-400 mr-2" />
                         <Input 
-                            placeholder="City or Airport" 
+                            placeholder="Cidade ou Aeroporto" 
                             className="border-none shadow-none focus-visible:ring-0 p-0 h-7 text-base font-semibold placeholder:text-slate-300 w-full bg-transparent truncate"
                             value={destination}
                             onChange={(e) => setDestination(e.target.value)}
@@ -158,10 +158,10 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                 <Popover>
                     <PopoverTrigger asChild>
                         <button type="button" className="bg-white p-3 h-full flex flex-col justify-center text-left hover:bg-slate-50 transition-colors w-full">
-                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5 cursor-pointer">Departure</Label>
+                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5 cursor-pointer">Ida</Label>
                             <div className="flex items-center gap-2">
                                 <span className={cn("text-base font-semibold truncate", !date && "text-slate-300")}>
-                                    {date ? format(date, "MMM dd, yyyy") : "Add date"}
+                                    {date ? format(date, "MMM dd, yyyy") : "Escolher data"}
                                 </span>
                             </div>
                         </button>
@@ -189,14 +189,14 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                         >
                             {tripType === "one-way" && (
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <span className="text-xs font-medium text-slate-400">One-way</span>
+                                    <span className="text-xs font-medium text-slate-400">Só Ida</span>
                                 </div>
                             )}
                             <div className={tripType === "one-way" ? "opacity-0" : ""}>
-                                <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5 cursor-pointer">Return</Label>
+                                <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5 cursor-pointer">Volta</Label>
                                 <div className="flex items-center gap-2">
                                     <span className={cn("text-base font-semibold truncate", !returnDate && "text-slate-300")}>
-                                        {returnDate ? format(returnDate, "MMM dd, yyyy") : "Add date"}
+                                        {returnDate ? format(returnDate, "MMM dd, yyyy") : "Escolher data"}
                                     </span>
                                 </div>
                             </div>
@@ -218,10 +218,10 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
             <Popover>
                 <PopoverTrigger asChild>
                     <button type="button" className="flex-[0.6] bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center text-left hover:bg-slate-50 transition-colors">
-                         <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5 cursor-pointer">Travelers & Class</Label>
+                         <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5 cursor-pointer">Passageiros & Classe</Label>
                          <div className="flex items-center gap-2">
                              <span className="text-base font-semibold truncate text-slate-900">
-                                 {totalPassengers} Traveler{totalPassengers !== 1 ? 's' : ''}, {cabinClass === 'economy' ? 'Eco' : cabinClass === 'premium_economy' ? 'Prem. Eco' : cabinClass === 'business' ? 'Biz' : 'First'}
+                                 {totalPassengers} {totalPassengers !== 1 ? 'Viajantes' : 'Viajante'}, {cabinClass === 'economy' ? 'Econ' : cabinClass === 'premium_economy' ? 'Prem' : cabinClass === 'business' ? 'Exec' : 'Prim'}
                              </span>
                          </div>
                     </button>
@@ -229,13 +229,13 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                 <PopoverContent className="w-80 p-5 rounded-xl shadow-xl" align="end">
                     <div className="space-y-4">
                         <div className="space-y-3">
-                            <h4 className="font-medium text-sm text-slate-900 border-b pb-2">Cabin Class</h4>
+                            <h4 className="font-medium text-sm text-slate-900 border-b pb-2">Classe</h4>
                             <div className="grid grid-cols-2 gap-2">
                                 {[
-                                    { id: "economy", label: "Economy" },
-                                    { id: "premium_economy", label: "Prem. Eco" },
-                                    { id: "business", label: "Business" },
-                                    { id: "first", label: "First" },
+                                    { id: "economy", label: "Econômica" },
+                                    { id: "premium_economy", label: "Econ. Premium" },
+                                    { id: "business", label: "Executiva" },
+                                    { id: "first", label: "Primeira" },
                                 ].map((cls) => (
                                     <div 
                                         key={cls.id}
@@ -254,13 +254,13 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                         </div>
 
                         <div className="space-y-3">
-                             <h4 className="font-medium text-sm text-slate-900 border-b pb-2">Travelers</h4>
+                             <h4 className="font-medium text-sm text-slate-900 border-b pb-2">Passageiros</h4>
                              
                              {/* Adults */}
                              <div className="flex justify-between items-center">
                                  <div>
-                                     <div className="font-medium text-sm text-slate-900">Adults</div>
-                                     <div className="text-xs text-slate-500">Age 12+</div>
+                                     <div className="font-medium text-sm text-slate-900">Adultos</div>
+                                     <div className="text-xs text-slate-500">12+ anos</div>
                                  </div>
                                  <div className="flex items-center gap-3">
                                      <button 
@@ -285,8 +285,8 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                              {/* Children */}
                              <div className="flex justify-between items-center">
                                  <div>
-                                     <div className="font-medium text-sm text-slate-900">Children</div>
-                                     <div className="text-xs text-slate-500">Age 2-11</div>
+                                     <div className="font-medium text-sm text-slate-900">Crianças</div>
+                                     <div className="text-xs text-slate-500">2-11 anos</div>
                                  </div>
                                  <div className="flex items-center gap-3">
                                      <button 
@@ -311,8 +311,8 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                              {/* Infants */}
                              <div className="flex justify-between items-center">
                                  <div>
-                                     <div className="font-medium text-sm text-slate-900">Infants</div>
-                                     <div className="text-xs text-slate-500">Under 2</div>
+                                     <div className="font-medium text-sm text-slate-900">Bebês</div>
+                                     <div className="text-xs text-slate-500">Menos de 2 anos</div>
                                  </div>
                                  <div className="flex items-center gap-3">
                                      <button 
@@ -345,7 +345,7 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                 className="h-auto py-3 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all lg:w-auto min-w-[120px]"
             >
                 <Search className="mr-2 h-5 w-5" />
-                Search
+                Buscar
             </Button>
         </div>
       </form>

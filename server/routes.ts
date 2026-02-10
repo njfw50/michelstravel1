@@ -13,10 +13,10 @@ async function seedDatabase() {
   const settings = await storage.getSiteSettings();
   if (!settings) {
     await storage.upsertSiteSettings({
-      siteName: "SkyBooker Pro",
+      siteName: "Michels Travel",
       commissionPercentage: "5.00",
-      heroTitle: "Travel the World for Less",
-      heroSubtitle: "Exclusive deals on international flights.",
+      heroTitle: "Opção Eficiente Para Viajar",
+      heroSubtitle: "Descubra os melhores destinos com a Michels Travel.",
     });
   }
 
