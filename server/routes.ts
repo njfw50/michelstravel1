@@ -108,12 +108,12 @@ export function registerRoutes(app: Express) {
             commissionAmount: commissionAmount,
             status: 'pending',
             stripePaymentStatus: 'pending',
-            userId: req.user?.id // Optional, null if guest
+            userId: (req as any).user?.id ? String((req as any).user.id) : null // Ensure string or null
         }).returning();
 
         // 2. Create Stripe Checkout Session
         const session = await stripeService.createFlightCheckoutSession(
-            req.user?.stripeCustomerId,
+            (req as any).user?.stripeCustomerId,
             price,
             bookingData.currency,
             `${req.protocol}://${req.get('host')}/checkout/success?bookingId=${booking.id}`,
