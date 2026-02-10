@@ -71,20 +71,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Get Flight Details
-  app.get('/api/flights/:id', async (req, res) => {
-    try {
-        const flight = await getFlight(req.params.id);
-        if (!flight) {
-            return res.status(404).json({ error: "Flight not found" });
-        }
-        res.json(flight);
-    } catch (error) {
-        res.status(500).json({ error: "Failed to fetch flight details" });
-    }
-  });
-
-  // Popular Flights
+  // Popular Flights (MUST be before :id route)
   app.get('/api/flights/popular', async (req, res) => {
     try {
       const popular = await storage.getPopularDestinations();
@@ -101,6 +88,19 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       console.error('Popular flights error:', error);
       res.status(500).json({ error: 'Failed to fetch popular flights' });
+    }
+  });
+
+  // Get Flight Details (MUST be after /popular to avoid matching "popular" as :id)
+  app.get('/api/flights/:id', async (req, res) => {
+    try {
+        const flight = await getFlight(req.params.id);
+        if (!flight) {
+            return res.status(404).json({ error: "Flight not found" });
+        }
+        res.json(flight);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch flight details" });
     }
   });
 

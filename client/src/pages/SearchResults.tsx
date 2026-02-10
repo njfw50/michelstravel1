@@ -7,13 +7,18 @@ import { Button } from "@/components/ui/button";
 
 export default function SearchResults() {
   const [location] = useLocation();
-  const searchParams = new URLSearchParams(location.split('?')[1]);
+  const searchParams = new URLSearchParams(window.location.search);
   
   const params = {
     origin: searchParams.get('origin') || "",
     destination: searchParams.get('destination') || "",
     date: searchParams.get('date') || "",
     passengers: searchParams.get('passengers') || "1",
+    adults: searchParams.get('adults') || "1",
+    children: searchParams.get('children') || "0",
+    infants: searchParams.get('infants') || "0",
+    cabinClass: searchParams.get('cabinClass') || "economy",
+    returnDate: searchParams.get('returnDate') || undefined,
   };
 
   const { data: flights, isLoading, error } = useFlightSearch(params);
