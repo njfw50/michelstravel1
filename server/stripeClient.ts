@@ -58,7 +58,7 @@ export async function getUncachableStripeClient() {
   return new Stripe(secretKey, {
     // Note that this is the latest API version, don't change it to a old version of the
     // API.
-    apiVersion: '2025-08-27.basil',
+    apiVersion: '2025-02-24.acacia',
   });
 }
 

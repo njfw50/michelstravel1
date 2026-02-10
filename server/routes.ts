@@ -142,32 +142,34 @@ export function registerRoutes(app: Express) {
   // === STRIPE ROUTES ===
 
   // Get user subscription
-  app.get('/api/subscription', async (req: any, res) => {
-    if (!req.user) {
+  app.get('/api/subscription', async (req, res) => {
+    const user = (req as any).user;
+    if (!user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    const user = await storage.getUser(req.user.id);
-    if (!user?.stripeSubscriptionId) {
+    const dbUser = await storage.getUser(user.id);
+    if (!dbUser?.stripeSubscriptionId) {
       return res.json({ subscription: null });
     }
 
-    const subscription = await storage.getSubscription(user.stripeSubscriptionId);
+    const subscription = await storage.getSubscription(dbUser.stripeSubscriptionId);
     res.json({ subscription });
   });
 
   // Create checkout session
-  app.post('/api/checkout', async (req: any, res) => {
-    if (!req.user) {
+  app.post('/api/checkout', async (req, res) => {
+    const user = (req as any).user;
+    if (!user) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    const user = await storage.getUser(req.user.id);
+    const dbUser = await storage.getUser(user.id);
     const { priceId } = req.body;
 
     // Create or get customer
-    let customerId = user.stripeCustomerId;
+    let customerId = dbUser.stripeCustomerId;
     if (!customerId) {
-      const customer = await stripeService.createCustomer(user.email, user.id);
-      await storage.updateUserStripeInfo(user.id, { stripeCustomerId: customer.id });
+      const customer = await stripeService.createCustomer(dbUser.email, dbUser.id);
+      await storage.updateUserStripeInfo(dbUser.id, { stripeCustomerId: customer.id });
       customerId = customer.id;
     }
 
