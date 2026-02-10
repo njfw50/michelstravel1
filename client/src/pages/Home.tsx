@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ShieldCheck, Zap, Globe, Heart, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
+import airplaneDestination from "@/assets/images/airplane-destination.jpg";
+
 export default function Home() {
   const { data: popularFlights, isLoading } = usePopularFlights();
 
@@ -17,7 +19,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-slate-900 select-none">
            {/* Tropical beach paradise hero image */}
           <img 
-            src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop"
+            src={airplaneDestination}
             alt="Airplane wing over clouds"
             className="w-full h-full object-cover opacity-60 scale-105"
           />
@@ -119,7 +121,7 @@ export default function Home() {
                   <Card className="group overflow-hidden border-none shadow-sm hover:shadow-xl transition-all cursor-pointer h-full bg-white rounded-2xl">
                     <div className="relative h-56 overflow-hidden">
                       <img 
-                        src={`https://source.unsplash.com/800x600/?${flight.destination}`} 
+                        src={airplaneDestination}
                         alt={flight.destination}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
