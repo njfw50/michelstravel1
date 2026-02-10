@@ -1,26 +1,15 @@
-import express, { type Request, Response, NextFunction } from "express";
+import express, { type Request, type Response, type NextFunction } from "express";
+import { runMigrations } from 'stripe-replit-sync';
 import { registerRoutes } from "./routes";
+import { setupVite } from "./vite";
 import { serveStatic } from "./static";
+import { storage } from "./storage";
+import { getStripeSync } from "./stripeClient";
+import { WebhookHandlers } from "./webhookHandlers";
 import { createServer } from "http";
 
 const app = express();
 const httpServer = createServer(app);
-
-declare module "http" {
-  interface IncomingMessage {
-    rawBody: unknown;
-  }
-}
-
-app.use(
-  express.json({
-    verify: (req, _res, buf) => {
-      req.rawBody = buf;
-    },
-  }),
-);
-
-app.use(express.urlencoded({ extended: false }));
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -32,6 +21,97 @@ export function log(message: string, source = "express") {
 
   console.log(`${formattedTime} [${source}] ${message}`);
 }
+
+// Initialize Stripe schema and sync data on startup
+async function initStripe() {
+  const databaseUrl = process.env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    console.warn('DATABASE_URL environment variable is not set. Stripe integration skipped.');
+    return;
+  }
+
+  try {
+    console.log('Initializing Stripe schema...');
+    await runMigrations({ 
+      databaseUrl
+    });
+    console.log('Stripe schema ready');
+
+    // Get StripeSync instance
+    const stripeSync = await getStripeSync();
+
+    // Set up managed webhook
+    console.log('Setting up managed webhook...');
+    const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+    const { webhook } = await stripeSync.findOrCreateManagedWebhook(
+      `${webhookBaseUrl}/api/stripe/webhook`);
+    console.log(`Webhook configured: ${webhook.url}`);
+
+    // Sync all existing Stripe data
+    console.log('Syncing Stripe data...');
+    // Start syncing backfill in the background so server can start immediately
+    stripeSync.syncBackfill()
+      .then(() => {
+        console.log('Stripe data synced');
+      })
+      .catch((err: any) => {
+        console.error('Error syncing Stripe data:', err);
+      });
+  } catch (error) {
+    console.error('Failed to initialize Stripe:', error);
+    // Don't throw error to allow app to start without Stripe if misconfigured
+  }
+}
+
+// Initialize on startup
+initStripe().catch(console.error);
+
+// Register Stripe webhook route BEFORE express.json()
+// This is critical - webhook needs raw Buffer, not parsed JSON
+app.post(
+  '/api/stripe/webhook',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    const signature = req.headers['stripe-signature'];
+
+    if (!signature) {
+      return res.status(400).json({ error: 'Missing stripe-signature' });
+    }
+
+    try {
+      const sig = Array.isArray(signature) ? signature[0] : signature;
+
+      // Validate that req.body is a Buffer (not parsed JSON)
+      if (!Buffer.isBuffer(req.body)) {
+        const errorMsg = 'STRIPE WEBHOOK ERROR: req.body is not a Buffer. ' +
+          'This means express.json() ran before this webhook route. ' +
+          'FIX: Move this webhook route registration BEFORE app.use(express.json()) in your code.';
+        console.error(errorMsg);
+        return res.status(500).json({ error: 'Webhook processing error' });
+      }
+
+      await WebhookHandlers.processWebhook(req.body as Buffer, sig);
+
+      res.status(200).json({ received: true });
+    } catch (error: any) {
+      console.error('Webhook error:', error.message);
+
+      // Log helpful error message if it's the common "payload must be Buffer" error
+      if (error.message && error.message.includes('payload must be provided as a string or a Buffer')) {
+        const helpfulMsg = 'STRIPE WEBHOOK ERROR: Payload is not a Buffer. ' +
+          'This usually means express.json() parsed the body before the webhook handler. ' +
+          'FIX: Ensure the webhook route is registered BEFORE app.use(express.json()).';
+        console.error(helpfulMsg);
+      }
+
+      res.status(400).json({ error: 'Webhook processing error' });
+    }
+  }
+);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -60,7 +140,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  await registerRoutes(httpServer, app);
+  registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -75,14 +155,10 @@ app.use((req, res, next) => {
     return res.status(status).json({ message });
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (process.env.NODE_ENV === "production") {
-    serveStatic(app);
-  } else {
-    const { setupVite } = await import("./vite");
+  if (app.get("env") === "development") {
     await setupVite(httpServer, app);
+  } else {
+    serveStatic(app);
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
