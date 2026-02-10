@@ -24,23 +24,25 @@ interface Place {
 
 export function LocationSearch({ label, placeholder, value, onChange, className }: LocationSearchProps) {
   const [query, setQuery] = useState(value);
-  const debouncedQuery = useDebounce(query, 500); // Use the hook result
+  const [displayText, setDisplayText] = useState("");
+  const debouncedQuery = useDebounce(query, 500);
   const [results, setResults] = useState<Place[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const selectedRef = useRef(false);
 
-  // Trigger search on debounced query change
   useEffect(() => {
-    if (debouncedQuery && debouncedQuery !== value && debouncedQuery.length >= 2) {
+    if (debouncedQuery && debouncedQuery.length >= 2 && !selectedRef.current) {
       searchPlaces(debouncedQuery);
     }
-  }, [debouncedQuery]); // Correct dependency
+    selectedRef.current = false;
+  }, [debouncedQuery]);
 
-  // Update internal state when external value changes (e.g. swap button)
   useEffect(() => {
-    if (value !== query) {
-        setQuery(value);
+    if (value === "" && query !== "") {
+      setQuery("");
+      setDisplayText("");
     }
   }, [value]);
 
@@ -61,9 +63,10 @@ export function LocationSearch({ label, placeholder, value, onChange, className 
   };
 
   const handleSelect = (place: Place) => {
-    // Format: "City (IATA)" or "Airport (IATA)"
-    const newValue = place.iataCode; 
-    setQuery(`${place.cityName || place.name} (${place.iataCode})`);
+    const text = `${place.cityName || place.name} (${place.iataCode})`;
+    selectedRef.current = true;
+    setQuery(text);
+    setDisplayText(text);
     onChange(place.iataCode);
     setIsOpen(false);
   };
@@ -87,8 +90,10 @@ export function LocationSearch({ label, placeholder, value, onChange, className 
         <Input 
             placeholder={placeholder || "City or Airport"} 
             className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-lg font-medium placeholder:text-white/30 w-full bg-transparent truncate text-white"
-            value={query}
+            data-testid={`input-${label.toLowerCase()}`}
+            value={displayText || query}
             onChange={(e) => {
+                setDisplayText("");
                 setQuery(e.target.value);
                 if (e.target.value === "") {
                     onChange("");
@@ -108,8 +113,10 @@ export function LocationSearch({ label, placeholder, value, onChange, className 
           <div className="p-2 space-y-1">
             {results.map((place) => (
               <button
+                type="button"
                 key={place.id}
                 onClick={() => handleSelect(place)}
+                data-testid={`place-option-${place.iataCode}`}
                 className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 transition-colors flex items-center gap-3 group"
               >
                 <div className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-blue-500/20 transition-colors">

@@ -358,6 +358,7 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                 <Button 
                     type="submit" 
                     size="lg" 
+                    data-testid="button-search-flights"
                     className="h-14 w-full lg:w-auto px-8 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold shadow-lg shadow-blue-900/50 hover:shadow-blue-600/50 transition-all uppercase tracking-wide text-sm border-0"
                 >
                     <Search className="mr-2 h-4 w-4" />
