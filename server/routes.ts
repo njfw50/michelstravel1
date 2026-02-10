@@ -1,9 +1,12 @@
 import type { Express } from "express";
-import type { Server } from "http"; // Correct import
+import type { Server } from "http";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
+import { searchFlights } from "./services/duffel";
 
 // Seed Function
 async function seedDatabase() {
@@ -42,13 +45,19 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // Security Middleware
+  app.use(helmet());
+  
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: "Too many requests from this IP, please try again later."
+  });
+  app.use("/api/", limiter);
+
   // 1. Setup Auth
   await setupAuth(app);
   registerAuthRoutes(app);
-
-  import { searchFlights } from "./services/duffel";
-
-// ... (existing code)
 
   // 2. Flight Routes
   app.get(api.flights.search.path, async (req, res) => {

@@ -1,143 +1,129 @@
 import { useLocation } from "wouter";
-import { Layout } from "@/components/Layout";
 import { FlightSearchForm } from "@/components/FlightSearchForm";
 import { FlightCard } from "@/components/FlightCard";
 import { useFlightSearch } from "@/hooks/use-flights";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { parse, format } from "date-fns";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Filter } from "lucide-react";
+import { Loader2, Filter, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function SearchResults() {
   const [location] = useLocation();
-  const searchParams = new URLSearchParams(location.split("?")[1]);
+  const searchParams = new URLSearchParams(location.split('?')[1]);
   
-  const origin = searchParams.get("origin") || "";
-  const destination = searchParams.get("destination") || "";
-  const dateStr = searchParams.get("date");
-  const passengers = searchParams.get("passengers") || "1";
-  
-  const date = dateStr ? parse(dateStr, "yyyy-MM-dd", new Date()) : undefined;
+  const params = {
+    origin: searchParams.get('origin') || "",
+    destination: searchParams.get('destination') || "",
+    date: searchParams.get('date') || "",
+    passengers: searchParams.get('passengers') || "1",
+  };
 
-  const { data: flights, isLoading } = useFlightSearch({
-    origin,
-    destination,
-    date: dateStr || format(new Date(), "yyyy-MM-dd"),
-    passengers,
-  });
+  const { data: flights, isLoading, error } = useFlightSearch(params);
+
+  const defaultValues = {
+    origin: params.origin,
+    destination: params.destination,
+    date: params.date ? new Date(params.date) : undefined,
+    passengers: params.passengers,
+  };
 
   return (
-    <Layout>
-      <div className="bg-primary/5 pb-12">
-        <div className="container mx-auto px-4 pt-8">
-          {/* Compact Search Form */}
-          <div className="mb-8">
-             <FlightSearchForm 
-               className="py-4 shadow-md" 
-               defaultValues={{ origin, destination, date, passengers }}
-             />
-          </div>
+    <div className="min-h-screen bg-slate-50 pb-20">
+      {/* Compact Search Header */}
+      <div className="bg-slate-900 pb-24 pt-8 px-4">
+        <div className="container mx-auto max-w-6xl">
+           <FlightSearchForm defaultValues={defaultValues} className="shadow-none border-none bg-white/10 backdrop-blur-sm text-white" />
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Sidebar Filters */}
-            <div className="hidden lg:block space-y-8 bg-white p-6 rounded-2xl shadow-sm h-fit sticky top-24">
-              <div className="flex items-center gap-2 mb-6">
-                <Filter className="h-5 w-5 text-primary" />
-                <h3 className="font-bold text-lg">Filters</h3>
+      <div className="container mx-auto px-4 -mt-16 max-w-6xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Filters Sidebar (Mock for UI) */}
+          <div className="hidden lg:block lg:col-span-3 space-y-6">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 sticky top-24">
+              <div className="flex items-center gap-2 mb-6 font-bold text-slate-900">
+                <Filter className="h-5 w-5" /> Filters
               </div>
-
-              {/* Stops */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-sm">Stops</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="non-stop" />
-                    <Label htmlFor="non-stop">Non-stop</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="one-stop" />
-                    <Label htmlFor="one-stop">1 Stop</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="two-stop" />
-                    <Label htmlFor="two-stop">2+ Stops</Label>
+              
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-sm font-semibold mb-3">Stops</h4>
+                  <div className="space-y-2">
+                    {['Direct', '1 Stop', '2+ Stops'].map(stop => (
+                      <label key={stop} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-primary">
+                        <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary" />
+                        {stop}
+                      </label>
+                    ))}
                   </div>
                 </div>
-              </div>
+                
+                <div className="h-px bg-slate-100" />
 
-              <div className="h-px bg-slate-100" />
-
-              {/* Price */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-sm">Price Range</h4>
-                <Slider defaultValue={[1000]} max={2000} step={50} />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>$0</span>
-                  <span>$2,000+</span>
-                </div>
-              </div>
-
-              <div className="h-px bg-slate-100" />
-
-              {/* Airlines */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-sm">Airlines</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="delta" />
-                    <Label htmlFor="delta">Delta Airlines</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="american" />
-                    <Label htmlFor="american">American Airlines</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="united" />
-                    <Label htmlFor="united">United Airlines</Label>
+                <div>
+                  <h4 className="text-sm font-semibold mb-3">Airlines</h4>
+                  <div className="space-y-2">
+                    {['Delta', 'United', 'British Airways', 'Lufthansa'].map(airline => (
+                      <label key={airline} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-primary">
+                        <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary" />
+                        {airline}
+                      </label>
+                    ))}
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Results List */}
-            <div className="lg:col-span-3 space-y-4">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">
-                  {isLoading ? "Searching flights..." : `${flights?.length || 0} flights found`}
-                </h2>
-                <span className="text-sm text-muted-foreground">
-                  {origin} to {destination} • {passengers} Adult{passengers !== "1" && "s"}
-                </span>
+          {/* Results List */}
+          <div className="lg:col-span-9 space-y-4">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-xl font-bold text-slate-800">
+                {isLoading ? "Searching flights..." : `${flights?.length || 0} flights found`}
+              </h2>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="lg:hidden">
+                  <Filter className="h-4 w-4 mr-2" /> Filters
+                </Button>
+                <select className="bg-white border border-slate-200 text-sm rounded-lg p-2 outline-none focus:ring-2 focus:ring-primary">
+                  <option>Cheapest first</option>
+                  <option>Fastest first</option>
+                  <option>Best value</option>
+                </select>
               </div>
+            </div>
 
-              {isLoading ? (
-                // Loading Skeletons
-                Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
-                    <div className="flex justify-between">
-                      <Skeleton className="h-12 w-12 rounded-full" />
-                      <Skeleton className="h-6 w-32" />
-                    </div>
-                    <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-10 w-24 ml-auto" />
-                  </div>
-                ))
-              ) : flights && flights.length > 0 ? (
-                flights.map((flight) => (
-                  <FlightCard key={flight.id} flight={flight} passengers={passengers} />
-                ))
-              ) : (
-                <div className="bg-white rounded-2xl p-12 text-center border border-dashed border-slate-300">
-                  <h3 className="text-lg font-semibold mb-2">No flights found</h3>
-                  <p className="text-muted-foreground">Try adjusting your filters or search for different dates.</p>
+            {isLoading && (
+              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-slate-100">
+                <Loader2 className="h-10 w-10 text-primary animate-spin mb-4" />
+                <p className="text-slate-500 font-medium">Searching hundreds of airlines...</p>
+              </div>
+            )}
+
+            {error && (
+              <div className="flex flex-col items-center justify-center py-20 bg-red-50 rounded-2xl border border-red-100 text-red-600">
+                <AlertCircle className="h-10 w-10 mb-4" />
+                <p className="font-medium">Failed to load flights. Please try again.</p>
+              </div>
+            )}
+
+            {!isLoading && !error && flights?.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-slate-100">
+                <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                  <Filter className="h-8 w-8 text-slate-300" />
                 </div>
-              )}
+                <h3 className="text-lg font-bold text-slate-900 mb-2">No flights found</h3>
+                <p className="text-slate-500">Try changing your dates or search filters.</p>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {flights?.map((flight) => (
+                <FlightCard key={flight.id} flight={flight} />
+              ))}
             </div>
           </div>
         </div>
       </div>
-    </Layout>
+    </div>
   );
 }

@@ -1,82 +1,43 @@
-import { Layout } from "@/components/Layout";
+import { useRoute } from "wouter";
 import { useBlogPost } from "@/hooks/use-blog";
-import { useRoute, Link } from "wouter";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Calendar } from "lucide-react";
+import { Loader2, Calendar } from "lucide-react";
+import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
 
 export default function BlogPost() {
-  const [_, params] = useRoute("/blog/:slug");
+  const [match, params] = useRoute("/blog/:slug");
   const { data: post, isLoading } = useBlogPost(params?.slug || "");
 
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="container mx-auto px-4 py-16 max-w-3xl">
-          <Skeleton className="h-8 w-24 mb-8" />
-          <Skeleton className="h-12 w-3/4 mb-4" />
-          <Skeleton className="h-6 w-1/2 mb-12" />
-          <div className="space-y-4">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-5/6" />
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
-  if (!post) {
-    return (
-      <Layout>
-        <div className="container mx-auto px-4 py-20 text-center">
-          <h1 className="text-3xl font-bold mb-4">Post not found</h1>
-          <Link href="/blog" className="text-primary hover:underline">Return to Blog</Link>
-        </div>
-      </Layout>
-    );
-  }
+  if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
+  if (!post) return <div className="text-center py-20">Post not found</div>;
 
   return (
-    <Layout>
-      <article className="min-h-screen pb-20">
-        {/* Header Image */}
-        <div className="h-[40vh] w-full bg-slate-900 relative overflow-hidden">
-          {post.coverImage && (
-            <img 
-              src={post.coverImage} 
-              alt={post.title} 
-              className="w-full h-full object-cover opacity-60"
-            />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
-            <div className="container mx-auto max-w-4xl">
-              <Link href="/blog" className="inline-flex items-center text-white/80 hover:text-white mb-6 transition-colors">
-                <ArrowLeft className="h-4 w-4 mr-2" /> Back to Guides
-              </Link>
-              <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-4 leading-tight">
-                {post.title}
-              </h1>
-              {post.createdAt && (
-                <div className="flex items-center text-slate-300 text-sm">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  {new Date(post.createdAt).toLocaleDateString()}
-                </div>
-              )}
+    <div className="min-h-screen bg-white">
+      {post.coverImage && (
+        <div className="h-[400px] w-full relative">
+          <img src={post.coverImage} alt={post.title} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 p-8 md:p-16 container mx-auto">
+            <div className="max-w-3xl">
+              <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-4">{post.title}</h1>
+              <div className="flex items-center text-white/80 gap-4">
+                <span className="flex items-center gap-2"><Calendar className="h-4 w-4" /> {format(new Date(post.createdAt || new Date()), "MMMM d, yyyy")}</span>
+              </div>
             </div>
           </div>
         </div>
+      )}
 
-        {/* Content */}
-        <div className="container mx-auto px-4 max-w-4xl -mt-10 relative z-10">
-          <div className="bg-white rounded-2xl p-8 md:p-12 shadow-xl border border-slate-100">
-            <div 
-              className="prose prose-lg prose-blue max-w-none"
-              dangerouslySetInnerHTML={{ __html: post.content }} 
-            />
-          </div>
+      <div className="container mx-auto px-4 py-16">
+        <div className="max-w-3xl mx-auto prose prose-lg prose-slate prose-headings:font-display prose-headings:font-bold prose-a:text-primary hover:prose-a:text-primary/80">
+          <p className="lead text-xl text-slate-600 mb-8">{post.excerpt}</p>
+          <div dangerouslySetInnerHTML={{ __html: post.content }} />
         </div>
-      </article>
-    </Layout>
+        
+        <div className="max-w-3xl mx-auto mt-16 pt-8 border-t border-slate-100 flex justify-between items-center">
+            <Button variant="outline" onClick={() => window.history.back()}>Back to Guide</Button>
+        </div>
+      </div>
+    </div>
   );
 }

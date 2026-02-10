@@ -3,6 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Layout } from "@/components/Layout";
 import NotFound from "@/pages/not-found";
 
 // Pages
@@ -16,12 +17,20 @@ import BlogPost from "@/pages/BlogPost";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/search" component={SearchResults} />
-      <Route path="/book/:id" component={Booking} />
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/blog" component={BlogList} />
-      <Route path="/blog/:slug" component={BlogPost} />
+      {/* Admin dashboard has its own layout or just lives inside main layout */}
+      <Route path="/admin">
+        <Layout>
+          <AdminDashboard />
+        </Layout>
+      </Route>
+
+      <Route path="/" component={() => <Layout><Home /></Layout>} />
+      <Route path="/search" component={() => <Layout><SearchResults /></Layout>} />
+      <Route path="/book/:id" component={() => <Layout><Booking /></Layout>} />
+      
+      <Route path="/blog" component={() => <Layout><BlogList /></Layout>} />
+      <Route path="/blog/:slug" component={() => <Layout><BlogPost /></Layout>} />
+      
       <Route component={NotFound} />
     </Switch>
   );

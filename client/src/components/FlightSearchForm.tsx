@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { motion } from "framer-motion";
 
 interface FlightSearchFormProps {
   className?: string;
@@ -51,22 +52,25 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
   };
 
   return (
-    <form 
+    <motion.form 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
       onSubmit={handleSearch}
       className={cn(
-        "bg-white rounded-2xl shadow-xl shadow-blue-900/5 p-6 md:p-8 flex flex-col md:flex-row gap-4 items-end border border-blue-50 relative z-10",
+        "bg-white rounded-2xl shadow-xl shadow-blue-900/5 p-6 md:p-8 flex flex-col lg:flex-row gap-4 items-end border border-blue-50 relative z-10",
         className
       )}
     >
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
         {/* Origin */}
-        <div className="space-y-2">
-          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">From</Label>
+        <div className="space-y-2 relative">
+          <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">From</Label>
           <div className="relative group">
-            <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
             <Input 
               placeholder="City or Airport" 
-              className="pl-9 h-12 bg-slate-50 border-slate-200 focus:bg-white transition-colors text-base font-medium rounded-xl"
+              className="pl-9 h-12 bg-slate-50 border-slate-200 focus:bg-white focus:border-primary transition-all text-base font-medium rounded-xl shadow-sm"
               value={origin}
               onChange={(e) => setOrigin(e.target.value)}
               required
@@ -74,21 +78,29 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
           </div>
         </div>
 
-        {/* Swap Button (Desktop only visual) */}
-        <div className="hidden md:flex items-center justify-center mb-2 -ml-6 -mr-6 z-10">
-          <div className="bg-white rounded-full p-2 border border-slate-100 shadow-sm cursor-pointer hover:shadow-md transition-all text-muted-foreground hover:text-primary">
-            <ArrowRightLeft className="h-4 w-4" />
-          </div>
+        {/* Swap Button (Absolute positioned for visual flair) */}
+        <div className="hidden lg:flex absolute left-[24%] bottom-9 z-20">
+            <button 
+                type="button"
+                className="bg-white rounded-full p-2 border border-slate-100 shadow-sm text-slate-400 hover:text-primary hover:shadow-md transition-all hover:scale-105"
+                onClick={() => {
+                    const temp = origin;
+                    setOrigin(destination);
+                    setDestination(temp);
+                }}
+            >
+                <ArrowRightLeft className="h-4 w-4" />
+            </button>
         </div>
 
         {/* Destination */}
         <div className="space-y-2">
-          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">To</Label>
+          <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">To</Label>
           <div className="relative group">
-            <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
             <Input 
               placeholder="City or Airport" 
-              className="pl-9 h-12 bg-slate-50 border-slate-200 focus:bg-white transition-colors text-base font-medium rounded-xl"
+              className="pl-9 h-12 bg-slate-50 border-slate-200 focus:bg-white focus:border-primary transition-all text-base font-medium rounded-xl shadow-sm"
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
               required
@@ -98,17 +110,17 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
 
         {/* Date */}
         <div className="space-y-2">
-          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Departure</Label>
+          <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Departure</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant={"outline"}
                 className={cn(
-                  "w-full h-12 justify-start text-left font-medium rounded-xl border-slate-200 bg-slate-50 hover:bg-white text-base",
+                  "w-full h-12 justify-start text-left font-medium rounded-xl border-slate-200 bg-slate-50 hover:bg-white hover:border-primary text-base shadow-sm group",
                   !date && "text-muted-foreground"
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <CalendarIcon className="mr-2 h-4 w-4 text-slate-400 group-hover:text-primary transition-colors" />
                 {date ? format(date, "MMM dd, yyyy") : <span>Pick a date</span>}
               </Button>
             </PopoverTrigger>
@@ -126,11 +138,11 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
 
         {/* Passengers */}
         <div className="space-y-2">
-          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider ml-1">Travelers</Label>
+          <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Travelers</Label>
           <Select value={passengers} onValueChange={setPassengers}>
-            <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-medium text-base">
+            <SelectTrigger className="h-12 bg-slate-50 border-slate-200 rounded-xl font-medium text-base shadow-sm focus:ring-primary focus:border-primary">
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <Users className="h-4 w-4 text-slate-400" />
                 <SelectValue placeholder="Passengers" />
               </div>
             </SelectTrigger>
@@ -147,11 +159,11 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
       <Button 
         type="submit" 
         size="lg" 
-        className="h-12 px-8 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground font-bold shadow-lg shadow-accent/20 w-full md:w-auto min-w-[140px]"
+        className="h-12 px-8 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all w-full lg:w-auto min-w-[140px]"
       >
         <Search className="mr-2 h-5 w-5" />
         Search
       </Button>
-    </form>
+    </motion.form>
   );
 }

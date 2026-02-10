@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,99 +6,74 @@
 
 :root {
   --font-display: 'Outfit', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
 
-  /* Ocean & Sky Theme - Trustworthy, Clean, Modern */
-  --background: 210 20% 98%;
+  /* Modern Blue & White Palette - Trust & Travel */
+  --background: 210 40% 98%;
   --foreground: 222 47% 11%;
 
-  /* Primary Blue - Vivid but professional */
-  --primary: 217 91% 60%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+
+  --primary: 217 91% 60%; /* Vivid Blue */
   --primary-foreground: 210 40% 98%;
 
-  /* Secondary - Soft Grays */
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222 47% 11%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222 47% 11.2%;
 
-  /* Muted */
-  --muted: 210 40% 96%;
+  --muted: 210 40% 96.1%;
   --muted-foreground: 215 16% 47%;
 
-  /* Accent - Warm Gold/Orange for CTAs */
-  --accent: 35 92% 58%;
-  --accent-foreground: 222 47% 11%;
+  --accent: 199 89% 48%; /* Sky Blue for highlights */
+  --accent-foreground: 210 40% 98%;
 
-  /* Destructive */
-  --destructive: 0 84% 60%;
+  --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 210 40% 98%;
 
-  /* Borders & Inputs */
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --ring: 221 83% 53%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 217 91% 60%;
 
   --radius: 0.75rem;
 }
 
-.dark {
-  --background: 222 47% 11%;
-  --foreground: 210 40% 98%;
-
-  --primary: 217 91% 60%;
-  --primary-foreground: 222 47% 11%;
-
-  --secondary: 217 19% 27%;
-  --secondary-foreground: 210 40% 98%;
-
-  --muted: 217 19% 27%;
-  --muted-foreground: 215 20% 65%;
-
-  --accent: 35 92% 58%;
-  --accent-foreground: 222 47% 11%;
-
-  --destructive: 0 62% 30%;
-  --destructive-foreground: 210 40% 98%;
-
-  --border: 217 19% 27%;
-  --input: 217 19% 27%;
-  --ring: 216 34% 17%;
-}
-
 @layer base {
+  * {
+    @apply border-border;
+  }
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-body);
   }
-
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    @apply font-bold tracking-tight text-foreground;
+    @apply tracking-tight;
   }
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  @apply bg-transparent;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-muted-foreground/20 rounded-full;
+  @apply bg-slate-300 rounded-full;
 }
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-muted-foreground/40;
+  @apply bg-slate-400;
 }
 
-/* Glass Effect */
+/* Glass effect utility */
 .glass {
-  @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
-}
-.dark .glass {
-  @apply bg-black/40 backdrop-blur-md border border-white/10;
+  @apply bg-white/80 backdrop-blur-md border border-white/20;
 }
 
-/* Card Hover Effect */
-.hover-card-effect {
-  @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+.glass-dark {
+  @apply bg-slate-900/80 backdrop-blur-md border border-white/10;
 }

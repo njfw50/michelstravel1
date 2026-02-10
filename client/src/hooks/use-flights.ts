@@ -1,25 +1,31 @@
 import { useQuery } from "@tanstack/react-query";
-import { api, buildUrl, type FlightSearchParams } from "@shared/routes";
+import { api, buildUrl } from "@shared/routes";
+import type { FlightSearchParams } from "@shared/schema";
 
-export function useFlightSearch(params: FlightSearchParams | null) {
+export function useFlightSearch(params: Partial<FlightSearchParams>) {
+  // Only enable query if essential params are present
+  const isEnabled = !!(params.origin && params.destination && params.date);
+
   return useQuery({
     queryKey: [api.flights.search.path, params],
     queryFn: async () => {
-      if (!params) return [];
-      
-      const url = buildUrl(api.flights.search.path);
+      // Create a URLSearchParams object but filter out undefined values
       const searchParams = new URLSearchParams();
-      searchParams.set("origin", params.origin);
-      searchParams.set("destination", params.destination);
-      searchParams.set("date", params.date);
-      if (params.returnDate) searchParams.set("returnDate", params.returnDate);
-      if (params.passengers) searchParams.set("passengers", params.passengers);
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) searchParams.append(key, String(value));
+      });
 
-      const res = await fetch(`${url}?${searchParams.toString()}`);
-      if (!res.ok) throw new Error("Failed to search flights");
+      const url = `${api.flights.search.path}?${searchParams.toString()}`;
+      const res = await fetch(url, { credentials: "include" });
+      
+      if (!res.ok) {
+        if (res.status === 400) throw new Error("Invalid search parameters");
+        throw new Error("Failed to search flights");
+      }
+      
       return api.flights.search.responses[200].parse(await res.json());
     },
-    enabled: !!params, // Only run if params are provided
+    enabled: isEnabled,
   });
 }
 
@@ -27,7 +33,7 @@ export function usePopularFlights() {
   return useQuery({
     queryKey: [api.flights.popular.path],
     queryFn: async () => {
-      const res = await fetch(api.flights.popular.path);
+      const res = await fetch(api.flights.popular.path, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch popular flights");
       return api.flights.popular.responses[200].parse(await res.json());
     },
