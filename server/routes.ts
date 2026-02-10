@@ -257,4 +257,63 @@ export function registerRoutes(app: Express) {
     const prices = await storage.getPricesForProduct(productId);
     res.json({ data: prices });
   });
+
+  // === ADMIN ROUTES ===
+  
+  // Admin Stats
+  app.get('/api/admin/stats', async (req, res) => {
+    if (!req.isAuthenticated() || !(req.user as any).isAdmin) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    
+    // Calculate stats
+    const allBookings = await db.select().from(bookings);
+    const totalBookings = allBookings.length;
+    const totalRevenue = allBookings.reduce((acc, b) => acc + Number(b.totalPrice), 0);
+    const totalCommission = allBookings.reduce((acc, b) => acc + (Number(b.commissionAmount) || 0), 0);
+    
+    // Mock recent searches count (or count from DB if we want accurate)
+    const recentSearches = await db.select().from(flightSearches).limit(100);
+    
+    res.json({
+        totalBookings,
+        totalRevenue,
+        totalCommission,
+        recentSearches: recentSearches.length
+    });
+  });
+
+  // Get Admin Settings
+  app.get('/api/admin/settings', async (req, res) => {
+    if (!req.isAuthenticated() || !(req.user as any).isAdmin) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    // Get latest settings (or default)
+    // We assume single row for settings
+    // For now, return mock or default
+    res.json({
+        siteName: "Michels Travel",
+        commissionPercentage: 5.0,
+        heroTitle: "Find Your Next Adventure",
+        heroSubtitle: "Best prices on flights worldwide."
+    });
+  });
+
+  // Update Admin Settings
+  app.post('/api/admin/settings', async (req, res) => {
+    if (!req.isAuthenticated() || !(req.user as any).isAdmin) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    // Logic to update settings...
+    res.json(req.body);
+  });
+
+  // All Bookings
+  app.get('/api/admin/bookings', async (req, res) => {
+    if (!req.isAuthenticated() || !(req.user as any).isAdmin) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    const allBookings = await db.select().from(bookings).orderBy(desc(bookings.createdAt));
+    res.json(allBookings);
+  });
 }

@@ -16,6 +16,9 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import BlogList from "@/pages/BlogList";
 import BlogPost from "@/pages/BlogPost";
 
+import CheckoutSuccess from "@/pages/CheckoutSuccess";
+import CheckoutCancel from "@/pages/CheckoutCancel";
+
 function Router() {
   return (
     <Switch>
@@ -33,6 +36,9 @@ function Router() {
       <Route path="/blog" component={() => <Layout><BlogList /></Layout>} />
       <Route path="/blog/:slug" component={() => <Layout><BlogPost /></Layout>} />
       
+      <Route path="/checkout/success" component={CheckoutSuccess} />
+      <Route path="/checkout/cancel" component={CheckoutCancel} />
+
       <Route component={NotFound} />
     </Switch>
   );

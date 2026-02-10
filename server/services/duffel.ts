@@ -139,14 +139,20 @@ export async function searchPlaces(query: string) {
         headers: {
           'Accept': 'application/json',
           'Accept-Encoding': 'gzip',
-          'Duffel-Version': 'beta', 
+          'Duffel-Version': 'v1', 
           'Authorization': `Bearer ${process.env.DUFFEL_API_TOKEN}`
         }
       }
     );
 
     if (!response.ok) {
-        throw new Error(`Duffel Places API error: ${response.statusText}`);
+        // If it's a Bad Request, it might be due to API version or param mismatch. 
+        // Try fallback or just log for now.
+        console.error(`Duffel Places API error: ${response.status} ${response.statusText}`);
+        // Log body for detail
+        const body = await response.text();
+        console.error("Duffel Response Body:", body);
+        return [];
     }
 
     const data = await response.json();

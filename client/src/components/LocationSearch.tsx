@@ -3,7 +3,7 @@ import { MapPin, Search, Loader2, Plane } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { useDebounce } from "@/hooks/use-debounce"; // We might need to create this hook if it doesn't exist, or just inline the logic
+import { useDebounce } from "@/hooks/use-debounce"; // Use module path
 
 interface LocationSearchProps {
   label: string;
@@ -24,23 +24,20 @@ interface Place {
 
 export function LocationSearch({ label, placeholder, value, onChange, className }: LocationSearchProps) {
   const [query, setQuery] = useState(value);
+  const debouncedQuery = useDebounce(query, 500); // Use the hook result
   const [results, setResults] = useState<Place[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // Debounce logic
+  // Trigger search on debounced query change
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (query && query !== value && query.length >= 2) {
-        searchPlaces(query);
-      }
-    }, 500);
+    if (debouncedQuery && debouncedQuery !== value && debouncedQuery.length >= 2) {
+      searchPlaces(debouncedQuery);
+    }
+  }, [debouncedQuery]); // Correct dependency
 
-    return () => clearTimeout(timer);
-  }, [query]);
-
-  // Update internal state when external value changes
+  // Update internal state when external value changes (e.g. swap button)
   useEffect(() => {
     if (value !== query) {
         setQuery(value);
@@ -51,11 +48,13 @@ export function LocationSearch({ label, placeholder, value, onChange, className 
     setIsLoading(true);
     try {
       const res = await fetch(`/api/places/search?query=${encodeURIComponent(searchQuery)}`);
+      if (!res.ok) throw new Error("Search failed");
       const data = await res.json();
       setResults(data);
       setIsOpen(true);
     } catch (error) {
       console.error("Failed to search places", error);
+      setResults([]); 
     } finally {
       setIsLoading(false);
     }
@@ -63,7 +62,7 @@ export function LocationSearch({ label, placeholder, value, onChange, className 
 
   const handleSelect = (place: Place) => {
     // Format: "City (IATA)" or "Airport (IATA)"
-    const newValue = place.iataCode; // We pass the IATA code back as the value
+    const newValue = place.iataCode; 
     setQuery(`${place.cityName || place.name} (${place.iataCode})`);
     onChange(place.iataCode);
     setIsOpen(false);
@@ -91,13 +90,9 @@ export function LocationSearch({ label, placeholder, value, onChange, className 
             value={query}
             onChange={(e) => {
                 setQuery(e.target.value);
-                // If cleared, update parent
                 if (e.target.value === "") {
                     onChange("");
                     setIsOpen(false);
-                } else {
-                    // We don't update parent immediately on typing, only on selection or clear
-                    // setIsOpen(true); // Open immediately if we want to show results
                 }
             }}
             onFocus={() => {
@@ -136,3 +131,4 @@ export function LocationSearch({ label, placeholder, value, onChange, className 
     </div>
   );
 }
+
