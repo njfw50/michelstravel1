@@ -4,8 +4,9 @@ import { storage } from './storage';
 import { stripeService } from './stripeService';
 import { getUncachableStripeClient } from './stripeClient';
 import { db } from "./db";
-import { flightSearches } from "@shared/schema";
+import { flightSearches, type FlightSearchParams } from "@shared/schema";
 import { desc } from "drizzle-orm";
+import { searchFlights } from "./services/duffel";
 
 /**
  * Register all application routes
@@ -20,54 +21,22 @@ export function registerRoutes(app: Express) {
   // Search Flights
   app.get('/api/flights/search', async (req, res) => {
     try {
-      const { origin, destination, date, passengers, cabinClass } = req.query;
+      const { origin, destination, date, passengers, cabinClass, returnDate, adults, children, infants } = req.query;
 
-      // Mock flight data for now (since we don't have real Duffel integration in this step yet)
-      // In a real implementation, this would call Duffel API
-      const mockFlights = [
-        {
-          id: 'flight_1',
-          airline: 'United Airlines',
-          flightNumber: 'UA123',
-          departureTime: `${date}T08:00:00`,
-          arrivalTime: `${date}T11:00:00`,
-          duration: '3h 00m',
-          origin: origin as string,
-          destination: destination as string,
-          price: 350,
-          currency: 'USD',
-          stops: 0,
-          logoUrl: 'https://logos.skyscnr.com/images/airlines/favicon/UA.png'
-        },
-        {
-          id: 'flight_2',
-          airline: 'Delta Airlines',
-          flightNumber: 'DL456',
-          departureTime: `${date}T09:30:00`,
-          arrivalTime: `${date}T13:45:00`,
-          duration: '4h 15m',
-          origin: origin as string,
-          destination: destination as string,
-          price: 320,
-          currency: 'USD',
-          stops: 1,
-          logoUrl: 'https://logos.skyscnr.com/images/airlines/favicon/DL.png'
-        },
-        {
-          id: 'flight_3',
-          airline: 'American Airlines',
-          flightNumber: 'AA789',
-          departureTime: `${date}T14:00:00`,
-          arrivalTime: `${date}T17:30:00`,
-          duration: '3h 30m',
-          origin: origin as string,
-          destination: destination as string,
-          price: 380,
-          currency: 'USD',
-          stops: 0,
-          logoUrl: 'https://logos.skyscnr.com/images/airlines/favicon/AA.png'
-        }
-      ];
+      const searchParams: FlightSearchParams = {
+        origin: origin as string,
+        destination: destination as string,
+        date: date as string,
+        returnDate: returnDate as string | undefined,
+        passengers: passengers as string,
+        adults: adults as string,
+        children: children as string,
+        infants: infants as string,
+        cabinClass: cabinClass as string,
+      };
+
+      // Call Duffel Service
+      const flights = await searchFlights(searchParams);
 
       // Log search for SEO/Analytics
       if (origin && destination && date) {
@@ -80,7 +49,7 @@ export function registerRoutes(app: Express) {
         });
       }
 
-      res.json(mockFlights);
+      res.json(flights);
     } catch (error) {
       console.error('Flight search error:', error);
       res.status(500).json({ error: 'Failed to search flights' });
