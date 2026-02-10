@@ -83,9 +83,49 @@ export async function searchFlights(params: FlightSearchParams): Promise<FlightO
   }
 }
 
-export async function createBooking(offerId: string, passengers: any[]) {
-    // This would be the next step: creating an order
-    // For now we just return a stub
-    return { id: `ord_mock_${Math.random().toString(36).substr(2, 9)}`, status: 'confirmed' };
+export async function getFlight(id: string): Promise<FlightOffer | null> {
+  try {
+    if (!process.env.DUFFEL_API_TOKEN) {
+      console.warn("Using mock data because DUFFEL_API_TOKEN is missing");
+      // Return a mock offer if needed, or null
+      return {
+        id: id,
+        airline: "Mock Airline",
+        flightNumber: "MK123",
+        departureTime: new Date().toISOString(),
+        arrivalTime: new Date(Date.now() + 3600000 * 4).toISOString(),
+        duration: "PT4H",
+        price: 450,
+        currency: "USD",
+        stops: 0,
+        logoUrl: null
+      };
+    }
+
+    const offer = await duffel.offers.get(id);
+    
+    const slice = offer.data.slices[0];
+    const segment = slice.segments[0];
+    const lastSegment = slice.segments[slice.segments.length - 1];
+    const airline = offer.data.owner.name;
+    const logoUrl = offer.data.owner.logo_symbol_url;
+
+    return {
+      id: offer.data.id,
+      airline,
+      flightNumber: `${segment.operating_carrier.iata_code}${segment.operating_carrier_flight_number}`,
+      departureTime: segment.departing_at,
+      arrivalTime: lastSegment.arriving_at,
+      duration: slice.duration || "PT0H",
+      price: parseFloat(offer.data.total_amount),
+      currency: offer.data.total_currency,
+      stops: slice.segments.length - 1,
+      logoUrl,
+    };
+  } catch (error) {
+    console.error("Duffel getFlight Error:", error);
+    return null;
+  }
 }
+
 
