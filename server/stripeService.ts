@@ -29,6 +29,50 @@ export class StripeService {
     });
   }
 
+  // Create checkout session for flight booking (one-time payment)
+  async createFlightCheckoutSession(
+    customerId: string | undefined, 
+    amount: number, 
+    currency: string, 
+    successUrl: string, 
+    cancelUrl: string,
+    metadata: any
+  ) {
+    const stripe = await getUncachableStripeClient();
+    
+    const sessionConfig: any = {
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: currency,
+          product_data: {
+            name: `Flight Booking #${metadata.bookingId}`,
+            description: `Flight from ${metadata.origin || 'Origin'} to ${metadata.destination || 'Destination'}`,
+            // images: [metadata.airlineLogo], // Optional: Add airline logo if available
+          },
+          unit_amount: Math.round(amount * 100), // Stripe expects cents
+        },
+        quantity: 1,
+      }],
+      mode: 'payment',
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      metadata: metadata,
+      client_reference_id: metadata.bookingId.toString(),
+    };
+
+    if (customerId) {
+      sessionConfig.customer = customerId;
+    } else {
+        // For guest checkout, prefill email if available
+        if (metadata.contactEmail) {
+            sessionConfig.customer_email = metadata.contactEmail;
+        }
+    }
+
+    return await stripe.checkout.sessions.create(sessionConfig);
+  }
+
   // Create customer portal session
   async createCustomerPortalSession(customerId: string, returnUrl: string) {
     const stripe = await getUncachableStripeClient();
