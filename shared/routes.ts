@@ -63,7 +63,10 @@ export const api = {
       path: '/api/bookings' as const,
       input: insertBookingSchema,
       responses: {
-        201: z.custom<typeof bookings.$inferSelect>(),
+        201: z.object({
+          booking: z.custom<typeof bookings.$inferSelect>(),
+          checkoutUrl: z.string(),
+        }),
         400: errorSchemas.validation,
       },
     },
