@@ -38,14 +38,14 @@ export async function searchFlights(params: SearchParams): Promise<FlightOffer[]
           origin: params.origin,
           destination: params.destination,
           departure_date: params.departureDate,
-        },
+        } as any,
         ...(params.returnDate
           ? [
               {
                 origin: params.destination,
                 destination: params.origin,
                 departure_date: params.returnDate,
-              },
+              } as any,
             ]
           : []),
       ],
