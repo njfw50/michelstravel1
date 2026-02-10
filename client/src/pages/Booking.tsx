@@ -2,7 +2,7 @@ import { useRoute, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useBooking, useCreateBooking } from "@/hooks/use-bookings";
+import { useCreateBooking } from "@/hooks/use-bookings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { CheckCircle2, Plane, AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { api } from "@shared/routes";
+import { useEffect, useState } from "react";
 
 // Define form schema
 const bookingFormSchema = z.object({
@@ -29,11 +29,6 @@ export default function Booking() {
   const { toast } = useToast();
   const { user } = useAuth();
   
-  // Note: In a real app, we would fetch the specific flight offer details again 
-  // or pass them via state. For MVP, we'll assume we pass enough data or fetch it.
-  // Here we'll simulate fetching the flight details or just show a placeholder if missing.
-  // Ideally, useFlightOffer(id) would exist.
-
   const createBooking = useCreateBooking();
 
   const form = useForm<BookingFormValues>({
@@ -46,13 +41,45 @@ export default function Booking() {
     },
   });
 
+  const [flight, setFlight] = useState<any>(null);
+
+  // Fetch flight details
+  useEffect(() => {
+    if (params?.id) {
+      fetch(`/api/flights/${params.id}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                toast({
+                    title: "Error",
+                    description: "Could not find flight details.",
+                    variant: "destructive"
+                });
+            } else {
+                setFlight(data);
+            }
+        })
+        .catch(err => console.error("Failed to fetch flight", err));
+    }
+  }, [params?.id]);
+
   const onSubmit = (data: BookingFormValues) => {
+    if (!flight) return;
+
     // Construct the payload matching the schema
     const bookingData = {
       contactEmail: data.email,
-      totalPrice: "500.00", // Mock price as we don't have flight data in this context without re-fetch
-      currency: "USD",
-      flightData: { id: params?.id, airline: "Mock Airline" }, // Simplified
+      totalPrice: flight.price.toString(),
+      currency: flight.currency,
+      flightData: { 
+        id: flight.id, 
+        airline: flight.airline,
+        flightNumber: flight.flightNumber,
+        origin: "Origin", // Duffel simplified object doesn't have origin/dest codes directly exposed in simplified type, but we can assume them or add them
+        destination: "Destination",
+        departureTime: flight.departureTime,
+        arrivalTime: flight.arrivalTime
+      },
       passengerDetails: {
         firstName: data.firstName,
         lastName: data.lastName,
@@ -61,13 +88,19 @@ export default function Booking() {
     };
 
     createBooking.mutate(bookingData, {
-      onSuccess: () => {
+      onSuccess: (response: any) => {
         toast({
-          title: "Booking Confirmed!",
-          description: "Your flight has been booked successfully.",
-          className: "bg-green-50 border-green-200 text-green-900",
+          title: "Booking Initiated!",
+          description: "Redirecting to payment...",
+          className: "bg-blue-50 border-blue-200 text-blue-900",
         });
-        setLocation("/");
+        // Redirect to Stripe Checkout
+        if (response.checkoutUrl) {
+            window.location.href = response.checkoutUrl;
+        } else {
+            // Fallback
+            setLocation("/");
+        }
       },
       onError: () => {
         toast({
@@ -78,6 +111,9 @@ export default function Booking() {
       },
     });
   };
+
+  if (!flight && !params?.id) return <div className="min-h-screen bg-slate-50 flex items-center justify-center">Loading flight details...</div>;
+  if (flight && flight.error) return <div className="min-h-screen bg-slate-50 flex items-center justify-center">Flight not found</div>;
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4">
@@ -131,9 +167,9 @@ export default function Booking() {
                   <Button 
                     type="submit" 
                     className="w-full mt-6 h-12 text-lg font-bold shadow-lg shadow-primary/20" 
-                    disabled={createBooking.isPending}
+                    disabled={createBooking.isPending || !flight}
                   >
-                    {createBooking.isPending ? "Processing..." : "Confirm & Pay"}
+                    {createBooking.isPending ? "Processing..." : `Pay ${flight ? new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price) : '...'}`}
                   </Button>
                 </form>
               </CardContent>
@@ -146,13 +182,15 @@ export default function Booking() {
                 <CardTitle className="text-lg">Flight Summary</CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-4">
+                {flight ? (
+                <>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="h-10 w-10 bg-white/10 rounded-full flex items-center justify-center">
-                    <Plane className="h-5 w-5" />
+                  <div className="h-10 w-10 bg-white/10 rounded-full flex items-center justify-center overflow-hidden p-1">
+                    {flight.logoUrl ? <img src={flight.logoUrl} className="w-full h-full object-contain" /> : <Plane className="h-5 w-5" />}
                   </div>
                   <div>
-                    <div className="font-bold">Flight #{params?.id?.slice(0, 8)}</div>
-                    <div className="text-sm text-slate-400">Mock Airline</div>
+                    <div className="font-bold">{flight.airline} {flight.flightNumber}</div>
+                    <div className="text-sm text-slate-400">{flight.duration} duration</div>
                   </div>
                 </div>
                 
@@ -160,19 +198,23 @@ export default function Booking() {
                 
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-400">Base Fare</span>
-                  <span className="font-medium">$450.00</span>
+                  <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price * 0.9)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-400">Taxes & Fees</span>
-                  <span className="font-medium">$50.00</span>
+                  <span className="font-medium">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price * 0.1)}</span>
                 </div>
                 
                 <Separator className="bg-slate-800" />
                 
                 <div className="flex justify-between text-xl font-bold">
                   <span>Total</span>
-                  <span>$500.00</span>
+                  <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price)}</span>
                 </div>
+                </>
+                ) : (
+                    <div className="text-center py-4">Loading flight details...</div>
+                )}
               </CardContent>
             </Card>
 

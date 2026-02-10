@@ -4,9 +4,9 @@ import { storage } from './storage';
 import { stripeService } from './stripeService';
 import { getUncachableStripeClient } from './stripeClient';
 import { db } from "./db";
-import { flightSearches, type FlightSearchParams } from "@shared/schema";
-import { desc } from "drizzle-orm";
-import { searchFlights } from "./services/duffel";
+import { flightSearches, bookings, type FlightSearchParams } from "@shared/schema";
+import { desc, eq } from "drizzle-orm";
+import { searchFlights, getFlight } from "./services/duffel";
 
 /**
  * Register all application routes
@@ -56,6 +56,19 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Get Flight Details
+  app.get('/api/flights/:id', async (req, res) => {
+    try {
+        const flight = await getFlight(req.params.id);
+        if (!flight) {
+            return res.status(404).json({ error: "Flight not found" });
+        }
+        res.json(flight);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch flight details" });
+    }
+  });
+
   // Popular Flights
   app.get('/api/flights/popular', async (req, res) => {
     try {
@@ -73,6 +86,56 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       console.error('Popular flights error:', error);
       res.status(500).json({ error: 'Failed to fetch popular flights' });
+    }
+  });
+
+  // === BOOKING ROUTES ===
+
+  // Create Booking & Checkout Session
+  app.post('/api/bookings', async (req, res) => {
+    try {
+        const bookingData = req.body;
+        
+        // Calculate commission (e.g. 5%)
+        const commissionRate = 0.05;
+        const price = parseFloat(bookingData.totalPrice);
+        const commissionAmount = (price * commissionRate).toFixed(2);
+
+        // 1. Create booking in DB (pending)
+        const [booking] = await db.insert(bookings).values({
+            ...bookingData,
+            commissionRate: commissionRate.toString(),
+            commissionAmount: commissionAmount,
+            status: 'pending',
+            stripePaymentStatus: 'pending',
+            userId: req.user?.id // Optional, null if guest
+        }).returning();
+
+        // 2. Create Stripe Checkout Session
+        const session = await stripeService.createFlightCheckoutSession(
+            req.user?.stripeCustomerId,
+            price,
+            bookingData.currency,
+            `${req.protocol}://${req.get('host')}/checkout/success?bookingId=${booking.id}`,
+            `${req.protocol}://${req.get('host')}/checkout/cancel?bookingId=${booking.id}`,
+            {
+                bookingId: booking.id,
+                origin: bookingData.flightData.origin || 'Flight',
+                destination: bookingData.flightData.destination || 'Destination',
+                contactEmail: bookingData.contactEmail
+            }
+        );
+
+        // 3. Update booking with session ID
+        await db.update(bookings)
+            .set({ stripePaymentIntentId: session.id })
+            .where(eq(bookings.id, booking.id));
+
+        res.status(201).json({ booking, checkoutUrl: session.url });
+
+    } catch (error) {
+        console.error("Booking creation error:", error);
+        res.status(500).json({ error: "Failed to create booking" });
     }
   });
 
