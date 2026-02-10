@@ -26,11 +26,11 @@ export default function SearchResults() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
+    <div className="min-h-screen pb-20">
       {/* Compact Search Header */}
-      <div className="bg-slate-900 pb-24 pt-8 px-4">
+      <div className="bg-black/20 backdrop-blur-md border-b border-white/10 pb-24 pt-8 px-4">
         <div className="container mx-auto max-w-6xl">
-           <FlightSearchForm defaultValues={defaultValues} className="shadow-none border-none bg-white/10 backdrop-blur-sm text-white" />
+           <FlightSearchForm defaultValues={defaultValues} className="shadow-none border-none bg-transparent backdrop-blur-none" />
         </div>
       </div>
 
@@ -39,32 +39,32 @@ export default function SearchResults() {
           
           {/* Filters Sidebar (Mock for UI) */}
           <div className="hidden lg:block lg:col-span-3 space-y-6">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 sticky top-24">
-              <div className="flex items-center gap-2 mb-6 font-bold text-slate-900">
+            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/10 sticky top-24">
+              <div className="flex items-center gap-2 mb-6 font-bold text-white">
                 <Filter className="h-5 w-5" /> Filters
               </div>
               
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-sm font-semibold mb-3">Stops</h4>
+                  <h4 className="text-sm font-semibold mb-3 text-white/80">Stops</h4>
                   <div className="space-y-2">
                     {['Direct', '1 Stop', '2+ Stops'].map(stop => (
-                      <label key={stop} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-primary">
-                        <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary" />
+                      <label key={stop} className="flex items-center gap-2 text-sm text-white/60 cursor-pointer hover:text-blue-300 transition-colors">
+                        <input type="checkbox" className="rounded border-white/20 bg-white/5 text-blue-500 focus:ring-blue-500/50" />
                         {stop}
                       </label>
                     ))}
                   </div>
                 </div>
                 
-                <div className="h-px bg-slate-100" />
+                <div className="h-px bg-white/10" />
 
                 <div>
-                  <h4 className="text-sm font-semibold mb-3">Airlines</h4>
+                  <h4 className="text-sm font-semibold mb-3 text-white/80">Airlines</h4>
                   <div className="space-y-2">
                     {['Delta', 'United', 'British Airways', 'Lufthansa'].map(airline => (
-                      <label key={airline} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-primary">
-                        <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary" />
+                      <label key={airline} className="flex items-center gap-2 text-sm text-white/60 cursor-pointer hover:text-blue-300 transition-colors">
+                        <input type="checkbox" className="rounded border-white/20 bg-white/5 text-blue-500 focus:ring-blue-500/50" />
                         {airline}
                       </label>
                     ))}
@@ -77,42 +77,42 @@ export default function SearchResults() {
           {/* Results List */}
           <div className="lg:col-span-9 space-y-4">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="text-xl font-bold text-slate-800">
+              <h2 className="text-xl font-bold text-white">
                 {isLoading ? "Searching flights..." : `${flights?.length || 0} flights found`}
               </h2>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="lg:hidden">
+                <Button variant="outline" size="sm" className="lg:hidden border-white/10 bg-white/5 text-white hover:bg-white/10">
                   <Filter className="h-4 w-4 mr-2" /> Filters
                 </Button>
-                <select className="bg-white border border-slate-200 text-sm rounded-lg p-2 outline-none focus:ring-2 focus:ring-primary">
-                  <option>Cheapest first</option>
-                  <option>Fastest first</option>
-                  <option>Best value</option>
+                <select className="bg-white/5 border border-white/10 text-sm rounded-lg p-2 outline-none focus:ring-2 focus:ring-blue-500/50 text-white cursor-pointer">
+                  <option className="bg-slate-900 text-white">Cheapest first</option>
+                  <option className="bg-slate-900 text-white">Fastest first</option>
+                  <option className="bg-slate-900 text-white">Best value</option>
                 </select>
               </div>
             </div>
 
             {isLoading && (
-              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-slate-100">
-                <Loader2 className="h-10 w-10 text-primary animate-spin mb-4" />
-                <p className="text-slate-500 font-medium">Searching hundreds of airlines...</p>
+              <div className="flex flex-col items-center justify-center py-20 bg-white/5 backdrop-blur-md rounded-2xl shadow-lg border border-white/10">
+                <Loader2 className="h-10 w-10 text-blue-400 animate-spin mb-4" />
+                <p className="text-white/60 font-medium">Searching hundreds of airlines...</p>
               </div>
             )}
 
             {error && (
-              <div className="flex flex-col items-center justify-center py-20 bg-red-50 rounded-2xl border border-red-100 text-red-600">
+              <div className="flex flex-col items-center justify-center py-20 bg-red-500/10 rounded-2xl border border-red-500/20 text-red-400">
                 <AlertCircle className="h-10 w-10 mb-4" />
                 <p className="font-medium">Failed to load flights. Please try again.</p>
               </div>
             )}
 
             {!isLoading && !error && flights?.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-slate-100">
-                <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                  <Filter className="h-8 w-8 text-slate-300" />
+              <div className="flex flex-col items-center justify-center py-20 bg-white/5 backdrop-blur-md rounded-2xl shadow-lg border border-white/10">
+                <div className="h-16 w-16 bg-white/5 rounded-full flex items-center justify-center mb-4 border border-white/10">
+                  <Filter className="h-8 w-8 text-white/30" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">No flights found</h3>
-                <p className="text-slate-500">Try changing your dates or search filters.</p>
+                <h3 className="text-lg font-bold text-white mb-2">No flights found</h3>
+                <p className="text-white/50">Try changing your dates or search filters.</p>
               </div>
             )}
 

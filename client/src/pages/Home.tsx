@@ -12,18 +12,18 @@ export default function Home() {
   const { data: popularFlights, isLoading } = usePopularFlights();
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-transparent">
       {/* Hero Section */}
       <section className="relative min-h-[700px] flex items-center justify-center pt-24 pb-32 overflow-hidden">
         {/* Background Image */}
-        <div className="absolute inset-0 bg-slate-900 select-none">
+        <div className="absolute inset-0 bg-transparent select-none">
            {/* Tropical beach paradise hero image */}
           <img 
             src={airplaneDestination}
             alt="Airplane wing over clouds"
-            className="w-full h-full object-cover opacity-60 scale-105"
+            className="w-full h-full object-cover opacity-30 scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         </div>
 
         <div className="container mx-auto px-4 relative z-10">
@@ -33,15 +33,15 @@ export default function Home() {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="text-center mb-16 max-w-4xl mx-auto"
           >
-            <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-[#354388]/90 text-white border border-white/20 backdrop-blur-sm shadow-lg">
-                <ShieldCheck className="h-4 w-4 text-[#FF6B6B]" />
-                <span className="text-sm font-semibold tracking-wide uppercase">Legal em NJ, USA • Seguranca e Confiabilidade</span>
+            <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-white/10 text-white border border-white/20 backdrop-blur-md shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                <ShieldCheck className="h-4 w-4 text-blue-400" />
+                <span className="text-sm font-semibold tracking-wide uppercase text-blue-100">Legal em NJ, USA • Seguranca e Confiabilidade</span>
             </div>
-            <h1 className="text-4xl md:text-6xl font-display font-bold text-white mb-6 leading-tight shadow-black/50 drop-shadow-lg">
+            <h1 className="text-4xl md:text-6xl font-display font-bold text-white mb-6 leading-tight drop-shadow-[0_0_25px_rgba(0,0,0,0.5)]">
               Opção Eficiente <br/>
-              <span className="text-[#FF6B6B]">Para Viajar</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Para Viajar</span>
             </h1>
-            <p className="text-lg text-slate-200 max-w-2xl mx-auto font-medium leading-relaxed drop-shadow-md">
+            <p className="text-lg text-white/80 max-w-2xl mx-auto font-medium leading-relaxed drop-shadow-md">
               Descubra os melhores destinos com a Michels Travel.
               Compare preços, reserve com segurança e viaje com tranquilidade.
             </p>
@@ -54,11 +54,11 @@ export default function Home() {
       </section>
 
       {/* Trust Section */}
-      <section className="py-24 bg-slate-50 border-b border-slate-200">
+      <section className="py-24 bg-black/20 backdrop-blur-sm border-y border-white/5">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold font-display text-[#354388] mb-4 uppercase tracking-wide">Por Que Escolher a Michels Travel?</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto font-medium">Nós tornamos sua viagem simples e segura. Veja por que somos a escolha de confiança.</p>
+            <h2 className="text-3xl font-bold font-display text-white mb-4 uppercase tracking-wide drop-shadow-lg">Por Que Escolher a Michels Travel?</h2>
+            <p className="text-white/60 max-w-2xl mx-auto font-medium">Nós tornamos sua viagem simples e segura. Veja por que somos a escolha de confiança.</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -73,13 +73,13 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="flex flex-col items-center text-center p-8 rounded-lg bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 group"
+                className="flex flex-col items-center text-center p-8 rounded-2xl bg-white/5 border border-white/10 shadow-lg hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-all duration-300 group backdrop-blur-md"
               >
-                <div className="h-16 w-16 bg-[#354388] rounded-md shadow-sm text-white flex items-center justify-center mb-6 group-hover:bg-[#FF6B6B] transition-colors duration-300">
+                <div className="h-16 w-16 bg-white/10 rounded-xl shadow-inner border border-white/10 text-blue-400 flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
                   <item.icon className="h-8 w-8" />
                 </div>
-                <h3 className="font-bold text-xl mb-3 text-[#354388] uppercase">{item.title}</h3>
-                <p className="text-slate-500 leading-relaxed font-medium">{item.desc}</p>
+                <h3 className="font-bold text-xl mb-3 text-white uppercase tracking-wide">{item.title}</h3>
+                <p className="text-white/50 leading-relaxed font-medium">{item.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -87,14 +87,14 @@ export default function Home() {
       </section>
 
       {/* Popular Destinations */}
-      <section className="py-24 bg-slate-50 border-t border-slate-200">
+      <section className="py-24 bg-transparent border-t border-white/5">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-end mb-12">
             <div>
-              <h2 className="text-3xl font-bold font-display text-slate-900 mb-2">Trending Destinations</h2>
-              <p className="text-slate-500">Most booked flights by our community this week</p>
+              <h2 className="text-3xl font-bold font-display text-white mb-2 drop-shadow-md">Trending Destinations</h2>
+              <p className="text-white/50">Most booked flights by our community this week</p>
             </div>
-            <Button variant="outline" className="hidden md:flex rounded-full border-slate-300 hover:bg-white hover:text-primary">
+            <Button variant="outline" className="hidden md:flex rounded-full border-white/20 bg-white/5 text-white hover:bg-white/10 backdrop-blur-sm">
               View All Destinations <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -102,11 +102,11 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {isLoading ? (
               [1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-white rounded-2xl shadow-sm h-80 animate-pulse">
-                  <div className="h-48 bg-slate-200 rounded-t-2xl" />
+                <div key={i} className="bg-white/5 rounded-2xl shadow-sm h-80 animate-pulse border border-white/5">
+                  <div className="h-48 bg-white/10 rounded-t-2xl" />
                   <div className="p-5 space-y-3">
-                    <div className="h-5 bg-slate-200 w-2/3 rounded" />
-                    <div className="h-4 bg-slate-200 w-1/2 rounded" />
+                    <div className="h-5 bg-white/10 w-2/3 rounded" />
+                    <div className="h-4 bg-white/10 w-1/2 rounded" />
                   </div>
                 </div>
               ))
@@ -119,32 +119,32 @@ export default function Home() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.05 }}
                 >
-                  <Card className="group overflow-hidden border-none shadow-sm hover:shadow-xl transition-all cursor-pointer h-full bg-white rounded-2xl">
+                  <Card className="group overflow-hidden border border-white/10 shadow-lg hover:shadow-[0_0_25px_rgba(59,130,246,0.3)] transition-all cursor-pointer h-full bg-white/5 backdrop-blur-md rounded-2xl">
                     <div className="relative h-56 overflow-hidden">
                       <img 
                         src={airplaneDestination}
                         alt={flight.destination}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-80" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-80" />
                       
                       <div className="absolute bottom-4 left-4 text-white">
                         <h3 className="font-bold text-xl">{flight.destination}</h3>
                         <p className="text-white/80 text-sm">Flights from {flight.origin}</p>
                       </div>
 
-                      <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md rounded-full p-2 text-white hover:bg-white hover:text-red-500 transition-colors">
+                      <div className="absolute top-4 right-4 bg-white/10 backdrop-blur-md rounded-full p-2 text-white hover:bg-white/20 hover:text-pink-500 transition-colors border border-white/20">
                         <Heart className="h-4 w-4" />
                       </div>
                     </div>
                     <CardContent className="p-5">
                       <div className="flex justify-between items-center mb-4">
-                        <Badge variant="secondary" className="bg-blue-50 text-primary font-semibold hover:bg-blue-100">
+                        <Badge variant="secondary" className="bg-blue-500/20 text-blue-200 border border-blue-500/30 font-semibold hover:bg-blue-500/30">
                           Trending
                         </Badge>
-                        <span className="text-xs font-medium text-slate-400">{flight.searchCount} searches</span>
+                        <span className="text-xs font-medium text-white/40">{flight.searchCount} searches</span>
                       </div>
-                      <Button className="w-full rounded-xl bg-slate-900 text-white hover:bg-primary transition-colors">
+                      <Button className="w-full rounded-xl bg-white/10 border border-white/10 text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 transition-all shadow-lg">
                         Check Prices
                       </Button>
                     </CardContent>
@@ -155,7 +155,7 @@ export default function Home() {
             
             {/* Fallback if list is empty */}
             {!isLoading && (!popularFlights || popularFlights.length === 0) && (
-              <div className="col-span-4 text-center py-12 text-slate-500">
+              <div className="col-span-4 text-center py-12 text-white/40">
                 Start searching to see popular destinations appear here!
               </div>
             )}
