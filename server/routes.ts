@@ -178,12 +178,15 @@ export function registerRoutes(app: Express) {
       return res.status(401).json({ error: "Unauthorized" });
     }
     const dbUser = await storage.getUser(user.id);
+    if (!dbUser) {
+        return res.status(404).json({ error: "User not found" });
+    }
     const { priceId } = req.body;
 
     // Create or get customer
     let customerId = dbUser.stripeCustomerId;
     if (!customerId) {
-      const customer = await stripeService.createCustomer(dbUser.email, dbUser.id);
+      const customer = await stripeService.createCustomer(dbUser.email || "", dbUser.id);
       await storage.updateUserStripeInfo(dbUser.id, { stripeCustomerId: customer.id });
       customerId = customer.id;
     }
