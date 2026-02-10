@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 import { LocationSearch } from "./LocationSearch";
 
 interface FlightSearchFormProps {
@@ -28,6 +29,7 @@ interface FlightSearchFormProps {
 
 export function FlightSearchForm({ className, defaultValues }: FlightSearchFormProps) {
   const [_, setLocation] = useLocation();
+  const { toast } = useToast();
   const [tripType, setTripType] = useState("round-trip");
   
   // Basic Search State
@@ -46,7 +48,33 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!origin || !destination || !date) return;
+    
+    if (!origin) {
+        toast({
+            title: "Origem obrigatória",
+            description: "Por favor selecione uma cidade ou aeroporto de origem.",
+            variant: "destructive",
+        });
+        return;
+    }
+
+    if (!destination) {
+        toast({
+            title: "Destino obrigatório",
+            description: "Por favor selecione uma cidade ou aeroporto de destino.",
+            variant: "destructive",
+        });
+        return;
+    }
+
+    if (!date) {
+        toast({
+            title: "Data obrigatória",
+            description: "Por favor selecione a data da viagem.",
+            variant: "destructive",
+        });
+        return;
+    }
 
     const params = new URLSearchParams();
     params.set("origin", origin);
