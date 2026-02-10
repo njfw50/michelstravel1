@@ -33,14 +33,15 @@ export default function Home() {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="text-center mb-16 max-w-4xl mx-auto"
           >
-            <Badge className="mb-6 px-4 py-1.5 rounded-full bg-white/10 text-white hover:bg-white/20 border-white/20 backdrop-blur-md transition-all text-sm font-medium">
-              ✨ The easiest way to travel
-            </Badge>
-            <h1 className="text-5xl md:text-7xl font-display font-bold text-white mb-6 leading-[1.1] tracking-tight">
+            <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-[#354388]/90 text-white border border-white/20 backdrop-blur-sm shadow-lg">
+                <ShieldCheck className="h-4 w-4 text-[#FF6B6B]" />
+                <span className="text-sm font-semibold tracking-wide uppercase">Legal em NJ, USA • Seguranca e Confiabilidade</span>
+            </div>
+            <h1 className="text-4xl md:text-6xl font-display font-bold text-white mb-6 leading-tight shadow-black/50 drop-shadow-lg">
               Opção Eficiente <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-orange-300 to-white">Para Viajar</span>
+              <span className="text-[#FF6B6B]">Para Viajar</span>
             </h1>
-            <p className="text-xl text-slate-300 max-w-2xl mx-auto font-light leading-relaxed">
+            <p className="text-lg text-slate-200 max-w-2xl mx-auto font-medium leading-relaxed drop-shadow-md">
               Descubra os melhores destinos com a Michels Travel.
               Compare preços, reserve com segurança e viaje com tranquilidade.
             </p>
@@ -53,18 +54,18 @@ export default function Home() {
       </section>
 
       {/* Trust Section */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-slate-50 border-b border-slate-200">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold font-display text-slate-900 mb-4">Why Book With Us?</h2>
-            <p className="text-slate-500 max-w-2xl mx-auto">We make travel simple and secure. Here is why millions of travelers trust us with their journeys.</p>
+            <h2 className="text-3xl font-bold font-display text-[#354388] mb-4 uppercase tracking-wide">Por Que Escolher a Michels Travel?</h2>
+            <p className="text-slate-600 max-w-2xl mx-auto font-medium">Nós tornamos sua viagem simples e segura. Veja por que somos a escolha de confiança.</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {[
-              { icon: ShieldCheck, title: "Secure Booking", desc: "Your data is protected with enterprise-grade encryption and secure payment gateways." },
-              { icon: Zap, title: "Instant Confirmation", desc: "No waiting around. Get your e-ticket delivered to your inbox seconds after payment." },
-              { icon: Globe, title: "24/7 Global Support", desc: "Our team of travel experts is here to help you around the clock, in your language." }
+              { icon: ShieldCheck, title: "Reserva Segura", desc: "Seus dados são protegidos com criptografia de nível empresarial e gateways de pagamento seguros." },
+              { icon: Zap, title: "Confirmação Imediata", desc: "Sem espera. Receba seu bilhete eletrônico em seu e-mail segundos após o pagamento." },
+              { icon: Globe, title: "Suporte Global 24/7", desc: "Nossa equipe de especialistas em viagens está aqui para ajudar você a qualquer hora." }
             ].map((item, i) => (
               <motion.div 
                 key={i}
@@ -72,13 +73,13 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="flex flex-col items-center text-center p-8 rounded-3xl bg-slate-50 hover:bg-white border border-transparent hover:border-slate-100 hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 group"
+                className="flex flex-col items-center text-center p-8 rounded-lg bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 group"
               >
-                <div className="h-16 w-16 bg-white rounded-2xl shadow-sm text-primary flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                <div className="h-16 w-16 bg-[#354388] rounded-md shadow-sm text-white flex items-center justify-center mb-6 group-hover:bg-[#FF6B6B] transition-colors duration-300">
                   <item.icon className="h-8 w-8" />
                 </div>
-                <h3 className="font-bold text-xl mb-3 text-slate-900">{item.title}</h3>
-                <p className="text-slate-500 leading-relaxed">{item.desc}</p>
+                <h3 className="font-bold text-xl mb-3 text-[#354388] uppercase">{item.title}</h3>
+                <p className="text-slate-500 leading-relaxed font-medium">{item.desc}</p>
               </motion.div>
             ))}
           </div>
