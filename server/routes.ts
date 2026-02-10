@@ -6,7 +6,7 @@ import { getUncachableStripeClient } from './stripeClient';
 import { db } from "./db";
 import { flightSearches, bookings, type FlightSearchParams } from "@shared/schema";
 import { desc, eq } from "drizzle-orm";
-import { searchFlights, getFlight } from "./services/duffel";
+import { searchFlights, getFlight, searchPlaces } from "./services/duffel";
 
 /**
  * Register all application routes
@@ -17,6 +17,21 @@ import { searchFlights, getFlight } from "./services/duffel";
 export function registerRoutes(app: Express) {
   
   // === FLIGHT ROUTES ===
+
+  // Search Places (Autocomplete)
+  app.get('/api/places/search', async (req, res) => {
+    try {
+        const { query } = req.query;
+        if (!query || typeof query !== 'string') {
+            return res.json([]);
+        }
+        const places = await searchPlaces(query);
+        res.json(places);
+    } catch (error) {
+        console.error('Places search error:', error);
+        res.status(500).json({ error: 'Failed to search places' });
+    }
+  });
 
   // Search Flights
   app.get('/api/flights/search', async (req, res) => {

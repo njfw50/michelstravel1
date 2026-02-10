@@ -12,15 +12,9 @@ import {
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
+import { LocationSearch } from "./LocationSearch";
 
 interface FlightSearchFormProps {
   className?: string;
@@ -110,19 +104,12 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
             
             {/* Location Group */}
             <div className="flex-1 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-center">
-                <div className="relative">
-                    <Label className="text-xs font-bold text-white/70 uppercase tracking-wider block mb-1">Origem</Label>
-                    <div className="flex items-center bg-white/10 border border-white/10 rounded-xl px-3 h-14 focus-within:ring-2 focus-within:ring-blue-400/50 focus-within:border-blue-400/50 transition-all shadow-lg backdrop-blur-sm hover:bg-white/15">
-                        <MapPin className="h-5 w-5 text-blue-300 mr-3" />
-                        <Input 
-                            placeholder="Cidade ou Aeroporto" 
-                            className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-lg font-medium placeholder:text-white/30 w-full bg-transparent truncate text-white"
-                            value={origin}
-                            onChange={(e) => setOrigin(e.target.value)}
-                            required
-                        />
-                    </div>
-                </div>
+                <LocationSearch 
+                    label="Origem"
+                    placeholder="Cidade ou Aeroporto"
+                    value={origin}
+                    onChange={setOrigin}
+                />
 
                 <div className="flex justify-center md:pt-6">
                      <button 
@@ -138,19 +125,12 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                     </button>
                 </div>
 
-                <div className="relative">
-                    <Label className="text-xs font-bold text-white/70 uppercase tracking-wider block mb-1">Destino</Label>
-                    <div className="flex items-center bg-white/10 border border-white/10 rounded-xl px-3 h-14 focus-within:ring-2 focus-within:ring-blue-400/50 focus-within:border-blue-400/50 transition-all shadow-lg backdrop-blur-sm hover:bg-white/15">
-                        <MapPin className="h-5 w-5 text-blue-300 mr-3" />
-                        <Input 
-                            placeholder="Cidade ou Aeroporto" 
-                            className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-lg font-medium placeholder:text-white/30 w-full bg-transparent truncate text-white"
-                            value={destination}
-                            onChange={(e) => setDestination(e.target.value)}
-                            required
-                        />
-                    </div>
-                </div>
+                <LocationSearch 
+                    label="Destino"
+                    placeholder="Cidade ou Aeroporto"
+                    value={destination}
+                    onChange={setDestination}
+                />
             </div>
 
             {/* Date Group */}
@@ -361,3 +341,4 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
     </motion.div>
   );
 }
+

@@ -128,4 +128,41 @@ export async function getFlight(id: string): Promise<FlightOffer | null> {
   }
 }
 
+export async function searchPlaces(query: string) {
+  try {
+    if (!process.env.DUFFEL_API_TOKEN) return [];
+
+    // Use direct fetch as the SDK might not expose suggestions yet
+    const response = await fetch(
+      `https://api.duffel.com/places/suggestions?query=${encodeURIComponent(query)}`,
+      {
+        headers: {
+          'Accept': 'application/json',
+          'Accept-Encoding': 'gzip',
+          'Duffel-Version': 'beta', 
+          'Authorization': `Bearer ${process.env.DUFFEL_API_TOKEN}`
+        }
+      }
+    );
+
+    if (!response.ok) {
+        throw new Error(`Duffel Places API error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.data.map((place: any) => ({
+      id: place.id,
+      name: place.name,
+      iataCode: place.iata_code,
+      cityName: place.city_name,
+      countryName: place.country_name,
+      type: place.type 
+    }));
+  } catch (error) {
+    console.error("Duffel searchPlaces Error:", error);
+    return [];
+  }
+}
+
+
 
