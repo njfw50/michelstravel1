@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/Layout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import NotFound from "@/pages/not-found";
 
 // Pages
@@ -43,6 +44,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
+          <LanguageSelector />
           <Router />
         </TooltipProvider>
       </QueryClientProvider>
