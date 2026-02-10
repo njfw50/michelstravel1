@@ -40,6 +40,7 @@ export const api = {
           price: z.number(),
           currency: z.string(),
           stops: z.number(),
+          logoUrl: z.string().nullable().optional(),
         })),
         400: errorSchemas.validation,
       },

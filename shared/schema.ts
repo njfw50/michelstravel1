@@ -104,4 +104,5 @@ export interface FlightOffer {
   price: number;
   currency: string;
   stops: number;
+  logoUrl?: string | null;
 }

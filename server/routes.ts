@@ -46,23 +46,23 @@ export async function registerRoutes(
   await setupAuth(app);
   registerAuthRoutes(app);
 
+  import { searchFlights } from "./services/duffel";
+
+// ... (existing code)
+
   // 2. Flight Routes
   app.get(api.flights.search.path, async (req, res) => {
     try {
       const input = api.flights.search.input.parse(req.query);
 
-      // Mock Flight Generation
-      const mockFlights = Array.from({ length: 5 }).map((_, i) => ({
-        id: `fl_${Math.random().toString(36).substr(2, 9)}`,
-        airline: ["Delta", "United", "Emirates", "Lufthansa", "British Airways"][Math.floor(Math.random() * 5)],
-        flightNumber: `FL${100 + Math.floor(Math.random() * 900)}`,
-        departureTime: input.date + "T" + String(8 + i).padStart(2, '0') + ":00:00",
-        arrivalTime: input.date + "T" + String(12 + i).padStart(2, '0') + ":30:00",
-        duration: "4h 30m",
-        price: 300 + Math.floor(Math.random() * 500),
-        currency: "USD",
-        stops: i % 2 === 0 ? 0 : 1,
-      }));
+      // Use Real Duffel API
+      const flights = await searchFlights({
+        origin: input.origin,
+        destination: input.destination,
+        departureDate: input.date,
+        returnDate: input.returnDate,
+        passengers: input.passengers ? parseInt(input.passengers) : 1,
+      });
 
       // Cache the search for SEO/Popularity
       await storage.createFlightSearch({
@@ -73,7 +73,7 @@ export async function registerRoutes(
         passengers: input.passengers ? parseInt(input.passengers) : 1,
       });
 
-      res.json(mockFlights);
+      res.json(flights);
     } catch (err) {
       if (err instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid search parameters" });
