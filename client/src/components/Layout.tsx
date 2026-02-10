@@ -68,7 +68,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                         <User className="h-4 w-4" />
                       </div>
-                      <span className="font-medium text-sm">{user.firstName || user.username || "User"}</span>
+                      <span className="font-medium text-sm">{user.firstName || "User"}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-lg shadow-black/5 border-slate-100 p-2">
