@@ -14,6 +14,7 @@ import Home from "@/pages/Home";
 import SearchResults from "@/pages/SearchResults";
 import Booking from "@/pages/Booking";
 import AdminDashboard from "@/pages/AdminDashboard";
+import AdminLogin from "@/pages/AdminLogin";
 import BlogList from "@/pages/BlogList";
 import BlogPost from "@/pages/BlogPost";
 
@@ -43,6 +44,7 @@ function TestModeBanner() {
 function Router() {
   return (
     <Switch>
+      <Route path="/admin/login" component={() => <Layout><AdminLogin /></Layout>} />
       <Route path="/admin">
         <Layout>
           <AdminDashboard />

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Plane, User, LogOut, Menu, X, LayoutDashboard } from "lucide-react";
+import { User, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,7 +7,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -24,6 +23,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navLinks = [
     { href: "/", label: t("nav.flights") },
     { href: "/blog", label: t("nav.blog") },
+    { href: "/admin", label: t("nav.admin") },
   ];
 
   return (
@@ -74,10 +74,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-2xl border-white/10 p-2 bg-[hsl(220,18%,10%)]/95 backdrop-blur-xl text-white">
-                    <DropdownMenuItem className="rounded-lg cursor-pointer hover:bg-white/10 focus:bg-white/10 focus:text-white" onClick={() => window.location.href = '/admin'} data-testid="link-admin">
-                      <LayoutDashboard className="mr-2 h-4 w-4" /> {t("nav.admin")}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-white/10" />
                     <DropdownMenuItem 
                       className="text-red-400 focus:text-red-300 focus:bg-red-500/10 rounded-lg cursor-pointer"
                       onClick={() => logout()}
@@ -130,15 +126,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
               ))}
               <div className="pt-4 border-t border-white/10">
                 {user ? (
-                  <>
-                    <Link href="/admin" className="block py-2 text-base font-medium text-white/80 hover:bg-white/5 rounded-lg px-2">{t("nav.admin")}</Link>
-                    <button 
-                      onClick={() => logout()}
-                      className="block w-full text-left py-2 text-base font-medium text-red-400 hover:bg-red-500/10 rounded-lg px-2"
-                    >
-                      {t("nav.logout")}
-                    </button>
-                  </>
+                  <button 
+                    onClick={() => logout()}
+                    className="block w-full text-left py-2 text-base font-medium text-red-400 hover:bg-red-500/10 rounded-lg px-2"
+                  >
+                    {t("nav.logout")}
+                  </button>
                 ) : (
                   <Button 
                     onClick={() => window.location.href = '/api/login'}

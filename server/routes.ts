@@ -9,19 +9,10 @@ import { users } from "@shared/models/auth";
 import { desc, eq } from "drizzle-orm";
 import { searchFlights, getFlight, searchPlaces, getAirlines, getAirports, getAircraft, initializeReferenceData, isTestMode, activeTokenIsTest, hasLiveToken, hasTestToken, setTestModeCache, clearReferenceDataCache, loadTestModeSetting, ensureTestModeLoaded } from "./services/duffel";
 
-async function requireAdmin(req: Request, res: Response, next: NextFunction) {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ error: "Unauthorized" });
+function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!(req.session as any)?.isAdmin) {
+    return res.status(401).json({ error: "Admin authentication required" });
   }
-  const userId = (req.user as any)?.claims?.sub;
-  if (!userId) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  const [dbUser] = await db.select().from(users).where(eq(users.id, userId));
-  if (!dbUser?.isAdmin) {
-    return res.status(403).json({ error: "Admin access required" });
-  }
-  (req as any).dbUser = dbUser;
   next();
 }
 
@@ -226,7 +217,7 @@ export function registerRoutes(app: Express) {
 
         const bookingData = req.body;
         
-        const commissionRate = 0.05;
+        const commissionRate = settings?.commissionPercentage ? parseFloat(settings.commissionPercentage) / 100 : 0.05;
         const price = parseFloat(bookingData.totalPrice);
         const commissionAmount = (price * commissionRate).toFixed(2);
 
@@ -496,5 +487,42 @@ export function registerRoutes(app: Express) {
   app.get('/api/admin/bookings', requireAdmin, async (req, res) => {
     const allBookings = await db.select().from(bookings).orderBy(desc(bookings.createdAt));
     res.json(allBookings);
+  });
+
+  // === ADMIN AUTH (Password-based, separate from Replit Auth) ===
+
+  app.post('/api/admin/login', (req, res) => {
+    const { password } = req.body;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminPassword) {
+      return res.status(500).json({ error: "Admin password not configured on server" });
+    }
+
+    if (!password || password !== adminPassword) {
+      return res.status(401).json({ error: "Invalid admin password" });
+    }
+
+    (req.session as any).isAdmin = true;
+    req.session.save((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Session error" });
+      }
+      res.json({ success: true });
+    });
+  });
+
+  app.post('/api/admin/logout', (req, res) => {
+    (req.session as any).isAdmin = false;
+    req.session.save((err) => {
+      if (err) {
+        return res.status(500).json({ error: "Session error" });
+      }
+      res.json({ success: true });
+    });
+  });
+
+  app.get('/api/admin/check', (req, res) => {
+    res.json({ isAdmin: !!(req.session as any)?.isAdmin });
   });
 }

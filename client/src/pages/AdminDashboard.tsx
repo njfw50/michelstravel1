@@ -1,14 +1,17 @@
-import { useAuth } from "@/hooks/use-auth";
-import { useAdminStats, useAllBookings } from "@/hooks/use-admin";
+import { useAdminStats, useAllBookings, useSiteSettings, useUpdateSettings } from "@/hooks/use-admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight } from "lucide-react";
+import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
+import { queryClient } from "@/lib/queryClient";
 
 function TestModeControl() {
   const { t } = useI18n();
@@ -155,18 +158,148 @@ function TestModeControl() {
   );
 }
 
+function CommissionControl() {
+  const { t } = useI18n();
+  const { toast } = useToast();
+  const { data: settings, isLoading } = useSiteSettings();
+  const updateSettings = useUpdateSettings();
+  const [commissionValue, setCommissionValue] = useState("");
+  const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    if (settings?.commissionPercentage) {
+      setCommissionValue(settings.commissionPercentage);
+    }
+  }, [settings?.commissionPercentage]);
+
+  const handleSave = async () => {
+    const numValue = parseFloat(commissionValue);
+    if (isNaN(numValue) || numValue < 0 || numValue > 100) {
+      toast({
+        title: t("admin.commission_error"),
+        description: t("admin.commission_range"),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await updateSettings.mutateAsync({
+        commissionPercentage: numValue.toFixed(2),
+        siteName: settings?.siteName || undefined,
+        heroTitle: settings?.heroTitle || undefined,
+        heroSubtitle: settings?.heroSubtitle || undefined,
+        testMode: settings?.testMode ?? true,
+      });
+      setHasChanges(false);
+      toast({
+        title: t("admin.commission_saved"),
+        description: `${t("admin.commission_updated")} ${numValue.toFixed(2)}%`,
+      });
+    } catch (error: any) {
+      toast({
+        title: t("admin.commission_error"),
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="border border-white/10 shadow-lg bg-white/5 backdrop-blur-md">
+        <CardContent className="p-6 flex items-center justify-center">
+          <Loader2 className="h-5 w-5 animate-spin text-white/40" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border border-white/10 shadow-lg bg-white/5 backdrop-blur-md">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-xl border flex items-center justify-center shadow-inner text-teal-400 bg-teal-500/10 border-teal-500/20">
+            <Percent className="h-6 w-6" />
+          </div>
+          <div>
+            <CardTitle className="text-lg text-white">{t("admin.commission_title")}</CardTitle>
+            <p className="text-xs text-white/50 mt-1">{t("admin.commission_desc")}</p>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-6 pt-2 space-y-4">
+        <div className="flex flex-col gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
+          <Label htmlFor="commission-rate" className="text-sm text-white/70">
+            {t("admin.commission_label")}
+          </Label>
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <Input
+                id="commission-rate"
+                data-testid="input-commission-rate"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                value={commissionValue}
+                onChange={(e) => {
+                  setCommissionValue(e.target.value);
+                  setHasChanges(true);
+                }}
+                className="bg-white/5 border-white/10 text-white pr-8"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 text-sm">%</span>
+            </div>
+            <Button
+              data-testid="button-save-commission"
+              onClick={handleSave}
+              disabled={!hasChanges || updateSettings.isPending}
+              className="gap-2"
+            >
+              {updateSettings.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {t("admin.commission_save")}
+            </Button>
+          </div>
+          <p className="text-xs text-white/40">
+            {t("admin.commission_example")} {commissionValue ? `$${(1000 * parseFloat(commissionValue || "0") / 100).toFixed(2)}` : "$0.00"}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function AdminDashboard() {
-  const { user, isLoading: authLoading } = useAuth();
   const { data: stats, isLoading: statsLoading } = useAdminStats();
   const { data: bookings } = useAllBookings();
   const { t } = useI18n();
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
-  if (authLoading || statsLoading) {
-    return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  const { data: adminCheck, isLoading: adminCheckLoading } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/admin/check"],
+  });
+
+  const handleLogout = async () => {
+    await fetch("/api/admin/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/check"] });
+    setLocation("/admin");
+  };
+
+  if (adminCheckLoading || statsLoading) {
+    return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-amber-400" /></div>;
   }
 
-  if (!user) {
-    window.location.href = '/api/login';
+  if (!adminCheck?.isAdmin) {
+    setLocation("/admin/login");
     return null;
   }
 
@@ -192,12 +325,22 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex justify-between items-center flex-wrap gap-4">
           <div>
-            <h1 className="text-3xl font-bold font-display text-white drop-shadow-md">{t("admin.dashboard")}</h1>
-            <p className="text-white/60">{t("admin.welcome")}, {user.firstName || 'Admin'}. {t("admin.happening")}</p>
+            <h1 className="text-3xl font-bold font-display text-white drop-shadow-md" data-testid="text-admin-title">{t("admin.dashboard")}</h1>
+            <p className="text-white/60">{t("admin.welcome")}. {t("admin.happening")}</p>
           </div>
+          <Button
+            data-testid="button-admin-logout"
+            variant="outline"
+            onClick={handleLogout}
+            className="gap-2 border-white/20 text-white"
+          >
+            <LogOut className="h-4 w-4" />
+            {t("admin.logout")}
+          </Button>
         </div>
 
         <TestModeControl />
+        <CommissionControl />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {statCards.map((stat, i) => (
@@ -205,7 +348,7 @@ export default function AdminDashboard() {
               <CardContent className="p-6 flex items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium text-white/60 mb-1">{stat.title}</p>
-                  <h3 className="text-2xl font-bold text-white">{stat.value}</h3>
+                  <h3 className="text-2xl font-bold text-white" data-testid={`text-stat-${i}`}>{stat.value}</h3>
                 </div>
                 <div className={`h-12 w-12 rounded-xl border flex items-center justify-center shadow-inner ${stat.color} bg-white/5 border-white/10`}>
                   <stat.icon className="h-6 w-6" />
