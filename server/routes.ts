@@ -169,6 +169,117 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  let flightBoardCache: { data: any[]; timestamp: number; date: string } = { data: [], timestamp: 0, date: "" };
+  const FLIGHT_BOARD_CACHE_TTL = 15 * 60 * 1000;
+  let flightBoardFetching = false;
+
+  app.get('/api/flight-board', async (req, res) => {
+    try {
+      await ensureTestModeLoaded();
+      const date = (req.query.date as string) || (() => {
+        const d = new Date();
+        d.setDate(d.getDate() + 14);
+        return d.toISOString().split("T")[0];
+      })();
+
+      if (flightBoardCache.date === date && Date.now() - flightBoardCache.timestamp < FLIGHT_BOARD_CACHE_TTL && flightBoardCache.data.length > 0) {
+        return res.json(flightBoardCache.data);
+      }
+
+      if (flightBoardFetching) {
+        return res.json(flightBoardCache.data);
+      }
+
+      flightBoardFetching = true;
+
+      const routes = [
+        { origin: "JFK", destination: "LHR" },
+        { origin: "EWR", destination: "LIS" },
+        { origin: "MIA", destination: "GRU" },
+        { origin: "LAX", destination: "NRT" },
+        { origin: "JFK", destination: "CDG" },
+        { origin: "EWR", destination: "FCO" },
+        { origin: "MIA", destination: "CUN" },
+        { origin: "JFK", destination: "BCN" },
+      ];
+
+      const results: any[] = [];
+
+      const searchPromises = routes.map(async (route) => {
+        try {
+          const offers = await searchFlights({
+            origin: route.origin,
+            destination: route.destination,
+            date: date,
+            passengers: "1",
+            adults: "1",
+            children: "0",
+            infants: "0",
+            cabinClass: "economy",
+          });
+
+          if (offers.length > 0) {
+            const sorted = offers.sort((a, b) => a.price - b.price);
+            const cheapest = sorted[0];
+            results.push({
+              id: cheapest.id,
+              airline: cheapest.airline,
+              logoUrl: cheapest.logoUrl,
+              flightNumber: cheapest.flightNumber,
+              origin: cheapest.originCode || route.origin,
+              originCity: cheapest.originCity || route.origin,
+              destination: cheapest.destinationCode || route.destination,
+              destinationCity: cheapest.destinationCity || route.destination,
+              departureTime: cheapest.departureTime,
+              arrivalTime: cheapest.arrivalTime,
+              duration: cheapest.duration,
+              price: cheapest.price,
+              currency: cheapest.currency,
+              stops: cheapest.stops,
+              cabinClass: cheapest.cabinClass || "economy",
+            });
+
+            if (sorted.length > 1 && sorted[1].airline !== sorted[0].airline) {
+              const alt = sorted[1];
+              results.push({
+                id: alt.id,
+                airline: alt.airline,
+                logoUrl: alt.logoUrl,
+                flightNumber: alt.flightNumber,
+                origin: alt.originCode || route.origin,
+                originCity: alt.originCity || route.origin,
+                destination: alt.destinationCode || route.destination,
+                destinationCity: alt.destinationCity || route.destination,
+                departureTime: alt.departureTime,
+                arrivalTime: alt.arrivalTime,
+                duration: alt.duration,
+                price: alt.price,
+                currency: alt.currency,
+                stops: alt.stops,
+                cabinClass: alt.cabinClass || "economy",
+              });
+            }
+          }
+        } catch (e) {
+          // Skip failed routes silently
+        }
+      });
+
+      await Promise.allSettled(searchPromises);
+
+      results.sort((a, b) => a.price - b.price);
+
+      flightBoardCache = { data: results, timestamp: Date.now(), date };
+      flightBoardFetching = false;
+
+      res.json(results);
+    } catch (error) {
+      flightBoardFetching = false;
+      console.error("Flight board error:", error);
+      res.status(500).json({ error: "Failed to fetch flight board data" });
+    }
+  });
+
   app.get('/api/aircraft', async (req, res) => {
     try {
       await ensureTestModeLoaded();

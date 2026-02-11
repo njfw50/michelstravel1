@@ -1,5 +1,6 @@
 import { FlightSearchForm } from "@/components/FlightSearchForm";
 import { usePopularFlights, useAirlines, useFeaturedAirports } from "@/hooks/use-flights";
+import { FlightBoard } from "@/components/FlightBoard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +10,41 @@ import { useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
 
 import airplaneDestination from "@/assets/images/airplane-destination.jpg";
+
+import imgNewYork from "@/assets/images/destinations/new-york.jpg";
+import imgLondon from "@/assets/images/destinations/london.jpg";
+import imgParis from "@/assets/images/destinations/paris.jpg";
+import imgMiami from "@/assets/images/destinations/miami.jpg";
+import imgLosAngeles from "@/assets/images/destinations/los-angeles.jpg";
+import imgDubai from "@/assets/images/destinations/dubai.jpg";
+import imgTokyo from "@/assets/images/destinations/tokyo.jpg";
+import imgBarcelona from "@/assets/images/destinations/barcelona.jpg";
+import imgSaoPaulo from "@/assets/images/destinations/sao-paulo.jpg";
+import imgRome from "@/assets/images/destinations/rome.jpg";
+import imgLisbon from "@/assets/images/destinations/lisbon.jpg";
+import imgCancun from "@/assets/images/destinations/cancun.jpg";
+import imgOrlando from "@/assets/images/destinations/orlando.jpg";
+import imgSanFrancisco from "@/assets/images/destinations/san-francisco.jpg";
+import imgChicago from "@/assets/images/destinations/chicago.jpg";
+
+const DESTINATION_IMAGES: Record<string, string> = {
+  JFK: imgNewYork,
+  EWR: imgNewYork,
+  LHR: imgLondon,
+  CDG: imgParis,
+  MIA: imgMiami,
+  LAX: imgLosAngeles,
+  DXB: imgDubai,
+  NRT: imgTokyo,
+  BCN: imgBarcelona,
+  GRU: imgSaoPaulo,
+  FCO: imgRome,
+  LIS: imgLisbon,
+  CUN: imgCancun,
+  MCO: imgOrlando,
+  SFO: imgSanFrancisco,
+  ORD: imgChicago,
+};
 
 const COUNTRY_NAMES: Record<string, string> = {
   US: "United States", BR: "Brazil", GB: "United Kingdom", FR: "France", ES: "Spain",
@@ -143,7 +179,7 @@ export default function Home() {
       )}
 
       {airports && airports.length > 0 && (
-        <section className="py-20 bg-transparent border-t border-white/5">
+        <section className="py-20 bg-transparent border-t border-white/5" data-testid="section-destinations">
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-end mb-12 flex-wrap gap-4">
               <div>
@@ -153,107 +189,71 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {airports.slice(0, 8).map((airport, i) => (
-                <motion.div
-                  key={airport.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
-                >
-                  <Card 
-                    className="group overflow-hidden border border-white/10 shadow-lg hover:shadow-[0_0_25px_rgba(245,158,11,0.15)] transition-all cursor-pointer h-full bg-white/5 backdrop-blur-md rounded-2xl"
-                    onClick={() => {
-                      if (airport.iataCode) {
-                        setLocation(`/search?origin=EWR&destination=${airport.iataCode}&date=2026-03-15&passengers=1&adults=1&children=0&infants=0&cabinClass=economy`);
-                      }
-                    }}
-                    data-testid={`destination-card-${airport.iataCode}`}
+              {airports.slice(0, 8).map((airport, i) => {
+                const destImage = airport.iataCode ? DESTINATION_IMAGES[airport.iataCode] : null;
+                return (
+                  <motion.div
+                    key={airport.id}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.05 }}
                   >
-                    <div className="relative h-40 overflow-hidden bg-gradient-to-br from-amber-500/20 via-teal-500/10 to-transparent">
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <div className="absolute top-4 right-4">
-                        <Badge variant="secondary" className="bg-white/15 text-white/90 border border-white/20 backdrop-blur-sm text-xs">
-                          {airport.iataCode}
-                        </Badge>
-                      </div>
-                      <div className="absolute bottom-4 left-4 right-4">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <MapPin className="h-3.5 w-3.5 text-amber-400" />
-                          <span className="text-xs text-white/60 truncate">{countryCodeToName(airport.countryName || "")}</span>
+                    <Card 
+                      className="group overflow-hidden border border-white/10 shadow-lg hover:shadow-[0_0_25px_rgba(245,158,11,0.15)] transition-all cursor-pointer h-full bg-white/5 backdrop-blur-md rounded-2xl"
+                      onClick={() => {
+                        if (airport.iataCode) {
+                          const d = new Date();
+                          d.setDate(d.getDate() + 14);
+                          const dateStr = d.toISOString().split("T")[0];
+                          setLocation(`/search?origin=EWR&destination=${airport.iataCode}&date=${dateStr}&passengers=1&adults=1&children=0&infants=0&cabinClass=economy`);
+                        }
+                      }}
+                      data-testid={`destination-card-${airport.iataCode}`}
+                    >
+                      <div className="relative h-44 overflow-hidden">
+                        {destImage ? (
+                          <img 
+                            src={destImage} 
+                            alt={airport.cityName || airport.name}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-amber-500/20 via-teal-500/10 to-transparent" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                        <div className="absolute top-3 right-3">
+                          <Badge variant="secondary" className="bg-black/40 text-white border border-white/20 backdrop-blur-md text-xs font-mono">
+                            {airport.iataCode}
+                          </Badge>
                         </div>
-                        <h3 className="font-bold text-lg text-white leading-tight truncate">
-                          {airport.cityName || airport.name}
-                        </h3>
+                        <div className="absolute bottom-4 left-4 right-4">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <MapPin className="h-3.5 w-3.5 text-amber-400" />
+                            <span className="text-xs text-white/70 truncate">{countryCodeToName(airport.countryName || "")}</span>
+                          </div>
+                          <h3 className="font-bold text-lg text-white leading-tight truncate drop-shadow-lg">
+                            {airport.cityName || airport.name}
+                          </h3>
+                        </div>
                       </div>
-                    </div>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-white/40 mb-3 truncate">{airport.name}</p>
-                      <Button className="w-full rounded-xl bg-white/10 border border-white/10 text-white hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-500 transition-all shadow-md text-sm" size="sm">
-                        {t("home.popular.check_prices")} <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+                      <CardContent className="p-4">
+                        <p className="text-xs text-white/40 mb-3 truncate">{airport.name}</p>
+                        <Button variant="outline" className="w-full rounded-xl text-white border-white/10 text-sm" size="sm">
+                          {t("home.popular.check_prices")} <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </section>
       )}
 
-      {popularFlights && popularFlights.length > 0 && (
-        <section className="py-20 bg-black/10 border-t border-white/5">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-between items-end mb-12 flex-wrap gap-4">
-              <div>
-                <h2 className="text-3xl font-bold font-display text-white mb-2 drop-shadow-md">{t("home.popular.title")}</h2>
-                <p className="text-white/45">{t("home.popular.subtitle")}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {popularFlights.map((flight, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
-                >
-                  <Card 
-                    className="group overflow-hidden border border-white/10 shadow-lg hover:shadow-[0_0_15px_rgba(245,158,11,0.1)] transition-all cursor-pointer bg-white/5 backdrop-blur-md rounded-2xl"
-                    onClick={() => setLocation(`/search?origin=${flight.origin}&destination=${flight.destination}&date=2026-03-15&passengers=1&adults=1&cabinClass=economy`)}
-                    data-testid={`popular-flight-${i}`}
-                  >
-                    <CardContent className="p-5">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <div className="h-8 w-8 rounded-full bg-amber-500/15 flex items-center justify-center">
-                            <Plane className="h-4 w-4 text-amber-400" />
-                          </div>
-                          <div>
-                            <div className="text-sm font-bold text-white">{flight.origin}</div>
-                          </div>
-                        </div>
-                        <ArrowRight className="h-4 w-4 text-white/30" />
-                        <div>
-                          <div className="text-sm font-bold text-white">{flight.destination}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Badge variant="secondary" className="bg-amber-500/15 text-amber-200 border border-amber-500/20 text-xs">
-                          {t("home.trending")}
-                        </Badge>
-                        <span className="text-xs font-medium text-white/35">{flight.searchCount} {t("home.popular.searches")}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      <FlightBoard />
 
       {(!airports || airports.length === 0) && !airportsLoading && (!popularFlights || popularFlights.length === 0) && (
         <section className="py-20 bg-transparent">

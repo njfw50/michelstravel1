@@ -88,6 +88,24 @@ const translations: Record<Language, Record<string, string>> = {
     "home.airlines_sub": "500+ companhias em todo o mundo",
     "home.trending": "Em Alta",
 
+    // Flight Board
+    "home.board.title": "Painel de Voos",
+    "home.board.subtitle": "Melhores preços para rotas populares - atualizado em tempo real",
+    "home.board.col_flight": "Voo",
+    "home.board.col_time": "Horário",
+    "home.board.col_route": "Rota",
+    "home.board.col_duration": "Duração",
+    "home.board.col_stops": "Paradas",
+    "home.board.col_price": "Preço",
+    "home.board.loading": "Carregando voos...",
+    "home.board.no_flights": "Nenhum voo disponível no momento",
+    "home.board.per_person": "por pessoa",
+    "home.board.book": "Reservar",
+    "home.board.show_more": "Ver mais voos",
+    "home.board.show_less": "Mostrar menos",
+    "home.board.more_flights": "voos",
+    "home.board.disclaimer": "Preços sujeitos a alteração. Tarifas mais baixas encontradas para as próximas 2 semanas.",
+
     // Flight Card
     "flight.total_price": "Preço Total",
     "flight.price_per_adult": "Preço por adulto",
@@ -307,6 +325,24 @@ const translations: Record<Language, Record<string, string>> = {
     "home.airlines_sub": "500+ airlines worldwide",
     "home.trending": "Trending",
 
+    // Flight Board
+    "home.board.title": "Flight Board",
+    "home.board.subtitle": "Best prices for popular routes - updated in real time",
+    "home.board.col_flight": "Flight",
+    "home.board.col_time": "Time",
+    "home.board.col_route": "Route",
+    "home.board.col_duration": "Duration",
+    "home.board.col_stops": "Stops",
+    "home.board.col_price": "Price",
+    "home.board.loading": "Loading flights...",
+    "home.board.no_flights": "No flights available at the moment",
+    "home.board.per_person": "per person",
+    "home.board.book": "Book",
+    "home.board.show_more": "Show more flights",
+    "home.board.show_less": "Show less",
+    "home.board.more_flights": "flights",
+    "home.board.disclaimer": "Prices subject to change. Lowest fares found for the next 2 weeks.",
+
     // Flight Card
     "flight.total_price": "Total Price",
     "flight.price_per_adult": "Price per adult",
@@ -525,6 +561,24 @@ const translations: Record<Language, Record<string, string>> = {
     "home.airlines": "Aerolíneas Asociadas",
     "home.airlines_sub": "500+ aerolíneas en todo el mundo",
     "home.trending": "Popular",
+
+    // Flight Board
+    "home.board.title": "Panel de Vuelos",
+    "home.board.subtitle": "Mejores precios para rutas populares - actualizado en tiempo real",
+    "home.board.col_flight": "Vuelo",
+    "home.board.col_time": "Hora",
+    "home.board.col_route": "Ruta",
+    "home.board.col_duration": "Duración",
+    "home.board.col_stops": "Escalas",
+    "home.board.col_price": "Precio",
+    "home.board.loading": "Cargando vuelos...",
+    "home.board.no_flights": "No hay vuelos disponibles en este momento",
+    "home.board.per_person": "por persona",
+    "home.board.book": "Reservar",
+    "home.board.show_more": "Ver más vuelos",
+    "home.board.show_less": "Mostrar menos",
+    "home.board.more_flights": "vuelos",
+    "home.board.disclaimer": "Precios sujetos a cambios. Tarifas más bajas encontradas para las próximas 2 semanas.",
 
     // Flight Card
     "flight.total_price": "Precio Total",
