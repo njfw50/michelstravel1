@@ -32,9 +32,10 @@ const passengerSchema = z.object({
   gender: z.enum(["m", "f"], { required_error: "Required" }),
   email: z.string().email("Invalid email"),
   phoneNumber: z.string().min(7, "Min 7 digits").max(20),
-  passportNumber: z.string().optional(),
-  passportExpiryDate: z.string().optional(),
-  passportIssuingCountry: z.string().optional(),
+  documentType: z.enum(["passport", "national_id", "drivers_license", "travel_document", "other"]).default("passport"),
+  documentNumber: z.string().optional(),
+  documentExpiryDate: z.string().optional(),
+  documentIssuingCountry: z.string().optional(),
   nationality: z.string().optional(),
   type: z.enum(["adult", "child", "infant_without_seat"]).default("adult"),
 });
@@ -50,25 +51,25 @@ function createBookingSchema(isDocRequired: boolean) {
 
   return baseSchema.superRefine((data, ctx) => {
     data.passengers.forEach((pax, i) => {
-      if (!pax.passportNumber || pax.passportNumber.trim() === "") {
+      if (!pax.documentNumber || pax.documentNumber.trim() === "") {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Passport number is required",
-          path: ["passengers", i, "passportNumber"],
+          message: "Document number is required",
+          path: ["passengers", i, "documentNumber"],
         });
       }
-      if (!pax.passportExpiryDate || pax.passportExpiryDate.trim() === "") {
+      if (!pax.documentExpiryDate || pax.documentExpiryDate.trim() === "") {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Passport expiry date is required",
-          path: ["passengers", i, "passportExpiryDate"],
+          message: "Document expiry date is required",
+          path: ["passengers", i, "documentExpiryDate"],
         });
       }
-      if (!pax.passportIssuingCountry || pax.passportIssuingCountry.trim() === "") {
+      if (!pax.documentIssuingCountry || pax.documentIssuingCountry.trim() === "") {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Issuing country is required",
-          path: ["passengers", i, "passportIssuingCountry"],
+          path: ["passengers", i, "documentIssuingCountry"],
         });
       }
       if (!pax.nationality || pax.nationality.trim() === "") {
@@ -120,10 +121,15 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
     if (data.familyName) setValue(`passengers.${index}.familyName`, data.familyName);
     if (data.bornOn) setValue(`passengers.${index}.bornOn`, data.bornOn);
     if (data.gender) setValue(`passengers.${index}.gender`, data.gender);
-    if (data.passportNumber) setValue(`passengers.${index}.passportNumber`, data.passportNumber);
-    if (data.passportExpiryDate) setValue(`passengers.${index}.passportExpiryDate`, data.passportExpiryDate);
+    if (data.passportNumber) setValue(`passengers.${index}.documentNumber`, data.passportNumber);
+    if (data.passportExpiryDate) setValue(`passengers.${index}.documentExpiryDate`, data.passportExpiryDate);
     if (data.nationality) setValue(`passengers.${index}.nationality`, data.nationality);
-    if (data.passportIssuingCountry) setValue(`passengers.${index}.passportIssuingCountry`, data.passportIssuingCountry);
+    if (data.passportIssuingCountry) setValue(`passengers.${index}.documentIssuingCountry`, data.passportIssuingCountry);
+    if (data.documentType) {
+      setValue(`passengers.${index}.documentType`, data.documentType);
+    } else {
+      setValue(`passengers.${index}.documentType`, "passport");
+    }
   };
 
   return (
@@ -257,25 +263,46 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.passport_number")} {isDocRequired ? "*" : ""}</Label>
-                <Input
-                  {...register(`passengers.${index}.passportNumber`)}
-                  className="bg-white/5 border-white/15 text-white placeholder:text-white/30 focus:border-amber-500/50"
-                  placeholder="AB1234567"
-                  data-testid={`input-passport-${index}`}
-                />
+                <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.doc_type")} {isDocRequired ? "*" : ""}</Label>
+                <Select
+                  defaultValue="passport"
+                  onValueChange={(val) => {
+                    const event = { target: { name: `passengers.${index}.documentType`, value: val } };
+                    register(`passengers.${index}.documentType`).onChange(event);
+                  }}
+                >
+                  <SelectTrigger className="bg-white/5 border-white/15 text-white" data-testid={`select-doc-type-${index}`}>
+                    <SelectValue placeholder={t("booking.select_doc_type")} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[hsl(220,18%,10%)] border-white/10 text-white">
+                    <SelectItem value="passport">{t("booking.doc_passport")}</SelectItem>
+                    <SelectItem value="national_id">{t("booking.doc_national_id")}</SelectItem>
+                    <SelectItem value="drivers_license">{t("booking.doc_drivers_license")}</SelectItem>
+                    <SelectItem value="travel_document">{t("booking.doc_travel_doc")}</SelectItem>
+                    <SelectItem value="other">{t("booking.doc_other")}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.passport_expiry")} {isDocRequired ? "*" : ""}</Label>
+                <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.doc_number")} {isDocRequired ? "*" : ""}</Label>
                 <Input
-                  {...register(`passengers.${index}.passportExpiryDate`)}
-                  type="date"
+                  {...register(`passengers.${index}.documentNumber`)}
                   className="bg-white/5 border-white/15 text-white placeholder:text-white/30 focus:border-amber-500/50"
-                  data-testid={`input-passport-expiry-${index}`}
+                  placeholder="AB1234567"
+                  data-testid={`input-doc-number-${index}`}
                 />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.doc_expiry")} {isDocRequired ? "*" : ""}</Label>
+                <Input
+                  {...register(`passengers.${index}.documentExpiryDate`)}
+                  type="date"
+                  className="bg-white/5 border-white/15 text-white placeholder:text-white/30 focus:border-amber-500/50"
+                  data-testid={`input-doc-expiry-${index}`}
+                />
+              </div>
               <div className="space-y-1.5">
                 <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.nationality")}</Label>
                 <Select onValueChange={(val) => {
@@ -290,11 +317,13 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.issuing_country")}</Label>
                 <Select onValueChange={(val) => {
-                  const event = { target: { name: `passengers.${index}.passportIssuingCountry`, value: val } };
-                  register(`passengers.${index}.passportIssuingCountry`).onChange(event);
+                  const event = { target: { name: `passengers.${index}.documentIssuingCountry`, value: val } };
+                  register(`passengers.${index}.documentIssuingCountry`).onChange(event);
                 }}>
                   <SelectTrigger className="bg-white/5 border-white/15 text-white" data-testid={`select-issuing-country-${index}`}>
                     <SelectValue placeholder={t("booking.select_country")} />
@@ -373,18 +402,19 @@ export default function Booking() {
         gender: "" as any,
         email: i === 0 ? (user?.email || "") : "",
         phoneNumber: "",
-        passportNumber: "",
-        passportExpiryDate: "",
-        passportIssuingCountry: "",
+        documentType: "passport" as const,
+        documentNumber: "",
+        documentExpiryDate: "",
+        documentIssuingCountry: "",
         nationality: "",
         type: "adult",
       });
     }
     for (let i = 0; i < numChildren; i++) {
-      pax.push({ givenName: "", familyName: "", bornOn: "", gender: "" as any, email: "", phoneNumber: "", passportNumber: "", passportExpiryDate: "", passportIssuingCountry: "", nationality: "", type: "child" });
+      pax.push({ givenName: "", familyName: "", bornOn: "", gender: "" as any, email: "", phoneNumber: "", documentType: "passport" as const, documentNumber: "", documentExpiryDate: "", documentIssuingCountry: "", nationality: "", type: "child" });
     }
     for (let i = 0; i < numInfants; i++) {
-      pax.push({ givenName: "", familyName: "", bornOn: "", gender: "" as any, email: "", phoneNumber: "", passportNumber: "", passportExpiryDate: "", passportIssuingCountry: "", nationality: "", type: "infant_without_seat" });
+      pax.push({ givenName: "", familyName: "", bornOn: "", gender: "" as any, email: "", phoneNumber: "", documentType: "passport" as const, documentNumber: "", documentExpiryDate: "", documentIssuingCountry: "", nationality: "", type: "infant_without_seat" });
     }
     return pax;
   };

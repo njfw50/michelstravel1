@@ -633,6 +633,10 @@ export interface DuffelPassenger {
   gender: "m" | "f";
   email: string;
   phoneNumber: string;
+  documentType?: string;
+  documentNumber?: string;
+  documentExpiryDate?: string;
+  documentIssuingCountry?: string;
   passportNumber?: string;
   passportExpiryDate?: string;
   passportIssuingCountry?: string;
@@ -665,12 +669,21 @@ export async function createDuffelOrder(
         type: pax.type || "adult",
       };
 
-      if (pax.passportNumber) {
+      const docNumber = pax.documentNumber || pax.passportNumber;
+      if (docNumber) {
+        const docTypeMap: Record<string, string> = {
+          "passport": "passport",
+          "national_id": "identity_card",
+          "drivers_license": "identity_card",
+          "travel_document": "passport",
+          "other": "identity_card",
+        };
+        const duffelDocType = docTypeMap[pax.documentType || "passport"] || "passport";
         passenger.identity_documents = [{
-          type: "passport",
-          unique_identifier: pax.passportNumber,
-          expires_on: pax.passportExpiryDate || undefined,
-          issuing_country_code: pax.passportIssuingCountry || undefined,
+          type: duffelDocType,
+          unique_identifier: docNumber,
+          expires_on: pax.documentExpiryDate || pax.passportExpiryDate || undefined,
+          issuing_country_code: pax.documentIssuingCountry || pax.passportIssuingCountry || undefined,
         }];
       }
 
