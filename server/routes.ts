@@ -636,4 +636,40 @@ export function registerRoutes(app: Express) {
   app.get('/api/admin/check', (req, res) => {
     res.json({ isAdmin: !!(req.session as any)?.isAdmin });
   });
+
+  // === BLOG ROUTES ===
+
+  app.get('/api/blog', async (req, res) => {
+    try {
+      const language = req.query.language as string | undefined;
+      const posts = await storage.getBlogPosts(language);
+      res.json(posts);
+    } catch (error) {
+      console.error('Blog posts fetch error:', error);
+      res.status(500).json({ error: 'Failed to fetch blog posts' });
+    }
+  });
+
+  app.get('/api/blog/:slug', async (req, res) => {
+    try {
+      const post = await storage.getBlogPost(req.params.slug);
+      if (!post) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
+      res.json(post);
+    } catch (error) {
+      console.error('Blog post fetch error:', error);
+      res.status(500).json({ error: 'Failed to fetch blog post' });
+    }
+  });
+
+  app.post('/api/admin/blog', requireAdmin, async (req, res) => {
+    try {
+      const post = await storage.createBlogPost(req.body);
+      res.status(201).json(post);
+    } catch (error) {
+      console.error('Blog post creation error:', error);
+      res.status(500).json({ error: 'Failed to create blog post' });
+    }
+  });
 }

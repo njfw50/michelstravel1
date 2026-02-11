@@ -250,6 +250,9 @@ const translations: Record<Language, Record<string, string>> = {
     "blog.post_not_found": "Artigo não encontrado",
     "blog.post_not_found_desc": "O artigo que você procura não está disponível.",
     "blog.back_to_guide": "Voltar ao Guia",
+    "blog.cta_title": "Pronto para sua aventura?",
+    "blog.cta_desc": "Encontre os melhores preços em voos para o Brasil e reserve agora mesmo.",
+    "blog.cta_button": "Pesquisar Voos",
 
     // Checkout
     "checkout.success_title": "Pagamento Confirmado!",
@@ -609,6 +612,9 @@ const translations: Record<Language, Record<string, string>> = {
     "blog.post_not_found": "Article not found",
     "blog.post_not_found_desc": "The article you're looking for is not available.",
     "blog.back_to_guide": "Back to Guide",
+    "blog.cta_title": "Ready for your adventure?",
+    "blog.cta_desc": "Find the best prices on flights to Brazil and book now.",
+    "blog.cta_button": "Search Flights",
 
     // Checkout
     "checkout.success_title": "Payment Confirmed!",
@@ -968,6 +974,9 @@ const translations: Record<Language, Record<string, string>> = {
     "blog.post_not_found": "Artículo no encontrado",
     "blog.post_not_found_desc": "El artículo que busca no está disponible.",
     "blog.back_to_guide": "Volver a la Guía",
+    "blog.cta_title": "¿Listo para su aventura?",
+    "blog.cta_desc": "Encuentre los mejores precios en vuelos a Brasil y reserve ahora.",
+    "blog.cta_button": "Buscar Vuelos",
 
     // Checkout
     "checkout.success_title": "Pago Confirmado!",

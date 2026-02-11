@@ -1,10 +1,11 @@
 import { useRoute } from "wouter";
 import { useBlogPost } from "@/hooks/use-blog";
-import { Loader2, Calendar, ArrowLeft, BookOpen } from "lucide-react";
+import { Loader2, Calendar, ArrowLeft, BookOpen, Plane } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useI18n } from "@/lib/i18n";
+import { Card } from "@/components/ui/card";
 
 export default function BlogPost() {
   const [match, params] = useRoute("/blog/:slug");
@@ -79,7 +80,20 @@ export default function BlogPost() {
           />
         </div>
 
-        <div className="max-w-3xl mx-auto mt-16 pt-8 border-t border-gray-200 flex justify-between items-center">
+        <div className="max-w-3xl mx-auto mt-12">
+            <Card className="bg-blue-50 border-blue-100 p-8 text-center">
+              <Plane className="h-10 w-10 text-blue-500 mx-auto mb-4" />
+              <h3 className="text-2xl font-display font-bold text-gray-900 mb-2">{t("blog.cta_title")}</h3>
+              <p className="text-gray-600 mb-6 max-w-lg mx-auto">{t("blog.cta_desc")}</p>
+              <Link href="/">
+                <Button className="bg-blue-600 text-white" data-testid="button-blog-search-flights">
+                  <Plane className="mr-2 h-4 w-4" /> {t("blog.cta_button")}
+                </Button>
+              </Link>
+            </Card>
+          </div>
+
+          <div className="max-w-3xl mx-auto mt-8 pt-8 border-t border-gray-200 flex flex-wrap justify-between items-center gap-4">
           <Link href="/blog">
             <Button variant="outline" className="border-gray-200 text-gray-700" data-testid="button-back-blog">
               <ArrowLeft className="mr-2 h-4 w-4" /> {t("blog.back_to_guide")}

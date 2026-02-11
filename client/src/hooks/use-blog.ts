@@ -1,11 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
+import { useI18n } from "@/lib/i18n";
 
 export function useBlogPosts() {
+  const { language } = useI18n();
+  const lang = language || "pt";
   return useQuery({
-    queryKey: [api.blog.list.path],
+    queryKey: [api.blog.list.path, lang],
     queryFn: async () => {
-      const res = await fetch(api.blog.list.path, { credentials: "include" });
+      const url = `${api.blog.list.path}?language=${lang}`;
+      const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch blog posts");
       return api.blog.list.responses[200].parse(await res.json());
     },

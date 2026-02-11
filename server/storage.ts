@@ -1,6 +1,6 @@
 
 import { db } from "./db";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 import {
   flightSearches, bookings, siteSettings, blogPosts, users,
   type FlightSearch, type InsertFlightSearch,
@@ -28,7 +28,7 @@ export interface IStorage extends IAuthStorage {
   upsertSiteSettings(settings: InsertSiteSetting): Promise<SiteSetting>;
 
   // Blog
-  getBlogPosts(): Promise<BlogPost[]>;
+  getBlogPosts(language?: string): Promise<BlogPost[]>;
   getBlogPost(slug: string): Promise<BlogPost | undefined>;
   createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
 
@@ -100,7 +100,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   // --- Blog ---
-  async getBlogPosts(): Promise<BlogPost[]> {
+  async getBlogPosts(language?: string): Promise<BlogPost[]> {
+    if (language) {
+      return await db.select().from(blogPosts).where(and(eq(blogPosts.isPublished, true), eq(blogPosts.language, language))).orderBy(desc(blogPosts.createdAt));
+    }
     return await db.select().from(blogPosts).where(eq(blogPosts.isPublished, true)).orderBy(desc(blogPosts.createdAt));
   }
 
