@@ -20,13 +20,17 @@ import {
   ScanLine,
   Shield,
   FileText,
-  ArrowRight,
   RotateCcw,
   Eye,
   X,
+  Smartphone,
+  Sun,
+  Maximize2,
+  Focus,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { parseMRZ, type MRZResult } from "@/lib/mrz";
+import { parseMRZ } from "@/lib/mrz";
+import { preprocessForMRZ, createPreviewUrl } from "@/lib/imagePreprocess";
 import Tesseract from "tesseract.js";
 
 type Step = "select" | "processing" | "review" | "error";
@@ -61,6 +65,7 @@ export function ScanDocumentDialog({
   const { t } = useI18n();
   const [step, setStep] = useState<Step>("select");
   const [progress, setProgress] = useState(0);
+  const [progressLabel, setProgressLabel] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
   const [editableData, setEditableData] = useState<ExtractedData | null>(null);
@@ -71,6 +76,7 @@ export function ScanDocumentDialog({
   const resetState = useCallback(() => {
     setStep("select");
     setProgress(0);
+    setProgressLabel("");
     setImagePreview(null);
     setExtractedData(null);
     setEditableData(null);
@@ -82,50 +88,78 @@ export function ScanDocumentDialog({
     onOpenChange(newOpen);
   };
 
+  const runOCRAttempt = async (imageBlob: Blob, label: string): Promise<string> => {
+    setProgressLabel(label);
+    const result = await Tesseract.recognize(imageBlob, "eng", {
+      logger: (m: any) => {
+        if (m.status === "recognizing text") {
+          setProgress((prev) => Math.min(prev + Math.round(m.progress * 15), 90));
+        }
+      },
+    });
+    return result.data.text;
+  };
+
   const processImage = async (file: File) => {
     setStep("processing");
-    setProgress(10);
+    setProgress(5);
+    setProgressLabel(t("scan.step_preparing"));
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setImagePreview(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    const preview = await createPreviewUrl(file);
+    setImagePreview(preview);
 
     try {
+      setProgress(10);
+      setProgressLabel(t("scan.step_enhancing"));
+
+      const { original, enhanced, mrzCropped } = await preprocessForMRZ(file);
+
       setProgress(20);
 
-      const result = await Tesseract.recognize(file, "eng", {
-        logger: (m: any) => {
-          if (m.status === "recognizing text") {
-            setProgress(20 + Math.round(m.progress * 60));
+      const attempts = [
+        { blob: mrzCropped, label: t("scan.attempt_mrz_zone") },
+        { blob: enhanced, label: t("scan.attempt_enhanced") },
+        { blob: original, label: t("scan.attempt_original") },
+      ];
+
+      let bestResult: ExtractedData | null = null;
+
+      for (const attempt of attempts) {
+        try {
+          const ocrText = await runOCRAttempt(attempt.blob, attempt.label);
+          const mrzResult = parseMRZ(ocrText);
+
+          if (mrzResult && mrzResult.surname) {
+            const data: ExtractedData = {
+              givenName: mrzResult.givenNames,
+              familyName: mrzResult.surname,
+              bornOn: mrzResult.dateOfBirth,
+              gender: mrzResult.gender,
+              passportNumber: mrzResult.documentNumber,
+              passportExpiryDate: mrzResult.expiryDate,
+              nationality: mrzResult.nationality,
+              passportIssuingCountry: mrzResult.issuingCountry,
+              documentType: mrzResult.documentType,
+              confidence: mrzResult.confidence,
+              warnings: mrzResult.warnings,
+            };
+
+            if (!bestResult || data.confidence > bestResult.confidence) {
+              bestResult = data;
+            }
+
+            if (data.confidence >= 80) break;
           }
-        },
-      });
-
-      setProgress(85);
-
-      const ocrText = result.data.text;
-      const mrzResult = parseMRZ(ocrText);
+        } catch (err) {
+          console.warn(`OCR attempt failed (${attempt.label}):`, err);
+        }
+      }
 
       setProgress(95);
 
-      if (mrzResult && mrzResult.surname) {
-        const data: ExtractedData = {
-          givenName: mrzResult.givenNames,
-          familyName: mrzResult.surname,
-          bornOn: mrzResult.dateOfBirth,
-          gender: mrzResult.gender,
-          passportNumber: mrzResult.documentNumber,
-          passportExpiryDate: mrzResult.expiryDate,
-          nationality: mrzResult.nationality,
-          passportIssuingCountry: mrzResult.issuingCountry,
-          documentType: mrzResult.documentType,
-          confidence: mrzResult.confidence,
-          warnings: mrzResult.warnings,
-        };
-        setExtractedData(data);
-        setEditableData({ ...data });
+      if (bestResult) {
+        setExtractedData(bestResult);
+        setEditableData({ ...bestResult });
         setProgress(100);
         setStep("review");
       } else {
@@ -144,6 +178,7 @@ export function ScanDocumentDialog({
     if (file) {
       processImage(file);
     }
+    if (e.target) e.target.value = "";
   };
 
   const handleConfirm = () => {
@@ -164,15 +199,15 @@ export function ScanDocumentDialog({
   };
 
   const confidenceColor = (conf: number) => {
-    if (conf >= 80) return "text-emerald-400";
-    if (conf >= 60) return "text-amber-400";
-    return "text-red-400";
+    if (conf >= 80) return "text-emerald-600";
+    if (conf >= 60) return "text-amber-600";
+    return "text-red-600";
   };
 
   const confidenceBg = (conf: number) => {
-    if (conf >= 80) return "bg-emerald-500/20 border-emerald-500/30";
-    if (conf >= 60) return "bg-amber-500/20 border-amber-500/30";
-    return "bg-red-500/20 border-red-500/30";
+    if (conf >= 80) return "bg-emerald-50 text-emerald-700 border-emerald-200";
+    if (conf >= 60) return "bg-amber-50 text-amber-700 border-amber-200";
+    return "bg-red-50 text-red-700 border-red-200";
   };
 
   return (
@@ -181,8 +216,8 @@ export function ScanDocumentDialog({
         {step === "select" && (
           <>
             <DialogHeader className="text-center items-center">
-              <div className="mx-auto h-16 w-16 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center mb-2">
-                <ScanLine className="h-8 w-8 text-teal-400" />
+              <div className="mx-auto h-16 w-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-2">
+                <ScanLine className="h-8 w-8 text-blue-500" />
               </div>
               <DialogTitle className="text-xl font-display text-gray-900" data-testid={`text-scan-title-${passengerIndex}`}>
                 {t("scan.title")}
@@ -194,8 +229,8 @@ export function ScanDocumentDialog({
 
             <div className="space-y-3 mt-4">
               <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-2">
-                <h4 className="text-sm font-bold text-gray-600 flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-teal-400" />
+                <h4 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-blue-500" />
                   {t("scan.supported_docs")}
                 </h4>
                 <ul className="text-xs text-gray-500 space-y-1 ml-6 list-disc">
@@ -222,7 +257,7 @@ export function ScanDocumentDialog({
                   onClick={() => cameraInputRef.current?.click()}
                   data-testid={`button-scan-camera-${passengerIndex}`}
                 >
-                  <Camera className="h-6 w-6 text-teal-400" />
+                  <Camera className="h-6 w-6 text-blue-500" />
                   <span className="text-sm font-medium">{t("scan.use_camera")}</span>
                   <span className="text-[10px] text-gray-400">{t("scan.camera_tip")}</span>
                 </Button>
@@ -247,8 +282,33 @@ export function ScanDocumentDialog({
                 </Button>
               </div>
 
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 border border-blue-100">
-                <Shield className="h-4 w-4 text-teal-400 mt-0.5 shrink-0" />
+              <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 space-y-2">
+                <h4 className="text-xs font-bold text-blue-700 flex items-center gap-2">
+                  <Smartphone className="h-3.5 w-3.5" />
+                  {t("scan.photo_tips_title")}
+                </h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-start gap-2">
+                    <Sun className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                    <span className="text-[11px] text-blue-600">{t("scan.photo_tip_light")}</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Focus className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                    <span className="text-[11px] text-blue-600">{t("scan.photo_tip_focus")}</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Maximize2 className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                    <span className="text-[11px] text-blue-600">{t("scan.photo_tip_flat")}</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <ScanLine className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                    <span className="text-[11px] text-blue-600">{t("scan.photo_tip_mrz")}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-gray-50 border border-gray-100">
+                <Shield className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
                 <p className="text-[11px] text-gray-400 leading-relaxed">
                   {t("scan.privacy_notice")}
                 </p>
@@ -270,27 +330,22 @@ export function ScanDocumentDialog({
 
             <div className="space-y-6 mt-4">
               {imagePreview && (
-                <div className="rounded-xl overflow-hidden border border-gray-200 max-h-48 flex items-center justify-center bg-gray-100">
+                <div className="rounded-xl overflow-hidden border border-gray-200 max-h-48 flex items-center justify-center bg-gray-50">
                   <img src={imagePreview} alt="Document" className="max-h-48 object-contain" />
                 </div>
               )}
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>{t("scan.reading_document")}</span>
+                  <span>{progressLabel || t("scan.reading_document")}</span>
                   <span>{progress}%</span>
                 </div>
                 <Progress value={progress} className="h-2" />
               </div>
 
               <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                <Loader2 className="h-4 w-4 animate-spin text-teal-400" />
-                <span>
-                  {progress < 30 && t("scan.step_loading")}
-                  {progress >= 30 && progress < 80 && t("scan.step_ocr")}
-                  {progress >= 80 && progress < 95 && t("scan.step_parsing")}
-                  {progress >= 95 && t("scan.step_done")}
-                </span>
+                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                <span>{t("scan.multi_attempt_notice")}</span>
               </div>
             </div>
           </>
@@ -299,8 +354,8 @@ export function ScanDocumentDialog({
         {step === "review" && editableData && (
           <>
             <DialogHeader className="text-center items-center">
-              <div className="mx-auto h-14 w-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-2">
-                <Eye className="h-7 w-7 text-emerald-400" />
+              <div className="mx-auto h-14 w-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-2">
+                <Eye className="h-7 w-7 text-emerald-500" />
               </div>
               <DialogTitle className="text-xl font-display text-gray-900" data-testid={`text-scan-review-title-${passengerIndex}`}>
                 {t("scan.review_title")}
@@ -317,9 +372,9 @@ export function ScanDocumentDialog({
                 </Badge>
                 <div className="flex items-center gap-1.5">
                   {editableData.confidence >= 80 ? (
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                   ) : (
-                    <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
+                    <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                   )}
                   <span className={`text-xs font-bold ${confidenceColor(editableData.confidence)}`}>
                     {t("scan.confidence")}: {editableData.confidence}%
@@ -330,7 +385,7 @@ export function ScanDocumentDialog({
               {editableData.warnings.length > 0 && (
                 <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-2">
                   <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-                  <div className="text-xs text-amber-600">
+                  <div className="text-xs text-amber-700">
                     <p className="font-bold mb-1">{t("scan.warnings")}</p>
                     <p>{t("scan.verify_data")}</p>
                   </div>
@@ -471,8 +526,8 @@ export function ScanDocumentDialog({
         {step === "error" && (
           <>
             <DialogHeader className="text-center items-center">
-              <div className="mx-auto h-14 w-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-2">
-                <AlertTriangle className="h-7 w-7 text-red-400" />
+              <div className="mx-auto h-14 w-14 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mb-2">
+                <AlertTriangle className="h-7 w-7 text-red-500" />
               </div>
               <DialogTitle className="text-xl font-display text-gray-900">
                 {t("scan.error_title")}
@@ -484,19 +539,31 @@ export function ScanDocumentDialog({
 
             <div className="space-y-4 mt-4">
               {imagePreview && (
-                <div className="rounded-xl overflow-hidden border border-gray-200 max-h-32 flex items-center justify-center bg-gray-100">
+                <div className="rounded-xl overflow-hidden border border-gray-200 max-h-32 flex items-center justify-center bg-gray-50">
                   <img src={imagePreview} alt="Document" className="max-h-32 object-contain opacity-50" />
                 </div>
               )}
 
-              <div className="p-3 rounded-lg bg-white border border-gray-200 space-y-2">
-                <p className="text-xs font-bold text-gray-600">{t("scan.tips_title")}</p>
-                <ul className="text-[11px] text-gray-400 space-y-1 ml-4 list-disc">
-                  <li>{t("scan.tip_1")}</li>
-                  <li>{t("scan.tip_2")}</li>
-                  <li>{t("scan.tip_3")}</li>
-                  <li>{t("scan.tip_4")}</li>
-                </ul>
+              <div className="p-4 rounded-xl bg-white border border-gray-200 space-y-3">
+                <p className="text-xs font-bold text-gray-700">{t("scan.tips_title")}</p>
+                <div className="grid grid-cols-1 gap-2">
+                  <div className="flex items-start gap-2">
+                    <Sun className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                    <span className="text-[11px] text-gray-500">{t("scan.tip_1")}</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Focus className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                    <span className="text-[11px] text-gray-500">{t("scan.tip_2")}</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Maximize2 className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                    <span className="text-[11px] text-gray-500">{t("scan.tip_3")}</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <ScanLine className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                    <span className="text-[11px] text-gray-500">{t("scan.tip_4")}</span>
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-2">
