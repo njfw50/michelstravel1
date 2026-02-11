@@ -1,12 +1,29 @@
 
-import express, { type Express } from 'express';
+import express, { type Express, type Request, type Response, type NextFunction } from 'express';
 import { storage } from './storage';
 import { stripeService } from './stripeService';
 import { getUncachableStripeClient } from './stripeClient';
 import { db } from "./db";
 import { flightSearches, bookings, siteSettings, type FlightSearchParams } from "@shared/schema";
+import { users } from "@shared/models/auth";
 import { desc, eq } from "drizzle-orm";
 import { searchFlights, getFlight, searchPlaces, getAirlines, getAirports, getAircraft, initializeReferenceData, isTestMode, activeTokenIsTest, hasLiveToken, hasTestToken, setTestModeCache, clearReferenceDataCache, loadTestModeSetting, ensureTestModeLoaded } from "./services/duffel";
+
+async function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const userId = (req.user as any)?.claims?.sub;
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const [dbUser] = await db.select().from(users).where(eq(users.id, userId));
+  if (!dbUser?.isAdmin) {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+  (req as any).dbUser = dbUser;
+  next();
+}
 
 /**
  * Register all application routes
@@ -379,11 +396,7 @@ export function registerRoutes(app: Express) {
   // === ADMIN ROUTES ===
   
   // Admin Stats
-  app.get('/api/admin/stats', async (req, res) => {
-    if (!req.isAuthenticated() || !(req.user as any).isAdmin) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-    
+  app.get('/api/admin/stats', requireAdmin, async (req, res) => {
     // Calculate stats
     const allBookings = await db.select().from(bookings);
     const totalBookings = allBookings.length;
@@ -402,10 +415,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Get Admin Settings
-  app.get('/api/admin/settings', async (req, res) => {
-    if (!req.isAuthenticated() || !(req.user as any).isAdmin) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+  app.get('/api/admin/settings', requireAdmin, async (req, res) => {
     const settings = await storage.getSiteSettings();
     if (!settings) {
       return res.json({
@@ -422,20 +432,13 @@ export function registerRoutes(app: Express) {
   });
 
   // Update Admin Settings
-  app.post('/api/admin/settings', async (req, res) => {
-    if (!req.isAuthenticated() || !(req.user as any).isAdmin) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+  app.post('/api/admin/settings', requireAdmin, async (req, res) => {
     const updated = await storage.upsertSiteSettings(req.body);
     res.json(updated);
   });
 
   // Toggle Test Mode
-  app.post('/api/admin/test-mode', async (req, res) => {
-    if (!req.isAuthenticated() || !(req.user as any).isAdmin) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
+  app.post('/api/admin/test-mode', requireAdmin, async (req, res) => {
     const { testMode } = req.body;
     if (typeof testMode !== 'boolean') {
       return res.status(400).json({ error: "testMode must be a boolean" });
@@ -490,10 +493,7 @@ export function registerRoutes(app: Express) {
   });
 
   // All Bookings
-  app.get('/api/admin/bookings', async (req, res) => {
-    if (!req.isAuthenticated() || !(req.user as any).isAdmin) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+  app.get('/api/admin/bookings', requireAdmin, async (req, res) => {
     const allBookings = await db.select().from(bookings).orderBy(desc(bookings.createdAt));
     res.json(allBookings);
   });

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, type InsertSiteSetting } from "@shared/routes";
+import { api } from "@shared/routes";
+import type { InsertSiteSetting } from "@shared/schema";
 
 export function useAdminStats() {
   return useQuery({

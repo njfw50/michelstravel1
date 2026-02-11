@@ -3,37 +3,38 @@ import { XCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
+import { useI18n } from "@/lib/i18n";
 
 export default function CheckoutCancel() {
   const [_, setLocation] = useLocation();
+  const { t } = useI18n();
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <Card className="w-full max-w-md bg-white/10 backdrop-blur-md border-white/10 text-white shadow-2xl">
+        <Card className="w-full max-w-md bg-white/5 backdrop-blur-md border-white/10 text-white shadow-2xl rounded-2xl">
           <CardContent className="pt-10 pb-10 px-6 flex flex-col items-center text-center space-y-6">
-            <div className="h-20 w-20 rounded-full bg-red-500/20 flex items-center justify-center mb-2">
+            <div className="h-20 w-20 rounded-full bg-red-500/20 flex items-center justify-center border border-red-500/20">
               <XCircle className="h-10 w-10 text-red-400" />
             </div>
-            
+
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold font-display">Pagamento Cancelado</h1>
-              <p className="text-white/60">
-                O processo de pagamento foi interrompido. Nenhuma cobrança foi realizada no seu cartão.
-              </p>
+              <h1 className="text-3xl font-bold font-display" data-testid="text-checkout-cancel">{t("checkout.cancel_title")}</h1>
+              <p className="text-white/60">{t("checkout.cancel_desc")}</p>
             </div>
 
             <div className="w-full pt-4">
-              <Button 
+              <Button
                 onClick={() => setLocation("/")}
                 variant="outline"
-                className="w-full h-12 rounded-xl border-white/20 hover:bg-white/10 text-white font-bold"
+                className="w-full h-12 rounded-xl border-white/20 text-white font-bold"
+                data-testid="button-try-again"
               >
-                <ArrowLeft className="mr-2 h-4 w-4" /> Tentar Novamente
+                <ArrowLeft className="mr-2 h-4 w-4" /> {t("checkout.try_again")}
               </Button>
             </div>
           </CardContent>

@@ -157,6 +157,26 @@ const translations: Record<Language, Record<string, string>> = {
     "admin.token_status": "Status do Token",
     "admin.token_test": "Token de Teste",
     "admin.token_production": "Token de Produção",
+
+    // Blog
+    "blog.subtitle": "Dicas, guias e inspiração para sua próxima aventura.",
+    "blog.read_article": "Ler Artigo",
+    "blog.no_posts": "Nenhum artigo ainda",
+    "blog.no_posts_desc": "Volte em breve para novos conteúdos de viagem.",
+    "blog.post_not_found": "Artigo não encontrado",
+    "blog.post_not_found_desc": "O artigo que você procura não está disponível.",
+    "blog.back_to_guide": "Voltar ao Guia",
+
+    // Checkout
+    "checkout.success_title": "Pagamento Confirmado!",
+    "checkout.success_desc": "Sua reserva foi processada com sucesso. Você receberá um e-mail com os detalhes do seu voo em instantes.",
+    "checkout.back_home": "Voltar para Início",
+    "checkout.cancel_title": "Pagamento Cancelado",
+    "checkout.cancel_desc": "O processo de pagamento foi interrompido. Nenhuma cobrança foi realizada no seu cartão.",
+    "checkout.try_again": "Tentar Novamente",
+
+    // Errors
+    "errors.page_not_found": "A página que você procura não foi encontrada.",
   },
   en: {
     // Header & Footer
@@ -305,6 +325,26 @@ const translations: Record<Language, Record<string, string>> = {
     "admin.token_status": "Token Status",
     "admin.token_test": "Test Token",
     "admin.token_production": "Production Token",
+
+    // Blog
+    "blog.subtitle": "Tips, guides, and inspiration for your next adventure.",
+    "blog.read_article": "Read Article",
+    "blog.no_posts": "No articles yet",
+    "blog.no_posts_desc": "Check back soon for new travel content.",
+    "blog.post_not_found": "Article not found",
+    "blog.post_not_found_desc": "The article you're looking for is not available.",
+    "blog.back_to_guide": "Back to Guide",
+
+    // Checkout
+    "checkout.success_title": "Payment Confirmed!",
+    "checkout.success_desc": "Your booking was processed successfully. You will receive an email with your flight details shortly.",
+    "checkout.back_home": "Back to Home",
+    "checkout.cancel_title": "Payment Cancelled",
+    "checkout.cancel_desc": "The payment process was interrupted. No charges were made to your card.",
+    "checkout.try_again": "Try Again",
+
+    // Errors
+    "errors.page_not_found": "The page you're looking for could not be found.",
   },
   es: {
     // Header & Footer
@@ -453,6 +493,26 @@ const translations: Record<Language, Record<string, string>> = {
     "admin.token_status": "Estado del Token",
     "admin.token_test": "Token de Prueba",
     "admin.token_production": "Token de Producción",
+
+    // Blog
+    "blog.subtitle": "Consejos, guías e inspiración para su próxima aventura.",
+    "blog.read_article": "Leer Artículo",
+    "blog.no_posts": "Sin artículos aún",
+    "blog.no_posts_desc": "Vuelva pronto para nuevo contenido de viaje.",
+    "blog.post_not_found": "Artículo no encontrado",
+    "blog.post_not_found_desc": "El artículo que busca no está disponible.",
+    "blog.back_to_guide": "Volver a la Guía",
+
+    // Checkout
+    "checkout.success_title": "Pago Confirmado!",
+    "checkout.success_desc": "Su reserva fue procesada con éxito. Recibirá un correo con los detalles de su vuelo en breve.",
+    "checkout.back_home": "Volver al Inicio",
+    "checkout.cancel_title": "Pago Cancelado",
+    "checkout.cancel_desc": "El proceso de pago fue interrumpido. No se realizaron cargos a su tarjeta.",
+    "checkout.try_again": "Intentar de Nuevo",
+
+    // Errors
+    "errors.page_not_found": "La página que busca no fue encontrada.",
   }
 };
 

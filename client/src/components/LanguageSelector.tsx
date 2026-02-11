@@ -44,7 +44,7 @@ export function LanguageSelector() {
                   <Globe className="h-5 w-5 text-emerald-400" />
                 </div>
                 <div className="text-left">
-                  <div className="font-bold text-white group-hover:text-amber-300 transition-colors">Portugues</div>
+                  <div className="font-bold text-white group-hover:text-amber-300 transition-colors">Português</div>
                   <div className="text-xs text-white/50 group-hover:text-white/70">Brasil / Portugal</div>
                 </div>
               </div>
@@ -78,8 +78,8 @@ export function LanguageSelector() {
                   <Globe className="h-5 w-5 text-orange-400" />
                 </div>
                 <div className="text-left">
-                  <div className="font-bold text-white group-hover:text-amber-300 transition-colors">Espanol</div>
-                  <div className="text-xs text-white/50 group-hover:text-white/70">Espana / Latinoamerica</div>
+                  <div className="font-bold text-white group-hover:text-amber-300 transition-colors">Español</div>
+                  <div className="text-xs text-white/50 group-hover:text-white/70">España / Latinoamérica</div>
                 </div>
               </div>
               <Check className="h-5 w-5 text-amber-400 opacity-0 group-hover:opacity-100 transition-all transform group-hover:scale-110" />
@@ -87,7 +87,7 @@ export function LanguageSelector() {
           </div>
           
           <div className="p-4 bg-white/5 text-center border-t border-white/10">
-            <p className="text-xs text-white/40 font-medium tracking-widest uppercase">Michels Travel - Opcao Eficiente</p>
+            <p className="text-xs text-white/40 font-medium tracking-widest uppercase">Michels Travel - Opção Eficiente</p>
           </div>
         </motion.div>
       </motion.div>

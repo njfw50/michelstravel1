@@ -171,10 +171,10 @@ export default function AdminDashboard() {
   }
 
   const statCards = [
-    { title: t("admin.total_revenue"), value: `$${stats?.totalRevenue.toLocaleString()}`, icon: DollarSign, color: "text-emerald-400" },
-    { title: t("admin.commissions"), value: `$${stats?.totalCommission.toLocaleString()}`, icon: TrendingUp, color: "text-amber-400" },
-    { title: t("admin.total_bookings"), value: stats?.totalBookings, icon: Plane, color: "text-teal-400" },
-    { title: t("admin.recent_searches"), value: stats?.recentSearches, icon: Users, color: "text-orange-400" },
+    { title: t("admin.total_revenue"), value: `$${(stats?.totalRevenue ?? 0).toLocaleString()}`, icon: DollarSign, color: "text-emerald-400" },
+    { title: t("admin.commissions"), value: `$${(stats?.totalCommission ?? 0).toLocaleString()}`, icon: TrendingUp, color: "text-amber-400" },
+    { title: t("admin.total_bookings"), value: stats?.totalBookings ?? 0, icon: Plane, color: "text-teal-400" },
+    { title: t("admin.recent_searches"), value: stats?.recentSearches ?? 0, icon: Users, color: "text-orange-400" },
   ];
 
   const chartData = [
