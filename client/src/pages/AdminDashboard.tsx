@@ -294,12 +294,17 @@ export default function AdminDashboard() {
     setLocation("/");
   };
 
+  useEffect(() => {
+    if (!adminCheckLoading && !adminCheck?.isAdmin) {
+      setLocation("/");
+    }
+  }, [adminCheck, adminCheckLoading, setLocation]);
+
   if (adminCheckLoading || statsLoading) {
     return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-amber-400" /></div>;
   }
 
   if (!adminCheck?.isAdmin) {
-    setLocation("/");
     return null;
   }
 
