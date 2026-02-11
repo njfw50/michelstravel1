@@ -138,14 +138,14 @@ export function FlightBoard() {
         </div>
 
         <div className="overflow-hidden border border-gray-200 bg-white rounded-2xl shadow-sm">
-          <div className="grid grid-cols-[1fr_auto_1fr_auto_auto_auto_auto] gap-0 px-5 py-3.5 border-b border-gray-100 bg-gray-50/80 text-[11px] font-bold text-gray-400 uppercase tracking-widest hidden md:grid">
+          <div className="grid grid-cols-[160px_80px_1fr_100px_100px_120px_80px] gap-0 px-5 py-3.5 border-b border-gray-100 bg-gray-50/80 text-[11px] font-bold text-gray-400 uppercase tracking-widest hidden md:grid items-center">
             <div>{t("home.board.col_flight")}</div>
             <div>{t("home.board.col_time")}</div>
             <div className="pl-4">{t("home.board.col_route")}</div>
-            <div className="text-center px-4">{t("home.board.col_duration")}</div>
-            <div className="text-center px-4">{t("home.board.col_stops")}</div>
-            <div className="text-right px-4">{t("home.board.col_price")}</div>
-            <div className="text-center px-2 w-24"></div>
+            <div className="text-center">{t("home.board.col_duration")}</div>
+            <div className="text-center">{t("home.board.col_stops")}</div>
+            <div className="text-right">{t("home.board.col_price")}</div>
+            <div></div>
           </div>
 
           {isLoading ? (
@@ -171,7 +171,7 @@ export function FlightBoard() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ delay: i * 0.03 }}
-                  className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_auto_auto_auto] gap-2 md:gap-0 px-5 py-3.5 border-b border-gray-100 hover:bg-blue-50/50 transition-all duration-200 cursor-pointer group"
+                  className="grid grid-cols-1 md:grid-cols-[160px_80px_1fr_100px_100px_120px_80px] gap-2 md:gap-0 px-5 py-3.5 border-b border-gray-100 hover:bg-blue-50/50 transition-all duration-200 cursor-pointer group items-center"
                   onClick={() => setLocation(`/book/${flight.id}?adults=1&children=0&infants=0`)}
                   data-testid={`board-row-${i}`}
                 >
@@ -189,13 +189,13 @@ export function FlightBoard() {
                     </div>
                   </div>
 
-                  <div className="flex items-center px-2">
+                  <div className="flex items-center">
                     <div className="font-mono text-lg font-bold text-blue-600" data-testid={`text-board-departure-${i}`}>
                       {formatTime(flight.departureTime)}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pl-4">
+                  <div className="flex items-center pl-4">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <div className="text-center flex-shrink-0">
                         <div className="text-sm font-bold text-gray-900 font-mono">{flight.origin}</div>
@@ -213,22 +213,22 @@ export function FlightBoard() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-center px-4">
+                  <div className="flex items-center justify-center">
                     <div className="flex items-center gap-1 text-xs text-gray-400">
                       <Clock className="h-3 w-3" />
                       <span className="font-mono">{formatDuration(flight.duration)}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-center px-4">
+                  <div className="flex items-center justify-center">
                     <Badge variant="secondary" className={`text-[10px] px-2.5 py-0.5 ${flight.stops === 0 ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-amber-50 text-amber-600 border-amber-200"}`}>
                       {flight.stops === 0 ? t("flight.direct") : `${flight.stops} ${flight.stops === 1 ? t("flight.stop") : t("flight.stops")}`}
                     </Badge>
                   </div>
 
-                  <div className="flex items-center justify-end px-4">
+                  <div className="flex items-center justify-end">
                     <div className="text-right">
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 justify-end">
                         <TrendingDown className="h-3 w-3 text-emerald-500" />
                         <span className="text-lg font-bold text-gray-900 font-mono" data-testid={`text-board-price-${i}`}>
                           {flight.currency === "USD" ? "$" : flight.currency === "EUR" ? "\u20AC" : flight.currency === "GBP" ? "\u00A3" : flight.currency === "BRL" ? "R$" : flight.currency}
@@ -239,7 +239,7 @@ export function FlightBoard() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-center w-24">
+                  <div className="flex items-center justify-center">
                     <Button
                       size="sm"
                       className="rounded-lg text-xs opacity-0 group-hover:opacity-100 transition-all duration-200 bg-blue-500 hover:bg-blue-600 text-white shadow-md shadow-blue-500/20"
