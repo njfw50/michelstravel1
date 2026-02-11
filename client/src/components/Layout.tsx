@@ -66,18 +66,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   className={cn(
                     "relative text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200",
                     location === link.href
-                      ? (scrolled ? "text-blue-600 bg-blue-50" : "text-white bg-white/15")
-                      : (scrolled ? "text-gray-500 hover:text-gray-900 hover:bg-gray-50" : "text-white/70 hover:text-white hover:bg-white/10")
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100/50"
                   )}
                 >
                   {link.label}
                   {location === link.href && (
                     <motion.div 
                       layoutId="activeNav"
-                      className={cn(
-                        "absolute bottom-0 left-3 right-3 h-[2px] rounded-full",
-                        scrolled ? "bg-blue-500" : "bg-white"
-                      )}
+                      className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full bg-blue-500"
                       transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
                     />
                   )}
@@ -91,7 +88,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className={cn("gap-2 rounded-full pl-2 pr-4 border", scrolled ? "border-gray-200 text-gray-700" : "border-white/20 text-white")} data-testid="button-user-menu">
+                    <Button variant="ghost" className="gap-2 rounded-full pl-2 pr-4 border border-gray-200 text-gray-700" data-testid="button-user-menu">
                       <div className="h-7 w-7 rounded-full bg-blue-500 flex items-center justify-center text-white ring-2 ring-blue-200">
                         <User className="h-3.5 w-3.5" />
                       </div>
@@ -120,12 +117,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               ) : (
                 <Button 
                   onClick={() => setLoginDialogOpen(true)}
-                  className={cn(
-                    "rounded-full px-6 font-bold shadow-md transition-all text-sm",
-                    scrolled
-                      ? "bg-blue-500 hover:bg-blue-600 text-white"
-                      : "bg-white text-blue-600 hover:bg-white/90"
-                  )}
+                  className="rounded-full px-6 font-bold shadow-md transition-all text-sm bg-blue-600 hover:bg-blue-700 text-white"
                   data-testid="button-signin"
                 >
                   {t("nav.signin")}
@@ -134,7 +126,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
 
             <button 
-              className={cn("md:hidden p-2 rounded-lg transition-colors", scrolled ? "text-gray-600 hover:bg-gray-100" : "text-white/80 hover:bg-white/10")}
+              className="md:hidden p-2 rounded-lg transition-colors text-gray-600 hover:bg-gray-100"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               data-testid="button-mobile-menu"
             >
