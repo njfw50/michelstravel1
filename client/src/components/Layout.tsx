@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { User, LogOut, Menu, X, Shield, ShieldCheck, Lock, Award, Building2, Plane } from "lucide-react";
+import { User, LogOut, Menu, X, Shield, ShieldCheck, Lock, Award, Building2, Plane, Briefcase } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +36,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const navLinks = [
     { href: "/", label: t("nav.flights") },
+    { href: "/my-trips", label: t("nav.my_trips") || "My Trips" },
     { href: "/about", label: t("footer.about") },
     { href: "/blog", label: t("nav.blog") },
   ];
@@ -96,6 +97,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-xl border-gray-200 p-2">
+                    <DropdownMenuItem 
+                      className="rounded-lg cursor-pointer"
+                      onClick={() => setLocation("/my-trips")}
+                      data-testid="button-my-trips"
+                    >
+                      <Briefcase className="mr-2 h-4 w-4" /> {t("nav.my_trips") || "My Trips"}
+                    </DropdownMenuItem>
                     {adminCheck?.isAdmin && (
                       <DropdownMenuItem 
                         className="rounded-lg cursor-pointer text-blue-600"

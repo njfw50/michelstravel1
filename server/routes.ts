@@ -6,8 +6,19 @@ import { getUncachableStripeClient } from './stripeClient';
 import { db } from "./db";
 import { flightSearches, bookings, siteSettings, type FlightSearchParams } from "@shared/schema";
 import { users } from "@shared/models/auth";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, and } from "drizzle-orm";
+import { nanoid } from "nanoid";
+
+function generateReferenceCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `MT-${code}`;
+}
 import { searchFlights, getFlight, searchPlaces, getAirlines, getAirports, getAircraft, initializeReferenceData, isTestMode, activeTokenIsTest, hasLiveToken, hasTestToken, setTestModeCache, clearReferenceDataCache, loadTestModeSetting, ensureTestModeLoaded } from "./services/duffel";
+import { sendBookingConfirmationEmail } from "./services/emailService";
 
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
   if (!(req.session as any)?.isAdmin) {
@@ -337,12 +348,16 @@ export function registerRoutes(app: Express) {
             _testMode: isTestModeActive,
         };
 
+        const refCode = generateReferenceCode();
+
         const [booking] = await db.insert(bookings).values({
+            referenceCode: refCode,
             flightData: flightDataWithMode,
             passengerDetails: bookingData.passengerDetails || bookingData.passengers,
             totalPrice: bookingData.totalPrice,
             currency: bookingData.currency || 'USD',
             contactEmail: bookingData.contactEmail,
+            contactPhone: bookingData.contactPhone || null,
             commissionRate: commissionRate.toString(),
             commissionAmount: commissionAmount,
             status: isTestModeActive ? 'test' : 'pending',
@@ -354,6 +369,18 @@ export function registerRoutes(app: Express) {
           await db.update(bookings)
               .set({ stripePaymentIntentId: 'test_session_' + booking.id, stripePaymentStatus: 'test' })
               .where(eq(bookings.id, booking.id));
+
+          sendBookingConfirmationEmail({
+            referenceCode: booking.referenceCode || refCode,
+            contactEmail: booking.contactEmail,
+            contactPhone: booking.contactPhone,
+            totalPrice: booking.totalPrice,
+            currency: booking.currency,
+            status: 'test',
+            flightData: booking.flightData,
+            passengerDetails: (booking.passengerDetails as any[]) || [],
+            createdAt: booking.createdAt?.toString() || new Date().toISOString(),
+          }).catch(err => console.error("[EMAIL] Background send failed:", err));
 
           const testSuccessUrl = `${req.protocol}://${req.get('host')}/checkout/success?bookingId=${booking.id}&test=true`;
           return res.status(201).json({ 
@@ -388,6 +415,81 @@ export function registerRoutes(app: Express) {
     } catch (error) {
         console.error("Booking creation error:", error);
         res.status(500).json({ error: "Failed to create booking" });
+    }
+  });
+
+  // Lookup booking by reference code + email (public, for customers)
+  // MUST be before /api/bookings/:id to avoid 'lookup' being treated as an id
+  app.get('/api/bookings/lookup', async (req, res) => {
+    try {
+      const { reference, email } = req.query;
+      if (!reference || !email) {
+        return res.status(400).json({ error: "Reference code and email are required" });
+      }
+      const refCode = (reference as string).toUpperCase().trim();
+      const emailStr = (email as string).toLowerCase().trim();
+      
+      const booking = await storage.getBookingByReferenceAndEmail(refCode, emailStr);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found. Please check your reference code and email." });
+      }
+      res.json(booking);
+    } catch (error) {
+      console.error("Booking lookup error:", error);
+      res.status(500).json({ error: "Failed to lookup booking" });
+    }
+  });
+
+  const emailSentCache = new Set<number>();
+
+  app.post('/api/bookings/:id/send-confirmation', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+
+      if (emailSentCache.has(id)) {
+        return res.json({ sent: false, message: "Confirmation email already sent for this booking" });
+      }
+
+      const booking = await storage.getBooking(id);
+      if (!booking) return res.status(404).json({ error: "Booking not found" });
+
+      emailSentCache.add(id);
+
+      const sent = await sendBookingConfirmationEmail({
+        referenceCode: booking.referenceCode || `MT-${booking.id}`,
+        contactEmail: booking.contactEmail,
+        contactPhone: booking.contactPhone,
+        totalPrice: booking.totalPrice,
+        currency: booking.currency,
+        status: booking.status,
+        flightData: booking.flightData,
+        passengerDetails: (booking.passengerDetails as any[]) || [],
+        createdAt: booking.createdAt?.toString() || new Date().toISOString(),
+      });
+
+      res.json({ sent, message: sent ? "Confirmation email sent" : "Email service not configured (logged to console)" });
+    } catch (error) {
+      console.error("Send confirmation error:", error);
+      res.status(500).json({ error: "Failed to send confirmation email" });
+    }
+  });
+
+  // Get booking by ID (for confirmation page)
+  app.get('/api/bookings/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid booking ID" });
+      }
+      const booking = await storage.getBooking(id);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      res.json(booking);
+    } catch (error) {
+      console.error("Get booking error:", error);
+      res.status(500).json({ error: "Failed to fetch booking" });
     }
   });
 

@@ -77,9 +77,24 @@ Preferred communication style: Simple, everyday language.
 - Sessions stored in PostgreSQL `sessions` table
 - Integration files in `server/replit_integrations/auth/`
 
+### Email Service (Booking Confirmations)
+- Nodemailer-based email service for sending booking confirmations
+- Sends professional HTML emails with reference code, flight details, passengers, pricing
+- Gracefully degrades (logs to console) when SMTP not configured
+- Triggered automatically on test mode bookings and via `/api/bookings/:id/send-confirmation` endpoint
+- Key file: `server/services/emailService.ts`
+- Optional env vars: `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_PORT`
+
+### Post-Sale System
+- **Reference Codes**: MT-XXXXXX format generated for every booking
+- **Confirmation Page**: `/checkout/success` — comprehensive booking confirmation with print support
+- **My Trips Page**: `/my-trips` — customer dashboard showing booking history (logged-in) and booking lookup (by reference + email)
+- **Booking Lookup API**: `GET /api/bookings/lookup?reference=MT-XXX&email=...` for non-logged-in users
+
 ### Required Environment Variables
 - `DATABASE_URL` — PostgreSQL connection string
 - `DUFFEL_API_TOKEN` — Duffel flight API key
 - `SESSION_SECRET` — Express session secret
 - `REPL_ID` — Replit environment identifier (auto-set by Replit)
 - Stripe credentials are fetched dynamically via Replit connectors (not env vars)
+- `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_PORT` — Optional, for sending booking confirmation emails

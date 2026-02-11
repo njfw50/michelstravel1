@@ -460,6 +460,7 @@ export default function Booking() {
 
     const bookingData = {
       contactEmail: data.contactEmail,
+      contactPhone: data.contactPhone,
       totalPrice: flight.price.toString(),
       currency: flight.currency,
       flightData: {

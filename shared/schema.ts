@@ -26,17 +26,19 @@ export const flightSearches = pgTable("flight_searches", {
 // === BOOKINGS (Commission Tracking) ===
 export const bookings = pgTable("bookings", {
   id: serial("id").primaryKey(),
-  userId: text("user_id").references(() => users.id), // Optional: guest checkout possible?
-  flightData: jsonb("flight_data").notNull(), // Snapshot of flight details
+  referenceCode: text("reference_code").unique(),
+  userId: text("user_id").references(() => users.id),
+  flightData: jsonb("flight_data").notNull(),
   passengerDetails: jsonb("passenger_details").notNull(),
   totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
   currency: text("currency").default("USD"),
-  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).default("0.05"), // 5% default
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).default("0.05"),
   commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }),
-  status: text("status").default("pending"), // pending, confirmed, cancelled
+  status: text("status").default("pending"),
   stripePaymentIntentId: text("stripe_payment_intent_id"),
   stripePaymentStatus: text("stripe_payment_status").default("pending"),
   contactEmail: text("contact_email").notNull(),
+  contactPhone: text("contact_phone"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

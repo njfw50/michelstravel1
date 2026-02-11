@@ -22,6 +22,8 @@ export interface IStorage extends IAuthStorage {
   createBooking(booking: InsertBooking): Promise<Booking>;
   getBookings(userId?: string): Promise<Booking[]>;
   getBooking(id: number): Promise<Booking | undefined>;
+  getBookingByReference(referenceCode: string): Promise<Booking | undefined>;
+  getBookingByReferenceAndEmail(referenceCode: string, email: string): Promise<Booking | undefined>;
 
   // Settings
   getSiteSettings(): Promise<SiteSetting | undefined>;
@@ -78,6 +80,18 @@ export class DatabaseStorage implements IStorage {
 
   async getBooking(id: number): Promise<Booking | undefined> {
     const [booking] = await db.select().from(bookings).where(eq(bookings.id, id));
+    return booking;
+  }
+
+  async getBookingByReference(referenceCode: string): Promise<Booking | undefined> {
+    const [booking] = await db.select().from(bookings).where(eq(bookings.referenceCode, referenceCode));
+    return booking;
+  }
+
+  async getBookingByReferenceAndEmail(referenceCode: string, email: string): Promise<Booking | undefined> {
+    const [booking] = await db.select().from(bookings).where(
+      and(eq(bookings.referenceCode, referenceCode), eq(bookings.contactEmail, email))
+    );
     return booking;
   }
 
