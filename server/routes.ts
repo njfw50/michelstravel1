@@ -375,7 +375,7 @@ export function registerRoutes(app: Express) {
             contactEmail: booking.contactEmail,
             contactPhone: booking.contactPhone,
             totalPrice: booking.totalPrice,
-            currency: booking.currency,
+            currency: booking.currency || 'USD',
             status: 'test',
             flightData: booking.flightData,
             passengerDetails: (booking.passengerDetails as any[]) || [],
@@ -461,8 +461,8 @@ export function registerRoutes(app: Express) {
         contactEmail: booking.contactEmail,
         contactPhone: booking.contactPhone,
         totalPrice: booking.totalPrice,
-        currency: booking.currency,
-        status: booking.status,
+        currency: booking.currency || 'USD',
+        status: booking.status || 'pending',
         flightData: booking.flightData,
         passengerDetails: (booking.passengerDetails as any[]) || [],
         createdAt: booking.createdAt?.toString() || new Date().toISOString(),
@@ -490,6 +490,68 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Get booking error:", error);
       res.status(500).json({ error: "Failed to fetch booking" });
+    }
+  });
+
+  // === PROFILE ROUTES ===
+
+  app.get('/api/profile', async (req, res) => {
+    const user = (req as any).user;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    try {
+      const fullUser = await storage.getUser(userId);
+      if (!fullUser) return res.status(404).json({ error: "User not found" });
+
+      const userBookings = await storage.getBookings(userId);
+      res.json({
+        id: fullUser.id,
+        email: fullUser.email,
+        firstName: fullUser.firstName,
+        lastName: fullUser.lastName,
+        phone: fullUser.phone,
+        profileImageUrl: fullUser.profileImageUrl,
+        createdAt: fullUser.createdAt,
+        bookingsCount: userBookings.length,
+      });
+    } catch (error) {
+      console.error("Get profile error:", error);
+      res.status(500).json({ error: "Failed to get profile" });
+    }
+  });
+
+  app.patch('/api/profile', async (req, res) => {
+    const user = (req as any).user;
+    const userId = user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    try {
+      const { firstName, lastName, phone } = req.body;
+      const updates: Record<string, string> = {};
+      if (typeof firstName === 'string') updates.firstName = firstName.trim();
+      if (typeof lastName === 'string') updates.lastName = lastName.trim();
+      if (typeof phone === 'string') updates.phone = phone.trim();
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No valid fields to update" });
+      }
+
+      const updated = await storage.updateUserProfile(userId, updates);
+      res.json({
+        id: updated.id,
+        email: updated.email,
+        firstName: updated.firstName,
+        lastName: updated.lastName,
+        phone: updated.phone,
+        profileImageUrl: updated.profileImageUrl,
+        createdAt: updated.createdAt,
+      });
+    } catch (error) {
+      console.error("Update profile error:", error);
+      res.status(500).json({ error: "Failed to update profile" });
     }
   });
 

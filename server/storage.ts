@@ -34,6 +34,9 @@ export interface IStorage extends IAuthStorage {
   getBlogPost(slug: string): Promise<BlogPost | undefined>;
   createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
 
+  // Profile
+  updateUserProfile(userId: string, profile: { firstName?: string; lastName?: string; phone?: string }): Promise<any>;
+
   // Stripe
   getProduct(productId: string): Promise<any>;
   listProducts(active?: boolean, limit?: number, offset?: number): Promise<any[]>;
@@ -129,6 +132,12 @@ export class DatabaseStorage implements IStorage {
   async createBlogPost(post: InsertBlogPost): Promise<BlogPost> {
     const [newPost] = await db.insert(blogPosts).values(post).returning();
     return newPost;
+  }
+
+  // --- Profile ---
+  async updateUserProfile(userId: string, profile: { firstName?: string; lastName?: string; phone?: string }) {
+    const [user] = await db.update(users).set({ ...profile, updatedAt: new Date() }).where(eq(users.id, userId)).returning();
+    return user;
   }
 
   // --- Stripe ---

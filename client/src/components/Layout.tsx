@@ -99,6 +99,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-xl border-gray-200 p-2">
                     <DropdownMenuItem 
                       className="rounded-lg cursor-pointer"
+                      onClick={() => setLocation("/profile")}
+                      data-testid="button-profile"
+                    >
+                      <User className="mr-2 h-4 w-4" /> {t("nav.profile") || "My Profile"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="rounded-lg cursor-pointer"
                       onClick={() => setLocation("/my-trips")}
                       data-testid="button-my-trips"
                     >
@@ -171,6 +178,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="pt-4 border-t border-gray-200">
                 {user ? (
                   <>
+                    <button
+                      onClick={() => { setIsMobileMenuOpen(false); setLocation("/profile"); }}
+                      className="block w-full text-left py-3 text-base font-medium text-gray-600 rounded-lg px-4 hover:bg-gray-50"
+                      data-testid="button-mobile-profile"
+                    >
+                      {t("nav.profile") || "My Profile"}
+                    </button>
                     {adminCheck?.isAdmin && (
                       <button
                         onClick={() => { setIsMobileMenuOpen(false); setLocation("/admin"); }}

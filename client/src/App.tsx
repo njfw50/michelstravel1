@@ -21,6 +21,7 @@ import About from "@/pages/About";
 import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import CheckoutCancel from "@/pages/CheckoutCancel";
 import MyTrips from "@/pages/MyTrips";
+import Profile from "@/pages/Profile";
 
 function TestModeBanner() {
   const { t } = useI18n();
@@ -64,6 +65,7 @@ function Router() {
       <Route path="/blog/:slug" component={() => <Layout><BlogPost /></Layout>} />
       
       <Route path="/my-trips" component={() => <Layout><MyTrips /></Layout>} />
+      <Route path="/profile" component={() => <Layout><Profile /></Layout>} />
       
       <Route path="/checkout/success" component={CheckoutSuccess} />
       <Route path="/checkout/cancel" component={CheckoutCancel} />

@@ -34,7 +34,7 @@ Preferred communication style: Simple, everyday language.
 - `routes.ts` — API route contracts with Zod schemas for input validation and response parsing, used by both client hooks and server handlers
 
 ### Key Data Models
-- **users** — Auth users with optional Stripe customer/subscription IDs and admin flag
+- **users** — Auth users with phone, optional Stripe customer/subscription IDs, and admin flag. Profile editable via `/profile` page
 - **sessions** — PostgreSQL-backed session storage for Replit Auth
 - **flight_searches** — Search history/cache for SEO and popular destinations
 - **bookings** — Flight booking records with commission tracking, Stripe payment status, passenger details as JSONB
