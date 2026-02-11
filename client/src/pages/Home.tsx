@@ -125,7 +125,7 @@ export default function Home() {
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent pointer-events-none" />
       </section>
 
-      <section className="relative -mt-8 z-20 pb-8">
+      <section className="relative mt-8 z-20 pb-8">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
