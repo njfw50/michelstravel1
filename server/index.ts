@@ -7,6 +7,7 @@ import { storage } from "./storage";
 import { getStripeSync } from "./stripeClient";
 import { WebhookHandlers } from "./webhookHandlers";
 import { createServer } from "http";
+import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 
 const app = express();
 const httpServer = createServer(app);
@@ -145,6 +146,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  await setupAuth(app);
+  registerAuthRoutes(app);
   registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
