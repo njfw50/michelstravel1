@@ -463,7 +463,7 @@ export default function MyTrips() {
                 </div>
                 <div>
                   <div className="text-xs text-gray-500">{t("booking.phone") || "Telefone"}</div>
-                  <a href="tel:+558623501161" className="text-sm font-medium text-blue-600 hover:underline" data-testid="link-contact-phone">+55 (86) 2350-1161</a>
+                  <a href="tel:+18623501161" className="text-sm font-medium text-blue-600 hover:underline" data-testid="link-contact-phone">+1 (862) 350-1161</a>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -472,7 +472,7 @@ export default function MyTrips() {
                 </div>
                 <div>
                   <div className="text-xs text-gray-500">{t("confirm.agency_location") || "Localização"}</div>
-                  <span className="text-sm font-medium text-gray-700">Brasil</span>
+                  <span className="text-sm font-medium text-gray-700">New Jersey, USA</span>
                 </div>
               </div>
             </div>

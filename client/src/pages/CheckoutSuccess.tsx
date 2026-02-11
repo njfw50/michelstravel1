@@ -510,13 +510,13 @@ export default function CheckoutSuccess() {
                   </div>
                   <div className="flex items-center gap-2 text-blue-700">
                     <Phone className="h-3.5 w-3.5" />
-                    <a href="tel:+558623501161" className="underline" data-testid="link-agency-phone">
-                      +55 (86) 2350-1161
+                    <a href="tel:+18623501161" className="underline" data-testid="link-agency-phone">
+                      +1 (862) 350-1161
                     </a>
                   </div>
                   <div className="flex items-center gap-2 text-blue-600 text-xs">
                     <MapPin className="h-3.5 w-3.5" />
-                    <span>{t("confirm.registered") || "Brasil"}</span>
+                    <span>{t("confirm.registered") || "New Jersey, USA"}</span>
                   </div>
                 </div>
               </div>
