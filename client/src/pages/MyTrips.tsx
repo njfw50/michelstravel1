@@ -371,7 +371,7 @@ export default function MyTrips() {
                   <p className="text-sm text-gray-500 mt-1">{t("trips.login_desc") || "Sign in to see all your bookings in one place, track flight status, and access your complete travel history."}</p>
                 </div>
                 <Button
-                  onClick={() => setLocation("/")}
+                  onClick={() => { window.location.href = "/api/login"; }}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
                   data-testid="button-login-from-trips"
                 >

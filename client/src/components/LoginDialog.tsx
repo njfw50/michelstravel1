@@ -9,7 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Lock, ShieldCheck, LogIn } from "lucide-react";
+import { Loader2, Lock, ShieldCheck, Mail, ArrowLeft } from "lucide-react";
+import { SiGoogle, SiApple, SiGithub } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
 import { useLocation } from "wouter";
@@ -22,7 +23,6 @@ interface LoginDialogProps {
 
 export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   const [step, setStep] = useState<"login" | "admin-password">("login");
-  const [loginValue, setLoginValue] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -31,7 +31,6 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
 
   const handleReset = () => {
     setStep("login");
-    setLoginValue("");
     setPassword("");
     setIsLoading(false);
   };
@@ -43,13 +42,8 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
     onOpenChange(newOpen);
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loginValue.trim().toLowerCase() === "admin") {
-      setStep("admin-password");
-    } else {
-      window.location.href = "/api/login";
-    }
+  const handleSocialLogin = () => {
+    window.location.href = "/api/login";
   };
 
   const handleAdminPasswordSubmit = async (e: React.FormEvent) => {
@@ -91,39 +85,49 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
           <>
             <DialogHeader className="text-center items-center">
               <div className="mx-auto h-14 w-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-2">
-                <LogIn className="h-7 w-7 text-blue-500" />
+                <Mail className="h-7 w-7 text-blue-500" />
               </div>
               <DialogTitle className="text-xl font-display text-gray-900" data-testid="text-login-dialog-title">
-                {t("nav.signin")}
+                {t("login.title")}
               </DialogTitle>
               <DialogDescription className="text-gray-500 text-sm">
                 {t("login.description")}
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleLoginSubmit} className="space-y-4 mt-2">
-              <div className="space-y-2">
-                <Label htmlFor="login-input" className="text-gray-600 text-sm">
-                  Login
-                </Label>
-                <Input
-                  id="login-input"
-                  data-testid="input-login-username"
-                  type="text"
-                  value={loginValue}
-                  onChange={(e) => setLoginValue(e.target.value)}
-                  placeholder={t("login.placeholder")}
-                  className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
-                  autoFocus
-                />
-              </div>
+            <div className="space-y-3 mt-2">
               <Button
-                data-testid="button-login-submit"
-                type="submit"
-                className="w-full gap-2"
+                type="button"
+                variant="outline"
+                className="w-full gap-3 border-gray-200 text-gray-700 font-medium"
+                onClick={handleSocialLogin}
+                data-testid="button-login-google"
               >
-                <LogIn className="h-4 w-4" />
-                {t("login.enter")}
+                <SiGoogle className="h-4 w-4 text-[#4285F4]" />
+                {t("login.continue_google")}
               </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full gap-3 border-gray-200 text-gray-700 font-medium"
+                onClick={handleSocialLogin}
+                data-testid="button-login-apple"
+              >
+                <SiApple className="h-4 w-4 text-gray-900" />
+                {t("login.continue_apple")}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full gap-3 border-gray-200 text-gray-700 font-medium"
+                onClick={handleSocialLogin}
+                data-testid="button-login-github"
+              >
+                <SiGithub className="h-4 w-4 text-gray-900" />
+                {t("login.continue_github")}
+              </Button>
+
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t border-gray-200" />
@@ -132,18 +136,32 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
                   <span className="bg-white px-2 text-gray-400">{t("login.or")}</span>
                 </div>
               </div>
+
               <Button
                 type="button"
-                variant="outline"
-                className="w-full gap-2 border-gray-200 text-gray-600"
-                onClick={() => {
-                  window.location.href = "/api/login";
-                }}
-                data-testid="button-login-replit"
+                className="w-full gap-3 font-medium"
+                onClick={handleSocialLogin}
+                data-testid="button-login-email"
               >
-                {t("login.continue_replit")}
+                <Mail className="h-4 w-4" />
+                {t("login.continue_email")}
               </Button>
-            </form>
+
+              <p className="text-[11px] text-gray-400 text-center leading-relaxed pt-1">
+                {t("login.terms_notice")}
+              </p>
+
+              <div className="pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  className="w-full text-xs text-gray-400 hover:text-gray-500 transition-colors py-1"
+                  onClick={() => setStep("admin-password")}
+                  data-testid="button-admin-access"
+                >
+                  {t("login.admin_access")}
+                </button>
+              </div>
+            </div>
           </>
         )}
 
@@ -196,13 +214,14 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
               <Button
                 type="button"
                 variant="ghost"
-                className="w-full text-gray-400 text-sm"
+                className="w-full text-gray-400 text-sm gap-2"
                 onClick={() => {
                   setStep("login");
                   setPassword("");
                 }}
                 data-testid="button-back-to-login"
               >
+                <ArrowLeft className="h-3.5 w-3.5" />
                 {t("login.back")}
               </Button>
             </form>
