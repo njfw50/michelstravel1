@@ -1,8 +1,8 @@
 import nodemailer from "nodemailer";
 
 const AGENCY_NAME = "Michels Travel";
-const AGENCY_EMAIL = "contact@michelstravel.com";
-const AGENCY_PHONE = "+1 (973) 555-0123";
+const AGENCY_EMAIL = "reservastrens@gmail.com";
+const AGENCY_PHONE = "+55 (86) 2350-1161";
 
 function getTransporter() {
   const host = process.env.SMTP_HOST;
@@ -164,8 +164,8 @@ function buildConfirmationHTML(booking: BookingEmailData): string {
           <div style="font-size:13px;color:#6B7280;">
             <strong>${AGENCY_NAME}</strong><br />
             <a href="mailto:${AGENCY_EMAIL}" style="color:#0074DE;">${AGENCY_EMAIL}</a> &bull;
-            <a href="tel:+19735550123" style="color:#0074DE;">${AGENCY_PHONE}</a><br />
-            <span style="font-size:11px;">Registered in New Jersey, USA</span>
+            <a href="tel:+558623501161" style="color:#0074DE;">${AGENCY_PHONE}</a><br />
+            <span style="font-size:11px;">Brasil</span>
           </div>
         </div>
       </div>

@@ -504,19 +504,19 @@ export default function CheckoutSuccess() {
                 <div className="space-y-1 text-sm">
                   <div className="flex items-center gap-2 text-blue-700">
                     <Mail className="h-3.5 w-3.5" />
-                    <a href="mailto:contact@michelstravel.com" className="underline" data-testid="link-agency-email">
-                      contact@michelstravel.com
+                    <a href="mailto:reservastrens@gmail.com" className="underline" data-testid="link-agency-email">
+                      reservastrens@gmail.com
                     </a>
                   </div>
                   <div className="flex items-center gap-2 text-blue-700">
                     <Phone className="h-3.5 w-3.5" />
-                    <a href="tel:+19735550123" className="underline" data-testid="link-agency-phone">
-                      +1 (973) 555-0123
+                    <a href="tel:+558623501161" className="underline" data-testid="link-agency-phone">
+                      +55 (86) 2350-1161
                     </a>
                   </div>
                   <div className="flex items-center gap-2 text-blue-600 text-xs">
                     <MapPin className="h-3.5 w-3.5" />
-                    <span>{t("confirm.registered") || "Registered in New Jersey, USA"}</span>
+                    <span>{t("confirm.registered") || "Brasil"}</span>
                   </div>
                 </div>
               </div>

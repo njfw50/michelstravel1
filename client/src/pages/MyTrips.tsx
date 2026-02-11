@@ -454,7 +454,7 @@ export default function MyTrips() {
                 </div>
                 <div>
                   <div className="text-xs text-gray-500">Email</div>
-                  <a href="mailto:contact@michelstravel.com" className="text-sm font-medium text-blue-600 hover:underline" data-testid="link-contact-email">contact@michelstravel.com</a>
+                  <a href="mailto:reservastrens@gmail.com" className="text-sm font-medium text-blue-600 hover:underline" data-testid="link-contact-email">reservastrens@gmail.com</a>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -462,8 +462,8 @@ export default function MyTrips() {
                   <Phone className="h-4 w-4 text-blue-500" />
                 </div>
                 <div>
-                  <div className="text-xs text-gray-500">{t("booking.phone") || "Phone"}</div>
-                  <a href="tel:+19735550123" className="text-sm font-medium text-blue-600 hover:underline" data-testid="link-contact-phone">+1 (973) 555-0123</a>
+                  <div className="text-xs text-gray-500">{t("booking.phone") || "Telefone"}</div>
+                  <a href="tel:+558623501161" className="text-sm font-medium text-blue-600 hover:underline" data-testid="link-contact-phone">+55 (86) 2350-1161</a>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -471,8 +471,8 @@ export default function MyTrips() {
                   <MapPin className="h-4 w-4 text-blue-500" />
                 </div>
                 <div>
-                  <div className="text-xs text-gray-500">{t("confirm.agency_location") || "Location"}</div>
-                  <span className="text-sm font-medium text-gray-700">New Jersey, USA</span>
+                  <div className="text-xs text-gray-500">{t("confirm.agency_location") || "Localização"}</div>
+                  <span className="text-sm font-medium text-gray-700">Brasil</span>
                 </div>
               </div>
             </div>
