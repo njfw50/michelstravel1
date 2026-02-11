@@ -1,9 +1,147 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useAdminStats, useAllBookings } from "@/hooks/use-admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Loader2, DollarSign, Users, Plane, TrendingUp } from "lucide-react";
+import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+
+function TestModeControl() {
+  const { t } = useI18n();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isToggling, setIsToggling] = useState(false);
+
+  const { data: testModeData, isLoading } = useQuery({
+    queryKey: ['/api/test-mode'],
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: async (newTestMode: boolean) => {
+      setIsToggling(true);
+      const res = await fetch('/api/admin/test-mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ testMode: newTestMode }),
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to toggle test mode');
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/test-mode'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/settings'] });
+      toast({
+        title: data.testMode ? t("admin.test_mode_enabled") : t("admin.test_mode_disabled"),
+        description: data.testMode ? t("admin.test_mode_safe") : t("admin.test_mode_live"),
+      });
+      setIsToggling(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+      setIsToggling(false);
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <Card className="border border-white/10 shadow-lg bg-white/5 backdrop-blur-md">
+        <CardContent className="p-6 flex items-center justify-center">
+          <Loader2 className="h-5 w-5 animate-spin text-white/40" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const isTestMode = testModeData?.testMode ?? true;
+  const tokenIsTest = testModeData?.tokenIsTest ?? true;
+
+  return (
+    <Card className={`border shadow-lg backdrop-blur-md ${isTestMode ? 'border-amber-500/30 bg-amber-500/5' : 'border-emerald-500/30 bg-emerald-500/5'}`}>
+      <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
+        <div className="flex items-center gap-3">
+          {isTestMode ? (
+            <div className="h-12 w-12 rounded-xl border flex items-center justify-center shadow-inner text-amber-400 bg-amber-500/10 border-amber-500/20">
+              <ShieldCheck className="h-6 w-6" />
+            </div>
+          ) : (
+            <div className="h-12 w-12 rounded-xl border flex items-center justify-center shadow-inner text-emerald-400 bg-emerald-500/10 border-emerald-500/20">
+              <ShieldAlert className="h-6 w-6" />
+            </div>
+          )}
+          <div>
+            <CardTitle className="text-lg text-white">{t("admin.test_mode")}</CardTitle>
+            <p className="text-xs text-white/50 mt-1">{t("admin.test_mode_desc")}</p>
+          </div>
+        </div>
+        <Badge
+          data-testid="badge-test-mode-status"
+          className={`text-xs font-bold px-3 py-1 ${
+            isTestMode 
+              ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' 
+              : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+          }`}
+        >
+          {isTestMode ? t("admin.test_mode_enabled") : t("admin.test_mode_disabled")}
+        </Badge>
+      </CardHeader>
+      <CardContent className="p-6 pt-2 space-y-4">
+        <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-white/70">{t("admin.token_status")}:</span>
+            <Badge
+              data-testid="badge-token-status"
+              className={`text-xs ${
+                tokenIsTest 
+                  ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' 
+                  : 'bg-green-500/20 text-green-300 border-green-500/30'
+              }`}
+            >
+              {tokenIsTest ? t("admin.token_test") : t("admin.token_production")}
+            </Badge>
+          </div>
+        </div>
+
+        {tokenIsTest && !isTestMode && (
+          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-xs">
+            {t("admin.test_mode_warning")}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between">
+          <p className={`text-sm font-medium ${isTestMode ? 'text-amber-300' : 'text-emerald-300'}`}>
+            {isTestMode ? t("admin.test_mode_safe") : t("admin.test_mode_live")}
+          </p>
+          <Button
+            data-testid="button-toggle-test-mode"
+            variant={isTestMode ? "default" : "destructive"}
+            onClick={() => toggleMutation.mutate(!isTestMode)}
+            disabled={isToggling || toggleMutation.isPending}
+            className="gap-2"
+          >
+            {isToggling || toggleMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : isTestMode ? (
+              <ToggleRight className="h-4 w-4" />
+            ) : (
+              <ToggleLeft className="h-4 w-4" />
+            )}
+            {isTestMode ? t("admin.test_mode_toggle_off") : t("admin.test_mode_toggle_on")}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function AdminDashboard() {
   const { user, isLoading: authLoading } = useAuth();
@@ -40,17 +178,19 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-transparent p-8">
       <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold font-display text-white drop-shadow-md">{t("admin.dashboard")}</h1>
             <p className="text-white/60">{t("admin.welcome")}, {user.firstName || 'Admin'}. {t("admin.happening")}</p>
           </div>
         </div>
 
+        <TestModeControl />
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {statCards.map((stat, i) => (
             <Card key={i} className="border border-white/10 shadow-lg bg-white/5 backdrop-blur-md hover:bg-white/10 transition-colors">
-              <CardContent className="p-6 flex items-center justify-between">
+              <CardContent className="p-6 flex items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium text-white/60 mb-1">{stat.title}</p>
                   <h3 className="text-2xl font-bold text-white">{stat.value}</h3>
@@ -93,7 +233,7 @@ export default function AdminDashboard() {
             <CardContent>
               <div className="space-y-4">
                 {bookings?.slice(0, 5).map((booking: any) => (
-                  <div key={booking.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                  <div key={booking.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 bg-white/10 rounded-full flex items-center justify-center text-amber-400 border border-white/10 shadow-inner">
                         <Plane className="h-4 w-4" />

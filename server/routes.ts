@@ -4,9 +4,9 @@ import { storage } from './storage';
 import { stripeService } from './stripeService';
 import { getUncachableStripeClient } from './stripeClient';
 import { db } from "./db";
-import { flightSearches, bookings, type FlightSearchParams } from "@shared/schema";
+import { flightSearches, bookings, siteSettings, type FlightSearchParams } from "@shared/schema";
 import { desc, eq } from "drizzle-orm";
-import { searchFlights, getFlight, searchPlaces, getAirlines, getAirports, getAircraft, initializeReferenceData } from "./services/duffel";
+import { searchFlights, getFlight, searchPlaces, getAirlines, getAirports, getAircraft, initializeReferenceData, isTestMode as getDuffelTestMode } from "./services/duffel";
 
 /**
  * Register all application routes
@@ -186,26 +186,59 @@ export function registerRoutes(app: Express) {
   // Create Booking & Checkout Session
   app.post('/api/bookings', async (req, res) => {
     try {
+        const settings = await storage.getSiteSettings();
+        const isTestModeActive = settings?.testMode ?? true;
+        const tokenIsTest = getDuffelTestMode();
+
+        if (isTestModeActive) {
+          console.log("[TEST MODE] Booking created in test mode - no real charges");
+        }
+
+        if (!isTestModeActive && tokenIsTest) {
+          return res.status(400).json({ 
+            error: "Configuration error: Production mode is enabled but Duffel token is a test token. Please contact the administrator." 
+          });
+        }
+
         const bookingData = req.body;
         
         const commissionRate = 0.05;
         const price = parseFloat(bookingData.totalPrice);
         const commissionAmount = (price * commissionRate).toFixed(2);
 
+        const flightDataWithMode = {
+            ...bookingData.flightData,
+            _testMode: isTestModeActive,
+        };
+
         const [booking] = await db.insert(bookings).values({
-            flightData: bookingData.flightData,
+            flightData: flightDataWithMode,
             passengerDetails: bookingData.passengerDetails || bookingData.passengers,
             totalPrice: bookingData.totalPrice,
             currency: bookingData.currency || 'USD',
             contactEmail: bookingData.contactEmail,
             commissionRate: commissionRate.toString(),
             commissionAmount: commissionAmount,
-            status: 'pending',
+            status: isTestModeActive ? 'test' : 'pending',
             stripePaymentStatus: 'pending',
             userId: (req as any).user?.id ? String((req as any).user.id) : null
         }).returning();
 
-        // 2. Create Stripe Checkout Session
+        if (isTestModeActive) {
+          await db.update(bookings)
+              .set({ stripePaymentIntentId: 'test_session_' + booking.id, stripePaymentStatus: 'test' })
+              .where(eq(bookings.id, booking.id));
+
+          const testSuccessUrl = `${req.protocol}://${req.get('host')}/checkout/success?bookingId=${booking.id}&test=true`;
+          return res.status(201).json({ 
+            booking: { ...booking, status: 'test' }, 
+            checkoutUrl: testSuccessUrl,
+            testMode: true,
+            message: "Test mode: no real payment processed" 
+          });
+        }
+
+        // Production: Create real Stripe Checkout Session
         const session = await stripeService.createFlightCheckoutSession(
             (req as any).user?.stripeCustomerId,
             price,
@@ -220,7 +253,6 @@ export function registerRoutes(app: Express) {
             }
         );
 
-        // 3. Update booking with session ID
         await db.update(bookings)
             .set({ stripePaymentIntentId: session.id })
             .where(eq(bookings.id, booking.id));
@@ -367,15 +399,19 @@ export function registerRoutes(app: Express) {
     if (!req.isAuthenticated() || !(req.user as any).isAdmin) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    // Get latest settings (or default)
-    // We assume single row for settings
-    // For now, return mock or default
-    res.json({
+    const settings = await storage.getSiteSettings();
+    if (!settings) {
+      return res.json({
+        id: 0,
         siteName: "Michels Travel",
-        commissionPercentage: 5.0,
+        commissionPercentage: "5.00",
         heroTitle: "Find Your Next Adventure",
-        heroSubtitle: "Best prices on flights worldwide."
-    });
+        heroSubtitle: "Best prices on flights worldwide.",
+        testMode: true,
+        updatedAt: new Date(),
+      });
+    }
+    res.json(settings);
   });
 
   // Update Admin Settings
@@ -383,8 +419,51 @@ export function registerRoutes(app: Express) {
     if (!req.isAuthenticated() || !(req.user as any).isAdmin) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    // Logic to update settings...
-    res.json(req.body);
+    const updated = await storage.upsertSiteSettings(req.body);
+    res.json(updated);
+  });
+
+  // Toggle Test Mode
+  app.post('/api/admin/test-mode', async (req, res) => {
+    if (!req.isAuthenticated() || !(req.user as any).isAdmin) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { testMode } = req.body;
+    if (typeof testMode !== 'boolean') {
+      return res.status(400).json({ error: "testMode must be a boolean" });
+    }
+
+    if (!testMode) {
+      const token = process.env.DUFFEL_API_TOKEN || '';
+      if (token.startsWith('duffel_test_')) {
+        return res.status(400).json({ 
+          error: "Cannot disable test mode: your Duffel API token is a test token (duffel_test_*). To go live, configure a production token (duffel_live_*) in your environment variables." 
+        });
+      }
+    }
+
+    const settings = await storage.getSiteSettings();
+    const updated = await storage.upsertSiteSettings({
+      ...(settings ? {
+        siteName: settings.siteName || undefined,
+        commissionPercentage: settings.commissionPercentage || undefined,
+        heroTitle: settings.heroTitle || undefined,
+        heroSubtitle: settings.heroSubtitle || undefined,
+      } : {}),
+      testMode,
+    });
+
+    res.json({ testMode: updated.testMode, message: testMode ? "Test mode enabled" : "Production mode enabled" });
+  });
+
+  // Public: check if test mode is active (for banner display)
+  app.get('/api/test-mode', async (_req, res) => {
+    const settings = await storage.getSiteSettings();
+    const isTest = settings?.testMode ?? true;
+    const token = process.env.DUFFEL_API_TOKEN || '';
+    const tokenIsTest = token.startsWith('duffel_test_') || !token;
+    res.json({ testMode: isTest, tokenIsTest });
   });
 
   // All Bookings

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Michels Travel ("Opção Eficiente") is a full-stack flight booking platform that allows users to search for flights, book them with Stripe payments, and manage bookings. It's a commission-based travel agency app targeting Brazilian/Portuguese-speaking customers, with multi-language support (Portuguese, English, Spanish). The app integrates with the Duffel API for real-time flight search and pricing, uses Stripe for payment processing, and includes an admin dashboard for monitoring revenue and bookings.
+Michels Travel ("Opção Eficiente") is a full-stack flight booking platform that allows users to search for flights, book them with Stripe payments, and manage bookings. It's a commission-based travel agency app targeting Brazilian/Portuguese-speaking customers, with multi-language support (Portuguese, English, Spanish). The app integrates with the Duffel API for real-time flight search and pricing, uses Stripe for payment processing, and includes an admin dashboard for monitoring revenue and bookings. Includes a test mode toggle system for production safety.
 
 ## User Preferences
 

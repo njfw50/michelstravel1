@@ -1,14 +1,15 @@
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/Layout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { useI18n } from "@/lib/i18n";
+import { ShieldCheck } from "lucide-react";
 import NotFound from "@/pages/not-found";
 
-// Pages
 import Home from "@/pages/Home";
 import SearchResults from "@/pages/SearchResults";
 import Booking from "@/pages/Booking";
@@ -19,10 +20,29 @@ import BlogPost from "@/pages/BlogPost";
 import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import CheckoutCancel from "@/pages/CheckoutCancel";
 
+function TestModeBanner() {
+  const { t } = useI18n();
+  const { data } = useQuery<{ testMode: boolean; tokenIsTest: boolean }>({
+    queryKey: ['/api/test-mode'],
+    refetchInterval: 30000,
+  });
+
+  if (!data?.testMode) return null;
+
+  return (
+    <div
+      data-testid="banner-test-mode"
+      className="sticky top-0 z-[100] flex items-center justify-center gap-2 bg-amber-500/90 px-4 py-1.5 text-xs font-bold text-black backdrop-blur-sm"
+    >
+      <ShieldCheck className="h-3.5 w-3.5" />
+      <span>{t("admin.test_mode_banner")}</span>
+    </div>
+  );
+}
+
 function Router() {
   return (
     <Switch>
-      {/* Admin dashboard has its own layout or just lives inside main layout */}
       <Route path="/admin">
         <Layout>
           <AdminDashboard />
@@ -51,6 +71,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <LanguageSelector />
+          <TestModeBanner />
           <Router />
         </TooltipProvider>
       </QueryClientProvider>

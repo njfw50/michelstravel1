@@ -338,6 +338,11 @@ export async function getFlight(id: string): Promise<FlightOffer | null> {
   }
 }
 
+export function isTestMode(): boolean {
+  const token = process.env.DUFFEL_API_TOKEN || '';
+  return token.startsWith('duffel_test_') || !token;
+}
+
 export async function searchPlaces(query: string) {
   try {
     if (!process.env.DUFFEL_API_TOKEN) return [];
