@@ -23,12 +23,16 @@ import CheckoutCancel from "@/pages/CheckoutCancel";
 
 function TestModeBanner() {
   const { t } = useI18n();
+  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/admin/check"],
+  });
   const { data } = useQuery<{ testMode: boolean; activeTokenIsTest: boolean; hasLiveToken: boolean; hasTestToken: boolean }>({
     queryKey: ['/api/test-mode'],
     refetchInterval: 30000,
+    enabled: !!adminCheck?.isAdmin,
   });
 
-  if (!data?.testMode) return null;
+  if (!adminCheck?.isAdmin || !data?.testMode) return null;
 
   return (
     <div
@@ -44,7 +48,6 @@ function TestModeBanner() {
 function Router() {
   return (
     <Switch>
-      <Route path="/admin/login" component={() => <Layout><AdminLogin /></Layout>} />
       <Route path="/admin">
         <Layout>
           <AdminDashboard />

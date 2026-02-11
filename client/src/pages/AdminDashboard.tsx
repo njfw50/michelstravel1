@@ -291,7 +291,7 @@ export default function AdminDashboard() {
       credentials: "include",
     });
     queryClient.invalidateQueries({ queryKey: ["/api/admin/check"] });
-    setLocation("/admin");
+    setLocation("/");
   };
 
   if (adminCheckLoading || statsLoading) {
@@ -299,7 +299,7 @@ export default function AdminDashboard() {
   }
 
   if (!adminCheck?.isAdmin) {
-    setLocation("/admin/login");
+    setLocation("/");
     return null;
   }
 

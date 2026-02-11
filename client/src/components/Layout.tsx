@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { User, LogOut, Menu, X } from "lucide-react";
+import { User, LogOut, Menu, X, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,21 +9,27 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n";
+import { LoginDialog } from "@/components/LoginDialog";
 import logo from "@assets/LOGO_1770751298475.png";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [location] = useLocation();
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [location, setLocation] = useLocation();
   const { t } = useI18n();
+
+  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/admin/check"],
+  });
 
   const navLinks = [
     { href: "/", label: t("nav.flights") },
     { href: "/blog", label: t("nav.blog") },
-    { href: "/admin", label: t("nav.admin") },
   ];
 
   return (
@@ -66,7 +72,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="gap-2 rounded-full pl-2 pr-4 h-10 border border-white/10 hover:bg-white/10 text-white/80 hover:text-white backdrop-blur-sm" data-testid="button-user-menu">
+                    <Button variant="ghost" className="gap-2 rounded-full pl-2 pr-4 h-10 border border-white/10 text-white/80 backdrop-blur-sm" data-testid="button-user-menu">
                       <div className="h-7 w-7 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-300 ring-1 ring-amber-500/30">
                         <User className="h-4 w-4" />
                       </div>
@@ -74,6 +80,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-2xl border-white/10 p-2 bg-[hsl(220,18%,10%)]/95 backdrop-blur-xl text-white">
+                    {adminCheck?.isAdmin && (
+                      <DropdownMenuItem 
+                        className="focus:bg-white/5 rounded-lg cursor-pointer text-amber-400 focus:text-amber-300"
+                        onClick={() => setLocation("/admin")}
+                        data-testid="button-admin-panel"
+                      >
+                        <Shield className="mr-2 h-4 w-4" /> {t("nav.admin")}
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem 
                       className="text-red-400 focus:text-red-300 focus:bg-red-500/10 rounded-lg cursor-pointer"
                       onClick={() => logout()}
@@ -85,8 +100,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </DropdownMenu>
               ) : (
                 <Button 
-                  onClick={() => window.location.href = '/api/login'}
-                  className="rounded-full px-6 font-semibold shadow-lg shadow-amber-900/20 hover:shadow-amber-500/30 transition-all hover:-translate-y-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0"
+                  onClick={() => setLoginDialogOpen(true)}
+                  className="rounded-full px-6 font-semibold shadow-lg shadow-amber-900/20 transition-all bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0"
                   data-testid="button-signin"
                 >
                   {t("nav.signin")}
@@ -126,16 +141,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
               ))}
               <div className="pt-4 border-t border-white/10">
                 {user ? (
-                  <button 
-                    onClick={() => logout()}
-                    className="block w-full text-left py-2 text-base font-medium text-red-400 hover:bg-red-500/10 rounded-lg px-2"
-                  >
-                    {t("nav.logout")}
-                  </button>
+                  <>
+                    {adminCheck?.isAdmin && (
+                      <button
+                        onClick={() => { setIsMobileMenuOpen(false); setLocation("/admin"); }}
+                        className="block w-full text-left py-2 text-base font-medium text-amber-400 rounded-lg px-2"
+                        data-testid="button-mobile-admin-panel"
+                      >
+                        {t("nav.admin")}
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => logout()}
+                      className="block w-full text-left py-2 text-base font-medium text-red-400 rounded-lg px-2"
+                    >
+                      {t("nav.logout")}
+                    </button>
+                  </>
                 ) : (
                   <Button 
-                    onClick={() => window.location.href = '/api/login'}
-                    className="w-full justify-center bg-amber-500 hover:bg-amber-400 text-white border-0"
+                    onClick={() => { setIsMobileMenuOpen(false); setLoginDialogOpen(true); }}
+                    className="w-full justify-center bg-amber-500 text-white border-0"
                   >
                     {t("nav.signin")}
                   </Button>
@@ -145,6 +171,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <LoginDialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen} />
 
       <main className="flex-1">
         {children}
