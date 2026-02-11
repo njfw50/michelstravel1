@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { MapPin, Search, Loader2, Plane } from "lucide-react";
+import { MapPin, Loader2, Plane } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
 
@@ -83,48 +82,48 @@ export function LocationSearch({ label, placeholder, value, onChange, className 
 
   return (
     <div className={cn("relative", className)} ref={wrapperRef}>
-      <Label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">{label}</Label>
-      <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 h-12 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-400 transition-all duration-200 hover:border-blue-300 hover:bg-blue-50/30 relative">
-        <MapPin className="h-4 w-4 text-blue-500 mr-2.5 shrink-0" />
+      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2 pl-1">{label}</label>
+      <div className="flex items-center bg-white border-2 border-gray-200 rounded-xl px-4 h-14 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all duration-200 hover:border-blue-400 relative">
+        <MapPin className="h-5 w-5 text-blue-500 mr-3 shrink-0" />
         <Input 
-            placeholder={placeholder || "City or Airport"} 
-            className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-sm font-medium placeholder:text-gray-400 w-full bg-transparent truncate text-gray-900"
-            data-testid={`input-${label.toLowerCase()}`}
-            value={displayText || query}
-            onChange={(e) => {
-                setDisplayText("");
-                setQuery(e.target.value);
-                if (e.target.value === "") {
-                    onChange("");
-                    setIsOpen(false);
-                }
-            }}
-            onFocus={() => {
-                if (results.length > 0) setIsOpen(true);
-            }}
+          placeholder={placeholder || "City or Airport"} 
+          className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-base font-medium placeholder:text-gray-400 w-full bg-transparent text-gray-900"
+          data-testid={`input-${label.toLowerCase()}`}
+          value={displayText || query}
+          onChange={(e) => {
+            setDisplayText("");
+            setQuery(e.target.value);
+            if (e.target.value === "") {
+              onChange("");
+              setIsOpen(false);
+            }
+          }}
+          onFocus={() => {
+            if (results.length > 0) setIsOpen(true);
+          }}
         />
-        {isLoading && <Loader2 className="h-4 w-4 animate-spin text-blue-500 absolute right-3" />}
+        {isLoading && <Loader2 className="h-5 w-5 animate-spin text-blue-500 absolute right-4" />}
       </div>
 
       {isOpen && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-64 overflow-y-auto overflow-x-hidden">
-          <div className="p-1.5 space-y-0.5">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 max-h-72 overflow-y-auto overflow-x-hidden">
+          <div className="p-2 space-y-0.5">
             {results.map((place) => (
               <button
                 type="button"
                 key={place.id}
                 onClick={() => handleSelect(place)}
                 data-testid={`place-option-${place.iataCode}`}
-                className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-3 group"
+                className="w-full text-left px-3 py-3 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-3 group"
               >
-                <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
-                    {place.type === 'airport' ? <Plane className="h-4 w-4 text-blue-500" /> : <MapPin className="h-4 w-4 text-blue-500" />}
+                <div className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
+                  {place.type === 'airport' ? <Plane className="h-5 w-5 text-blue-500" /> : <MapPin className="h-5 w-5 text-blue-500" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-gray-900 text-sm truncate">
+                  <div className="font-semibold text-gray-900 text-sm">
                     {place.name} <span className="text-blue-600 font-bold">({place.iataCode})</span>
                   </div>
-                  <div className="text-xs text-gray-400 truncate">
+                  <div className="text-xs text-gray-400 mt-0.5">
                     {place.cityName ? `${place.cityName}, ` : ''}{place.countryName}
                   </div>
                 </div>
