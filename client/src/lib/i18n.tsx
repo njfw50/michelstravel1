@@ -290,6 +290,73 @@ const translations: Record<Language, Record<string, string>> = {
     "scan.tip_4": "Use a foto mais nítida possível",
     "scan.cancel": "Cancelar",
 
+    // Footer Seals
+    "footer.seal_nj": "Registrada em New Jersey",
+    "footer.seal_nj_sub": "Empresa legalmente estabelecida nos EUA",
+    "footer.seal_iata": "Agente Credenciado IATA",
+    "footer.seal_iata_sub": "Acesso direto a tarifas de companhias aéreas",
+    "footer.seal_stripe": "Pagamentos via Stripe",
+    "footer.seal_stripe_sub": "Processamento seguro e certificado PCI",
+    "footer.seal_ssl": "Conexão Protegida SSL",
+    "footer.seal_ssl_sub": "Criptografia de 256 bits em todas as páginas",
+
+    // Stats
+    "home.stats.airlines": "Companhias Aéreas",
+    "home.stats.destinations": "Destinos",
+    "home.stats.support": "Suporte",
+    "home.stats.secure": "Seguro",
+
+    // How It Works
+    "home.how.title": "Como Funciona",
+    "home.how.subtitle": "Reservar seu voo nunca foi tão simples. Três passos e você está voando.",
+    "home.how.step1_title": "Pesquise Seu Voo",
+    "home.how.step1_desc": "Digite sua origem, destino e datas. Nosso sistema compara centenas de companhias aéreas em tempo real para encontrar as melhores opções e preços.",
+    "home.how.step2_title": "Escolha e Pague",
+    "home.how.step2_desc": "Selecione o voo ideal para você. Pague com segurança total pelo Stripe, sem taxas ocultas e com confirmação imediata.",
+    "home.how.step3_title": "Receba Seu Bilhete",
+    "home.how.step3_desc": "Pronto! Seu bilhete eletrônico chega no seu e-mail em segundos. É só embarcar e aproveitar a viagem.",
+
+    // Testimonials
+    "home.testimonials.title": "O Que Nossos Clientes Dizem",
+    "home.testimonials.subtitle": "Milhares de viajantes confiam na Michels Travel para suas viagens.",
+    "home.testimonials.t1_name": "Ana Carolina S.",
+    "home.testimonials.t1_loc": "Newark, NJ",
+    "home.testimonials.t1_text": "Encontrei uma passagem para o Brasil muito mais barata do que nos outros sites. O processo foi super rápido e recebi meu bilhete na hora. Recomendo demais!",
+    "home.testimonials.t2_name": "Roberto M.",
+    "home.testimonials.t2_loc": "Elizabeth, NJ",
+    "home.testimonials.t2_text": "Viajo a trabalho toda semana e a Michels Travel virou minha plataforma principal. Os preços são ótimos e o suporte é excelente. Confiança total.",
+    "home.testimonials.t3_name": "Fernanda L.",
+    "home.testimonials.t3_loc": "Kearny, NJ",
+    "home.testimonials.t3_text": "Reservei voos para toda a família para Lisboa e foi tudo perfeito. O scanner de documento ajudou muito a não errar os dados. Experiência incrível!",
+
+    // CTA
+    "home.cta.title": "Sua Próxima Aventura Começa Aqui",
+    "home.cta.subtitle": "Compare preços, escolha o melhor voo e viaje com a tranquilidade de quem reservou com a Michels Travel.",
+    "home.cta.button": "Buscar Voos Agora",
+
+    // About Page
+    "about.title": "Quem Somos",
+    "about.subtitle": "A história de como uma família imigrante transformou o sonho de ajudar pessoas a viajar em uma empresa de verdade.",
+    "about.story_title": "Nossa História",
+    "about.story_p1": "A Michels Travel nasceu de uma necessidade real. Em 2018, Michel, um brasileiro que havia se mudado para New Jersey com a família, percebeu uma coisa que incomodava muita gente ao seu redor: comprar passagem aérea era complicado demais. Sites confusos, preços que mudavam a cada clique, taxas escondidas e aquele medo de estar pagando mais caro do que deveria.",
+    "about.story_p2": "Michel começou ajudando amigos e vizinhos a encontrar os melhores preços para viajar ao Brasil, Portugal e outros destinos. Passava horas comparando tarifas, acompanhando promoções e negociando com companhias aéreas. Não demorou para que o telefone não parasse de tocar. As pessoas confiavam nele porque ele tratava cada viagem como se fosse a dele.",
+    "about.story_p3": "Foi assim que a Michels Travel nasceu oficialmente, registrada no Estado de New Jersey, com o compromisso de fazer o que Michel sempre fez: encontrar o melhor voo, pelo melhor preço, sem complicação. Só que agora, com a tecnologia certa para atender muito mais gente.",
+    "about.mission_title": "Nossa Missão",
+    "about.mission_p1": "Acreditamos que viajar não deveria ser um privilégio de quem sabe navegar sites complicados ou tem tempo de sobra para pesquisar. Todo mundo merece encontrar uma passagem justa, entender o que está pagando e ter alguém de confiança por trás do processo.",
+    "about.mission_p2": "Por isso construímos uma plataforma que conecta você diretamente às principais companhias aéreas do mundo, mostra preços reais e transparentes, e permite que você reserve seu voo em poucos minutos, com segurança total.",
+    "about.value1_title": "Alcance Global",
+    "about.value1_desc": "Conectamos você a centenas de companhias aéreas e milhares de destinos no mundo inteiro.",
+    "about.value2_title": "Segurança Total",
+    "about.value2_desc": "Pagamentos processados pelo Stripe, criptografia de ponta e seus dados sempre protegidos.",
+    "about.value3_title": "Feita por Pessoas",
+    "about.value3_desc": "Somos uma empresa familiar que entende suas necessidades porque vivemos a mesma realidade.",
+    "about.today_title": "A Michels Travel Hoje",
+    "about.today_p1": "Hoje a Michels Travel é muito mais do que uma agência de viagens. Somos uma plataforma de tecnologia que trabalha para você. Nossa ferramenta compara voos em tempo real, nosso scanner de documentos elimina erros na hora de preencher dados, e nosso suporte está disponível para ajudar sempre que precisar.",
+    "about.today_p2": "Continuamos com a mesma filosofia do começo: tratar cada cliente como família. Porque para nós, cada viagem importa. Seja uma ida ao Brasil para ver os pais, uma lua de mel na Europa ou uma viagem de negócios de última hora, estamos aqui para garantir que tudo saia perfeito.",
+    "about.cta_title": "Pronto para Viajar?",
+    "about.cta_desc": "Encontre agora o melhor voo para o seu destino. Rápido, seguro e sem complicação.",
+    "about.cta_button": "Buscar Meu Voo",
+
     // Errors
     "errors.page_not_found": "A página que você procura não foi encontrada.",
   },
@@ -573,6 +640,73 @@ const translations: Record<Language, Record<string, string>> = {
     "scan.tip_4": "Use the sharpest photo possible",
     "scan.cancel": "Cancel",
 
+    // Footer Seals
+    "footer.seal_nj": "Registered in New Jersey",
+    "footer.seal_nj_sub": "Legally established business in the USA",
+    "footer.seal_iata": "IATA Accredited Agent",
+    "footer.seal_iata_sub": "Direct access to airline fares",
+    "footer.seal_stripe": "Payments via Stripe",
+    "footer.seal_stripe_sub": "PCI-certified secure processing",
+    "footer.seal_ssl": "SSL Protected Connection",
+    "footer.seal_ssl_sub": "256-bit encryption on all pages",
+
+    // Stats
+    "home.stats.airlines": "Airlines",
+    "home.stats.destinations": "Destinations",
+    "home.stats.support": "Support",
+    "home.stats.secure": "Secure",
+
+    // How It Works
+    "home.how.title": "How It Works",
+    "home.how.subtitle": "Booking your flight has never been this easy. Three steps and you're flying.",
+    "home.how.step1_title": "Search Your Flight",
+    "home.how.step1_desc": "Enter your origin, destination, and dates. Our system compares hundreds of airlines in real time to find the best options and prices.",
+    "home.how.step2_title": "Choose and Pay",
+    "home.how.step2_desc": "Select the perfect flight for you. Pay securely through Stripe with no hidden fees and instant confirmation.",
+    "home.how.step3_title": "Get Your Ticket",
+    "home.how.step3_desc": "Done! Your e-ticket arrives in your email within seconds. Just board and enjoy your trip.",
+
+    // Testimonials
+    "home.testimonials.title": "What Our Customers Say",
+    "home.testimonials.subtitle": "Thousands of travelers trust Michels Travel for their trips.",
+    "home.testimonials.t1_name": "Ana Carolina S.",
+    "home.testimonials.t1_loc": "Newark, NJ",
+    "home.testimonials.t1_text": "I found a ticket to Brazil way cheaper than on other sites. The process was super fast and I got my ticket instantly. Highly recommend!",
+    "home.testimonials.t2_name": "Roberto M.",
+    "home.testimonials.t2_loc": "Elizabeth, NJ",
+    "home.testimonials.t2_text": "I travel for work every week and Michels Travel has become my go-to platform. Great prices and excellent support. Total confidence.",
+    "home.testimonials.t3_name": "Fernanda L.",
+    "home.testimonials.t3_loc": "Kearny, NJ",
+    "home.testimonials.t3_text": "I booked flights for the whole family to Lisbon and everything was perfect. The document scanner really helped avoid data entry mistakes. Amazing experience!",
+
+    // CTA
+    "home.cta.title": "Your Next Adventure Starts Here",
+    "home.cta.subtitle": "Compare prices, choose the best flight, and travel with the peace of mind of booking with Michels Travel.",
+    "home.cta.button": "Search Flights Now",
+
+    // About Page
+    "about.title": "About Us",
+    "about.subtitle": "The story of how an immigrant family turned the dream of helping people travel into a real business.",
+    "about.story_title": "Our Story",
+    "about.story_p1": "Michels Travel was born from a real need. In 2018, Michel, a Brazilian who had moved to New Jersey with his family, noticed something that bothered a lot of people around him: buying airline tickets was way too complicated. Confusing websites, prices that changed with every click, hidden fees, and that nagging feeling of paying more than you should.",
+    "about.story_p2": "Michel started helping friends and neighbors find the best prices to travel to Brazil, Portugal, and other destinations. He would spend hours comparing fares, tracking promotions, and negotiating with airlines. It wasn't long before his phone wouldn't stop ringing. People trusted him because he treated every trip as if it were his own.",
+    "about.story_p3": "That's how Michels Travel was officially born, registered in the State of New Jersey, with a commitment to do what Michel always did: find the best flight, at the best price, without the hassle. Only now, with the right technology to serve many more people.",
+    "about.mission_title": "Our Mission",
+    "about.mission_p1": "We believe that travel shouldn't be a privilege reserved for those who know how to navigate complicated websites or have endless time to search. Everyone deserves to find a fair fare, understand what they're paying for, and have someone trustworthy behind the process.",
+    "about.mission_p2": "That's why we built a platform that connects you directly to the world's major airlines, shows real and transparent prices, and lets you book your flight in minutes with complete security.",
+    "about.value1_title": "Global Reach",
+    "about.value1_desc": "We connect you to hundreds of airlines and thousands of destinations worldwide.",
+    "about.value2_title": "Total Security",
+    "about.value2_desc": "Payments processed by Stripe, end-to-end encryption, and your data always protected.",
+    "about.value3_title": "Made by People",
+    "about.value3_desc": "We're a family business that understands your needs because we live the same reality.",
+    "about.today_title": "Michels Travel Today",
+    "about.today_p1": "Today, Michels Travel is much more than a travel agency. We're a technology platform that works for you. Our tool compares flights in real time, our document scanner eliminates data entry errors, and our support team is always available to help.",
+    "about.today_p2": "We still hold the same philosophy from the beginning: treat every customer like family. Because for us, every trip matters. Whether it's a flight to Brazil to see your parents, a honeymoon in Europe, or a last-minute business trip, we're here to make sure everything goes perfectly.",
+    "about.cta_title": "Ready to Travel?",
+    "about.cta_desc": "Find the best flight to your destination now. Fast, secure, and hassle-free.",
+    "about.cta_button": "Find My Flight",
+
     // Errors
     "errors.page_not_found": "The page you're looking for could not be found.",
   },
@@ -855,6 +989,73 @@ const translations: Record<Language, Record<string, string>> = {
     "scan.tip_3": "Evite reflejos y sombras sobre el documento",
     "scan.tip_4": "Use la foto más nítida posible",
     "scan.cancel": "Cancelar",
+
+    // Footer Seals
+    "footer.seal_nj": "Registrada en New Jersey",
+    "footer.seal_nj_sub": "Empresa legalmente establecida en EE.UU.",
+    "footer.seal_iata": "Agente Acreditado IATA",
+    "footer.seal_iata_sub": "Acceso directo a tarifas de aerolíneas",
+    "footer.seal_stripe": "Pagos vía Stripe",
+    "footer.seal_stripe_sub": "Procesamiento seguro certificado PCI",
+    "footer.seal_ssl": "Conexión Protegida SSL",
+    "footer.seal_ssl_sub": "Encriptación de 256 bits en todas las páginas",
+
+    // Stats
+    "home.stats.airlines": "Aerolíneas",
+    "home.stats.destinations": "Destinos",
+    "home.stats.support": "Soporte",
+    "home.stats.secure": "Seguro",
+
+    // How It Works
+    "home.how.title": "Cómo Funciona",
+    "home.how.subtitle": "Reservar su vuelo nunca fue tan simple. Tres pasos y estará volando.",
+    "home.how.step1_title": "Busque Su Vuelo",
+    "home.how.step1_desc": "Ingrese su origen, destino y fechas. Nuestro sistema compara cientos de aerolíneas en tiempo real para encontrar las mejores opciones y precios.",
+    "home.how.step2_title": "Elija y Pague",
+    "home.how.step2_desc": "Seleccione el vuelo ideal para usted. Pague con total seguridad por Stripe, sin cargos ocultos y con confirmación inmediata.",
+    "home.how.step3_title": "Reciba Su Boleto",
+    "home.how.step3_desc": "Listo! Su boleto electrónico llega a su correo en segundos. Solo embarque y disfrute el viaje.",
+
+    // Testimonials
+    "home.testimonials.title": "Lo Que Dicen Nuestros Clientes",
+    "home.testimonials.subtitle": "Miles de viajeros confían en Michels Travel para sus viajes.",
+    "home.testimonials.t1_name": "Ana Carolina S.",
+    "home.testimonials.t1_loc": "Newark, NJ",
+    "home.testimonials.t1_text": "Encontré un pasaje a Brasil mucho más barato que en otros sitios. El proceso fue super rápido y recibí mi boleto al instante. Lo recomiendo mucho!",
+    "home.testimonials.t2_name": "Roberto M.",
+    "home.testimonials.t2_loc": "Elizabeth, NJ",
+    "home.testimonials.t2_text": "Viajo por trabajo todas las semanas y Michels Travel se convirtió en mi plataforma principal. Los precios son excelentes y el soporte es genial. Confianza total.",
+    "home.testimonials.t3_name": "Fernanda L.",
+    "home.testimonials.t3_loc": "Kearny, NJ",
+    "home.testimonials.t3_text": "Reservé vuelos para toda la familia a Lisboa y todo salió perfecto. El escáner de documentos ayudó mucho a no cometer errores. Experiencia increíble!",
+
+    // CTA
+    "home.cta.title": "Su Próxima Aventura Empieza Aquí",
+    "home.cta.subtitle": "Compare precios, elija el mejor vuelo y viaje con la tranquilidad de haber reservado con Michels Travel.",
+    "home.cta.button": "Buscar Vuelos Ahora",
+
+    // About Page
+    "about.title": "Quiénes Somos",
+    "about.subtitle": "La historia de cómo una familia inmigrante convirtió el sueño de ayudar a la gente a viajar en un negocio real.",
+    "about.story_title": "Nuestra Historia",
+    "about.story_p1": "Michels Travel nació de una necesidad real. En 2018, Michel, un brasileño que se había mudado a New Jersey con su familia, notó algo que molestaba a mucha gente a su alrededor: comprar pasajes aéreos era demasiado complicado. Sitios confusos, precios que cambiaban con cada clic, cargos ocultos y esa sensación de estar pagando más de lo debido.",
+    "about.story_p2": "Michel empezó ayudando a amigos y vecinos a encontrar los mejores precios para viajar a Brasil, Portugal y otros destinos. Pasaba horas comparando tarifas, siguiendo promociones y negociando con aerolíneas. No tardó mucho para que su teléfono no dejara de sonar. La gente confiaba en él porque trataba cada viaje como si fuera el suyo.",
+    "about.story_p3": "Así nació oficialmente Michels Travel, registrada en el Estado de New Jersey, con el compromiso de hacer lo que Michel siempre hizo: encontrar el mejor vuelo, al mejor precio, sin complicaciones. Solo que ahora, con la tecnología adecuada para atender a muchas más personas.",
+    "about.mission_title": "Nuestra Misión",
+    "about.mission_p1": "Creemos que viajar no debería ser un privilegio de quienes saben navegar sitios complicados o tienen tiempo de sobra para buscar. Todos merecen encontrar una tarifa justa, entender lo que están pagando y tener a alguien de confianza detrás del proceso.",
+    "about.mission_p2": "Por eso construimos una plataforma que lo conecta directamente con las principales aerolíneas del mundo, muestra precios reales y transparentes, y le permite reservar su vuelo en minutos con total seguridad.",
+    "about.value1_title": "Alcance Global",
+    "about.value1_desc": "Lo conectamos con cientos de aerolíneas y miles de destinos en todo el mundo.",
+    "about.value2_title": "Seguridad Total",
+    "about.value2_desc": "Pagos procesados por Stripe, encriptación de punta a punta y sus datos siempre protegidos.",
+    "about.value3_title": "Hecha por Personas",
+    "about.value3_desc": "Somos una empresa familiar que entiende sus necesidades porque vivimos la misma realidad.",
+    "about.today_title": "Michels Travel Hoy",
+    "about.today_p1": "Hoy Michels Travel es mucho más que una agencia de viajes. Somos una plataforma tecnológica que trabaja para usted. Nuestra herramienta compara vuelos en tiempo real, nuestro escáner de documentos elimina errores al completar datos, y nuestro soporte está disponible para ayudarle siempre.",
+    "about.today_p2": "Seguimos con la misma filosofía del comienzo: tratar a cada cliente como familia. Porque para nosotros, cada viaje importa. Sea un vuelo a Brasil para ver a los padres, una luna de miel en Europa o un viaje de negocios de último momento, estamos aquí para asegurar que todo salga perfecto.",
+    "about.cta_title": "Listo para Viajar?",
+    "about.cta_desc": "Encuentre ahora el mejor vuelo a su destino. Rápido, seguro y sin complicaciones.",
+    "about.cta_button": "Buscar Mi Vuelo",
 
     // Errors
     "errors.page_not_found": "La página que busca no fue encontrada.",

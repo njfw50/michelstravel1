@@ -4,7 +4,7 @@ import { FlightBoard } from "@/components/FlightBoard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldCheck, Zap, Globe, ArrowRight, MapPin, Plane } from "lucide-react";
+import { ShieldCheck, Zap, Globe, ArrowRight, MapPin, Plane, Search, CreditCard, Ticket, Star, Clock, Headphones, Users, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
@@ -70,6 +70,8 @@ export default function Home() {
   const { t } = useI18n();
 
   const topAirlines = airlines?.filter(a => a.logoSymbolUrl && a.iataCode) || [];
+  const airlineCount = airlines?.length || 0;
+  const airportCount = airports?.length || 0;
 
   return (
     <div className="flex flex-col min-h-screen bg-transparent">
@@ -90,10 +92,6 @@ export default function Home() {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="text-center mb-16 max-w-4xl mx-auto"
           >
-            <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-white/10 text-white border border-white/15 backdrop-blur-md shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                <ShieldCheck className="h-4 w-4 text-amber-400" />
-                <span className="text-sm font-semibold tracking-wide uppercase text-amber-100" data-testid="text-badge">{t("home.badge")}</span>
-            </div>
             <h1 className="text-4xl md:text-6xl font-display font-bold text-white mb-6 leading-tight drop-shadow-[0_0_25px_rgba(0,0,0,0.5)]" data-testid="text-hero-title">
               {t("home.title.1")} <br/>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-400">{t("home.title.2")}</span>
@@ -109,7 +107,68 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-20 bg-black/20 backdrop-blur-sm border-y border-white/5">
+      <section className="py-12 bg-black/10 border-y border-white/5">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { value: airlineCount > 0 ? `${airlineCount}+` : "500+", labelKey: "home.stats.airlines", icon: Plane },
+              { value: airportCount > 0 ? `${airportCount.toLocaleString()}+` : "3,000+", labelKey: "home.stats.destinations", icon: Globe },
+              { value: "24/7", labelKey: "home.stats.support", icon: Headphones },
+              { value: "100%", labelKey: "home.stats.secure", icon: ShieldCheck },
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="flex flex-col items-center text-center py-4"
+              >
+                <stat.icon className="h-6 w-6 text-amber-400/70 mb-2" />
+                <span className="text-2xl md:text-3xl font-bold font-display text-white">{stat.value}</span>
+                <span className="text-xs text-white/40 mt-1 uppercase tracking-wider font-semibold">{t(stat.labelKey)}</span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 bg-black/20 backdrop-blur-sm border-b border-white/5">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl font-bold font-display text-white mb-4 uppercase tracking-wide drop-shadow-lg">{t("home.how.title")}</h2>
+            <p className="text-white/50 max-w-2xl mx-auto font-medium">{t("home.how.subtitle")}</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {[
+              { icon: Search, step: "01", titleKey: "home.how.step1_title", descKey: "home.how.step1_desc", color: "text-teal-400", border: "border-teal-500/30" },
+              { icon: CreditCard, step: "02", titleKey: "home.how.step2_title", descKey: "home.how.step2_desc", color: "text-amber-400", border: "border-amber-500/30" },
+              { icon: Ticket, step: "03", titleKey: "home.how.step3_title", descKey: "home.how.step3_desc", color: "text-emerald-400", border: "border-emerald-500/30" },
+            ].map((item, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15 }}
+                className={`relative flex flex-col items-center text-center p-8 rounded-2xl bg-white/5 border ${item.border} backdrop-blur-md`}
+              >
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <span className={`text-xs font-bold ${item.color} bg-background/90 border ${item.border} px-3 py-1 rounded-full`}>{item.step}</span>
+                </div>
+                <div className={`h-14 w-14 bg-white/10 rounded-xl ${item.color} flex items-center justify-center mb-5`}>
+                  <item.icon className="h-7 w-7" />
+                </div>
+                <h3 className="font-bold text-lg mb-2 text-white">{t(item.titleKey)}</h3>
+                <p className="text-white/45 leading-relaxed text-sm">{t(item.descKey)}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 bg-transparent border-b border-white/5">
         <div className="container mx-auto px-4">
           <div className="text-center mb-14">
             <h2 className="text-3xl font-bold font-display text-white mb-4 uppercase tracking-wide drop-shadow-lg">{t("home.trust.title")}</h2>
@@ -118,9 +177,9 @@ export default function Home() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {[
-              { icon: ShieldCheck, titleKey: "home.trust.secure", descKey: "home.trust.secure_desc", color: "text-emerald-400", bg: "group-hover:bg-emerald-500" },
-              { icon: Zap, titleKey: "home.trust.instant", descKey: "home.trust.instant_desc", color: "text-amber-400", bg: "group-hover:bg-amber-500" },
-              { icon: Globe, titleKey: "home.trust.support", descKey: "home.trust.support_desc", color: "text-teal-400", bg: "group-hover:bg-teal-500" }
+              { icon: ShieldCheck, titleKey: "home.trust.secure", descKey: "home.trust.secure_desc", color: "text-emerald-400" },
+              { icon: Zap, titleKey: "home.trust.instant", descKey: "home.trust.instant_desc", color: "text-amber-400" },
+              { icon: Globe, titleKey: "home.trust.support", descKey: "home.trust.support_desc", color: "text-teal-400" }
             ].map((item, i) => (
               <motion.div 
                 key={i}
@@ -128,9 +187,9 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="flex flex-col items-center text-center p-8 rounded-2xl bg-white/5 border border-white/10 shadow-lg hover:shadow-[0_0_20px_rgba(255,255,255,0.05)] transition-all duration-300 group backdrop-blur-md"
+                className="flex flex-col items-center text-center p-8 rounded-2xl bg-white/5 border border-white/10 shadow-lg transition-all duration-300 group backdrop-blur-md"
               >
-                <div className={`h-16 w-16 bg-white/10 rounded-xl shadow-inner border border-white/10 ${item.color} flex items-center justify-center mb-6 ${item.bg} group-hover:text-white transition-colors duration-300`}>
+                <div className={`h-16 w-16 bg-white/10 rounded-xl shadow-inner border border-white/10 ${item.color} flex items-center justify-center mb-6`}>
                   <item.icon className="h-8 w-8" />
                 </div>
                 <h3 className="font-bold text-xl mb-3 text-white uppercase tracking-wide">{t(item.titleKey)}</h3>
@@ -154,7 +213,7 @@ export default function Home() {
                 {[...topAirlines, ...topAirlines].map((airline, i) => (
                   <div
                     key={`${airline.id}-${i}`}
-                    className="flex-shrink-0 flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-5 py-3 backdrop-blur-sm hover:bg-white/10 transition-colors"
+                    className="flex-shrink-0 flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-5 py-3 backdrop-blur-sm"
                     data-testid={`airline-card-${airline.iataCode}`}
                   >
                     <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
@@ -200,7 +259,7 @@ export default function Home() {
                     transition={{ delay: i * 0.05 }}
                   >
                     <Card 
-                      className="group overflow-hidden border border-white/10 shadow-lg hover:shadow-[0_0_25px_rgba(245,158,11,0.15)] transition-all cursor-pointer h-full bg-white/5 backdrop-blur-md rounded-2xl"
+                      className="group overflow-hidden border border-white/10 shadow-lg transition-all cursor-pointer h-full bg-white/5 backdrop-blur-md rounded-2xl"
                       onClick={() => {
                         if (airport.iataCode) {
                           const d = new Date();
@@ -254,6 +313,64 @@ export default function Home() {
       )}
 
       <FlightBoard />
+
+      <section className="py-20 bg-black/20 backdrop-blur-sm border-y border-white/5">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl font-bold font-display text-white mb-4 uppercase tracking-wide drop-shadow-lg">{t("home.testimonials.title")}</h2>
+            <p className="text-white/50 max-w-2xl mx-auto">{t("home.testimonials.subtitle")}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {[
+              { nameKey: "home.testimonials.t1_name", locKey: "home.testimonials.t1_loc", textKey: "home.testimonials.t1_text" },
+              { nameKey: "home.testimonials.t2_name", locKey: "home.testimonials.t2_loc", textKey: "home.testimonials.t2_text" },
+              { nameKey: "home.testimonials.t3_name", locKey: "home.testimonials.t3_loc", textKey: "home.testimonials.t3_text" },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md"
+              >
+                <div className="flex gap-1 mb-4">
+                  {Array.from({ length: 5 }).map((_, j) => (
+                    <Star key={j} className="h-4 w-4 text-amber-400 fill-amber-400" />
+                  ))}
+                </div>
+                <p className="text-white/60 text-sm leading-relaxed mb-5 italic">"{t(item.textKey)}"</p>
+                <div>
+                  <span className="text-white font-semibold text-sm block">{t(item.nameKey)}</span>
+                  <span className="text-white/30 text-xs">{t(item.locKey)}</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 bg-transparent">
+        <div className="container mx-auto px-4 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-3xl mx-auto"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold font-display text-white mb-6 leading-tight">{t("home.cta.title")}</h2>
+            <p className="text-white/50 text-lg mb-8 max-w-xl mx-auto">{t("home.cta.subtitle")}</p>
+            <Button 
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              className="rounded-full px-10 py-6 text-lg font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg shadow-amber-900/30"
+              data-testid="button-cta-search"
+            >
+              {t("home.cta.button")} <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </motion.div>
+        </div>
+      </section>
 
       {(!airports || airports.length === 0) && !airportsLoading && (!popularFlights || popularFlights.length === 0) && (
         <section className="py-20 bg-transparent">

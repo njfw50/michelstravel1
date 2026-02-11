@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { User, LogOut, Menu, X, Shield } from "lucide-react";
+import { User, LogOut, Menu, X, Shield, ShieldCheck, Lock, Award, Building2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -197,9 +197,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div>
               <h4 className="font-bold text-white mb-4">{t("footer.company")}</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-white/50 hover:text-amber-300 transition-colors">{t("footer.about")}</a></li>
-                <li><a href="#" className="text-white/50 hover:text-amber-300 transition-colors">{t("footer.careers")}</a></li>
-                <li><a href="#" className="text-white/50 hover:text-amber-300 transition-colors">{t("footer.press")}</a></li>
+                <li><Link href="/about" className="text-white/50 hover:text-amber-300 transition-colors">{t("footer.about")}</Link></li>
+                <li><Link href="/blog" className="text-white/50 hover:text-amber-300 transition-colors">{t("nav.blog")}</Link></li>
               </ul>
             </div>
 
@@ -226,6 +225,43 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           </div>
+
+          <div className="border-t border-white/5 pt-8 mb-8">
+            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
+              <div className="flex items-center gap-2 text-white/40" data-testid="seal-nj-registered">
+                <Building2 className="h-5 w-5 text-amber-400/70" />
+                <div className="text-xs leading-tight">
+                  <span className="block font-semibold text-white/60">{t("footer.seal_nj")}</span>
+                  <span className="text-white/30">{t("footer.seal_nj_sub")}</span>
+                </div>
+              </div>
+              <div className="w-px h-8 bg-white/10 hidden md:block" />
+              <div className="flex items-center gap-2 text-white/40" data-testid="seal-iata">
+                <Award className="h-5 w-5 text-amber-400/70" />
+                <div className="text-xs leading-tight">
+                  <span className="block font-semibold text-white/60">{t("footer.seal_iata")}</span>
+                  <span className="text-white/30">{t("footer.seal_iata_sub")}</span>
+                </div>
+              </div>
+              <div className="w-px h-8 bg-white/10 hidden md:block" />
+              <div className="flex items-center gap-2 text-white/40" data-testid="seal-stripe">
+                <Lock className="h-5 w-5 text-amber-400/70" />
+                <div className="text-xs leading-tight">
+                  <span className="block font-semibold text-white/60">{t("footer.seal_stripe")}</span>
+                  <span className="text-white/30">{t("footer.seal_stripe_sub")}</span>
+                </div>
+              </div>
+              <div className="w-px h-8 bg-white/10 hidden md:block" />
+              <div className="flex items-center gap-2 text-white/40" data-testid="seal-ssl">
+                <ShieldCheck className="h-5 w-5 text-amber-400/70" />
+                <div className="text-xs leading-tight">
+                  <span className="block font-semibold text-white/60">{t("footer.seal_ssl")}</span>
+                  <span className="text-white/30">{t("footer.seal_ssl_sub")}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="border-t border-white/5 pt-8 text-center text-xs text-white/30">
             &copy; {new Date().getFullYear()} Michels Travel. {t("footer.rights")}
           </div>

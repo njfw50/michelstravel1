@@ -16,6 +16,7 @@ import Booking from "@/pages/Booking";
 import AdminDashboard from "@/pages/AdminDashboard";
 import BlogList from "@/pages/BlogList";
 import BlogPost from "@/pages/BlogPost";
+import About from "@/pages/About";
 
 import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import CheckoutCancel from "@/pages/CheckoutCancel";
@@ -57,6 +58,7 @@ function Router() {
       <Route path="/search" component={() => <Layout><SearchResults /></Layout>} />
       <Route path="/book/:id" component={() => <Layout><Booking /></Layout>} />
       
+      <Route path="/about" component={() => <Layout><About /></Layout>} />
       <Route path="/blog" component={() => <Layout><BlogList /></Layout>} />
       <Route path="/blog/:slug" component={() => <Layout><BlogPost /></Layout>} />
       
