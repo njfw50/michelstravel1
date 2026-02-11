@@ -1,5 +1,5 @@
 export interface MRZResult {
-  documentType: "passport" | "id_card" | "travel_doc";
+  documentType: "passport" | "id_card" | "travel_doc" | "visa";
   surname: string;
   givenNames: string;
   documentNumber: string;
@@ -244,8 +244,127 @@ function parseTD2(lines: string[]): MRZResult | null {
   if (!surname) confidence -= 20;
   if (!givenNames) confidence -= 20;
 
+  const docTypeChar = line1.substring(0, 1);
+  const isVisa = docTypeChar === "V";
+
   return {
-    documentType: "travel_doc",
+    documentType: isVisa ? "visa" : "travel_doc",
+    surname,
+    givenNames,
+    documentNumber: docNumber,
+    nationality,
+    dateOfBirth,
+    gender,
+    expiryDate,
+    issuingCountry,
+    confidence: Math.max(0, confidence),
+    warnings,
+  };
+}
+
+function parseMRVA(lines: string[]): MRZResult | null {
+  const line1 = normalizeMRZLine(lines[0]);
+  const line2 = normalizeMRZLine(lines[1]);
+
+  if (line1.length < 44 || line2.length < 44) return null;
+  if (line1.substring(0, 1) !== "V") return null;
+
+  const warnings: string[] = [];
+
+  const issuingCountry = line1.substring(2, 5).replace(/</g, "");
+  const nameField = line1.substring(5, 44);
+  const nameParts = nameField.split("<<");
+  const surname = cleanName(nameParts[0] || "");
+  const givenNames = cleanName(nameParts.slice(1).join(" ") || "");
+
+  const docNumber = line2.substring(0, 9).replace(/</g, "");
+  const docCheckDigit = line2.substring(9, 10);
+  if (!validateCheckDigit(line2.substring(0, 9), docCheckDigit)) {
+    warnings.push("doc_number_check_failed");
+  }
+
+  const nationality = line2.substring(10, 13).replace(/</g, "");
+  const birthRaw = line2.substring(13, 19);
+  const birthCheckDigit = line2.substring(19, 20);
+  if (!validateCheckDigit(birthRaw, birthCheckDigit)) {
+    warnings.push("birth_date_check_failed");
+  }
+
+  const gender = parseMRZGender(line2.substring(20, 21));
+  const expiryRaw = line2.substring(21, 27);
+  const expiryCheckDigit = line2.substring(27, 28);
+  if (!validateCheckDigit(expiryRaw, expiryCheckDigit)) {
+    warnings.push("expiry_date_check_failed");
+  }
+
+  const dateOfBirth = parseMRZDateForBirth(birthRaw);
+  const expiryDate = parseMRZDate(expiryRaw);
+
+  let confidence = 100;
+  confidence -= warnings.length * 10;
+  if (!surname) confidence -= 20;
+  if (!givenNames) confidence -= 20;
+
+  return {
+    documentType: "visa",
+    surname,
+    givenNames,
+    documentNumber: docNumber,
+    nationality,
+    dateOfBirth,
+    gender,
+    expiryDate,
+    issuingCountry,
+    confidence: Math.max(0, confidence),
+    warnings,
+  };
+}
+
+function parseMRVB(lines: string[]): MRZResult | null {
+  const line1 = normalizeMRZLine(lines[0]);
+  const line2 = normalizeMRZLine(lines[1]);
+
+  if (line1.length < 36 || line2.length < 36) return null;
+  if (line1.substring(0, 1) !== "V") return null;
+
+  const warnings: string[] = [];
+
+  const issuingCountry = line1.substring(2, 5).replace(/</g, "");
+  const nameField = line1.substring(5, 36);
+  const nameParts = nameField.split("<<");
+  const surname = cleanName(nameParts[0] || "");
+  const givenNames = cleanName(nameParts.slice(1).join(" ") || "");
+
+  const docNumber = line2.substring(0, 9).replace(/</g, "");
+  const docCheckDigit = line2.substring(9, 10);
+  if (!validateCheckDigit(line2.substring(0, 9), docCheckDigit)) {
+    warnings.push("doc_number_check_failed");
+  }
+
+  const nationality = line2.substring(10, 13).replace(/</g, "");
+  const birthRaw = line2.substring(13, 19);
+  const birthCheckDigit = line2.substring(19, 20);
+  if (!validateCheckDigit(birthRaw, birthCheckDigit)) {
+    warnings.push("birth_date_check_failed");
+  }
+
+  const gender = parseMRZGender(line2.substring(20, 21));
+  const expiryRaw = line2.substring(21, 27);
+  const expiryCheckDigit = line2.substring(27, 28);
+  if (!validateCheckDigit(expiryRaw, expiryCheckDigit)) {
+    warnings.push("expiry_date_check_failed");
+  }
+
+  const dateOfBirth = parseMRZDateForBirth(birthRaw);
+  const expiryDate = parseMRZDate(expiryRaw);
+
+  let confidence = 100;
+  confidence -= warnings.length * 10;
+  if (!surname) confidence -= 20;
+  if (!givenNames) confidence -= 20;
+
+  return {
+    documentType: "visa",
     surname,
     givenNames,
     documentNumber: docNumber,
@@ -299,8 +418,18 @@ export function parseMRZ(ocrText: string): MRZResult | null {
     const l1 = lines[lines.length - 2];
     const l2 = lines[lines.length - 1];
 
+    if (l1.length >= 44 && l2.length >= 44 && l1.startsWith("V")) {
+      const result = parseMRVA([l1, l2]);
+      if (result && result.surname) return result;
+    }
+
     if (l1.length >= 44 && l2.length >= 44) {
       const result = parseTD3([l1, l2]);
+      if (result && result.surname) return result;
+    }
+
+    if (l1.length >= 36 && l2.length >= 36 && l1.length < 44 && l1.startsWith("V")) {
+      const result = parseMRVB([l1, l2]);
       if (result && result.surname) return result;
     }
 

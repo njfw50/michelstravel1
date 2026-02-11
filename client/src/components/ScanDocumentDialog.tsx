@@ -158,6 +158,7 @@ export function ScanDocumentDialog({
       case "passport": return t("scan.doc_passport");
       case "id_card": return t("scan.doc_id_card");
       case "travel_doc": return t("scan.doc_travel_doc");
+      case "visa": return t("scan.doc_visa");
       default: return t("scan.doc_document");
     }
   };

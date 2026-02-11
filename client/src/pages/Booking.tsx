@@ -16,12 +16,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CheckCircle2, Plane, Clock, ArrowRight, Shield, Luggage, User, ChevronDown, ChevronUp, RefreshCw, X as XIcon, Briefcase } from "lucide-react";
+import { CheckCircle2, Plane, Clock, ArrowRight, Shield, Luggage, User, ChevronDown, ChevronUp, RefreshCw, X as XIcon, Briefcase, ScanLine } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { useI18n } from "@/lib/i18n";
+import { ScanDocumentDialog } from "@/components/ScanDocumentDialog";
 import type { FlightOffer } from "@shared/schema";
 
 const passengerSchema = z.object({
@@ -108,10 +109,22 @@ const COUNTRIES = [
   { code: "DO", name: "Dominican Republic" }, { code: "GT", name: "Guatemala" }, { code: "HN", name: "Honduras" },
 ].sort((a, b) => a.name.localeCompare(b.name));
 
-function PassengerForm({ index, control, register, errors, passengerType, isDocRequired, t }: any) {
+function PassengerForm({ index, control, register, errors, passengerType, isDocRequired, t, setValue }: any) {
   const [expanded, setExpanded] = useState(index === 0);
+  const [scanOpen, setScanOpen] = useState(false);
   const paxErrors = errors?.passengers?.[index];
   const typeLabel = passengerType === "child" ? t("booking.child") : passengerType === "infant_without_seat" ? t("booking.infant") : t("booking.adult");
+
+  const handleScanConfirm = (data: any) => {
+    if (data.givenName) setValue(`passengers.${index}.givenName`, data.givenName);
+    if (data.familyName) setValue(`passengers.${index}.familyName`, data.familyName);
+    if (data.bornOn) setValue(`passengers.${index}.bornOn`, data.bornOn);
+    if (data.gender) setValue(`passengers.${index}.gender`, data.gender);
+    if (data.passportNumber) setValue(`passengers.${index}.passportNumber`, data.passportNumber);
+    if (data.passportExpiryDate) setValue(`passengers.${index}.passportExpiryDate`, data.passportExpiryDate);
+    if (data.nationality) setValue(`passengers.${index}.nationality`, data.nationality);
+    if (data.passportIssuingCountry) setValue(`passengers.${index}.passportIssuingCountry`, data.passportIssuingCountry);
+  };
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden">
@@ -135,6 +148,27 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
 
       {expanded && (
         <div className="px-4 pb-5 space-y-4 border-t border-white/5 pt-4">
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2 border-teal-500/30 text-teal-300 bg-teal-500/5"
+              onClick={() => setScanOpen(true)}
+              data-testid={`button-scan-document-${index}`}
+            >
+              <ScanLine className="h-4 w-4" />
+              {t("scan.scan_document")}
+            </Button>
+          </div>
+
+          <ScanDocumentDialog
+            open={scanOpen}
+            onOpenChange={setScanOpen}
+            onConfirm={handleScanConfirm}
+            passengerIndex={index}
+          />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.given_name")} *</Label>
@@ -514,6 +548,7 @@ export default function Booking() {
                       passengerType={field.type}
                       isDocRequired={isDocRequired}
                       t={t}
+                      setValue={form.setValue}
                     />
                   ))}
                 </CardContent>
