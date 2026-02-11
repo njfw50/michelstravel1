@@ -106,7 +106,48 @@ export interface FlightSearchParams {
   // slices?: Array<{ origin: string; destination: string; date: string }>;
 }
 
-// Mock Flight Result Type (since we don't have real API yet)
+export interface FlightSegment {
+  segmentId: string;
+  carrierCode: string;
+  carrierName: string;
+  flightNumber: string;
+  aircraftType: string | null;
+  departureTime: string;
+  arrivalTime: string;
+  duration: string;
+  originCode: string;
+  originName: string;
+  originCity: string | null;
+  originTerminal: string | null;
+  destinationCode: string;
+  destinationName: string;
+  destinationCity: string | null;
+  destinationTerminal: string | null;
+}
+
+export interface FlightSlice {
+  duration: string;
+  originCode: string;
+  originCity: string | null;
+  destinationCode: string;
+  destinationCity: string | null;
+  segments: FlightSegment[];
+}
+
+export interface FlightPassengerBaggage {
+  type: string;
+  quantity: number;
+}
+
+export interface FlightPassengerInfo {
+  passengerId: string;
+  passengerType: string;
+  cabinClass: string;
+  cabinClassName: string;
+  baggages: FlightPassengerBaggage[];
+  fareBrandName: string | null;
+}
+
 export interface FlightOffer {
   id: string;
   airline: string;
@@ -123,4 +164,14 @@ export interface FlightOffer {
   destinationCity?: string | null;
   originCode?: string | null;
   destinationCode?: string | null;
+  cabinClass?: string | null;
+  slices?: FlightSlice[];
+  passengers?: FlightPassengerInfo[];
+  passengerIdentityDocumentsRequired?: boolean;
+  taxAmount?: string | null;
+  baseAmount?: string | null;
+  conditions?: {
+    changeBeforeDeparture?: { allowed: boolean; penaltyAmount?: string; penaltyCurrency?: string } | null;
+    refundBeforeDeparture?: { allowed: boolean; penaltyAmount?: string; penaltyCurrency?: string } | null;
+  } | null;
 }

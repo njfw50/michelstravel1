@@ -1,7 +1,8 @@
 import { type FlightOffer } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plane, Clock, ArrowRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plane, Clock, ArrowRight, Luggage } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Link } from "wouter";
 import { useI18n } from "@/lib/i18n";
@@ -35,12 +36,20 @@ export function FlightCard({ flight }: FlightCardProps) {
     ? t("flight.direct") 
     : `${flight.stops} ${flight.stops > 1 ? t("flight.stops") : t("flight.stop")}`;
 
+  const cabinClassName = flight.passengers?.[0]?.cabinClassName;
+  const checkedBags = flight.passengers?.[0]?.baggages?.find(b => b.type === "checked");
+  const carryOnBags = flight.passengers?.[0]?.baggages?.find(b => b.type === "carry_on");
+  const fareBrand = flight.passengers?.[0]?.fareBrandName;
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const bookUrl = `/book/${flight.id}?${searchParams.toString()}`;
+
   return (
     <Card data-testid={`flight-card-${flight.id}`} className="p-0 overflow-hidden border border-white/10 shadow-lg hover:shadow-[0_0_20px_rgba(245,158,11,0.1)] transition-all duration-300 group bg-white/5 backdrop-blur-sm rounded-2xl">
       <div className="p-6 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
         
         <div className="md:col-span-3 flex items-center gap-4">
-          <div className="h-12 w-12 rounded-full bg-white/10 border border-white/15 flex items-center justify-center p-2 overflow-hidden shadow-inner">
+          <div className="h-12 w-12 rounded-full bg-white/10 border border-white/15 flex items-center justify-center p-2 overflow-hidden shadow-inner shrink-0">
             {flight.logoUrl ? (
               <img src={flight.logoUrl} alt={flight.airline} className="w-full h-full object-contain" />
             ) : (
@@ -49,20 +58,23 @@ export function FlightCard({ flight }: FlightCardProps) {
           </div>
           <div>
             <h3 className="font-bold text-white leading-tight" data-testid="text-airline-name">{flight.airline}</h3>
-            <div className="flex items-center gap-2 mt-1 flex-wrap">
+            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
               <span className="text-xs text-amber-200/80 font-medium bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full inline-block" data-testid="text-flight-number">
                 {flight.flightNumber}
               </span>
-              {flight.aircraftType && (
-                <span className="text-xs text-teal-200/80 font-medium bg-teal-500/10 border border-teal-500/20 px-2 py-0.5 rounded-full inline-block" data-testid="text-aircraft-type">
-                  {flight.aircraftType}
+              {cabinClassName && (
+                <span className="text-xs text-teal-200/80 font-medium bg-teal-500/10 border border-teal-500/20 px-2 py-0.5 rounded-full inline-block">
+                  {cabinClassName}
                 </span>
               )}
             </div>
+            {fareBrand && (
+              <div className="text-[10px] text-white/30 mt-1">{fareBrand}</div>
+            )}
           </div>
         </div>
 
-        <div className="md:col-span-6 flex flex-col justify-center px-4 md:px-0">
+        <div className="md:col-span-5 flex flex-col justify-center px-4 md:px-0">
           <div className="flex justify-between items-end mb-2">
             <div className="text-center">
               <div className="text-2xl font-bold text-white leading-none" data-testid="text-departure-time">{format(parseISO(flight.departureTime), "HH:mm")}</div>
@@ -99,9 +111,28 @@ export function FlightCard({ flight }: FlightCardProps) {
               )}
             </div>
           </div>
+          {(checkedBags || carryOnBags || flight.aircraftType) && (
+            <div className="flex items-center justify-center gap-3 mt-2 flex-wrap">
+              {flight.aircraftType && (
+                <span className="text-[10px] text-white/30 flex items-center gap-1">
+                  <Plane className="h-2.5 w-2.5" /> {flight.aircraftType}
+                </span>
+              )}
+              {checkedBags && checkedBags.quantity > 0 && (
+                <span className="text-[10px] text-emerald-300/70 flex items-center gap-1" data-testid="text-checked-bags">
+                  <Luggage className="h-2.5 w-2.5" /> {checkedBags.quantity}x {t("booking.checked_bag")}
+                </span>
+              )}
+              {carryOnBags && carryOnBags.quantity > 0 && (
+                <span className="text-[10px] text-teal-300/70 flex items-center gap-1">
+                  <Luggage className="h-2.5 w-2.5" /> {carryOnBags.quantity}x {t("booking.carry_on")}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
-        <div className="md:col-span-3 flex flex-col items-end justify-center border-l-0 md:border-l border-white/10 pl-0 md:pl-6 gap-3 pt-4 md:pt-0 border-t md:border-t-0 mt-4 md:mt-0">
+        <div className="md:col-span-4 flex flex-col items-end justify-center border-l-0 md:border-l border-white/10 pl-0 md:pl-6 gap-3 pt-4 md:pt-0 border-t md:border-t-0 mt-4 md:mt-0">
           <div className="text-right w-full md:w-auto flex justify-between md:block items-center">
             <span className="text-xs text-white/50 font-medium md:block hidden">{t("flight.total_price")}</span>
             <span className="text-sm text-white/50 md:hidden">{t("flight.price_per_adult")}</span>
@@ -109,7 +140,7 @@ export function FlightCard({ flight }: FlightCardProps) {
               {formatPrice(flight.price, flight.currency)}
             </div>
           </div>
-          <Link href={`/book/${flight.id}`} className="w-full">
+          <Link href={bookUrl} className="w-full">
             <Button data-testid="button-select-flight" className="w-full rounded-xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 shadow-lg shadow-amber-900/30 transition-all h-12 text-base border-0 text-white">
               {t("flight.select")} <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Button>
