@@ -6,7 +6,7 @@ import { getUncachableStripeClient } from './stripeClient';
 import { db } from "./db";
 import { flightSearches, bookings, siteSettings, type FlightSearchParams } from "@shared/schema";
 import { desc, eq } from "drizzle-orm";
-import { searchFlights, getFlight, searchPlaces, getAirlines, getAirports, getAircraft, initializeReferenceData, isTestMode as getDuffelTestMode } from "./services/duffel";
+import { searchFlights, getFlight, searchPlaces, getAirlines, getAirports, getAircraft, initializeReferenceData, isTestMode, activeTokenIsTest, hasLiveToken, hasTestToken, setTestModeCache, clearReferenceDataCache, loadTestModeSetting, ensureTestModeLoaded } from "./services/duffel";
 
 /**
  * Register all application routes
@@ -21,6 +21,7 @@ export function registerRoutes(app: Express) {
   // Search Places (Autocomplete)
   app.get('/api/places/search', async (req, res) => {
     try {
+        await ensureTestModeLoaded();
         const { query } = req.query;
         if (!query || typeof query !== 'string') {
             return res.json([]);
@@ -36,6 +37,7 @@ export function registerRoutes(app: Express) {
   // Search Flights
   app.get('/api/flights/search', async (req, res) => {
     try {
+      await ensureTestModeLoaded();
       const { origin, destination, date, passengers, cabinClass, returnDate, adults, children, infants } = req.query;
 
       const searchParams: FlightSearchParams = {
@@ -94,6 +96,7 @@ export function registerRoutes(app: Express) {
   // Get Flight Details (MUST be after /popular to avoid matching "popular" as :id)
   app.get('/api/flights/:id', async (req, res) => {
     try {
+        await ensureTestModeLoaded();
         const flight = await getFlight(req.params.id);
         if (!flight) {
             return res.status(404).json({ error: "Flight not found" });
@@ -108,6 +111,7 @@ export function registerRoutes(app: Express) {
 
   app.get('/api/airlines', async (req, res) => {
     try {
+      await ensureTestModeLoaded();
       const airlines = await getAirlines();
       const { search, limit } = req.query;
       let filtered = airlines;
@@ -130,6 +134,7 @@ export function registerRoutes(app: Express) {
 
   app.get('/api/airports', async (req, res) => {
     try {
+      await ensureTestModeLoaded();
       const airports = await getAirports();
       const { search, limit, featured } = req.query;
       let filtered = airports;
@@ -158,6 +163,7 @@ export function registerRoutes(app: Express) {
 
   app.get('/api/aircraft', async (req, res) => {
     try {
+      await ensureTestModeLoaded();
       const aircraft = await getAircraft();
       const { search, limit } = req.query;
       let filtered = aircraft;
@@ -186,18 +192,19 @@ export function registerRoutes(app: Express) {
   // Create Booking & Checkout Session
   app.post('/api/bookings', async (req, res) => {
     try {
+        await ensureTestModeLoaded();
         const settings = await storage.getSiteSettings();
         const isTestModeActive = settings?.testMode ?? true;
-        const tokenIsTest = getDuffelTestMode();
 
         if (isTestModeActive) {
-          console.log("[TEST MODE] Booking created in test mode - no real charges");
-        }
-
-        if (!isTestModeActive && tokenIsTest) {
-          return res.status(400).json({ 
-            error: "Configuration error: Production mode is enabled but Duffel token is a test token. Please contact the administrator." 
-          });
+          console.log("[TEST MODE] Booking created in test mode - using test token, no real charges");
+        } else {
+          if (!hasLiveToken()) {
+            return res.status(400).json({ 
+              error: "Configuration error: Production mode is enabled but no live Duffel token (DUFFEL_LIVE_TOKEN) is configured." 
+            });
+          }
+          console.log("[PRODUCTION MODE] Creating real booking with live token");
         }
 
         const bookingData = req.body;
@@ -434,13 +441,16 @@ export function registerRoutes(app: Express) {
       return res.status(400).json({ error: "testMode must be a boolean" });
     }
 
-    if (!testMode) {
-      const token = process.env.DUFFEL_API_TOKEN || '';
-      if (token.startsWith('duffel_test_')) {
-        return res.status(400).json({ 
-          error: "Cannot disable test mode: your Duffel API token is a test token (duffel_test_*). To go live, configure a production token (duffel_live_*) in your environment variables." 
-        });
-      }
+    if (!testMode && !hasLiveToken()) {
+      return res.status(400).json({ 
+        error: "Cannot disable test mode: no production token (DUFFEL_LIVE_TOKEN) is configured. Add a duffel_live_* token to your secrets first." 
+      });
+    }
+
+    if (testMode && !hasTestToken()) {
+      return res.status(400).json({ 
+        error: "Cannot enable test mode: no test token (DUFFEL_API_TOKEN) is configured. Add a duffel_test_* token to your secrets first." 
+      });
     }
 
     const settings = await storage.getSiteSettings();
@@ -454,16 +464,29 @@ export function registerRoutes(app: Express) {
       testMode,
     });
 
-    res.json({ testMode: updated.testMode, message: testMode ? "Test mode enabled" : "Production mode enabled" });
+    setTestModeCache(testMode);
+    clearReferenceDataCache();
+
+    const modeLabel = testMode ? 'TEST' : 'PRODUCTION';
+    console.log(`[MODE SWITCH] Switched to ${modeLabel} mode. Active token: ${activeTokenIsTest() ? 'test' : 'live'}`);
+
+    res.json({ 
+      testMode: updated.testMode, 
+      activeTokenIsTest: activeTokenIsTest(),
+      message: testMode ? "Test mode enabled - using test token" : "Production mode enabled - using live token" 
+    });
   });
 
   // Public: check if test mode is active (for banner display)
   app.get('/api/test-mode', async (_req, res) => {
     const settings = await storage.getSiteSettings();
-    const isTest = settings?.testMode ?? true;
-    const token = process.env.DUFFEL_API_TOKEN || '';
-    const tokenIsTest = token.startsWith('duffel_test_') || !token;
-    res.json({ testMode: isTest, tokenIsTest });
+    const testModeActive = settings?.testMode ?? true;
+    res.json({ 
+      testMode: testModeActive, 
+      activeTokenIsTest: activeTokenIsTest(),
+      hasLiveToken: hasLiveToken(),
+      hasTestToken: hasTestToken(),
+    });
   });
 
   // All Bookings

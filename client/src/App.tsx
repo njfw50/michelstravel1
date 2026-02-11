@@ -22,7 +22,7 @@ import CheckoutCancel from "@/pages/CheckoutCancel";
 
 function TestModeBanner() {
   const { t } = useI18n();
-  const { data } = useQuery<{ testMode: boolean; tokenIsTest: boolean }>({
+  const { data } = useQuery<{ testMode: boolean; activeTokenIsTest: boolean; hasLiveToken: boolean; hasTestToken: boolean }>({
     queryKey: ['/api/test-mode'],
     refetchInterval: 30000,
   });

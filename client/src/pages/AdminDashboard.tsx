@@ -16,7 +16,7 @@ function TestModeControl() {
   const queryClient = useQueryClient();
   const [isToggling, setIsToggling] = useState(false);
 
-  const { data: testModeData, isLoading } = useQuery({
+  const { data: testModeData, isLoading } = useQuery<{ testMode: boolean; activeTokenIsTest: boolean; hasLiveToken: boolean; hasTestToken: boolean }>({
     queryKey: ['/api/test-mode'],
   });
 
@@ -62,14 +62,16 @@ function TestModeControl() {
     );
   }
 
-  const isTestMode = testModeData?.testMode ?? true;
-  const tokenIsTest = testModeData?.tokenIsTest ?? true;
+  const currentTestMode = testModeData?.testMode ?? true;
+  const tokenActive = testModeData?.activeTokenIsTest ?? true;
+  const liveTokenReady = testModeData?.hasLiveToken ?? false;
+  const testTokenReady = testModeData?.hasTestToken ?? false;
 
   return (
-    <Card className={`border shadow-lg backdrop-blur-md ${isTestMode ? 'border-amber-500/30 bg-amber-500/5' : 'border-emerald-500/30 bg-emerald-500/5'}`}>
+    <Card className={`border shadow-lg backdrop-blur-md ${currentTestMode ? 'border-amber-500/30 bg-amber-500/5' : 'border-emerald-500/30 bg-emerald-500/5'}`}>
       <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
         <div className="flex items-center gap-3">
-          {isTestMode ? (
+          {currentTestMode ? (
             <div className="h-12 w-12 rounded-xl border flex items-center justify-center shadow-inner text-amber-400 bg-amber-500/10 border-amber-500/20">
               <ShieldCheck className="h-6 w-6" />
             </div>
@@ -86,56 +88,66 @@ function TestModeControl() {
         <Badge
           data-testid="badge-test-mode-status"
           className={`text-xs font-bold px-3 py-1 ${
-            isTestMode 
+            currentTestMode 
               ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' 
               : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
           }`}
         >
-          {isTestMode ? t("admin.test_mode_enabled") : t("admin.test_mode_disabled")}
+          {currentTestMode ? t("admin.test_mode_enabled") : t("admin.test_mode_disabled")}
         </Badge>
       </CardHeader>
       <CardContent className="p-6 pt-2 space-y-4">
-        <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <span className="text-sm text-white/70">{t("admin.token_status")}:</span>
             <Badge
-              data-testid="badge-token-status"
+              data-testid="badge-active-token"
               className={`text-xs ${
-                tokenIsTest 
+                tokenActive 
                   ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' 
                   : 'bg-green-500/20 text-green-300 border-green-500/30'
               }`}
             >
-              {tokenIsTest ? t("admin.token_test") : t("admin.token_production")}
+              {tokenActive ? t("admin.token_test") : t("admin.token_production")}
             </Badge>
+          </div>
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <div className={`h-2 w-2 rounded-full ${testTokenReady ? 'bg-yellow-400' : 'bg-red-400'}`} />
+              <span className="text-xs text-white/50">DUFFEL_API_TOKEN: {testTokenReady ? 'OK' : 'Missing'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className={`h-2 w-2 rounded-full ${liveTokenReady ? 'bg-green-400' : 'bg-red-400'}`} />
+              <span className="text-xs text-white/50">DUFFEL_LIVE_TOKEN: {liveTokenReady ? 'OK' : 'Missing'}</span>
+            </div>
           </div>
         </div>
 
-        {tokenIsTest && !isTestMode && (
+        {!liveTokenReady && !currentTestMode && (
           <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-xs">
             {t("admin.test_mode_warning")}
           </div>
         )}
 
-        <div className="flex items-center justify-between">
-          <p className={`text-sm font-medium ${isTestMode ? 'text-amber-300' : 'text-emerald-300'}`}>
-            {isTestMode ? t("admin.test_mode_safe") : t("admin.test_mode_live")}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <p className={`text-sm font-medium ${currentTestMode ? 'text-amber-300' : 'text-emerald-300'}`}>
+            {currentTestMode ? t("admin.test_mode_safe") : t("admin.test_mode_live")}
           </p>
           <Button
             data-testid="button-toggle-test-mode"
-            variant={isTestMode ? "default" : "destructive"}
-            onClick={() => toggleMutation.mutate(!isTestMode)}
+            variant={currentTestMode ? "default" : "destructive"}
+            onClick={() => toggleMutation.mutate(!currentTestMode)}
             disabled={isToggling || toggleMutation.isPending}
             className="gap-2"
           >
             {isToggling || toggleMutation.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
-            ) : isTestMode ? (
+            ) : currentTestMode ? (
               <ToggleRight className="h-4 w-4" />
             ) : (
               <ToggleLeft className="h-4 w-4" />
             )}
-            {isTestMode ? t("admin.test_mode_toggle_off") : t("admin.test_mode_toggle_on")}
+            {currentTestMode ? t("admin.test_mode_toggle_off") : t("admin.test_mode_toggle_on")}
           </Button>
         </div>
       </CardContent>
