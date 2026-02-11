@@ -47,6 +47,7 @@ export const siteSettings = pgTable("site_settings", {
   commissionPercentage: decimal("commission_percentage", { precision: 5, scale: 2 }).default("5.00"),
   heroTitle: text("hero_title").default("Find Your Next Adventure"),
   heroSubtitle: text("hero_subtitle").default("Best prices on flights worldwide."),
+  testMode: boolean("test_mode").default(true).notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
