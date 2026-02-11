@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plane, Clock, ArrowRight, TrendingDown, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import { useLocation } from "wouter";
@@ -105,30 +104,30 @@ export function FlightBoard() {
   const hasMore = (flights?.length || 0) > 8;
 
   return (
-    <section className="py-24 md:py-32 section-elevated" data-testid="section-flight-board">
+    <section className="py-24 md:py-32 bg-white" data-testid="section-flight-board">
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex justify-between items-end mb-10 flex-wrap gap-4">
           <div>
             <div className="flex items-center gap-3 mb-3">
-              <div className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-              <span className="text-[11px] text-emerald-400 font-bold uppercase tracking-[0.2em]">LIVE</span>
+              <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+              <span className="text-[11px] text-emerald-600 font-bold uppercase tracking-[0.2em]">LIVE</span>
             </div>
-            <h2 className="text-3xl md:text-5xl font-extrabold font-display text-white mb-2" data-testid="text-board-title">
+            <h2 className="text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-2" data-testid="text-board-title">
               {t("home.board.title")}
             </h2>
-            <p className="text-white/40">{t("home.board.subtitle")}</p>
+            <p className="text-gray-500">{t("home.board.subtitle")}</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <div className="font-mono text-2xl font-bold text-white tracking-wider" data-testid="text-board-clock">
+              <div className="font-mono text-2xl font-bold text-gray-900 tracking-wider" data-testid="text-board-clock">
                 {currentTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}
               </div>
-              <div className="text-[11px] text-white/30 font-mono">{currentTime.toLocaleDateString("en-US", { weekday: "short", day: "2-digit", month: "short", year: "numeric" })} {Intl.DateTimeFormat().resolvedOptions().timeZone.split("/").pop()}</div>
+              <div className="text-[11px] text-gray-400 font-mono">{currentTime.toLocaleDateString("en-US", { weekday: "short", day: "2-digit", month: "short", year: "numeric" })} {Intl.DateTimeFormat().resolvedOptions().timeZone.split("/").pop()}</div>
             </div>
             <Button
               size="icon"
               variant="ghost"
-              className="text-white/30"
+              className="text-gray-400"
               onClick={() => refetch()}
               disabled={isFetching}
               data-testid="button-refresh-board"
@@ -138,8 +137,8 @@ export function FlightBoard() {
           </div>
         </div>
 
-        <div className="overflow-hidden border border-white/[0.06] bg-card/60 backdrop-blur-sm rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.3)]">
-          <div className="grid grid-cols-[1fr_auto_1fr_auto_auto_auto_auto] gap-0 px-5 py-3.5 border-b border-white/[0.06] bg-white/[0.02] text-[11px] font-bold text-white/35 uppercase tracking-widest hidden md:grid">
+        <div className="overflow-hidden border border-gray-200 bg-white rounded-2xl shadow-sm">
+          <div className="grid grid-cols-[1fr_auto_1fr_auto_auto_auto_auto] gap-0 px-5 py-3.5 border-b border-gray-100 bg-gray-50/80 text-[11px] font-bold text-gray-400 uppercase tracking-widest hidden md:grid">
             <div>{t("home.board.col_flight")}</div>
             <div>{t("home.board.col_time")}</div>
             <div className="pl-4">{t("home.board.col_route")}</div>
@@ -151,7 +150,7 @@ export function FlightBoard() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
-              <div className="flex items-center gap-3 text-white/30">
+              <div className="flex items-center gap-3 text-gray-400">
                 <RefreshCw className="h-5 w-5 animate-spin" />
                 <span className="font-mono text-sm">{t("home.board.loading")}</span>
               </div>
@@ -159,8 +158,8 @@ export function FlightBoard() {
           ) : !flights || flights.length === 0 ? (
             <div className="flex items-center justify-center py-20">
               <div className="text-center">
-                <Plane className="h-10 w-10 text-white/15 mx-auto mb-3" />
-                <p className="text-white/30 font-medium">{t("home.board.no_flights")}</p>
+                <Plane className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-400 font-medium">{t("home.board.no_flights")}</p>
               </div>
             </div>
           ) : (
@@ -172,26 +171,26 @@ export function FlightBoard() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ delay: i * 0.03 }}
-                  className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_auto_auto_auto] gap-2 md:gap-0 px-5 py-3.5 border-b border-white/[0.03] hover:bg-white/[0.03] transition-all duration-200 cursor-pointer group"
+                  className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_auto_auto_auto] gap-2 md:gap-0 px-5 py-3.5 border-b border-gray-100 hover:bg-blue-50/50 transition-all duration-200 cursor-pointer group"
                   onClick={() => setLocation(`/book/${flight.id}?adults=1&children=0&infants=0`)}
                   data-testid={`board-row-${i}`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-lg bg-white/[0.06] flex items-center justify-center overflow-hidden flex-shrink-0 border border-white/[0.04]">
+                    <div className="h-9 w-9 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0 border border-gray-200">
                       {flight.logoUrl ? (
                         <img src={flight.logoUrl} alt={flight.airline} className="h-5 w-5 object-contain" />
                       ) : (
-                        <Plane className="h-4 w-4 text-amber-400" />
+                        <Plane className="h-4 w-4 text-blue-500" />
                       )}
                     </div>
                     <div>
-                      <div className="text-sm font-bold text-white font-mono" data-testid={`text-flight-number-${i}`}>{flight.flightNumber}</div>
-                      <div className="text-[11px] text-white/30 truncate max-w-[120px]">{flight.airline}</div>
+                      <div className="text-sm font-bold text-gray-900 font-mono" data-testid={`text-flight-number-${i}`}>{flight.flightNumber}</div>
+                      <div className="text-[11px] text-gray-400 truncate max-w-[120px]">{flight.airline}</div>
                     </div>
                   </div>
 
                   <div className="flex items-center px-2">
-                    <div className="font-mono text-lg font-bold text-amber-400" data-testid={`text-board-departure-${i}`}>
+                    <div className="font-mono text-lg font-bold text-blue-600" data-testid={`text-board-departure-${i}`}>
                       {formatTime(flight.departureTime)}
                     </div>
                   </div>
@@ -199,30 +198,30 @@ export function FlightBoard() {
                   <div className="flex items-center gap-2 pl-4">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <div className="text-center flex-shrink-0">
-                        <div className="text-sm font-bold text-white font-mono">{flight.origin}</div>
-                        <div className="text-[10px] text-white/25 truncate max-w-[80px]">{flight.originCity}</div>
+                        <div className="text-sm font-bold text-gray-900 font-mono">{flight.origin}</div>
+                        <div className="text-[10px] text-gray-400 truncate max-w-[80px]">{flight.originCity}</div>
                       </div>
                       <div className="flex items-center gap-1 flex-1 min-w-0 px-2">
-                        <div className="h-px bg-white/10 flex-1" />
-                        <Plane className="h-3 w-3 text-amber-400 flex-shrink-0" />
-                        <div className="h-px bg-white/10 flex-1" />
+                        <div className="h-px bg-gray-200 flex-1" />
+                        <Plane className="h-3 w-3 text-blue-500 flex-shrink-0" />
+                        <div className="h-px bg-gray-200 flex-1" />
                       </div>
                       <div className="text-center flex-shrink-0">
-                        <div className="text-sm font-bold text-white font-mono">{flight.destination}</div>
-                        <div className="text-[10px] text-white/25 truncate max-w-[80px]">{flight.destinationCity}</div>
+                        <div className="text-sm font-bold text-gray-900 font-mono">{flight.destination}</div>
+                        <div className="text-[10px] text-gray-400 truncate max-w-[80px]">{flight.destinationCity}</div>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-center px-4">
-                    <div className="flex items-center gap-1 text-xs text-white/40">
+                    <div className="flex items-center gap-1 text-xs text-gray-400">
                       <Clock className="h-3 w-3" />
                       <span className="font-mono">{formatDuration(flight.duration)}</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-center px-4">
-                    <Badge variant="secondary" className={`text-[10px] px-2.5 py-0.5 ${flight.stops === 0 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/15" : "bg-amber-500/10 text-amber-400 border-amber-500/15"}`}>
+                    <Badge variant="secondary" className={`text-[10px] px-2.5 py-0.5 ${flight.stops === 0 ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-amber-50 text-amber-600 border-amber-200"}`}>
                       {flight.stops === 0 ? t("flight.direct") : `${flight.stops} ${flight.stops === 1 ? t("flight.stop") : t("flight.stops")}`}
                     </Badge>
                   </div>
@@ -230,20 +229,20 @@ export function FlightBoard() {
                   <div className="flex items-center justify-end px-4">
                     <div className="text-right">
                       <div className="flex items-center gap-1">
-                        <TrendingDown className="h-3 w-3 text-emerald-400" />
-                        <span className="text-lg font-bold text-white font-mono" data-testid={`text-board-price-${i}`}>
+                        <TrendingDown className="h-3 w-3 text-emerald-500" />
+                        <span className="text-lg font-bold text-gray-900 font-mono" data-testid={`text-board-price-${i}`}>
                           {flight.currency === "USD" ? "$" : flight.currency === "EUR" ? "\u20AC" : flight.currency === "GBP" ? "\u00A3" : flight.currency === "BRL" ? "R$" : flight.currency}
                           {flight.price.toFixed(0)}
                         </span>
                       </div>
-                      <div className="text-[10px] text-white/20">{t("home.board.per_person")}</div>
+                      <div className="text-[10px] text-gray-400">{t("home.board.per_person")}</div>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-center w-24">
                     <Button
                       size="sm"
-                      className="rounded-lg text-xs opacity-0 group-hover:opacity-100 transition-all duration-200 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg shadow-amber-500/20"
+                      className="rounded-lg text-xs opacity-0 group-hover:opacity-100 transition-all duration-200 bg-blue-500 hover:bg-blue-600 text-white shadow-md shadow-blue-500/20"
                       onClick={(e) => {
                         e.stopPropagation();
                         setLocation(`/book/${flight.id}?adults=1&children=0&infants=0`);
@@ -259,10 +258,10 @@ export function FlightBoard() {
           )}
 
           {hasMore && (
-            <div className="flex justify-center py-4 border-t border-white/[0.04]">
+            <div className="flex justify-center py-4 border-t border-gray-100">
               <Button
                 variant="ghost"
-                className="text-amber-400 text-sm gap-2"
+                className="text-blue-600 text-sm gap-2"
                 onClick={() => setShowAll(!showAll)}
                 data-testid="button-toggle-board"
               >
@@ -280,7 +279,7 @@ export function FlightBoard() {
           )}
         </div>
 
-        <div className="flex items-center justify-center gap-2 mt-4 text-xs text-white/20">
+        <div className="flex items-center justify-center gap-2 mt-4 text-xs text-gray-400">
           <TrendingDown className="h-3 w-3" />
           <span>{t("home.board.disclaimer")}</span>
         </div>
