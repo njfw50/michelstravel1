@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import type { Booking } from "@shared/schema";
+import { SEO } from "@/components/SEO";
 
 function formatDuration(duration: string) {
   if (!duration) return "";
@@ -343,6 +344,7 @@ export default function MyTrips() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      <SEO title="Minhas Viagens" description="Acompanhe suas reservas de voo e gerencie suas viagens." path="/my-trips" noindex={true} />
       <div className="bg-white border-b border-gray-200 shadow-sm pt-8 pb-6 px-4">
         <div className="container mx-auto max-w-4xl">
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>

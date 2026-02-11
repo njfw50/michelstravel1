@@ -5,6 +5,7 @@ import { useFlightSearch } from "@/hooks/use-flights";
 import { Loader2, Filter, AlertCircle, Plane } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/lib/i18n";
+import { SEO } from "@/components/SEO";
 
 export default function SearchResults() {
   const [location] = useLocation();
@@ -36,6 +37,7 @@ export default function SearchResults() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      <SEO title="Resultados da Pesquisa" description="Compare voos e encontre as melhores ofertas de passagens aéreas. Preços atualizados em tempo real." path="/search" noindex={true} />
       <div className="bg-white border-b border-gray-200 shadow-sm pb-6 pt-8 px-4">
         <div className="container mx-auto max-w-6xl">
            <FlightSearchForm defaultValues={defaultValues} />

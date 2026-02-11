@@ -91,6 +91,16 @@ Preferred communication style: Simple, everyday language.
 - **My Trips Page**: `/my-trips` — customer dashboard showing booking history (logged-in) and booking lookup (by reference + email)
 - **Booking Lookup API**: `GET /api/bookings/lookup?reference=MT-XXX&email=...` for non-logged-in users
 
+### SEO System
+- **Meta tags**: Comprehensive meta tags in `client/index.html` (title, description, OG, Twitter Cards, JSON-LD)
+- **Per-page SEO**: `client/src/components/SEO.tsx` component using `react-helmet-async` — added to all major pages
+- **Sitemap**: Dynamic `GET /sitemap.xml` endpoint with static pages + blog posts
+- **Robots**: `GET /robots.txt` blocks /admin, /checkout/, /profile, /my-trips, /search, /book/, /api/
+- **Structured Data**: JSON-LD for TravelAgency and WebSite schemas in index.html
+- **Dynamic lang**: HTML `lang` attribute updates based on selected language (pt-BR, en, es)
+- **Domain**: https://michelstravel.com
+- **Contact**: reservastrens@gmail.com, +1 (862) 350-1161, New Jersey, USA
+
 ### Required Environment Variables
 - `DATABASE_URL` — PostgreSQL connection string
 - `DUFFEL_API_TOKEN` — Duffel flight API key

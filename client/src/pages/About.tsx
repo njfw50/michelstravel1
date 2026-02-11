@@ -3,6 +3,7 @@ import { useI18n } from "@/lib/i18n";
 import { Heart, MapPin, Users, ShieldCheck, Globe, Plane, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import { SEO } from "@/components/SEO";
 
 export default function About() {
   const { t } = useI18n();
@@ -10,6 +11,7 @@ export default function About() {
 
   return (
     <div className="min-h-screen">
+      <SEO title="Sobre Nós" description="Conheça a Michels Travel, agência de viagens registrada em New Jersey. Encontramos os melhores preços em passagens aéreas para você." path="/about" />
       <div className="relative py-28 md:py-36 px-4 text-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-50 via-white to-white" />
         <div className="relative z-10 container mx-auto max-w-4xl">

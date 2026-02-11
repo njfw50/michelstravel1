@@ -32,6 +32,7 @@ import {
   Globe,
   Shield,
 } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 const formatDuration = (duration: string) => {
   if (!duration) return "";
@@ -213,6 +214,7 @@ export default function CheckoutSuccess() {
         }
       `}</style>
 
+      <SEO title="Reserva Confirmada" description="Sua reserva foi confirmada com sucesso." path="/checkout/success" noindex={true} />
       <div className="min-h-screen bg-gray-50 py-8 px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

@@ -22,6 +22,7 @@ import {
   Shield,
   CheckCircle,
 } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 interface ProfileData {
   id: string;
@@ -133,6 +134,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      <SEO title="Meu Perfil" description="Gerencie suas informações pessoais e preferências de viagem." path="/profile" noindex={true} />
       <div className="bg-white border-b border-gray-200 shadow-sm pt-8 pb-6 px-4">
         <div className="container mx-auto max-w-2xl">
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>

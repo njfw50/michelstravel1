@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import { format } from "date-fns";
 import { Loader2, ArrowRight, BookOpen } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { SEO } from "@/components/SEO";
 
 export default function BlogList() {
   const { data: posts, isLoading } = useBlogPosts();
@@ -11,6 +12,7 @@ export default function BlogList() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SEO title="Blog de Viagens" description="Dicas de viagem, guias de destinos e novidades do mundo da aviação. Tudo para você viajar melhor e mais barato." path="/blog" />
       <div className="bg-white border-b border-gray-200 py-20 px-4 text-center">
         <h1 className="text-4xl md:text-5xl font-display font-bold text-gray-900 mb-4">{t("nav.blog")}</h1>
         <p className="text-gray-500 text-lg max-w-2xl mx-auto">{t("blog.subtitle")}</p>

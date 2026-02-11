@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useI18n } from "@/lib/i18n";
 import { Card } from "@/components/ui/card";
+import { SEO } from "@/components/SEO";
 
 export default function BlogPost() {
   const [match, params] = useRoute("/blog/:slug");
@@ -39,6 +40,7 @@ export default function BlogPost() {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO title={post?.title || "Blog"} description={post?.excerpt || "Artigo do blog Michels Travel"} path={"/blog/" + (post?.slug || "")} type="article" />
       {post.coverImage && (
         <div className="h-[400px] w-full relative overflow-hidden">
           <img src={post.coverImage} alt={post.title} className="w-full h-full object-cover" />

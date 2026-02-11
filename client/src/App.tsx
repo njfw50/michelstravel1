@@ -8,6 +8,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useI18n } from "@/lib/i18n";
 import { ShieldCheck } from "lucide-react";
+import { HelmetProvider } from "react-helmet-async";
 import NotFound from "@/pages/not-found";
 
 import Home from "@/pages/Home";
@@ -78,14 +79,16 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <LanguageSelector />
-          <TestModeBanner />
-          <Router />
-        </TooltipProvider>
-      </QueryClientProvider>
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <LanguageSelector />
+            <TestModeBanner />
+            <Router />
+          </TooltipProvider>
+        </QueryClientProvider>
+      </HelmetProvider>
     </ErrorBoundary>
   );
 }

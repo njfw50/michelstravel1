@@ -1522,6 +1522,10 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     const savedLang = localStorage.getItem("michels-travel-lang") as Language;
     if (savedLang && (savedLang === "pt" || savedLang === "en" || savedLang === "es")) {
       setLanguageState(savedLang);
+      const htmlLang = savedLang === "pt" ? "pt-BR" : savedLang === "es" ? "es" : "en";
+      document.documentElement.lang = htmlLang;
+    } else {
+      document.documentElement.lang = "pt-BR";
     }
     setIsLoading(false);
   }, []);
@@ -1529,6 +1533,8 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem("michels-travel-lang", lang);
+    const htmlLang = lang === "pt" ? "pt-BR" : lang === "es" ? "es" : "en";
+    document.documentElement.lang = htmlLang;
   };
 
   const t = (key: string) => {

@@ -836,4 +836,71 @@ export function registerRoutes(app: Express) {
       res.status(500).json({ error: 'Failed to create blog post' });
     }
   });
+
+  const SITE_URL = "https://michelstravel.com";
+
+  app.get('/robots.txt', (_req, res) => {
+    res.type('text/plain');
+    res.send(`User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /checkout/
+Disallow: /profile
+Disallow: /my-trips
+Disallow: /search
+Disallow: /book/
+Disallow: /api/
+
+Sitemap: ${SITE_URL}/sitemap.xml
+`);
+  });
+
+  app.get('/sitemap.xml', async (_req, res) => {
+    try {
+      const blogPosts = await storage.getBlogPosts();
+      const now = new Date().toISOString().split('T')[0];
+
+      const staticPages = [
+        { url: '/', priority: '1.0', changefreq: 'daily' },
+        { url: '/about', priority: '0.8', changefreq: 'monthly' },
+        { url: '/blog', priority: '0.7', changefreq: 'weekly' },
+      ];
+
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+`;
+
+      for (const page of staticPages) {
+        xml += `  <url>
+    <loc>${SITE_URL}${page.url}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>${page.changefreq}</changefreq>
+    <priority>${page.priority}</priority>
+  </url>
+`;
+      }
+
+      if (blogPosts && blogPosts.length > 0) {
+        for (const post of blogPosts) {
+          const lastmod = post.createdAt
+            ? new Date(post.createdAt as unknown as string).toISOString().split('T')[0]
+            : now;
+          xml += `  <url>
+    <loc>${SITE_URL}/blog/${post.slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+`;
+        }
+      }
+
+      xml += `</urlset>`;
+      res.type('application/xml');
+      res.send(xml);
+    } catch (error) {
+      console.error('Sitemap generation error:', error);
+      res.status(500).send('Error generating sitemap');
+    }
+  });
 }

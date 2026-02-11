@@ -8,6 +8,7 @@ import { ShieldCheck, Zap, Globe, ArrowRight, MapPin, Plane, Search, CreditCard,
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
+import { SEO } from "@/components/SEO";
 
 import airplaneDestination from "@/assets/images/airplane-destination.jpg";
 import airplaneLightHero from "@/assets/images/airplane-light-hero.png";
@@ -76,6 +77,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <SEO />
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 select-none">
           <img 
