@@ -188,19 +188,21 @@ export function registerRoutes(app: Express) {
     try {
         const bookingData = req.body;
         
-        // Calculate commission (e.g. 5%)
         const commissionRate = 0.05;
         const price = parseFloat(bookingData.totalPrice);
         const commissionAmount = (price * commissionRate).toFixed(2);
 
-        // 1. Create booking in DB (pending)
         const [booking] = await db.insert(bookings).values({
-            ...bookingData,
+            flightData: bookingData.flightData,
+            passengerDetails: bookingData.passengerDetails || bookingData.passengers,
+            totalPrice: bookingData.totalPrice,
+            currency: bookingData.currency || 'USD',
+            contactEmail: bookingData.contactEmail,
             commissionRate: commissionRate.toString(),
             commissionAmount: commissionAmount,
             status: 'pending',
             stripePaymentStatus: 'pending',
-            userId: (req as any).user?.id ? String((req as any).user.id) : null // Ensure string or null
+            userId: (req as any).user?.id ? String((req as any).user.id) : null
         }).returning();
 
         // 2. Create Stripe Checkout Session
