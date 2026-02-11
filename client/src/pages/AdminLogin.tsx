@@ -48,27 +48,27 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border border-white/10 shadow-2xl bg-white/5 backdrop-blur-md">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+      <Card className="w-full max-w-md border border-gray-200 shadow-xl bg-white">
         <CardHeader className="text-center space-y-4 pb-2">
-          <div className="mx-auto h-16 w-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-            <ShieldCheck className="h-8 w-8 text-amber-400" />
+          <div className="mx-auto h-16 w-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center">
+            <ShieldCheck className="h-8 w-8 text-blue-500" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-display text-white" data-testid="text-admin-login-title">
+            <CardTitle className="text-2xl font-display text-gray-900" data-testid="text-admin-login-title">
               {t("admin.login_title")}
             </CardTitle>
-            <p className="text-white/50 text-sm mt-2">{t("admin.login_subtitle")}</p>
+            <p className="text-gray-500 text-sm mt-2">{t("admin.login_subtitle")}</p>
           </div>
         </CardHeader>
         <CardContent className="pt-4">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="admin-password" className="text-white/70 text-sm">
+              <Label htmlFor="admin-password" className="text-gray-600 text-sm">
                 {t("admin.password_label")}
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   id="admin-password"
                   data-testid="input-admin-password"
@@ -76,7 +76,7 @@ export default function AdminLogin() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={t("admin.password_placeholder")}
-                  className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-amber-500/50"
+                  className="pl-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
                   required
                   autoFocus
                 />
@@ -96,7 +96,7 @@ export default function AdminLogin() {
               {t("admin.login_button")}
             </Button>
           </form>
-          <p className="text-center text-white/30 text-xs mt-6">
+          <p className="text-center text-gray-400 text-xs mt-6">
             Michels Travel - {t("admin.login_footer")}
           </p>
         </CardContent>

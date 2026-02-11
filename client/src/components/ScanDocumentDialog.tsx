@@ -177,28 +177,28 @@ export function ScanDocumentDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg border-white/10 bg-[hsl(220,18%,10%)]/95 backdrop-blur-xl text-white overflow-y-auto max-h-[90vh]">
+      <DialogContent className="max-w-lg overflow-y-auto max-h-[90vh]">
         {step === "select" && (
           <>
             <DialogHeader className="text-center items-center">
               <div className="mx-auto h-16 w-16 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center mb-2">
                 <ScanLine className="h-8 w-8 text-teal-400" />
               </div>
-              <DialogTitle className="text-xl font-display text-white" data-testid={`text-scan-title-${passengerIndex}`}>
+              <DialogTitle className="text-xl font-display text-gray-900" data-testid={`text-scan-title-${passengerIndex}`}>
                 {t("scan.title")}
               </DialogTitle>
-              <DialogDescription className="text-white/50 text-sm">
+              <DialogDescription className="text-gray-500 text-sm">
                 {t("scan.subtitle")}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-3 mt-4">
-              <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4 space-y-2">
-                <h4 className="text-sm font-bold text-white/80 flex items-center gap-2">
+              <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-2">
+                <h4 className="text-sm font-bold text-gray-600 flex items-center gap-2">
                   <FileText className="h-4 w-4 text-teal-400" />
                   {t("scan.supported_docs")}
                 </h4>
-                <ul className="text-xs text-white/50 space-y-1 ml-6 list-disc">
+                <ul className="text-xs text-gray-500 space-y-1 ml-6 list-disc">
                   <li>{t("scan.doc_passport")}</li>
                   <li>{t("scan.doc_id_card")}</li>
                   <li>{t("scan.doc_travel_doc")}</li>
@@ -218,13 +218,13 @@ export function ScanDocumentDialog({
                 />
                 <Button
                   variant="outline"
-                  className="h-auto py-4 flex flex-col items-center gap-2 border-white/10 text-white/80"
+                  className="h-auto py-4 flex flex-col items-center gap-2 border-gray-200 text-gray-600"
                   onClick={() => cameraInputRef.current?.click()}
                   data-testid={`button-scan-camera-${passengerIndex}`}
                 >
                   <Camera className="h-6 w-6 text-teal-400" />
                   <span className="text-sm font-medium">{t("scan.use_camera")}</span>
-                  <span className="text-[10px] text-white/40">{t("scan.camera_tip")}</span>
+                  <span className="text-[10px] text-gray-400">{t("scan.camera_tip")}</span>
                 </Button>
 
                 <input
@@ -237,19 +237,19 @@ export function ScanDocumentDialog({
                 />
                 <Button
                   variant="outline"
-                  className="h-auto py-4 flex flex-col items-center gap-2 border-white/10 text-white/80"
+                  className="h-auto py-4 flex flex-col items-center gap-2 border-gray-200 text-gray-600"
                   onClick={() => fileInputRef.current?.click()}
                   data-testid={`button-scan-upload-${passengerIndex}`}
                 >
-                  <Upload className="h-6 w-6 text-amber-400" />
+                  <Upload className="h-6 w-6 text-blue-500" />
                   <span className="text-sm font-medium">{t("scan.upload_photo")}</span>
-                  <span className="text-[10px] text-white/40">{t("scan.upload_tip")}</span>
+                  <span className="text-[10px] text-gray-400">{t("scan.upload_tip")}</span>
                 </Button>
               </div>
 
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-teal-500/5 border border-teal-500/10">
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 border border-blue-100">
                 <Shield className="h-4 w-4 text-teal-400 mt-0.5 shrink-0" />
-                <p className="text-[11px] text-white/40 leading-relaxed">
+                <p className="text-[11px] text-gray-400 leading-relaxed">
                   {t("scan.privacy_notice")}
                 </p>
               </div>
@@ -260,30 +260,30 @@ export function ScanDocumentDialog({
         {step === "processing" && (
           <>
             <DialogHeader className="text-center items-center">
-              <DialogTitle className="text-xl font-display text-white">
+              <DialogTitle className="text-xl font-display text-gray-900">
                 {t("scan.processing")}
               </DialogTitle>
-              <DialogDescription className="text-white/50 text-sm">
+              <DialogDescription className="text-gray-500 text-sm">
                 {t("scan.processing_desc")}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-6 mt-4">
               {imagePreview && (
-                <div className="rounded-xl overflow-hidden border border-white/10 max-h-48 flex items-center justify-center bg-black/20">
+                <div className="rounded-xl overflow-hidden border border-gray-200 max-h-48 flex items-center justify-center bg-gray-100">
                   <img src={imagePreview} alt="Document" className="max-h-48 object-contain" />
                 </div>
               )}
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs text-white/50">
+                <div className="flex items-center justify-between text-xs text-gray-500">
                   <span>{t("scan.reading_document")}</span>
                   <span>{progress}%</span>
                 </div>
                 <Progress value={progress} className="h-2" />
               </div>
 
-              <div className="flex items-center justify-center gap-2 text-sm text-white/60">
+              <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                 <Loader2 className="h-4 w-4 animate-spin text-teal-400" />
                 <span>
                   {progress < 30 && t("scan.step_loading")}
@@ -302,10 +302,10 @@ export function ScanDocumentDialog({
               <div className="mx-auto h-14 w-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-2">
                 <Eye className="h-7 w-7 text-emerald-400" />
               </div>
-              <DialogTitle className="text-xl font-display text-white" data-testid={`text-scan-review-title-${passengerIndex}`}>
+              <DialogTitle className="text-xl font-display text-gray-900" data-testid={`text-scan-review-title-${passengerIndex}`}>
                 {t("scan.review_title")}
               </DialogTitle>
-              <DialogDescription className="text-white/50 text-sm">
+              <DialogDescription className="text-gray-500 text-sm">
                 {t("scan.review_subtitle")}
               </DialogDescription>
             </DialogHeader>
@@ -328,9 +328,9 @@ export function ScanDocumentDialog({
               </div>
 
               {editableData.warnings.length > 0 && (
-                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
-                  <div className="text-xs text-amber-300/80">
+                <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                  <div className="text-xs text-amber-600">
                     <p className="font-bold mb-1">{t("scan.warnings")}</p>
                     <p>{t("scan.verify_data")}</p>
                   </div>
@@ -340,20 +340,20 @@ export function ScanDocumentDialog({
               <div className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-white/50 text-[11px] font-bold uppercase tracking-wider">{t("booking.family_name")}</Label>
+                    <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.family_name")}</Label>
                     <Input
                       value={editableData.familyName}
                       onChange={(e) => setEditableData({ ...editableData, familyName: e.target.value })}
-                      className="bg-white/5 border-white/15 text-white text-sm"
+                      className="bg-white border-gray-200 text-gray-900 text-sm"
                       data-testid={`input-scan-family-name-${passengerIndex}`}
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-white/50 text-[11px] font-bold uppercase tracking-wider">{t("booking.given_name")}</Label>
+                    <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.given_name")}</Label>
                     <Input
                       value={editableData.givenName}
                       onChange={(e) => setEditableData({ ...editableData, givenName: e.target.value })}
-                      className="bg-white/5 border-white/15 text-white text-sm"
+                      className="bg-white border-gray-200 text-gray-900 text-sm"
                       data-testid={`input-scan-given-name-${passengerIndex}`}
                     />
                   </div>
@@ -361,23 +361,23 @@ export function ScanDocumentDialog({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-white/50 text-[11px] font-bold uppercase tracking-wider">{t("booking.date_of_birth")}</Label>
+                    <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.date_of_birth")}</Label>
                     <Input
                       type="date"
                       value={editableData.bornOn}
                       onChange={(e) => setEditableData({ ...editableData, bornOn: e.target.value })}
-                      className="bg-white/5 border-white/15 text-white text-sm"
+                      className="bg-white border-gray-200 text-gray-900 text-sm"
                       data-testid={`input-scan-dob-${passengerIndex}`}
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-white/50 text-[11px] font-bold uppercase tracking-wider">{t("booking.gender")}</Label>
+                    <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.gender")}</Label>
                     <div className="flex gap-2">
                       <Button
                         type="button"
                         size="sm"
                         variant={editableData.gender === "m" ? "default" : "outline"}
-                        className={`flex-1 text-xs ${editableData.gender === "m" ? "" : "border-white/10 text-white/60"}`}
+                        className={`flex-1 text-xs ${editableData.gender === "m" ? "" : "border-gray-200 text-gray-500"}`}
                         onClick={() => setEditableData({ ...editableData, gender: "m" })}
                         data-testid={`button-scan-gender-m-${passengerIndex}`}
                       >
@@ -387,7 +387,7 @@ export function ScanDocumentDialog({
                         type="button"
                         size="sm"
                         variant={editableData.gender === "f" ? "default" : "outline"}
-                        className={`flex-1 text-xs ${editableData.gender === "f" ? "" : "border-white/10 text-white/60"}`}
+                        className={`flex-1 text-xs ${editableData.gender === "f" ? "" : "border-gray-200 text-gray-500"}`}
                         onClick={() => setEditableData({ ...editableData, gender: "f" })}
                         data-testid={`button-scan-gender-f-${passengerIndex}`}
                       >
@@ -399,21 +399,21 @@ export function ScanDocumentDialog({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-white/50 text-[11px] font-bold uppercase tracking-wider">{t("scan.doc_number")}</Label>
+                    <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("scan.doc_number")}</Label>
                     <Input
                       value={editableData.passportNumber}
                       onChange={(e) => setEditableData({ ...editableData, passportNumber: e.target.value })}
-                      className="bg-white/5 border-white/15 text-white text-sm"
+                      className="bg-white border-gray-200 text-gray-900 text-sm"
                       data-testid={`input-scan-doc-number-${passengerIndex}`}
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-white/50 text-[11px] font-bold uppercase tracking-wider">{t("booking.passport_expiry")}</Label>
+                    <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.passport_expiry")}</Label>
                     <Input
                       type="date"
                       value={editableData.passportExpiryDate}
                       onChange={(e) => setEditableData({ ...editableData, passportExpiryDate: e.target.value })}
-                      className="bg-white/5 border-white/15 text-white text-sm"
+                      className="bg-white border-gray-200 text-gray-900 text-sm"
                       data-testid={`input-scan-expiry-${passengerIndex}`}
                     />
                   </div>
@@ -421,22 +421,22 @@ export function ScanDocumentDialog({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-white/50 text-[11px] font-bold uppercase tracking-wider">{t("booking.nationality")}</Label>
+                    <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.nationality")}</Label>
                     <Input
                       value={editableData.nationality}
                       onChange={(e) => setEditableData({ ...editableData, nationality: e.target.value.toUpperCase() })}
-                      className="bg-white/5 border-white/15 text-white text-sm"
+                      className="bg-white border-gray-200 text-gray-900 text-sm"
                       maxLength={3}
                       placeholder="BRA"
                       data-testid={`input-scan-nationality-${passengerIndex}`}
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-white/50 text-[11px] font-bold uppercase tracking-wider">{t("booking.issuing_country")}</Label>
+                    <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.issuing_country")}</Label>
                     <Input
                       value={editableData.passportIssuingCountry}
                       onChange={(e) => setEditableData({ ...editableData, passportIssuingCountry: e.target.value.toUpperCase() })}
-                      className="bg-white/5 border-white/15 text-white text-sm"
+                      className="bg-white border-gray-200 text-gray-900 text-sm"
                       maxLength={3}
                       placeholder="BRA"
                       data-testid={`input-scan-issuing-${passengerIndex}`}
@@ -448,7 +448,7 @@ export function ScanDocumentDialog({
               <div className="flex gap-2 pt-2">
                 <Button
                   variant="outline"
-                  className="flex-1 border-white/10 text-white/60"
+                  className="flex-1 border-gray-200 text-gray-500"
                   onClick={resetState}
                   data-testid={`button-scan-retry-${passengerIndex}`}
                 >
@@ -474,24 +474,24 @@ export function ScanDocumentDialog({
               <div className="mx-auto h-14 w-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-2">
                 <AlertTriangle className="h-7 w-7 text-red-400" />
               </div>
-              <DialogTitle className="text-xl font-display text-white">
+              <DialogTitle className="text-xl font-display text-gray-900">
                 {t("scan.error_title")}
               </DialogTitle>
-              <DialogDescription className="text-white/50 text-sm">
+              <DialogDescription className="text-gray-500 text-sm">
                 {errorMessage}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 mt-4">
               {imagePreview && (
-                <div className="rounded-xl overflow-hidden border border-white/10 max-h-32 flex items-center justify-center bg-black/20">
+                <div className="rounded-xl overflow-hidden border border-gray-200 max-h-32 flex items-center justify-center bg-gray-100">
                   <img src={imagePreview} alt="Document" className="max-h-32 object-contain opacity-50" />
                 </div>
               )}
 
-              <div className="p-3 rounded-lg bg-white/[0.02] border border-white/5 space-y-2">
-                <p className="text-xs font-bold text-white/70">{t("scan.tips_title")}</p>
-                <ul className="text-[11px] text-white/40 space-y-1 ml-4 list-disc">
+              <div className="p-3 rounded-lg bg-white border border-gray-200 space-y-2">
+                <p className="text-xs font-bold text-gray-600">{t("scan.tips_title")}</p>
+                <ul className="text-[11px] text-gray-400 space-y-1 ml-4 list-disc">
                   <li>{t("scan.tip_1")}</li>
                   <li>{t("scan.tip_2")}</li>
                   <li>{t("scan.tip_3")}</li>
@@ -502,7 +502,7 @@ export function ScanDocumentDialog({
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  className="flex-1 border-white/10 text-white/60"
+                  className="flex-1 border-gray-200 text-gray-500"
                   onClick={() => handleOpenChange(false)}
                   data-testid={`button-scan-cancel-${passengerIndex}`}
                 >

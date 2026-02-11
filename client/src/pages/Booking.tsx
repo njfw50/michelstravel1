@@ -133,33 +133,33 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
   };
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden">
+    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors"
+        className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
         data-testid={`button-toggle-passenger-${index}`}
       >
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-300">
+          <div className="h-9 w-9 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-500">
             <User className="h-4 w-4" />
           </div>
           <div>
-            <span className="text-white font-bold text-sm">{t("booking.passenger")} {index + 1}</span>
-            <Badge className="ml-2 text-[10px] bg-white/10 text-white/60 border-white/10">{typeLabel}</Badge>
+            <span className="text-gray-900 font-bold text-sm">{t("booking.passenger")} {index + 1}</span>
+            <Badge className="ml-2 text-[10px] bg-gray-100 text-gray-500 border-gray-200">{typeLabel}</Badge>
           </div>
         </div>
-        {expanded ? <ChevronUp className="h-4 w-4 text-white/40" /> : <ChevronDown className="h-4 w-4 text-white/40" />}
+        {expanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
       </button>
 
       {expanded && (
-        <div className="px-4 pb-5 space-y-4 border-t border-white/5 pt-4">
+        <div className="px-4 pb-5 space-y-4 border-t border-gray-200 pt-4">
           <div className="flex justify-end">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="gap-2 border-teal-500/30 text-teal-300 bg-teal-500/5"
+              className="gap-2 border-blue-200 text-blue-600 bg-blue-50"
               onClick={() => setScanOpen(true)}
               data-testid={`button-scan-document-${index}`}
             >
@@ -177,20 +177,20 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.given_name")} *</Label>
+              <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.given_name")} *</Label>
               <Input
                 {...register(`passengers.${index}.givenName`)}
-                className="bg-white/5 border-white/15 text-white placeholder:text-white/30 focus:border-amber-500/50"
+                className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
                 placeholder="e.g. John"
                 data-testid={`input-given-name-${index}`}
               />
               {paxErrors?.givenName && <p className="text-xs text-red-400">{paxErrors.givenName.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.family_name")} *</Label>
+              <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.family_name")} *</Label>
               <Input
                 {...register(`passengers.${index}.familyName`)}
-                className="bg-white/5 border-white/15 text-white placeholder:text-white/30 focus:border-amber-500/50"
+                className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
                 placeholder="e.g. Smith"
                 data-testid={`input-family-name-${index}`}
               />
@@ -200,27 +200,27 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.date_of_birth")} *</Label>
+              <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.date_of_birth")} *</Label>
               <Input
                 {...register(`passengers.${index}.bornOn`)}
                 type="date"
-                className="bg-white/5 border-white/15 text-white placeholder:text-white/30 focus:border-amber-500/50"
+                className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
                 data-testid={`input-dob-${index}`}
               />
               {paxErrors?.bornOn && <p className="text-xs text-red-400">{paxErrors.bornOn.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.gender")} *</Label>
+              <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.gender")} *</Label>
               <Select
                 onValueChange={(val) => {
                   const event = { target: { name: `passengers.${index}.gender`, value: val } };
                   register(`passengers.${index}.gender`).onChange(event);
                 }}
               >
-                <SelectTrigger className="bg-white/5 border-white/15 text-white" data-testid={`select-gender-${index}`}>
+                <SelectTrigger className="bg-white border-gray-200 text-gray-900" data-testid={`select-gender-${index}`}>
                   <SelectValue placeholder={t("booking.select_gender")} />
                 </SelectTrigger>
-                <SelectContent className="bg-[hsl(220,18%,10%)] border-white/10 text-white">
+                <SelectContent>
                   <SelectItem value="m">{t("booking.male")}</SelectItem>
                   <SelectItem value="f">{t("booking.female")}</SelectItem>
                 </SelectContent>
@@ -231,22 +231,22 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.email")} *</Label>
+              <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.email")} *</Label>
               <Input
                 {...register(`passengers.${index}.email`)}
                 type="email"
-                className="bg-white/5 border-white/15 text-white placeholder:text-white/30 focus:border-amber-500/50"
+                className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
                 placeholder="passenger@email.com"
                 data-testid={`input-email-${index}`}
               />
               {paxErrors?.email && <p className="text-xs text-red-400">{paxErrors.email.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.phone")} *</Label>
+              <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.phone")} *</Label>
               <Input
                 {...register(`passengers.${index}.phoneNumber`)}
                 type="tel"
-                className="bg-white/5 border-white/15 text-white placeholder:text-white/30 focus:border-amber-500/50"
+                className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
                 placeholder="+1 234 567 8900"
                 data-testid={`input-phone-${index}`}
               />
@@ -254,16 +254,16 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
             </div>
           </div>
 
-          <Separator className="bg-white/10" />
+          <Separator className="bg-gray-200" />
 
           <div className="space-y-3">
-            <h4 className="text-sm font-bold text-white/80 flex items-center gap-2">
-              <Briefcase className="h-4 w-4 text-amber-400" />
-              {t("booking.travel_document")} {isDocRequired && <Badge className="text-[10px] bg-red-500/20 text-red-300 border-red-500/30">{t("booking.required")}</Badge>}
+            <h4 className="text-sm font-bold text-gray-600 flex items-center gap-2">
+              <Briefcase className="h-4 w-4 text-blue-500" />
+              {t("booking.travel_document")} {isDocRequired && <Badge className="text-[10px] bg-red-50 text-red-600 border-red-200">{t("booking.required")}</Badge>}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.doc_type")} {isDocRequired ? "*" : ""}</Label>
+                <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.doc_type")} {isDocRequired ? "*" : ""}</Label>
                 <Select
                   defaultValue="passport"
                   onValueChange={(val) => {
@@ -271,10 +271,10 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
                     register(`passengers.${index}.documentType`).onChange(event);
                   }}
                 >
-                  <SelectTrigger className="bg-white/5 border-white/15 text-white" data-testid={`select-doc-type-${index}`}>
+                  <SelectTrigger className="bg-white border-gray-200 text-gray-900" data-testid={`select-doc-type-${index}`}>
                     <SelectValue placeholder={t("booking.select_doc_type")} />
                   </SelectTrigger>
-                  <SelectContent className="bg-[hsl(220,18%,10%)] border-white/10 text-white">
+                  <SelectContent>
                     <SelectItem value="passport">{t("booking.doc_passport")}</SelectItem>
                     <SelectItem value="national_id">{t("booking.doc_national_id")}</SelectItem>
                     <SelectItem value="drivers_license">{t("booking.doc_drivers_license")}</SelectItem>
@@ -284,10 +284,10 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.doc_number")} {isDocRequired ? "*" : ""}</Label>
+                <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.doc_number")} {isDocRequired ? "*" : ""}</Label>
                 <Input
                   {...register(`passengers.${index}.documentNumber`)}
-                  className="bg-white/5 border-white/15 text-white placeholder:text-white/30 focus:border-amber-500/50"
+                  className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
                   placeholder="AB1234567"
                   data-testid={`input-doc-number-${index}`}
                 />
@@ -295,24 +295,24 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.doc_expiry")} {isDocRequired ? "*" : ""}</Label>
+                <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.doc_expiry")} {isDocRequired ? "*" : ""}</Label>
                 <Input
                   {...register(`passengers.${index}.documentExpiryDate`)}
                   type="date"
-                  className="bg-white/5 border-white/15 text-white placeholder:text-white/30 focus:border-amber-500/50"
+                  className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
                   data-testid={`input-doc-expiry-${index}`}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.nationality")}</Label>
+                <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.nationality")}</Label>
                 <Select onValueChange={(val) => {
                   const event = { target: { name: `passengers.${index}.nationality`, value: val } };
                   register(`passengers.${index}.nationality`).onChange(event);
                 }}>
-                  <SelectTrigger className="bg-white/5 border-white/15 text-white" data-testid={`select-nationality-${index}`}>
+                  <SelectTrigger className="bg-white border-gray-200 text-gray-900" data-testid={`select-nationality-${index}`}>
                     <SelectValue placeholder={t("booking.select_country")} />
                   </SelectTrigger>
-                  <SelectContent className="bg-[hsl(220,18%,10%)] border-white/10 text-white max-h-60">
+                  <SelectContent className="max-h-60">
                     {COUNTRIES.map(c => <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -320,15 +320,15 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.issuing_country")}</Label>
+                <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.issuing_country")}</Label>
                 <Select onValueChange={(val) => {
                   const event = { target: { name: `passengers.${index}.documentIssuingCountry`, value: val } };
                   register(`passengers.${index}.documentIssuingCountry`).onChange(event);
                 }}>
-                  <SelectTrigger className="bg-white/5 border-white/15 text-white" data-testid={`select-issuing-country-${index}`}>
+                  <SelectTrigger className="bg-white border-gray-200 text-gray-900" data-testid={`select-issuing-country-${index}`}>
                     <SelectValue placeholder={t("booking.select_country")} />
                   </SelectTrigger>
-                  <SelectContent className="bg-[hsl(220,18%,10%)] border-white/10 text-white max-h-60">
+                  <SelectContent className="max-h-60">
                     {COUNTRIES.map(c => <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -344,31 +344,31 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
 function SegmentDetail({ segment, t }: { segment: any; t: any }) {
   const dur = segment.duration?.startsWith("P") ? formatDuration(segment.duration) : segment.duration;
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-white/5 last:border-0">
+    <div className="flex items-center gap-3 py-3 border-b border-gray-200 last:border-0">
       <div className="flex-1">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="text-center min-w-[60px]">
-            <div className="text-base font-bold text-white">{format(parseISO(segment.departureTime), "HH:mm")}</div>
-            <div className="text-[10px] text-white/50 font-medium uppercase">{segment.originCode}</div>
-            {segment.originTerminal && <div className="text-[10px] text-white/30">T{segment.originTerminal}</div>}
+            <div className="text-base font-bold text-gray-900">{format(parseISO(segment.departureTime), "HH:mm")}</div>
+            <div className="text-[10px] text-gray-500 font-medium uppercase">{segment.originCode}</div>
+            {segment.originTerminal && <div className="text-[10px] text-gray-400">T{segment.originTerminal}</div>}
           </div>
           <div className="flex flex-col items-center px-2 flex-1 max-w-[120px]">
-            <div className="text-[10px] text-white/50 flex items-center gap-1">
+            <div className="text-[10px] text-gray-500 flex items-center gap-1">
               <Clock className="h-2.5 w-2.5" />{dur}
             </div>
-            <div className="w-full h-[1px] bg-white/10 my-1 relative">
-              <Plane className="h-3 w-3 text-amber-400 rotate-90 absolute left-1/2 -translate-x-1/2 -translate-y-1/2" />
+            <div className="w-full h-[1px] bg-gray-200 my-1 relative">
+              <Plane className="h-3 w-3 text-blue-500 rotate-90 absolute left-1/2 -translate-x-1/2 -translate-y-1/2" />
             </div>
-            <div className="text-[10px] text-white/40">{segment.flightNumber}</div>
+            <div className="text-[10px] text-gray-400">{segment.flightNumber}</div>
           </div>
           <div className="text-center min-w-[60px]">
-            <div className="text-base font-bold text-white">{format(parseISO(segment.arrivalTime), "HH:mm")}</div>
-            <div className="text-[10px] text-white/50 font-medium uppercase">{segment.destinationCode}</div>
-            {segment.destinationTerminal && <div className="text-[10px] text-white/30">T{segment.destinationTerminal}</div>}
+            <div className="text-base font-bold text-gray-900">{format(parseISO(segment.arrivalTime), "HH:mm")}</div>
+            <div className="text-[10px] text-gray-500 font-medium uppercase">{segment.destinationCode}</div>
+            {segment.destinationTerminal && <div className="text-[10px] text-gray-400">T{segment.destinationTerminal}</div>}
           </div>
         </div>
         {segment.aircraftType && (
-          <div className="text-[10px] text-white/30 mt-1 text-center">{segment.carrierName} - {segment.aircraftType}</div>
+          <div className="text-[10px] text-gray-400 mt-1 text-center">{segment.carrierName} - {segment.aircraftType}</div>
         )}
       </div>
     </div>
@@ -500,7 +500,7 @@ export default function Booking() {
   if (!flight && !params?.id) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-white/50">{t("booking.loading")}</div>
+        <div className="text-gray-400">{t("booking.loading")}</div>
       </div>
     );
   }
@@ -513,28 +513,28 @@ export default function Booking() {
     <div className="min-h-screen py-12 px-4">
       <div className="container mx-auto max-w-6xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold font-display text-white mb-2 drop-shadow-md" data-testid="text-booking-title">{t("booking.title")}</h1>
-          <p className="text-white/50">{t("booking.subtitle")}</p>
+          <h1 className="text-3xl font-bold font-display text-gray-900 mb-2" data-testid="text-booking-title">{t("booking.title")}</h1>
+          <p className="text-gray-500">{t("booking.subtitle")}</p>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <Card className="border border-white/10 shadow-lg bg-white/5 backdrop-blur-md rounded-2xl">
-                <CardHeader className="border-b border-white/10 gap-2">
-                  <CardTitle className="flex items-center gap-2 text-white">
-                    <User className="h-5 w-5 text-amber-400" />
+              <Card className="border border-gray-200 shadow-sm rounded-2xl">
+                <CardHeader className="border-b border-gray-200 gap-2">
+                  <CardTitle className="flex items-center gap-2 text-gray-900">
+                    <User className="h-5 w-5 text-blue-500" />
                     {t("booking.contact_info")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.contact_email")} *</Label>
+                      <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.contact_email")} *</Label>
                       <Input
                         {...form.register("contactEmail")}
                         type="email"
-                        className="bg-white/5 border-white/15 text-white placeholder:text-white/30 focus:border-amber-500/50"
+                        className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
                         placeholder="contact@email.com"
                         data-testid="input-contact-email"
                       />
@@ -543,11 +543,11 @@ export default function Booking() {
                       )}
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-white/70 text-xs font-bold uppercase tracking-wider">{t("booking.contact_phone")} *</Label>
+                      <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.contact_phone")} *</Label>
                       <Input
                         {...form.register("contactPhone")}
                         type="tel"
-                        className="bg-white/5 border-white/15 text-white placeholder:text-white/30 focus:border-amber-500/50"
+                        className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
                         placeholder="+1 234 567 8900"
                         data-testid="input-contact-phone"
                       />
@@ -559,12 +559,12 @@ export default function Booking() {
                 </CardContent>
               </Card>
 
-              <Card className="border border-white/10 shadow-lg bg-white/5 backdrop-blur-md rounded-2xl">
-                <CardHeader className="border-b border-white/10 gap-2">
-                  <CardTitle className="flex items-center gap-2 text-white">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+              <Card className="border border-gray-200 shadow-sm rounded-2xl">
+                <CardHeader className="border-b border-gray-200 gap-2">
+                  <CardTitle className="flex items-center gap-2 text-gray-900">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                     {t("booking.passenger_details")}
-                    <Badge className="ml-auto text-xs bg-white/10 text-white/60 border-white/10">{totalPassengers} {totalPassengers > 1 ? t("booking.passengers_label") : t("booking.passenger")}</Badge>
+                    <Badge className="ml-auto text-xs bg-gray-100 text-gray-500 border-gray-200">{totalPassengers} {totalPassengers > 1 ? t("booking.passengers_label") : t("booking.passenger")}</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 space-y-3">
@@ -586,7 +586,7 @@ export default function Booking() {
 
               <Button 
                 type="submit" 
-                className="w-full h-14 text-base font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 shadow-lg shadow-amber-900/30 transition-all border-0 text-white rounded-xl" 
+                className="w-full h-14 text-base font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all border-0 text-white rounded-xl" 
                 disabled={createBooking.isPending || !flight}
                 data-testid="button-pay"
               >
@@ -596,25 +596,25 @@ export default function Booking() {
           </div>
 
           <div className="space-y-6">
-            <Card className="border border-white/10 shadow-lg bg-white/5 backdrop-blur-md rounded-2xl">
-              <CardHeader className="border-b border-white/10 gap-2">
-                <CardTitle className="text-lg text-white">{t("booking.flight_summary")}</CardTitle>
+            <Card className="border border-gray-200 shadow-sm rounded-2xl">
+              <CardHeader className="border-b border-gray-200 gap-2">
+                <CardTitle className="text-lg text-gray-900">{t("booking.flight_summary")}</CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-5">
                 {flight ? (
                 <>
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 bg-white/10 rounded-full flex items-center justify-center overflow-hidden p-2 border border-white/15 shadow-inner">
-                      {flight.logoUrl ? <img src={flight.logoUrl} className="w-full h-full object-contain" alt={flight.airline} /> : <Plane className="h-5 w-5 text-white/50" />}
+                    <div className="h-12 w-12 bg-gray-50 rounded-full flex items-center justify-center overflow-hidden p-2 border border-gray-200 shadow-inner">
+                      {flight.logoUrl ? <img src={flight.logoUrl} className="w-full h-full object-contain" alt={flight.airline} /> : <Plane className="h-5 w-5 text-gray-400" />}
                     </div>
                     <div>
-                      <div className="font-bold text-white" data-testid="text-airline">{flight.airline}</div>
+                      <div className="font-bold text-gray-900" data-testid="text-airline">{flight.airline}</div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="secondary" className="bg-amber-500/15 text-amber-200 border border-amber-500/20 text-xs">
+                        <Badge variant="secondary" className="bg-blue-50 text-blue-600 border border-blue-100 text-xs">
                           {flight.flightNumber}
                         </Badge>
                         {cabinClassName && (
-                          <Badge variant="secondary" className="bg-teal-500/10 text-teal-200 border border-teal-500/20 text-xs">
+                          <Badge variant="secondary" className="bg-blue-50 text-blue-600 border border-blue-100 text-xs">
                             {cabinClassName}
                           </Badge>
                         )}
@@ -623,17 +623,17 @@ export default function Booking() {
                   </div>
 
                   {fareBrand && (
-                    <div className="text-xs text-white/40 px-1">{t("booking.fare_brand")}: <span className="text-white/60 font-medium">{fareBrand}</span></div>
+                    <div className="text-xs text-gray-400 px-1">{t("booking.fare_brand")}: <span className="text-gray-600 font-medium">{fareBrand}</span></div>
                   )}
 
                   {flight.slices && flight.slices.length > 0 ? (
                     flight.slices.map((slice, si) => (
-                      <div key={si} className="bg-white/5 rounded-xl p-4 border border-white/10 space-y-2">
+                      <div key={si} className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-2">
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge className="text-[10px] bg-white/10 text-white/50 border-white/10">
+                          <Badge className="text-[10px] bg-gray-100 text-gray-500 border-gray-200">
                             {si === 0 ? t("booking.outbound") : t("booking.return_flight")}
                           </Badge>
-                          <span className="text-xs text-white/40">
+                          <span className="text-xs text-gray-400">
                             {slice.originCode} <ArrowRight className="h-3 w-3 inline" /> {slice.destinationCode}
                           </span>
                         </div>
@@ -641,37 +641,37 @@ export default function Booking() {
                           <SegmentDetail key={segi} segment={seg} t={t} />
                         ))}
                         {slice.segments.length > 1 && (
-                          <div className="text-[10px] text-amber-300 text-center pt-1">
+                          <div className="text-[10px] text-blue-500 text-center pt-1">
                             {slice.segments.length - 1} {t("booking.connection")}
                           </div>
                         )}
                       </div>
                     ))
                   ) : (
-                    <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                       <div className="flex justify-between items-center mb-3">
                         <div className="text-center">
-                          <div className="text-xl font-bold text-white">{format(parseISO(flight.departureTime), "HH:mm")}</div>
-                          <div className="text-xs text-white/50 font-medium uppercase">{flight.originCode || "DEP"}</div>
-                          {flight.originCity && <div className="text-[10px] text-white/40">{flight.originCity}</div>}
+                          <div className="text-xl font-bold text-gray-900">{format(parseISO(flight.departureTime), "HH:mm")}</div>
+                          <div className="text-xs text-gray-500 font-medium uppercase">{flight.originCode || "DEP"}</div>
+                          {flight.originCity && <div className="text-[10px] text-gray-400">{flight.originCity}</div>}
                         </div>
                         <div className="flex flex-col items-center px-3">
-                          <div className="text-xs text-white/50 flex items-center gap-1">
+                          <div className="text-xs text-gray-500 flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             {flight.duration.startsWith("P") ? formatDuration(flight.duration) : flight.duration}
                           </div>
-                          <ArrowRight className="h-4 w-4 text-amber-400 my-1" />
-                          <div className={`text-xs font-bold ${flight.stops === 0 ? "text-emerald-400" : "text-amber-400"}`}>
+                          <ArrowRight className="h-4 w-4 text-blue-500 my-1" />
+                          <div className={`text-xs font-bold ${flight.stops === 0 ? "text-emerald-600" : "text-blue-500"}`}>
                             {stopsLabel}
                           </div>
                         </div>
                         <div className="text-center">
-                          <div className="text-xl font-bold text-white">{format(parseISO(flight.arrivalTime), "HH:mm")}</div>
-                          <div className="text-xs text-white/50 font-medium uppercase">{flight.destinationCode || "ARR"}</div>
-                          {flight.destinationCity && <div className="text-[10px] text-white/40">{flight.destinationCity}</div>}
+                          <div className="text-xl font-bold text-gray-900">{format(parseISO(flight.arrivalTime), "HH:mm")}</div>
+                          <div className="text-xs text-gray-500 font-medium uppercase">{flight.destinationCode || "ARR"}</div>
+                          {flight.destinationCity && <div className="text-[10px] text-gray-400">{flight.destinationCity}</div>}
                         </div>
                       </div>
-                      <div className="text-xs text-white/40 text-center">
+                      <div className="text-xs text-gray-400 text-center">
                         {format(parseISO(flight.departureTime), "EEEE, MMMM d, yyyy")}
                       </div>
                     </div>
@@ -679,12 +679,12 @@ export default function Booking() {
 
                   {firstPaxBaggage.length > 0 && (
                     <div className="space-y-2">
-                      <h4 className="text-xs font-bold text-white/60 uppercase tracking-wider flex items-center gap-2">
-                        <Luggage className="h-3.5 w-3.5 text-amber-400" /> {t("booking.baggage_included")}
+                      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                        <Luggage className="h-3.5 w-3.5 text-blue-500" /> {t("booking.baggage_included")}
                       </h4>
                       {firstPaxBaggage.map((bag: any, bi: number) => (
-                        <div key={bi} className="flex items-center gap-2 text-sm text-white/60">
-                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                        <div key={bi} className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                           {bag.quantity}x {bag.type === "checked" ? t("booking.checked_bag") : bag.type === "carry_on" ? t("booking.carry_on") : bag.type}
                         </div>
                       ))}
@@ -693,90 +693,90 @@ export default function Booking() {
 
                   {flight.conditions && (
                     <div className="space-y-2">
-                      <h4 className="text-xs font-bold text-white/60 uppercase tracking-wider flex items-center gap-2">
-                        <RefreshCw className="h-3.5 w-3.5 text-amber-400" /> {t("booking.fare_conditions")}
+                      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                        <RefreshCw className="h-3.5 w-3.5 text-blue-500" /> {t("booking.fare_conditions")}
                       </h4>
                       {flight.conditions.changeBeforeDeparture && (
-                        <div className="flex items-center gap-2 text-xs text-white/50">
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
                           {flight.conditions.changeBeforeDeparture.allowed ? (
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                           ) : (
-                            <XIcon className="h-3.5 w-3.5 text-red-400" />
+                            <XIcon className="h-3.5 w-3.5 text-red-500" />
                           )}
                           {t("booking.change_allowed")}: {flight.conditions.changeBeforeDeparture.allowed ? t("booking.yes") : t("booking.no")}
                           {flight.conditions.changeBeforeDeparture.penaltyAmount && (
-                            <span className="text-amber-300 ml-1">({flight.conditions.changeBeforeDeparture.penaltyCurrency} {flight.conditions.changeBeforeDeparture.penaltyAmount})</span>
+                            <span className="text-blue-500 ml-1">({flight.conditions.changeBeforeDeparture.penaltyCurrency} {flight.conditions.changeBeforeDeparture.penaltyAmount})</span>
                           )}
                         </div>
                       )}
                       {flight.conditions.refundBeforeDeparture && (
-                        <div className="flex items-center gap-2 text-xs text-white/50">
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
                           {flight.conditions.refundBeforeDeparture.allowed ? (
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                           ) : (
-                            <XIcon className="h-3.5 w-3.5 text-red-400" />
+                            <XIcon className="h-3.5 w-3.5 text-red-500" />
                           )}
                           {t("booking.refund_allowed")}: {flight.conditions.refundBeforeDeparture.allowed ? t("booking.yes") : t("booking.no")}
                           {flight.conditions.refundBeforeDeparture.penaltyAmount && (
-                            <span className="text-amber-300 ml-1">({flight.conditions.refundBeforeDeparture.penaltyCurrency} {flight.conditions.refundBeforeDeparture.penaltyAmount})</span>
+                            <span className="text-blue-500 ml-1">({flight.conditions.refundBeforeDeparture.penaltyCurrency} {flight.conditions.refundBeforeDeparture.penaltyAmount})</span>
                           )}
                         </div>
                       )}
                     </div>
                   )}
                   
-                  <Separator className="bg-white/10" />
+                  <Separator className="bg-gray-200" />
                   
                   <div className="space-y-2">
                     {flight.baseAmount && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-white/50">{t("booking.base_fare")}</span>
-                        <span className="font-medium text-white">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(parseFloat(flight.baseAmount))}</span>
+                        <span className="text-gray-500">{t("booking.base_fare")}</span>
+                        <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(parseFloat(flight.baseAmount))}</span>
                       </div>
                     )}
                     {flight.taxAmount && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-white/50">{t("booking.taxes")}</span>
-                        <span className="font-medium text-white">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(parseFloat(flight.taxAmount))}</span>
+                        <span className="text-gray-500">{t("booking.taxes")}</span>
+                        <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(parseFloat(flight.taxAmount))}</span>
                       </div>
                     )}
                     {!flight.baseAmount && !flight.taxAmount && (
                       <>
                         <div className="flex justify-between text-sm">
-                          <span className="text-white/50">{t("booking.base_fare")}</span>
-                          <span className="font-medium text-white">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price * 0.9)}</span>
+                          <span className="text-gray-500">{t("booking.base_fare")}</span>
+                          <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price * 0.9)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-white/50">{t("booking.taxes")}</span>
-                          <span className="font-medium text-white">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price * 0.1)}</span>
+                          <span className="text-gray-500">{t("booking.taxes")}</span>
+                          <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price * 0.1)}</span>
                         </div>
                       </>
                     )}
                     {totalPassengers > 1 && (
-                      <div className="flex justify-between text-xs text-white/40">
+                      <div className="flex justify-between text-xs text-gray-400">
                         <span>{t("booking.per_passenger")}</span>
                         <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price / totalPassengers)}</span>
                       </div>
                     )}
                   </div>
                   
-                  <Separator className="bg-white/10" />
+                  <Separator className="bg-gray-200" />
                   
                   <div className="flex justify-between text-xl font-bold">
-                    <span className="text-white">{t("booking.total")}</span>
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-400" data-testid="text-total-price">
+                    <span className="text-gray-900">{t("booking.total")}</span>
+                    <span className="text-blue-600" data-testid="text-total-price">
                       {new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price)}
                     </span>
                   </div>
                 </>
                 ) : (
-                  <div className="text-center py-4 text-white/40">{t("booking.loading")}</div>
+                  <div className="text-center py-4 text-gray-400">{t("booking.loading")}</div>
                 )}
               </CardContent>
             </Card>
 
-            <div className="bg-emerald-500/10 p-4 rounded-xl flex gap-3 text-emerald-300 text-sm border border-emerald-500/20">
-              <Shield className="h-5 w-5 shrink-0 text-emerald-400" />
+            <div className="bg-emerald-50 p-4 rounded-xl flex gap-3 text-emerald-700 text-sm border border-emerald-200">
+              <Shield className="h-5 w-5 shrink-0 text-emerald-500" />
               <p>{t("booking.secure_payment")}</p>
             </div>
           </div>
