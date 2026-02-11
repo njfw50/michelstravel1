@@ -4,7 +4,7 @@ import { FlightBoard } from "@/components/FlightBoard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldCheck, Zap, Globe, ArrowRight, MapPin, Plane, Search, CreditCard, Ticket, Star, Clock, Headphones, Users, TrendingUp } from "lucide-react";
+import { ShieldCheck, Zap, Globe, ArrowRight, MapPin, Plane, Search, CreditCard, Ticket, Star, Clock, Headphones, Users, TrendingUp, ChevronRight, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
@@ -74,112 +74,156 @@ export default function Home() {
   const airportCount = airports?.length || 0;
 
   return (
-    <div className="flex flex-col min-h-screen bg-transparent">
-      <section className="relative min-h-[700px] flex items-center justify-center pt-24 pb-32 overflow-hidden">
-        <div className="absolute inset-0 bg-transparent select-none">
+    <div className="flex flex-col min-h-screen">
+      {/* HERO - Immersive full-screen like Universal Orlando */}
+      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 select-none">
           <img 
             src={airplaneDestination}
             alt="Airplane wing over clouds"
-            className="w-full h-full object-cover opacity-25 scale-105"
+            className="w-full h-full object-cover scale-110"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+          <div className="hero-wash absolute inset-0" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-background/60" />
         </div>
 
-        <div className="container mx-auto px-4 relative z-10">
+        <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div 
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="text-center mb-16 max-w-4xl mx-auto"
+            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+            className="text-center mb-12 md:mb-16 max-w-4xl mx-auto"
           >
-            <h1 className="text-4xl md:text-6xl font-display font-bold text-white mb-6 leading-tight drop-shadow-[0_0_25px_rgba(0,0,0,0.5)]" data-testid="text-hero-title">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="inline-flex items-center gap-2 bg-white/[0.08] backdrop-blur-md border border-white/[0.1] rounded-full px-5 py-2 mb-8"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+              <span className="text-xs font-semibold text-white/70 uppercase tracking-wider">{t("home.stats.secure")} &middot; {t("home.stats.support")}</span>
+            </motion.div>
+
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-extrabold text-white mb-6 leading-[0.95] tracking-tight" data-testid="text-hero-title">
               {t("home.title.1")} <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-400">{t("home.title.2")}</span>
+              <span className="shimmer-text">{t("home.title.2")}</span>
             </h1>
-            <p className="text-lg text-white/75 max-w-2xl mx-auto font-medium leading-relaxed drop-shadow-md" data-testid="text-hero-subtitle">
+            <p className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto font-medium leading-relaxed" data-testid="text-hero-subtitle">
               {t("home.subtitle")}
             </p>
           </motion.div>
 
-          <div className="max-w-6xl mx-auto transform hover:scale-[1.005] transition-transform duration-500">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="max-w-6xl mx-auto"
+          >
             <FlightSearchForm />
-          </div>
+          </motion.div>
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+      </section>
+
+      {/* STATS BAR - Clean, Venmo-style metrics */}
+      <section className="relative -mt-8 z-20 pb-8">
+        <div className="container mx-auto px-4 md:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-card/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 md:p-8 shadow-[0_8px_40px_rgba(0,0,0,0.4)]"
+          >
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+              {[
+                { value: airlineCount > 0 ? `${airlineCount}+` : "500+", labelKey: "home.stats.airlines", icon: Plane, color: "text-amber-400" },
+                { value: airportCount > 0 ? `${airportCount.toLocaleString()}+` : "3,000+", labelKey: "home.stats.destinations", icon: Globe, color: "text-cyan-400" },
+                { value: "24/7", labelKey: "home.stats.support", icon: Headphones, color: "text-emerald-400" },
+                { value: "100%", labelKey: "home.stats.secure", icon: ShieldCheck, color: "text-violet-400" },
+              ].map((stat, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.08 }}
+                  className="flex items-center gap-4"
+                >
+                  <div className={`h-12 w-12 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center ${stat.color} flex-shrink-0`}>
+                    <stat.icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <span className="text-2xl md:text-3xl font-extrabold font-display text-white block leading-none">{stat.value}</span>
+                    <span className="text-[11px] text-white/35 mt-0.5 uppercase tracking-widest font-semibold block">{t(stat.labelKey)}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      <section className="py-12 bg-black/10 border-y border-white/5">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[
-              { value: airlineCount > 0 ? `${airlineCount}+` : "500+", labelKey: "home.stats.airlines", icon: Plane },
-              { value: airportCount > 0 ? `${airportCount.toLocaleString()}+` : "3,000+", labelKey: "home.stats.destinations", icon: Globe },
-              { value: "24/7", labelKey: "home.stats.support", icon: Headphones },
-              { value: "100%", labelKey: "home.stats.secure", icon: ShieldCheck },
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="flex flex-col items-center text-center py-4"
-              >
-                <stat.icon className="h-6 w-6 text-amber-400/70 mb-2" />
-                <span className="text-2xl md:text-3xl font-bold font-display text-white">{stat.value}</span>
-                <span className="text-xs text-white/40 mt-1 uppercase tracking-wider font-semibold">{t(stat.labelKey)}</span>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-20 bg-black/20 backdrop-blur-sm border-b border-white/5">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold font-display text-white mb-4 uppercase tracking-wide drop-shadow-lg">{t("home.how.title")}</h2>
-            <p className="text-white/50 max-w-2xl mx-auto font-medium">{t("home.how.subtitle")}</p>
-          </div>
+      {/* HOW IT WORKS - Venmo-style feature blocks */}
+      <section className="py-24 md:py-32 section-elevated">
+        <div className="container mx-auto px-4 md:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <span className="text-xs font-bold text-amber-400 uppercase tracking-[0.2em] mb-3 block">{t("home.how.title")}</span>
+            <h2 className="text-3xl md:text-5xl font-extrabold font-display text-white mb-4">{t("home.how.subtitle")}</h2>
+          </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
-              { icon: Search, step: "01", titleKey: "home.how.step1_title", descKey: "home.how.step1_desc", color: "text-teal-400", border: "border-teal-500/30" },
-              { icon: CreditCard, step: "02", titleKey: "home.how.step2_title", descKey: "home.how.step2_desc", color: "text-amber-400", border: "border-amber-500/30" },
-              { icon: Ticket, step: "03", titleKey: "home.how.step3_title", descKey: "home.how.step3_desc", color: "text-emerald-400", border: "border-emerald-500/30" },
+              { icon: Search, step: "01", titleKey: "home.how.step1_title", descKey: "home.how.step1_desc", gradient: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400", borderColor: "border-cyan-500/10" },
+              { icon: CreditCard, step: "02", titleKey: "home.how.step2_title", descKey: "home.how.step2_desc", gradient: "from-amber-500/20 to-orange-500/20", iconColor: "text-amber-400", borderColor: "border-amber-500/10" },
+              { icon: Ticket, step: "03", titleKey: "home.how.step3_title", descKey: "home.how.step3_desc", gradient: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400", borderColor: "border-emerald-500/10" },
             ].map((item, i) => (
               <motion.div 
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                className={`relative flex flex-col items-center text-center p-8 rounded-2xl bg-white/5 border ${item.border} backdrop-blur-md`}
+                transition={{ delay: i * 0.12 }}
+                className={`relative group flex flex-col items-center text-center p-8 md:p-10 rounded-2xl bg-white/[0.02] border ${item.borderColor} transition-all duration-500 hover:bg-white/[0.04]`}
               >
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className={`text-xs font-bold ${item.color} bg-background/90 border ${item.border} px-3 py-1 rounded-full`}>{item.step}</span>
+                <div className={`absolute inset-0 rounded-2xl bg-gradient-to-b ${item.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                <div className="relative z-10">
+                  <span className={`text-[11px] font-bold ${item.iconColor} tracking-[0.3em] mb-6 block`}>{item.step}</span>
+                  <div className={`h-16 w-16 rounded-2xl bg-white/[0.06] border border-white/[0.08] ${item.iconColor} flex items-center justify-center mb-6 mx-auto`}>
+                    <item.icon className="h-7 w-7" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-3 text-white">{t(item.titleKey)}</h3>
+                  <p className="text-white/40 leading-relaxed text-sm">{t(item.descKey)}</p>
                 </div>
-                <div className={`h-14 w-14 bg-white/10 rounded-xl ${item.color} flex items-center justify-center mb-5`}>
-                  <item.icon className="h-7 w-7" />
-                </div>
-                <h3 className="font-bold text-lg mb-2 text-white">{t(item.titleKey)}</h3>
-                <p className="text-white/45 leading-relaxed text-sm">{t(item.descKey)}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-20 bg-transparent border-b border-white/5">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold font-display text-white mb-4 uppercase tracking-wide drop-shadow-lg">{t("home.trust.title")}</h2>
-            <p className="text-white/50 max-w-2xl mx-auto font-medium">{t("home.trust.subtitle")}</p>
-          </div>
+      {/* VALUE PROPS - Bold side-by-side layout like Venmo */}
+      <section className="py-24 md:py-32">
+        <div className="container mx-auto px-4 md:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <span className="text-xs font-bold text-cyan-400 uppercase tracking-[0.2em] mb-3 block">{t("home.trust.title")}</span>
+            <h2 className="text-3xl md:text-5xl font-extrabold font-display text-white mb-4">{t("home.trust.subtitle")}</h2>
+          </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {[
-              { icon: ShieldCheck, titleKey: "home.trust.secure", descKey: "home.trust.secure_desc", color: "text-emerald-400" },
-              { icon: Zap, titleKey: "home.trust.instant", descKey: "home.trust.instant_desc", color: "text-amber-400" },
-              { icon: Globe, titleKey: "home.trust.support", descKey: "home.trust.support_desc", color: "text-teal-400" }
+              { icon: ShieldCheck, titleKey: "home.trust.secure", descKey: "home.trust.secure_desc", gradient: "from-emerald-500 to-teal-600" },
+              { icon: Zap, titleKey: "home.trust.instant", descKey: "home.trust.instant_desc", gradient: "from-amber-500 to-orange-600" },
+              { icon: Globe, titleKey: "home.trust.support", descKey: "home.trust.support_desc", gradient: "from-cyan-500 to-blue-600" }
             ].map((item, i) => (
               <motion.div 
                 key={i}
@@ -187,38 +231,41 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="flex flex-col items-center text-center p-8 rounded-2xl bg-white/5 border border-white/10 shadow-lg transition-all duration-300 group backdrop-blur-md"
+                className="group relative overflow-visible rounded-2xl bg-white/[0.03] border border-white/[0.06] p-8 md:p-10 transition-all duration-300 hover:bg-white/[0.05]"
               >
-                <div className={`h-16 w-16 bg-white/10 rounded-xl shadow-inner border border-white/10 ${item.color} flex items-center justify-center mb-6`}>
-                  <item.icon className="h-8 w-8" />
+                <div className={`h-14 w-14 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-6 shadow-lg`}>
+                  <item.icon className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="font-bold text-xl mb-3 text-white uppercase tracking-wide">{t(item.titleKey)}</h3>
-                <p className="text-white/45 leading-relaxed font-medium">{t(item.descKey)}</p>
+                <h3 className="font-bold text-xl mb-3 text-white">{t(item.titleKey)}</h3>
+                <p className="text-white/40 leading-relaxed">{t(item.descKey)}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
+      {/* AIRLINE TICKER */}
       {topAirlines.length > 0 && (
-        <section className="py-16 bg-transparent border-b border-white/5">
-          <div className="container mx-auto px-4">
+        <section className="py-16 section-elevated border-y border-white/[0.04]">
+          <div className="container mx-auto px-4 md:px-6">
             <div className="text-center mb-10">
-              <h2 className="text-2xl font-bold font-display text-white mb-2">{t("home.airlines")}</h2>
-              <p className="text-white/40 text-sm">{t("home.airlines_sub")}</p>
+              <h2 className="text-2xl md:text-3xl font-bold font-display text-white mb-2">{t("home.airlines")}</h2>
+              <p className="text-white/35 text-sm">{t("home.airlines_sub")}</p>
             </div>
             
             <div className="relative overflow-hidden">
-              <div className="flex animate-marquee gap-8 py-4">
+              <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-card to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-card to-transparent z-10 pointer-events-none" />
+              <div className="flex animate-marquee gap-4 py-4">
                 {[...topAirlines, ...topAirlines].map((airline, i) => (
                   <div
                     key={`${airline.id}-${i}`}
-                    className="flex-shrink-0 flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-5 py-3 backdrop-blur-sm"
+                    className="flex-shrink-0 flex items-center gap-3 bg-white/[0.03] border border-white/[0.06] rounded-xl px-5 py-3 transition-colors hover:bg-white/[0.06]"
                     data-testid={`airline-card-${airline.iataCode}`}
                   >
-                    <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
+                    <div className="h-8 w-8 rounded-lg bg-white/[0.08] flex items-center justify-center overflow-hidden">
                       {airline.logoSymbolUrl ? (
-                        <img src={airline.logoSymbolUrl} alt={airline.name} className="h-6 w-6 object-contain" />
+                        <img src={airline.logoSymbolUrl} alt={airline.name} className="h-5 w-5 object-contain" />
                       ) : (
                         <Plane className="h-4 w-4 text-white/40" />
                       )}
@@ -226,7 +273,7 @@ export default function Home() {
                     <div>
                       <span className="text-sm font-semibold text-white whitespace-nowrap">{airline.name}</span>
                       {airline.iataCode && (
-                        <span className="text-xs text-amber-300/70 ml-2">({airline.iataCode})</span>
+                        <span className="text-xs text-amber-400/60 ml-2 font-mono">({airline.iataCode})</span>
                       )}
                     </div>
                   </div>
@@ -237,29 +284,35 @@ export default function Home() {
         </section>
       )}
 
+      {/* DESTINATIONS - Universal Orlando card grid style */}
       {airports && airports.length > 0 && (
-        <section className="py-20 bg-transparent border-t border-white/5" data-testid="section-destinations">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-between items-end mb-12 flex-wrap gap-4">
+        <section className="py-24 md:py-32" data-testid="section-destinations">
+          <div className="container mx-auto px-4 md:px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex justify-between items-end mb-12 flex-wrap gap-4"
+            >
               <div>
-                <h2 className="text-3xl font-bold font-display text-white mb-2 drop-shadow-md">{t("home.popular.title")}</h2>
-                <p className="text-white/45">{t("home.popular.subtitle")}</p>
+                <span className="text-xs font-bold text-amber-400 uppercase tracking-[0.2em] mb-3 block">{t("home.popular.title")}</span>
+                <h2 className="text-3xl md:text-5xl font-extrabold font-display text-white mb-2">{t("home.popular.subtitle")}</h2>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {airports.slice(0, 8).map((airport, i) => {
                 const destImage = airport.iataCode ? DESTINATION_IMAGES[airport.iataCode] : null;
                 return (
                   <motion.div
                     key={airport.id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.05 }}
                   >
-                    <Card 
-                      className="group overflow-hidden border border-white/10 shadow-lg transition-all cursor-pointer h-full bg-white/5 backdrop-blur-md rounded-2xl"
+                    <div
+                      className="group relative overflow-hidden rounded-2xl cursor-pointer h-72 bg-card border border-white/[0.06]"
                       onClick={() => {
                         if (airport.iataCode) {
                           const d = new Date();
@@ -270,40 +323,37 @@ export default function Home() {
                       }}
                       data-testid={`destination-card-${airport.iataCode}`}
                     >
-                      <div className="relative h-44 overflow-hidden">
-                        {destImage ? (
-                          <img 
-                            src={destImage} 
-                            alt={airport.cityName || airport.name}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-amber-500/20 via-teal-500/10 to-transparent" />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                        <div className="absolute top-3 right-3">
-                          <Badge variant="secondary" className="bg-black/40 text-white border border-white/20 backdrop-blur-md text-xs font-mono">
-                            {airport.iataCode}
-                          </Badge>
+                      {destImage ? (
+                        <img 
+                          src={destImage} 
+                          alt={airport.cityName || airport.name}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-amber-600/30 via-cyan-600/10 to-transparent" />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                      
+                      <div className="absolute top-4 right-4">
+                        <span className="bg-black/50 backdrop-blur-md text-white text-xs font-mono font-bold px-3 py-1.5 rounded-lg border border-white/10">
+                          {airport.iataCode}
+                        </span>
+                      </div>
+
+                      <div className="absolute bottom-0 left-0 right-0 p-5">
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <MapPin className="h-3 w-3 text-amber-400" />
+                          <span className="text-[11px] text-white/60 truncate font-medium">{countryCodeToName(airport.countryName || "")}</span>
                         </div>
-                        <div className="absolute bottom-4 left-4 right-4">
-                          <div className="flex items-center gap-1.5 mb-1">
-                            <MapPin className="h-3.5 w-3.5 text-amber-400" />
-                            <span className="text-xs text-white/70 truncate">{countryCodeToName(airport.countryName || "")}</span>
-                          </div>
-                          <h3 className="font-bold text-lg text-white leading-tight truncate drop-shadow-lg">
-                            {airport.cityName || airport.name}
-                          </h3>
+                        <h3 className="font-bold text-xl text-white leading-tight truncate mb-3">
+                          {airport.cityName || airport.name}
+                        </h3>
+                        <div className="flex items-center gap-2 text-amber-400 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-2 group-hover:translate-y-0">
+                          {t("home.popular.check_prices")} <ArrowRight className="h-3.5 w-3.5" />
                         </div>
                       </div>
-                      <CardContent className="p-4">
-                        <p className="text-xs text-white/40 mb-3 truncate">{airport.name}</p>
-                        <Button variant="outline" className="w-full rounded-xl text-white border-white/10 text-sm" size="sm">
-                          {t("home.popular.check_prices")} <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                        </Button>
-                      </CardContent>
-                    </Card>
+                    </div>
                   </motion.div>
                 );
               })}
@@ -312,16 +362,23 @@ export default function Home() {
         </section>
       )}
 
+      {/* FLIGHT BOARD */}
       <FlightBoard />
 
-      <section className="py-20 bg-black/20 backdrop-blur-sm border-y border-white/5">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl font-bold font-display text-white mb-4 uppercase tracking-wide drop-shadow-lg">{t("home.testimonials.title")}</h2>
-            <p className="text-white/50 max-w-2xl mx-auto">{t("home.testimonials.subtitle")}</p>
-          </div>
+      {/* TESTIMONIALS - Clean card layout */}
+      <section className="py-24 md:py-32 section-elevated">
+        <div className="container mx-auto px-4 md:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <span className="text-xs font-bold text-emerald-400 uppercase tracking-[0.2em] mb-3 block">{t("home.testimonials.title")}</span>
+            <h2 className="text-3xl md:text-5xl font-extrabold font-display text-white">{t("home.testimonials.subtitle")}</h2>
+          </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
               { nameKey: "home.testimonials.t1_name", locKey: "home.testimonials.t1_loc", textKey: "home.testimonials.t1_text" },
               { nameKey: "home.testimonials.t2_name", locKey: "home.testimonials.t2_loc", textKey: "home.testimonials.t2_text" },
@@ -329,21 +386,26 @@ export default function Home() {
             ].map((item, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md"
+                className="p-8 rounded-2xl bg-white/[0.03] border border-white/[0.06] transition-all duration-300 hover:bg-white/[0.05]"
               >
-                <div className="flex gap-1 mb-4">
+                <div className="flex gap-1 mb-5">
                   {Array.from({ length: 5 }).map((_, j) => (
                     <Star key={j} className="h-4 w-4 text-amber-400 fill-amber-400" />
                   ))}
                 </div>
-                <p className="text-white/60 text-sm leading-relaxed mb-5 italic">"{t(item.textKey)}"</p>
-                <div>
-                  <span className="text-white font-semibold text-sm block">{t(item.nameKey)}</span>
-                  <span className="text-white/30 text-xs">{t(item.locKey)}</span>
+                <p className="text-white/55 text-sm leading-relaxed mb-6">"{t(item.textKey)}"</p>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-sm">
+                    {t(item.nameKey).charAt(0)}
+                  </div>
+                  <div>
+                    <span className="text-white font-semibold text-sm block">{t(item.nameKey)}</span>
+                    <span className="text-white/30 text-xs">{t(item.locKey)}</span>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -351,19 +413,21 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-20 bg-transparent">
-        <div className="container mx-auto px-4 text-center">
+      {/* CTA - Bold, Venmo-style */}
+      <section className="py-24 md:py-32 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-cyan-500/5 pointer-events-none" />
+        <div className="container mx-auto px-4 md:px-6 text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="max-w-3xl mx-auto"
           >
-            <h2 className="text-3xl md:text-4xl font-bold font-display text-white mb-6 leading-tight">{t("home.cta.title")}</h2>
-            <p className="text-white/50 text-lg mb-8 max-w-xl mx-auto">{t("home.cta.subtitle")}</p>
+            <h2 className="text-4xl md:text-6xl font-extrabold font-display text-white mb-6 leading-tight">{t("home.cta.title")}</h2>
+            <p className="text-white/45 text-lg mb-10 max-w-xl mx-auto leading-relaxed">{t("home.cta.subtitle")}</p>
             <Button 
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="rounded-full px-10 py-6 text-lg font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg shadow-amber-900/30"
+              className="rounded-full px-10 py-6 text-lg font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-[0_8px_30px_rgba(245,158,11,0.3)] hover:shadow-[0_12px_40px_rgba(245,158,11,0.4)] transition-all"
               data-testid="button-cta-search"
             >
               {t("home.cta.button")} <ArrowRight className="ml-2 h-5 w-5" />

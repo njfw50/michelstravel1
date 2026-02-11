@@ -8,34 +8,34 @@
   --font-display: 'Outfit', sans-serif;
   --font-body: 'DM Sans', sans-serif;
 
-  --background: 220 20% 7%;
-  --foreground: 40 15% 90%;
+  --background: 225 25% 6%;
+  --foreground: 210 20% 92%;
 
-  --card: 220 18% 10%;
-  --card-foreground: 40 15% 90%;
+  --card: 225 22% 9%;
+  --card-foreground: 210 20% 92%;
 
-  --popover: 220 18% 10%;
-  --popover-foreground: 40 10% 75%;
+  --popover: 225 22% 9%;
+  --popover-foreground: 210 15% 75%;
 
-  --primary: 36 80% 55%;
-  --primary-foreground: 220 20% 7%;
+  --primary: 32 95% 55%;
+  --primary-foreground: 225 25% 6%;
 
-  --secondary: 200 15% 16%;
-  --secondary-foreground: 40 15% 90%;
+  --secondary: 220 18% 14%;
+  --secondary-foreground: 210 20% 92%;
 
-  --muted: 200 12% 15%;
-  --muted-foreground: 200 10% 55%;
+  --muted: 220 15% 12%;
+  --muted-foreground: 215 12% 55%;
 
-  --accent: 175 30% 22%;
-  --accent-foreground: 170 40% 85%;
+  --accent: 190 60% 38%;
+  --accent-foreground: 190 50% 92%;
 
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 40 15% 95%;
 
-  --border: 210 12% 16%;
-  --input: 210 12% 16%;
-  --ring: 36 60% 50%;
-  
+  --border: 220 15% 13%;
+  --input: 220 15% 13%;
+  --ring: 32 80% 50%;
+
   --radius: 0.75rem;
 }
 
@@ -46,10 +46,10 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-body);
-    background-image: 
-      radial-gradient(at 0% 0%, hsla(220,20%,10%,1) 0, transparent 50%), 
-      radial-gradient(at 50% 0%, hsla(200,25%,14%,1) 0, transparent 50%), 
-      radial-gradient(at 100% 0%, hsla(30,30%,12%,1) 0, transparent 50%);
+    background-color: hsl(225, 25%, 6%);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, hsla(220, 60%, 20%, 0.4) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 40% at 100% 0%, hsla(32, 80%, 30%, 0.12) 0%, transparent 60%);
     background-attachment: fixed;
   }
   h1, h2, h3, h4, h5, h6 {
@@ -59,17 +59,17 @@
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-white/20 rounded-full;
+  @apply bg-white/15 rounded-full;
 }
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-white/30;
+  @apply bg-white/25;
 }
 
 .glass {
@@ -77,7 +77,7 @@
 }
 
 .glass-dark {
-  @apply bg-white/5 backdrop-blur-md border border-white/10;
+  @apply bg-white/[0.04] backdrop-blur-lg border border-white/[0.06];
 }
 
 @keyframes marquee {
@@ -91,4 +91,70 @@
 
 .animate-marquee:hover {
   animation-play-state: paused;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    hsl(32, 95%, 55%) 0%,
+    hsl(45, 100%, 70%) 25%,
+    hsl(32, 95%, 55%) 50%,
+    hsl(20, 90%, 50%) 75%,
+    hsl(32, 95%, 55%) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 4s linear infinite;
+}
+
+.section-dark {
+  background: linear-gradient(180deg, hsla(225, 25%, 5%, 1) 0%, hsla(225, 25%, 8%, 1) 100%);
+}
+
+.section-elevated {
+  background: linear-gradient(180deg, hsla(225, 22%, 9%, 1) 0%, hsla(225, 22%, 7%, 1) 100%);
+}
+
+.hero-wash {
+  background: linear-gradient(
+    180deg,
+    hsla(225, 25%, 6%, 0.3) 0%,
+    hsla(225, 25%, 6%, 0.5) 30%,
+    hsla(225, 25%, 6%, 0.85) 70%,
+    hsla(225, 25%, 6%, 1) 100%
+  );
+}
+
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, hsla(32, 95%, 55%, 0.3), hsla(190, 60%, 38%, 0.3));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }

@@ -18,7 +18,7 @@ Preferred communication style: Simple, everyday language.
 - **Animations**: Framer Motion for page transitions and UI interactions
 - **Charts**: Recharts for admin dashboard analytics
 - **Internationalization**: Custom i18n system with React Context (`I18nProvider`) supporting pt/en/es, stored in localStorage with a language selection modal on first visit
-- **Design**: Dark glassmorphism theme with backdrop blur effects, gradients, and a dark navy background. Fonts are Outfit (display) and DM Sans (body)
+- **Design**: Dark immersive theme inspired by Venmo (clean bold typography, card-based sections, vibrant accents) and Universal Orlando (cinematic hero, dark overlays, full-bleed imagery). Deep navy background with amber/orange primary, cyan/teal accent. Fonts are Outfit (display) and DM Sans (body). Uses CSS shimmer animations, gradient borders, and section alternation (section-dark/section-elevated classes)
 - **Path aliases**: `@/` maps to `client/src/`, `@shared/` maps to `shared/`, `@assets/` maps to `attached_assets/`
 
 ### Backend (Express + Node.js)

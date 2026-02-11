@@ -85,39 +85,28 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
       className={cn(
-        "bg-black/30 backdrop-blur-md rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] p-1 border border-white/10 relative z-10 max-w-5xl mx-auto",
+        "bg-card/80 backdrop-blur-xl rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.5)] border border-white/[0.06] relative z-10 max-w-5xl mx-auto overflow-hidden",
         className
       )}
     >
-        <div className="px-6 pt-4 pb-2">
+        <div className="px-6 pt-5 pb-2">
             <Tabs defaultValue="round-trip" value={tripType} onValueChange={setTripType} className="w-full">
-                <TabsList className="bg-transparent p-0 h-auto gap-6 justify-start">
-                    <TabsTrigger 
-                        value="round-trip" 
-                        className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-white data-[state=active]:font-bold text-white/60 rounded-none border-b-4 border-transparent data-[state=active]:border-amber-400 px-0 pb-2 transition-all text-sm uppercase tracking-wide font-semibold hover:text-white/80"
-                        data-testid="tab-round-trip"
-                    >
-                        {t("search.round_trip")}
-                    </TabsTrigger>
-                    <TabsTrigger 
-                        value="one-way" 
-                        className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-white data-[state=active]:font-bold text-white/60 rounded-none border-b-4 border-transparent data-[state=active]:border-amber-400 px-0 pb-2 transition-all text-sm uppercase tracking-wide font-semibold hover:text-white/80"
-                        data-testid="tab-one-way"
-                    >
-                        {t("search.one_way")}
-                    </TabsTrigger>
-                    <TabsTrigger 
-                        value="multi-city" 
-                        className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-white data-[state=active]:font-bold text-white/60 rounded-none border-b-4 border-transparent data-[state=active]:border-amber-400 px-0 pb-2 transition-all text-sm uppercase tracking-wide font-semibold hover:text-white/80"
-                        data-testid="tab-multi-city"
-                    >
-                        {t("search.multi_city")}
-                    </TabsTrigger>
+                <TabsList className="bg-transparent p-0 h-auto gap-1 justify-start">
+                    {["round-trip", "one-way", "multi-city"].map((type) => (
+                        <TabsTrigger
+                            key={type}
+                            value={type}
+                            className="data-[state=active]:bg-white/[0.08] data-[state=active]:shadow-none data-[state=active]:text-white text-white/50 rounded-lg px-4 py-2 transition-all text-sm font-semibold"
+                            data-testid={`tab-${type}`}
+                        >
+                            {t(`search.${type.replace("-", "_")}`)}
+                        </TabsTrigger>
+                    ))}
                 </TabsList>
             </Tabs>
         </div>
 
-      <form onSubmit={handleSearch} className="p-4 md:p-6 bg-transparent border-t border-white/10">
+      <form onSubmit={handleSearch} className="p-5 md:p-6 border-t border-white/[0.04]">
         <div className="flex flex-col lg:flex-row gap-4">
             
             <div className="flex-1 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-center">
@@ -131,7 +120,7 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                 <div className="flex justify-center md:pt-6">
                      <button 
                         type="button"
-                        className="bg-white/10 rounded-full p-2 border border-white/20 text-white/70 hover:text-white hover:border-amber-400 hover:bg-amber-500/20 transition-all shadow-lg backdrop-blur-md"
+                        className="bg-white/[0.06] rounded-full p-2.5 border border-white/[0.08] text-white/50 hover:text-white hover:border-amber-500/40 hover:bg-amber-500/10 transition-all duration-200"
                         onClick={() => {
                             const temp = origin;
                             setOrigin(destination);
@@ -152,87 +141,87 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
             </div>
 
             <div className="flex-[0.8] grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                    <Label className="text-xs font-bold text-white/70 uppercase tracking-wider block">{t("search.departure")}</Label>
+                <div className="space-y-1.5">
+                    <Label className="text-[11px] font-bold text-white/50 uppercase tracking-widest block">{t("search.departure")}</Label>
                     <Popover>
                         <PopoverTrigger asChild>
-                            <button type="button" className="w-full bg-white/10 border border-white/10 rounded-xl px-3 h-14 flex items-center text-left hover:bg-white/15 hover:border-white/20 transition-all shadow-lg backdrop-blur-sm focus:ring-2 focus:ring-amber-400/50" data-testid="button-departure-date">
-                                <CalendarIcon className="h-5 w-5 text-amber-300 mr-3" />
-                                <span className={cn("text-base font-medium truncate", !date ? "text-white/30" : "text-white")}>
+                            <button type="button" className="w-full bg-white/[0.04] border border-white/[0.06] rounded-xl px-3 h-14 flex items-center text-left hover:bg-white/[0.06] hover:border-white/[0.1] transition-all duration-200 focus:ring-2 focus:ring-amber-500/30" data-testid="button-departure-date">
+                                <CalendarIcon className="h-5 w-5 text-amber-400 mr-3 flex-shrink-0" />
+                                <span className={cn("text-sm font-medium truncate", !date ? "text-white/25" : "text-white")}>
                                     {date ? format(date, "dd/MM/yyyy") : t("search.date_placeholder")}
                                 </span>
                             </button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 bg-[hsl(220,18%,10%)] border-white/10 text-white" align="start">
+                        <PopoverContent className="w-auto p-0 bg-card border-white/[0.08] text-white" align="start">
                             <Calendar
                                 mode="single"
                                 selected={date}
                                 onSelect={setDate}
                                 initialFocus
                                 disabled={(date) => date < new Date()}
-                                className="bg-[hsl(220,18%,10%)] text-white rounded-md border border-white/10"
+                                className="bg-card text-white rounded-md border border-white/[0.06]"
                             />
                         </PopoverContent>
                     </Popover>
                 </div>
 
-                <div className="space-y-1">
-                    <Label className={cn("text-xs font-bold text-white/70 uppercase tracking-wider block", tripType === "one-way" && "opacity-50")}>{t("search.return")}</Label>
+                <div className="space-y-1.5">
+                    <Label className={cn("text-[11px] font-bold text-white/50 uppercase tracking-widest block", tripType === "one-way" && "opacity-40")}>{t("search.return")}</Label>
                     <Popover>
                         <PopoverTrigger asChild>
                             <button 
                                 type="button" 
                                 className={cn(
-                                    "w-full bg-white/10 border border-white/10 rounded-xl px-3 h-14 flex items-center text-left hover:bg-white/15 hover:border-white/20 transition-all shadow-lg backdrop-blur-sm focus:ring-2 focus:ring-amber-400/50 relative",
-                                    tripType === "one-way" && "bg-white/5 text-white/20 cursor-not-allowed border-white/5 shadow-none"
+                                    "w-full bg-white/[0.04] border border-white/[0.06] rounded-xl px-3 h-14 flex items-center text-left hover:bg-white/[0.06] hover:border-white/[0.1] transition-all duration-200 focus:ring-2 focus:ring-amber-500/30",
+                                    tripType === "one-way" && "bg-white/[0.02] text-white/15 cursor-not-allowed border-white/[0.03]"
                                 )}
                                 disabled={tripType === "one-way"}
                                 data-testid="button-return-date"
                             >
-                                <CalendarIcon className="h-5 w-5 text-amber-300 mr-3" />
+                                <CalendarIcon className="h-5 w-5 text-amber-400 mr-3 flex-shrink-0" />
                                 {tripType === "one-way" ? (
-                                    <span className="text-sm font-medium text-white/20">{t("search.optional")}</span>
+                                    <span className="text-sm font-medium text-white/15">{t("search.optional")}</span>
                                 ) : (
-                                    <span className={cn("text-base font-medium truncate", !returnDate ? "text-white/30" : "text-white")}>
+                                    <span className={cn("text-sm font-medium truncate", !returnDate ? "text-white/25" : "text-white")}>
                                         {returnDate ? format(returnDate, "dd/MM/yyyy") : t("search.date_placeholder")}
                                     </span>
                                 )}
                             </button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 bg-[hsl(220,18%,10%)] border-white/10 text-white" align="start">
+                        <PopoverContent className="w-auto p-0 bg-card border-white/[0.08] text-white" align="start">
                             <Calendar
                                 mode="single"
                                 selected={returnDate}
                                 onSelect={setReturnDate}
                                 initialFocus
                                 disabled={(d) => d < (date || new Date())}
-                                className="bg-[hsl(220,18%,10%)] text-white rounded-md border border-white/10"
+                                className="bg-card text-white rounded-md border border-white/[0.06]"
                             />
                         </PopoverContent>
                     </Popover>
                 </div>
             </div>
 
-            <div className="flex-[0.6] space-y-1">
-                <Label className="text-xs font-bold text-white/70 uppercase tracking-wider block">{t("search.passengers_class")}</Label>
+            <div className="flex-[0.6] space-y-1.5">
+                <Label className="text-[11px] font-bold text-white/50 uppercase tracking-widest block">{t("search.passengers_class")}</Label>
                 <Popover>
                     <PopoverTrigger asChild>
-                        <button type="button" className="w-full bg-white/10 border border-white/10 rounded-xl px-3 h-14 flex items-center text-left hover:bg-white/15 hover:border-white/20 transition-all shadow-lg backdrop-blur-sm focus:ring-2 focus:ring-amber-400/50" data-testid="button-passengers">
-                             <Users className="h-5 w-5 text-amber-300 mr-3" />
+                        <button type="button" className="w-full bg-white/[0.04] border border-white/[0.06] rounded-xl px-3 h-14 flex items-center text-left hover:bg-white/[0.06] hover:border-white/[0.1] transition-all duration-200 focus:ring-2 focus:ring-amber-500/30" data-testid="button-passengers">
+                             <Users className="h-5 w-5 text-amber-400 mr-3 flex-shrink-0" />
                              <div className="flex flex-col justify-center overflow-hidden">
                                  <span className="text-sm font-bold text-white truncate leading-tight">
                                      {totalPassengers} {totalPassengers !== 1 ? t("search.people") : t("search.person")}
                                  </span>
-                                 <span className="text-xs text-amber-200/70 truncate leading-tight">
+                                 <span className="text-[11px] text-amber-400/60 truncate leading-tight font-medium">
                                     {classLabel(cabinClass)}
                                  </span>
                              </div>
                         </button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-80 p-5 rounded-xl shadow-2xl border-white/10 bg-[hsl(220,18%,10%)]/95 backdrop-blur-xl text-white" align="end">
-                        <div className="space-y-4">
+                    <PopoverContent className="w-80 p-5 rounded-xl shadow-2xl border-white/[0.08] bg-card/98 backdrop-blur-xl text-white" align="end">
+                        <div className="space-y-5">
                             <div className="space-y-3">
-                                <h4 className="font-bold text-sm text-white border-b border-white/10 pb-2">{t("search.class")}</h4>
+                                <h4 className="font-bold text-sm text-white border-b border-white/[0.06] pb-2">{t("search.class")}</h4>
                                 <div className="grid grid-cols-2 gap-2">
                                     {[
                                         { id: "economy" },
@@ -244,10 +233,10 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                                             key={cls.id}
                                             onClick={() => setCabinClass(cls.id)}
                                             className={cn(
-                                                "cursor-pointer text-sm p-2 rounded-lg border text-center transition-all font-medium",
+                                                "cursor-pointer text-sm p-2.5 rounded-lg border text-center transition-all duration-200 font-medium",
                                                 cabinClass === cls.id 
-                                                    ? "bg-amber-500 text-white border-amber-400 shadow-lg shadow-amber-900/50" 
-                                                    : "border-white/10 hover:bg-white/10 text-white/70"
+                                                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-400/30 shadow-lg shadow-amber-500/20" 
+                                                    : "border-white/[0.06] hover:bg-white/[0.06] text-white/60"
                                             )}
                                             data-testid={`class-option-${cls.id}`}
                                         >
@@ -258,23 +247,23 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                             </div>
 
                             <div className="space-y-3">
-                                 <h4 className="font-bold text-sm text-white border-b border-white/10 pb-2">{t("search.passengers")}</h4>
+                                 <h4 className="font-bold text-sm text-white border-b border-white/[0.06] pb-2">{t("search.passengers")}</h4>
                                  
                                  {[
                                    { label: t("search.adults"), sub: t("search.adults_desc"), value: adults, set: setAdults, min: 1 },
                                    { label: t("search.children"), sub: t("search.children_desc"), value: children, set: setChildren, min: 0 },
                                    { label: t("search.infants"), sub: t("search.infants_desc"), value: infants, set: setInfants, min: 0 },
                                  ].map((pax) => (
-                                   <div key={pax.label} className="flex justify-between items-center">
+                                   <div key={pax.label} className="flex justify-between items-center gap-4">
                                      <div>
                                        <div className="font-bold text-sm text-white">{pax.label}</div>
-                                       <div className="text-xs text-white/50">{pax.sub}</div>
+                                       <div className="text-xs text-white/40">{pax.sub}</div>
                                      </div>
                                      <div className="flex items-center gap-3">
                                        <button 
                                          type="button"
                                          onClick={() => pax.set(Math.max(pax.min, pax.value - 1))}
-                                         className="h-8 w-8 rounded bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center text-white transition-colors disabled:opacity-30"
+                                         className="h-8 w-8 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.06] flex items-center justify-center text-white transition-colors disabled:opacity-30"
                                          disabled={pax.value <= pax.min}
                                        >
                                          <Minus className="h-4 w-4" />
@@ -283,7 +272,7 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                                        <button 
                                          type="button"
                                          onClick={() => pax.set(Math.min(9, pax.value + 1))}
-                                         className="h-8 w-8 rounded bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center text-white transition-colors"
+                                         className="h-8 w-8 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.06] flex items-center justify-center text-white transition-colors"
                                        >
                                          <Plus className="h-4 w-4" />
                                        </button>
@@ -301,7 +290,7 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                     type="submit" 
                     size="lg" 
                     data-testid="button-search-flights"
-                    className="h-14 w-full lg:w-auto px-8 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-bold shadow-lg shadow-amber-900/40 hover:shadow-amber-500/40 transition-all uppercase tracking-wide text-sm border-0"
+                    className="h-14 w-full lg:w-auto px-8 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold shadow-[0_4px_20px_rgba(245,158,11,0.3)] hover:shadow-[0_8px_30px_rgba(245,158,11,0.4)] transition-all uppercase tracking-wider text-sm border-0"
                 >
                     <Search className="mr-2 h-4 w-4" />
                     {t("search.button")}
