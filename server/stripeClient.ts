@@ -4,6 +4,15 @@ import Stripe from 'stripe';
 let connectionSettings: any;
 
 async function getCredentials() {
+  const isProduction = process.env.REPLIT_DEPLOYMENT === '1';
+
+  if (isProduction && process.env.STRIPE_LIVE_SECRET_KEY && process.env.STRIPE_LIVE_PUBLISHABLE_KEY) {
+    return {
+      publishableKey: process.env.STRIPE_LIVE_PUBLISHABLE_KEY,
+      secretKey: process.env.STRIPE_LIVE_SECRET_KEY,
+    };
+  }
+
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
     ? 'repl ' + process.env.REPL_IDENTITY
@@ -12,15 +21,16 @@ async function getCredentials() {
       : null;
 
   if (!xReplitToken) {
+    if (process.env.STRIPE_LIVE_SECRET_KEY && process.env.STRIPE_LIVE_PUBLISHABLE_KEY) {
+      return {
+        publishableKey: process.env.STRIPE_LIVE_PUBLISHABLE_KEY,
+        secretKey: process.env.STRIPE_LIVE_SECRET_KEY,
+      };
+    }
     throw new Error('X_REPLIT_TOKEN not found for repl/depl');
   }
 
-  // Use stripe connector for all environments
-  // The environment field in the connection will distinguish between development and production
   const connectorName = 'stripe';
-
-  // Determine which environment to use based on deployment status
-  const isProduction = process.env.REPLIT_DEPLOYMENT === '1';
   const targetEnvironment = isProduction ? 'production' : 'development';
 
   const url = new URL(`https://${hostname}/api/v2/connection`);
@@ -40,6 +50,12 @@ async function getCredentials() {
   connectionSettings = data.items?.[0];
 
   if (!connectionSettings || (!connectionSettings.settings.publishable || !connectionSettings.settings.secret)) {
+    if (process.env.STRIPE_LIVE_SECRET_KEY && process.env.STRIPE_LIVE_PUBLISHABLE_KEY) {
+      return {
+        publishableKey: process.env.STRIPE_LIVE_PUBLISHABLE_KEY,
+        secretKey: process.env.STRIPE_LIVE_SECRET_KEY,
+      };
+    }
     throw new Error(`Stripe ${targetEnvironment} connection not found`);
   }
 
