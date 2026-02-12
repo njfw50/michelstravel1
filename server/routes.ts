@@ -347,7 +347,7 @@ export function registerRoutes(app: Express) {
         const isTestModeActive = settings?.testMode ?? true;
 
         if (isTestModeActive) {
-          console.log("[TEST MODE] Booking created in test mode - using test token, no real charges");
+          console.log("[TEST MODE] Booking created in test mode - Stripe test keys will be used (no real charges)");
         } else {
           if (!hasLiveToken()) {
             return res.status(400).json({ 
@@ -380,36 +380,10 @@ export function registerRoutes(app: Express) {
             contactPhone: bookingData.contactPhone || null,
             commissionRate: commissionRate.toString(),
             commissionAmount: commissionAmount,
-            status: isTestModeActive ? 'test' : 'pending',
+            status: 'pending',
             stripePaymentStatus: 'pending',
             userId: (req as any).user?.id ? String((req as any).user.id) : null
         }).returning();
-
-        if (isTestModeActive) {
-          await db.update(bookings)
-              .set({ stripePaymentIntentId: 'test_session_' + booking.id, stripePaymentStatus: 'test' })
-              .where(eq(bookings.id, booking.id));
-
-          sendBookingConfirmationEmail({
-            referenceCode: booking.referenceCode || refCode,
-            contactEmail: booking.contactEmail,
-            contactPhone: booking.contactPhone,
-            totalPrice: booking.totalPrice,
-            currency: booking.currency || 'USD',
-            status: 'test',
-            flightData: booking.flightData,
-            passengerDetails: (booking.passengerDetails as any[]) || [],
-            createdAt: booking.createdAt?.toString() || new Date().toISOString(),
-          }).catch(err => console.error("[EMAIL] Background send failed:", err));
-
-          const testSuccessUrl = `${req.protocol}://${req.get('host')}/checkout/success?bookingId=${booking.id}&test=true`;
-          return res.status(201).json({ 
-            booking: { ...booking, status: 'test' }, 
-            checkoutUrl: testSuccessUrl,
-            testMode: true,
-            message: "Test mode: no real payment processed" 
-          });
-        }
 
         const flightInfo = bookingData.flightData || {};
         const session = await stripeService.createFlightCheckoutSession(
@@ -441,7 +415,7 @@ export function registerRoutes(app: Express) {
             .set({ stripePaymentIntentId: session.id })
             .where(eq(bookings.id, booking.id));
 
-        res.status(201).json({ booking, checkoutUrl: session.url });
+        res.status(201).json({ booking, checkoutUrl: session.url, testMode: isTestModeActive });
 
     } catch (error) {
         console.error("Booking creation error:", error);
@@ -757,9 +731,8 @@ export function registerRoutes(app: Express) {
       }
 
       const paymentId = booking.stripePaymentIntentId;
-      const isTestPayment = !paymentId || paymentId.includes('_test_') || paymentId.startsWith('test_');
 
-      if (paymentId && !isTestPayment) {
+      if (paymentId) {
         try {
           const { getUncachableStripeClient } = await import('./stripeClient');
           const stripe = await getUncachableStripeClient();

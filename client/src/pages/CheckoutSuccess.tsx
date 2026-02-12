@@ -223,7 +223,6 @@ export default function CheckoutSuccess() {
 
   const searchParams = new URLSearchParams(window.location.search);
   const bookingId = parseInt(searchParams.get("bookingId") || "0", 10);
-  const isTestMode = searchParams.get("test") === "true";
 
   const { data: booking, isLoading, error, refetch } = useBooking(bookingId);
   const emailSentRef = useRef(false);
@@ -238,7 +237,7 @@ export default function CheckoutSuccess() {
     if (booking && bookingId && !verifiedRef.current) {
       verifiedRef.current = true;
 
-      if (isTestMode || booking.status === 'confirmed') {
+      if (booking.status === 'confirmed') {
         if (!emailSentRef.current) {
           emailSentRef.current = true;
           fetch(`/api/bookings/${bookingId}/send-confirmation`, { method: "POST" })
@@ -250,12 +249,17 @@ export default function CheckoutSuccess() {
           .then(data => {
             if (data.verified) {
               refetch();
+              if (!emailSentRef.current) {
+                emailSentRef.current = true;
+                fetch(`/api/bookings/${bookingId}/send-confirmation`, { method: "POST" })
+                  .catch(() => {});
+              }
             }
           })
           .catch(() => {});
       }
     }
-  }, [booking, bookingId, isTestMode, refetch]);
+  }, [booking, bookingId, refetch]);
 
   const handleCopyRef = () => {
     if (booking?.referenceCode) {
