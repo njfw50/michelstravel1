@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plane, Info, XCircle, Users } from "lucide-react";
+import { Armchair, Info, XCircle, Users, ChevronRight } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -100,7 +100,6 @@ export default function SeatMap({ offerId, onSeatSelected, passengerCount }: Sea
   const segments = data?.seatMaps ?? [];
   const effectiveSegmentId = activeSegmentId ?? segments[0]?.segmentId ?? "";
   const segmentIndex = segments.findIndex((s) => s.segmentId === effectiveSegmentId);
-  const segmentLabel = segmentIndex >= 0 ? segmentIndex + 1 : 1;
 
   const handleSeatClick = useCallback(
     (seat: SeatData, segmentId: string) => {
@@ -168,14 +167,14 @@ export default function SeatMap({ offerId, onSeatSelected, passengerCount }: Sea
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Plane className="h-4 w-4" />
+      <Card className="border border-gray-200 shadow-sm rounded-2xl">
+        <CardHeader className="border-b border-gray-100 gap-2">
+          <CardTitle className="flex items-center gap-2 text-gray-900">
+            <Armchair className="h-5 w-5 text-blue-500" />
             {t("seatmap.title") || "Seat Selection"}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <div className="space-y-3">
             <Skeleton className="h-8 w-full" />
             <Skeleton className="h-64 w-full" />
@@ -188,19 +187,26 @@ export default function SeatMap({ offerId, onSeatSelected, passengerCount }: Sea
 
   if (isError || !data?.available || !data?.seatMaps?.length) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Plane className="h-4 w-4" />
+      <Card className="border border-gray-200 shadow-sm rounded-2xl">
+        <CardHeader className="border-b border-gray-100 gap-2">
+          <CardTitle className="flex items-center gap-2 text-gray-900">
+            <Armchair className="h-5 w-5 text-blue-500" />
             {t("seatmap.title") || "Seat Selection"}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <div className="flex flex-col items-center gap-3 py-8 text-center" data-testid="seatmap-unavailable">
-            <Info className="h-8 w-8 text-gray-400" />
-            <p className="text-sm text-gray-500">
-              {t("seatmap.unavailable") || "Seat map is not available for this flight. Seats will be assigned at check-in."}
-            </p>
+            <div className="h-14 w-14 rounded-full bg-gray-100 flex items-center justify-center">
+              <Armchair className="h-7 w-7 text-gray-300" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-1">
+                {t("seatmap.unavailable_title") || "Seat selection unavailable"}
+              </p>
+              <p className="text-xs text-gray-400 max-w-xs">
+                {t("seatmap.unavailable") || "Seats will be automatically assigned at check-in. You can request specific seats at the airport."}
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -214,89 +220,122 @@ export default function SeatMap({ offerId, onSeatSelected, passengerCount }: Sea
     return { segment: seg, segIndex: idx, entries };
   });
 
+  const seatsSelectedCount = selectedSeats.size;
+  const totalSeatsNeeded = passengerCount * segments.length;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Plane className="h-4 w-4" />
-          {t("seatmap.title") || "Seat Selection"}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2" data-testid="seatmap-passenger-indicator">
-          <Users className="h-4 w-4 text-blue-600" />
-          <span className="text-sm font-medium text-blue-700">
-            {t("seatmap.select_for") || "Select seat for"}{" "}
-            {t("seatmap.passenger") || "Passenger"} {currentPassenger + 1}
-            {segments.length > 1 && (
-              <> on Segment {segmentLabel}</>
-            )}
+    <Card className="border border-gray-200 shadow-sm rounded-2xl">
+      <CardHeader className="border-b border-gray-100 gap-2">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <CardTitle className="flex items-center gap-2 text-gray-900">
+            <Armchair className="h-5 w-5 text-blue-500" />
+            {t("seatmap.title") || "Seat Selection"}
+          </CardTitle>
+          <span className="text-xs text-gray-400">
+            {t("seatmap.optional") || "Optional"}
           </span>
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 md:p-6 space-y-5">
+        <div className="flex items-center gap-3 rounded-xl bg-blue-50 border border-blue-100 px-4 py-3" data-testid="seatmap-passenger-indicator">
+          <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+            <span className="text-sm font-bold text-blue-600">{currentPassenger + 1}</span>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-blue-800">
+              {t("seatmap.selecting_for") || "Selecting seat for"}{" "}
+              {t("booking.passenger") || "Passenger"} {currentPassenger + 1}
+            </p>
+            {segments.length > 1 && (
+              <p className="text-xs text-blue-500">
+                {t("seatmap.flight_segment") || "Flight"} {(segmentIndex >= 0 ? segmentIndex : 0) + 1} {t("seatmap.of") || "of"} {segments.length}
+              </p>
+            )}
+          </div>
         </div>
 
         {selectedSeats.size > 0 && (
           <div className="space-y-2">
-            {groupedBySegment.map(({ segment, segIndex, entries }) =>
-              entries.length > 0 ? (
-                <div key={segment.segmentId} className="flex flex-wrap gap-2">
-                  {entries.map(([key, sel]) => {
-                    const paxNum = parseInt(key.split("-seg-")[0].replace("pax-", "")) + 1;
-                    return (
-                      <Badge
-                        key={key}
-                        className="gap-1 bg-blue-100 text-blue-700 border-blue-200"
-                        data-testid={`badge-selected-seat-${sel.designator}`}
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t("seatmap.your_seats") || "Your selected seats"}</p>
+            <div className="flex flex-wrap gap-2">
+              {groupedBySegment.map(({ segment, segIndex, entries }) =>
+                entries.map(([key, sel]) => {
+                  const paxNum = parseInt(key.split("-seg-")[0].replace("pax-", "")) + 1;
+                  return (
+                    <div
+                      key={key}
+                      className="inline-flex items-center gap-2 rounded-lg bg-white border border-blue-200 px-3 py-1.5 shadow-sm"
+                      data-testid={`badge-selected-seat-${sel.designator}`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-5 w-5 rounded-full bg-blue-100 flex items-center justify-center">
+                          <span className="text-[10px] font-bold text-blue-600">{paxNum}</span>
+                        </div>
+                        <span className="text-sm font-bold text-gray-900">{sel.designator}</span>
+                        {segments.length > 1 && (
+                          <span className="text-[10px] text-gray-400">
+                            ({t("seatmap.flight_short") || "Voo"} {segIndex + 1})
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className="text-gray-400 transition-colors"
+                        onClick={() => {
+                          setSelectedSeats((prev) => {
+                            const next = new Map(prev);
+                            next.delete(key);
+                            const paxIdx = parseInt(key.split("-seg-")[0].replace("pax-", ""));
+                            setCurrentPassenger(Math.min(paxIdx, passengerCount - 1));
+                            setActiveSegmentId(sel.segmentId);
+                            setTimeout(() => {
+                              onSeatSelected(Array.from(next.values()));
+                            }, 0);
+                            return next;
+                          });
+                        }}
+                        data-testid={`button-remove-seat-${sel.designator}`}
                       >
-                        P{paxNum}{segments.length > 1 && <> Seg{segIndex + 1}</>}: {sel.designator}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedSeats((prev) => {
-                              const next = new Map(prev);
-                              next.delete(key);
-                              const paxIdx = parseInt(key.split("-seg-")[0].replace("pax-", ""));
-                              setCurrentPassenger(Math.min(paxIdx, passengerCount - 1));
-                              setActiveSegmentId(sel.segmentId);
-                              setTimeout(() => {
-                                onSeatSelected(Array.from(next.values()));
-                              }, 0);
-                              return next;
-                            });
-                          }}
-                          data-testid={`button-remove-seat-${sel.designator}`}
-                        >
-                          <XCircle className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    );
-                  })}
-                </div>
-              ) : null
-            )}
+                        <XCircle className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
         )}
 
         {segments.length > 1 && (
-          <div className="flex gap-2" data-testid="seatmap-segment-tabs">
-            {segments.map((seg, idx) => (
-              <button
-                key={seg.segmentId}
-                type="button"
-                onClick={() => {
-                  setActiveSegmentId(seg.segmentId);
-                  const nextPax = findNextOpenPassenger(selectedSeats, seg.segmentId, 0, passengerCount);
-                  setCurrentPassenger(nextPax);
-                }}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                  effectiveSegmentId === seg.segmentId
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-                data-testid={`button-segment-tab-${idx + 1}`}
-              >
-                Segment {idx + 1}
-              </button>
-            ))}
+          <div className="flex gap-2 overflow-x-auto pb-1" data-testid="seatmap-segment-tabs">
+            {segments.map((seg, idx) => {
+              const isActive = effectiveSegmentId === seg.segmentId;
+              const segSeats = seatsForSegment(selectedSeats, seg.segmentId);
+              return (
+                <button
+                  key={seg.segmentId}
+                  type="button"
+                  onClick={() => {
+                    setActiveSegmentId(seg.segmentId);
+                    const nextPax = findNextOpenPassenger(selectedSeats, seg.segmentId, 0, passengerCount);
+                    setCurrentPassenger(nextPax);
+                  }}
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all whitespace-nowrap ${
+                    isActive
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                  data-testid={`button-segment-tab-${idx + 1}`}
+                >
+                  <span>{t("seatmap.flight_label") || "Flight"} {idx + 1}</span>
+                  {segSeats > 0 && (
+                    <span className={`text-[10px] rounded-full px-1.5 py-0.5 ${isActive ? "bg-white/20 text-white" : "bg-blue-100 text-blue-600"}`}>
+                      {segSeats}/{passengerCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -318,14 +357,19 @@ export default function SeatMap({ offerId, onSeatSelected, passengerCount }: Sea
 
         {selectedSeats.size > 0 && (
           <div
-            className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-4 py-3"
+            className="flex items-center justify-between rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-white px-5 py-4"
             data-testid="seatmap-total-cost"
           >
-            <span className="text-sm font-medium text-gray-700">
-              {t("seatmap.total_seat_cost") || "Total seat cost"}
-            </span>
-            <span className="text-base font-bold text-blue-700">
-              {currency} {totalSeatCost.toFixed(2)}
+            <div>
+              <p className="text-sm font-medium text-gray-700">
+                {t("seatmap.total_seat_cost") || "Total for seat selection"}
+              </p>
+              <p className="text-xs text-gray-400">
+                {seatsSelectedCount} {seatsSelectedCount === 1 ? (t("seatmap.seat") || "seat") : (t("seatmap.seats") || "seats")} {t("seatmap.selected_label") || "selected"}
+              </p>
+            </div>
+            <span className="text-lg font-bold text-blue-700">
+              {new Intl.NumberFormat("en-US", { style: "currency", currency }).format(totalSeatCost)}
             </span>
           </div>
         )}
@@ -395,15 +439,15 @@ function SeatMapGrid({
   return (
     <div className="overflow-x-auto" data-testid="seatmap-grid">
       <div className="mx-auto min-w-[280px] max-w-[360px]">
-        <div className="relative rounded-t-[80px] border-x-2 border-t-2 border-gray-300 bg-gray-50 px-4 pt-10 pb-2">
+        <div className="relative rounded-t-[80px] border-x-2 border-t-2 border-gray-200 bg-gradient-to-b from-gray-50 to-white px-4 pt-10 pb-2">
           <div className="absolute left-1/2 top-3 -translate-x-1/2">
-            <Plane className="h-5 w-5 text-gray-400 rotate-0" />
+            <Armchair className="h-5 w-5 text-gray-300" />
           </div>
 
           <div className="flex items-center justify-center gap-1 mb-3 px-2">
             <div className="flex gap-1 flex-1 justify-end">
               {LEFT_COLUMNS.map((col) => (
-                <div key={col} className="w-9 text-center text-xs font-bold text-gray-500">
+                <div key={col} className="w-9 text-center text-xs font-bold text-gray-400">
                   {col}
                 </div>
               ))}
@@ -411,7 +455,7 @@ function SeatMapGrid({
             <div className="w-6" />
             <div className="flex gap-1 flex-1">
               {RIGHT_COLUMNS.map((col) => (
-                <div key={col} className="w-9 text-center text-xs font-bold text-gray-500">
+                <div key={col} className="w-9 text-center text-xs font-bold text-gray-400">
                   {col}
                 </div>
               ))}
@@ -419,8 +463,8 @@ function SeatMapGrid({
           </div>
 
           <div className="space-y-1">
-            {allRows.map((row) => (
-              <div key={row.rowNumber} className="flex items-center justify-center gap-1 px-2">
+            {allRows.map((row, rowIdx) => (
+              <div key={`row-${row.rowNumber || rowIdx}`} className="flex items-center justify-center gap-1 px-2">
                 <div className="flex gap-1 flex-1 justify-end">
                   {LEFT_COLUMNS.map((col) => {
                     const seat = row.seatsByColumn.get(col);
@@ -437,7 +481,7 @@ function SeatMapGrid({
                     );
                   })}
                 </div>
-                <div className="w-6 text-center text-[10px] font-medium text-gray-400 shrink-0">
+                <div className="w-6 text-center text-[10px] font-medium text-gray-300 shrink-0">
                   {row.rowNumber}
                 </div>
                 <div className="flex gap-1 flex-1">
@@ -461,7 +505,7 @@ function SeatMapGrid({
           </div>
         </div>
 
-        <div className="h-4 rounded-b-xl border-x-2 border-b-2 border-gray-300 bg-gray-50" />
+        <div className="h-4 rounded-b-xl border-x-2 border-b-2 border-gray-200 bg-white" />
       </div>
     </div>
   );
@@ -482,20 +526,20 @@ function SeatButton({
 }) {
   const extra = isExtraLegroom(seat);
 
-  let className = "w-9 h-8 rounded-md text-[10px] font-medium transition-colors border-2 ";
+  let className = "w-9 h-8 rounded-md text-[10px] font-medium transition-all border ";
 
   if (!seat.available) {
-    className += "bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed";
+    className += "bg-gray-100 border-gray-200 text-gray-300 cursor-not-allowed";
   } else if (isSelected) {
-    className += "bg-blue-600 border-blue-700 text-white cursor-pointer";
+    className += "bg-blue-600 border-blue-600 text-white cursor-pointer shadow-md shadow-blue-600/20 scale-105";
   } else if (extra) {
-    className += "bg-white border-green-400 text-green-700 cursor-pointer hover:bg-green-50";
+    className += "bg-emerald-50 border-emerald-300 text-emerald-700 cursor-pointer hover:bg-emerald-100 hover:border-emerald-400";
   } else {
-    className += "bg-white border-blue-300 text-blue-600 cursor-pointer hover:bg-blue-50";
+    className += "bg-white border-gray-300 text-gray-600 cursor-pointer hover:bg-blue-50 hover:border-blue-400";
   }
 
   const priceLabel = seat.available
-    ? `${seat.currency} ${parseFloat(seat.price).toFixed(2)}`
+    ? new Intl.NumberFormat("en-US", { style: "currency", currency: seat.currency }).format(parseFloat(seat.price))
     : t("seatmap.unavailable_short") || "Unavailable";
 
   const disclosureText = seat.disclosures.length > 0 ? seat.disclosures.join(", ") : "";
@@ -514,13 +558,14 @@ function SeatButton({
           {getSeatColumn(seat.designator)}
         </button>
       </TooltipTrigger>
-      <TooltipContent>
-        <div className="text-xs space-y-0.5">
-          <div className="font-bold">
+      <TooltipContent side="top" className="bg-gray-900 text-white border-gray-800">
+        <div className="text-xs space-y-1 py-0.5">
+          <div className="font-bold text-sm">
             {t("seatmap.seat") || "Seat"} {seat.designator}
           </div>
-          <div>{priceLabel}</div>
-          {disclosureText && <div className="text-gray-400">{disclosureText}</div>}
+          <div className="text-gray-300">{priceLabel}</div>
+          {extra && <div className="text-emerald-400 text-[10px]">{t("seatmap.extra_legroom") || "Extra legroom"}</div>}
+          {disclosureText && <div className="text-gray-400 text-[10px]">{disclosureText}</div>}
         </div>
       </TooltipContent>
     </Tooltip>
@@ -529,21 +574,21 @@ function SeatButton({
 
 function SeatLegend({ t }: { t: (key: string) => string }) {
   return (
-    <div className="flex flex-wrap gap-4 text-xs text-gray-600" data-testid="seatmap-legend">
+    <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-gray-500 py-2" data-testid="seatmap-legend">
       <div className="flex items-center gap-1.5">
-        <div className="w-5 h-4 rounded border-2 border-blue-300 bg-white" />
+        <div className="w-4 h-3.5 rounded border border-gray-300 bg-white" />
         <span>{t("seatmap.available") || "Available"}</span>
       </div>
       <div className="flex items-center gap-1.5">
-        <div className="w-5 h-4 rounded border-2 border-blue-700 bg-blue-600" />
+        <div className="w-4 h-3.5 rounded bg-blue-600" />
         <span>{t("seatmap.selected") || "Selected"}</span>
       </div>
       <div className="flex items-center gap-1.5">
-        <div className="w-5 h-4 rounded border-2 border-gray-300 bg-gray-200" />
-        <span>{t("seatmap.unavailable_label") || "Unavailable"}</span>
+        <div className="w-4 h-3.5 rounded bg-gray-100 border border-gray-200" />
+        <span>{t("seatmap.unavailable_label") || "Occupied"}</span>
       </div>
       <div className="flex items-center gap-1.5">
-        <div className="w-5 h-4 rounded border-2 border-green-400 bg-white" />
+        <div className="w-4 h-3.5 rounded border border-emerald-300 bg-emerald-50" />
         <span>{t("seatmap.extra_legroom") || "Extra legroom"}</span>
       </div>
     </div>

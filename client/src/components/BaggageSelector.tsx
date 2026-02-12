@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Luggage, Plus, Minus, Package } from "lucide-react";
+import { Luggage, Plus, Minus, Package, Check } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 interface BaggageService {
@@ -126,11 +126,6 @@ export default function BaggageSelector({
     return text;
   };
 
-  const getTypeIcon = (type: string) => {
-    if (type === "carry_on") return <Package className="h-5 w-5 text-blue-500" />;
-    return <Luggage className="h-5 w-5 text-blue-500" />;
-  };
-
   const getTypeLabel = (type: string) => {
     if (type === "carry_on") return t("baggage.carry_on");
     return t("baggage.checked");
@@ -139,7 +134,7 @@ export default function BaggageSelector({
   if (isLoading) {
     return (
       <Card className="border border-gray-200 shadow-sm rounded-2xl" data-testid="baggage-selector-loading">
-        <CardHeader className="border-b border-gray-200 gap-2">
+        <CardHeader className="border-b border-gray-100 gap-2">
           <CardTitle className="flex items-center gap-2 text-gray-900">
             <Luggage className="h-5 w-5 text-blue-500" />
             {t("baggage.title")}
@@ -157,7 +152,7 @@ export default function BaggageSelector({
   if (isError) {
     return (
       <Card className="border border-gray-200 shadow-sm rounded-2xl" data-testid="baggage-selector-error">
-        <CardHeader className="border-b border-gray-200 gap-2">
+        <CardHeader className="border-b border-gray-100 gap-2">
           <CardTitle className="flex items-center gap-2 text-gray-900">
             <Luggage className="h-5 w-5 text-blue-500" />
             {t("baggage.title")}
@@ -175,25 +170,28 @@ export default function BaggageSelector({
   if (baggageServices.length === 0) {
     return (
       <Card className="border border-gray-200 shadow-sm rounded-2xl" data-testid="baggage-selector-empty">
-        <CardHeader className="border-b border-gray-200 gap-2">
-          <CardTitle className="flex items-center gap-2 text-gray-900">
-            <Luggage className="h-5 w-5 text-blue-500" />
-            {t("baggage.title")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          {totalIncluded > 0 && (
-            <div className="flex items-center gap-2 mb-3">
+        <CardHeader className="border-b border-gray-100 gap-2">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <CardTitle className="flex items-center gap-2 text-gray-900">
+              <Luggage className="h-5 w-5 text-blue-500" />
+              {t("baggage.title")}
+            </CardTitle>
+            {totalIncluded > 0 && (
               <Badge className="bg-emerald-50 text-emerald-600 border-emerald-200 text-xs">
+                <Check className="h-3 w-3 mr-1" />
                 {tReplace("baggage.bags_included", { count: totalIncluded })}
               </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4 text-gray-500" data-testid="text-baggage-included-only">
+            <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+              <Package className="h-6 w-6 text-gray-300" />
             </div>
-          )}
-          <div className="flex items-center gap-3 text-gray-500" data-testid="text-baggage-included-only">
-            <Package className="h-5 w-5 text-gray-400" />
             <div>
               <p className="text-sm font-medium text-gray-700">{t("baggage.included_only")}</p>
-              <p className="text-xs text-gray-400">{t("baggage.included_only_desc")}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{t("baggage.included_only_desc")}</p>
             </div>
           </div>
         </CardContent>
@@ -203,41 +201,46 @@ export default function BaggageSelector({
 
   return (
     <Card className="border border-gray-200 shadow-sm rounded-2xl" data-testid="baggage-selector">
-      <CardHeader className="border-b border-gray-200 gap-2">
-        <CardTitle className="flex items-center gap-2 text-gray-900">
-          <Luggage className="h-5 w-5 text-blue-500" />
-          {t("baggage.title")}
-        </CardTitle>
+      <CardHeader className="border-b border-gray-100 gap-2">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <CardTitle className="flex items-center gap-2 text-gray-900">
+            <Luggage className="h-5 w-5 text-blue-500" />
+            {t("baggage.title")}
+          </CardTitle>
+          <span className="text-xs text-gray-400">
+            {t("baggage.optional") || "Optional"}
+          </span>
+        </div>
       </CardHeader>
       <CardContent className="p-4 md:p-6 space-y-5">
         {totalIncluded > 0 && (
-          <div className="flex items-center gap-2">
-            <Badge className="bg-emerald-50 text-emerald-600 border-emerald-200 text-xs" data-testid="badge-included-baggage">
+          <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-2.5">
+            <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+            <span className="text-sm text-emerald-700" data-testid="badge-included-baggage">
               {tReplace("baggage.bags_included", { count: totalIncluded })}
-            </Badge>
+            </span>
           </div>
         )}
 
         {Object.entries(grouped).map(([type, services]) => (
           <div key={type} className="space-y-3" data-testid={`baggage-group-${type}`}>
-            <div className="flex items-center gap-2">
-              {getTypeIcon(type)}
-              <span className="text-sm font-bold text-gray-900">{getTypeLabel(type)}</span>
-            </div>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{getTypeLabel(type)}</p>
 
             {services.map((service) => (
               <div
                 key={service.id}
-                className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-3"
+                className="rounded-xl border border-gray-200 bg-white overflow-hidden"
                 data-testid={`baggage-service-${service.id}`}
               >
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2">
-                    {getTypeIcon(type)}
+                <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100 flex-wrap gap-2">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                      {type === "carry_on" ? <Package className="h-5 w-5 text-blue-500" /> : <Luggage className="h-5 w-5 text-blue-500" />}
+                    </div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">{getTypeLabel(type)}</p>
                       {service.metadata?.maximum_weight_kg && (
-                        <p className="text-xs text-gray-500" data-testid={`text-weight-${service.id}`}>
+                        <p className="text-xs text-gray-400" data-testid={`text-weight-${service.id}`}>
                           {tReplace("baggage.weight", { weight: service.metadata.maximum_weight_kg })}
                         </p>
                       )}
@@ -251,9 +254,7 @@ export default function BaggageSelector({
                   </div>
                 </div>
 
-                <Separator className="bg-gray-200" />
-
-                <div className="space-y-2">
+                <div className="px-4 py-3 space-y-2.5">
                   {Array.from({ length: passengerCount }).map((_, paxIdx) => {
                     const key = getKey(service.id, paxIdx);
                     const qty = quantities[key] || 0;
@@ -263,9 +264,14 @@ export default function BaggageSelector({
                         className="flex items-center justify-between flex-wrap gap-2"
                         data-testid={`baggage-passenger-row-${service.id}-${paxIdx}`}
                       >
-                        <span className="text-xs text-gray-600">
-                          {tReplace("baggage.passenger", { index: paxIdx + 1 })}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center">
+                            <span className="text-[10px] font-bold text-gray-500">{paxIdx + 1}</span>
+                          </div>
+                          <span className="text-sm text-gray-600">
+                            {t("booking.passenger") || "Passenger"} {paxIdx + 1}
+                          </span>
+                        </div>
                         <div className="flex items-center gap-2">
                           <Button
                             type="button"
@@ -304,15 +310,15 @@ export default function BaggageSelector({
         ))}
 
         {totalExtraCost > 0 && (
-          <>
-            <Separator className="bg-gray-200" />
-            <div className="flex items-center justify-between" data-testid="baggage-total">
-              <span className="text-sm font-bold text-gray-700">{t("baggage.extra_total")}</span>
-              <span className="text-lg font-bold text-blue-600" data-testid="text-baggage-total-price">
-                {formatPrice(totalExtraCost, currency)}
-              </span>
+          <div className="flex items-center justify-between rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-white px-5 py-4" data-testid="baggage-total">
+            <div>
+              <p className="text-sm font-medium text-gray-700">{t("baggage.extra_total")}</p>
+              <p className="text-xs text-gray-400">{t("baggage.added_to_total") || "Added to your total"}</p>
             </div>
-          </>
+            <span className="text-lg font-bold text-blue-600" data-testid="text-baggage-total-price">
+              {formatPrice(totalExtraCost, currency)}
+            </span>
+          </div>
         )}
       </CardContent>
     </Card>

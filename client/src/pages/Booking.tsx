@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CheckCircle2, Plane, Clock, ArrowRight, Shield, Luggage, User, ChevronDown, ChevronUp, RefreshCw, X as XIcon, Briefcase, ScanLine } from "lucide-react";
+import { CheckCircle2, Plane, Clock, ArrowRight, Shield, Luggage, User, ChevronDown, ChevronUp, RefreshCw, X as XIcon, Briefcase, ScanLine, CreditCard, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
@@ -145,11 +145,11 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
         data-testid={`button-toggle-passenger-${index}`}
       >
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-500">
-            <User className="h-4 w-4" />
+          <div className="h-9 w-9 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
+            <span className="text-sm font-bold text-blue-600">{index + 1}</span>
           </div>
           <div>
-            <span className="text-gray-900 font-bold text-sm">{t("booking.passenger")} {index + 1}</span>
+            <span className="text-gray-900 font-medium text-sm">{t("booking.passenger")} {index + 1}</span>
             <Badge className="ml-2 text-[10px] bg-gray-100 text-gray-500 border-gray-200">{typeLabel}</Badge>
           </div>
         </div>
@@ -157,7 +157,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
       </button>
 
       {expanded && (
-        <div className="px-4 pb-5 space-y-4 border-t border-gray-200 pt-4">
+        <div className="px-4 pb-5 space-y-4 border-t border-gray-100 pt-4">
           <div className="flex justify-end">
             <Button
               type="button"
@@ -181,7 +181,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.given_name")} *</Label>
+              <Label className="text-gray-500 text-xs font-medium">{t("booking.given_name")} *</Label>
               <Input
                 {...register(`passengers.${index}.givenName`)}
                 className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
@@ -191,7 +191,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
               {paxErrors?.givenName && <p className="text-xs text-red-400">{paxErrors.givenName.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.family_name")} *</Label>
+              <Label className="text-gray-500 text-xs font-medium">{t("booking.family_name")} *</Label>
               <Input
                 {...register(`passengers.${index}.familyName`)}
                 className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
@@ -204,7 +204,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.date_of_birth")} *</Label>
+              <Label className="text-gray-500 text-xs font-medium">{t("booking.date_of_birth")} *</Label>
               <Input
                 {...register(`passengers.${index}.bornOn`)}
                 type="date"
@@ -214,7 +214,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
               {paxErrors?.bornOn && <p className="text-xs text-red-400">{paxErrors.bornOn.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.gender")} *</Label>
+              <Label className="text-gray-500 text-xs font-medium">{t("booking.gender")} *</Label>
               <Select
                 onValueChange={(val) => {
                   const event = { target: { name: `passengers.${index}.gender`, value: val } };
@@ -235,7 +235,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.email")} *</Label>
+              <Label className="text-gray-500 text-xs font-medium">{t("booking.email")} *</Label>
               <Input
                 {...register(`passengers.${index}.email`)}
                 type="email"
@@ -246,7 +246,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
               {paxErrors?.email && <p className="text-xs text-red-400">{paxErrors.email.message}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.phone")} *</Label>
+              <Label className="text-gray-500 text-xs font-medium">{t("booking.phone")} *</Label>
               <Input
                 {...register(`passengers.${index}.phoneNumber`)}
                 type="tel"
@@ -258,16 +258,15 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
             </div>
           </div>
 
-          <Separator className="bg-gray-200" />
-
-          <div className="space-y-3">
-            <h4 className="text-sm font-bold text-gray-600 flex items-center gap-2">
+          <div className="rounded-xl bg-gray-50 border border-gray-100 p-4 space-y-3">
+            <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
               <Briefcase className="h-4 w-4 text-blue-500" />
-              {t("booking.travel_document")} {isDocRequired && <Badge className="text-[10px] bg-red-50 text-red-600 border-red-200">{t("booking.required")}</Badge>}
+              {t("booking.travel_document")}
+              {isDocRequired && <Badge className="text-[10px] bg-red-50 text-red-600 border-red-200">{t("booking.required")}</Badge>}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.doc_type")} {isDocRequired ? "*" : ""}</Label>
+                <Label className="text-gray-500 text-xs font-medium">{t("booking.doc_type")} {isDocRequired ? "*" : ""}</Label>
                 <Select
                   defaultValue="passport"
                   onValueChange={(val) => {
@@ -288,7 +287,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.doc_number")} {isDocRequired ? "*" : ""}</Label>
+                <Label className="text-gray-500 text-xs font-medium">{t("booking.doc_number")} {isDocRequired ? "*" : ""}</Label>
                 <Input
                   {...register(`passengers.${index}.documentNumber`)}
                   className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
@@ -299,7 +298,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.doc_expiry")} {isDocRequired ? "*" : ""}</Label>
+                <Label className="text-gray-500 text-xs font-medium">{t("booking.doc_expiry")} {isDocRequired ? "*" : ""}</Label>
                 <Input
                   {...register(`passengers.${index}.documentExpiryDate`)}
                   type="date"
@@ -308,7 +307,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.nationality")}</Label>
+                <Label className="text-gray-500 text-xs font-medium">{t("booking.nationality")}</Label>
                 <Select onValueChange={(val) => {
                   const event = { target: { name: `passengers.${index}.nationality`, value: val } };
                   register(`passengers.${index}.nationality`).onChange(event);
@@ -324,7 +323,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.issuing_country")}</Label>
+                <Label className="text-gray-500 text-xs font-medium">{t("booking.issuing_country")}</Label>
                 <Select onValueChange={(val) => {
                   const event = { target: { name: `passengers.${index}.documentIssuingCountry`, value: val } };
                   register(`passengers.${index}.documentIssuingCountry`).onChange(event);
@@ -340,14 +339,15 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
             </div>
           </div>
 
-          <div className="border-t border-gray-100 pt-4">
-            <div className="flex items-center gap-2 mb-3">
+          <div className="rounded-xl bg-gray-50 border border-gray-100 p-4 space-y-3">
+            <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
               <Briefcase className="h-4 w-4 text-blue-500" />
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("booking.loyalty_program") || "Frequent Flyer"}</span>
-            </div>
+              {t("booking.loyalty_program") || "Frequent Flyer"}
+              <span className="text-xs text-gray-400 font-normal ml-1">({t("booking.optional") || "optional"})</span>
+            </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.loyalty_airline") || "Airline Program"}</Label>
+                <Label className="text-gray-500 text-xs font-medium">{t("booking.loyalty_airline") || "Airline Program"}</Label>
                 <Input
                   {...register(`passengers.${index}.loyaltyProgram`)}
                   className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
@@ -356,7 +356,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.loyalty_number") || "Member Number"}</Label>
+                <Label className="text-gray-500 text-xs font-medium">{t("booking.loyalty_number") || "Member Number"}</Label>
                 <Input
                   {...register(`passengers.${index}.loyaltyNumber`)}
                   className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
@@ -375,7 +375,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
 function SegmentDetail({ segment, t }: { segment: any; t: any }) {
   const dur = segment.duration?.startsWith("P") ? formatDuration(segment.duration) : segment.duration;
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-gray-200 last:border-0">
+    <div className="flex items-center gap-3 py-3 border-b border-gray-100 last:border-0">
       <div className="flex-1">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="text-center min-w-[60px]">
@@ -384,7 +384,7 @@ function SegmentDetail({ segment, t }: { segment: any; t: any }) {
             {segment.originTerminal && <div className="text-[10px] text-gray-400">T{segment.originTerminal}</div>}
           </div>
           <div className="flex flex-col items-center px-2 flex-1 max-w-[120px]">
-            <div className="text-[10px] text-gray-500 flex items-center gap-1">
+            <div className="text-[10px] text-gray-400 flex items-center gap-1">
               <Clock className="h-2.5 w-2.5" />{dur}
             </div>
             <div className="w-full h-[1px] bg-gray-200 my-1 relative">
@@ -553,27 +553,29 @@ export default function Booking() {
   const grandTotal = (flight?.price || 0) + seatExtras + baggageExtras;
 
   return (
-    <div className="min-h-screen py-12 px-4">
-      <div className="container mx-auto max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold font-display text-gray-900 mb-2" data-testid="text-booking-title">{t("booking.title")}</h1>
-          <p className="text-gray-500">{t("booking.subtitle")}</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto max-w-6xl px-4 py-8 md:py-10">
+          <h1 className="text-2xl md:text-3xl font-bold font-display text-gray-900 mb-1" data-testid="text-booking-title">{t("booking.title")}</h1>
+          <p className="text-gray-400 text-sm">{t("booking.subtitle")}</p>
         </div>
-        
+      </div>
+      
+      <div className="container mx-auto max-w-6xl px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <Card className="border border-gray-200 shadow-sm rounded-2xl">
-                <CardHeader className="border-b border-gray-200 gap-2">
+              <Card className="border border-gray-200 shadow-sm rounded-2xl bg-white">
+                <CardHeader className="border-b border-gray-100 gap-2">
                   <CardTitle className="flex items-center gap-2 text-gray-900">
                     <User className="h-5 w-5 text-blue-500" />
                     {t("booking.contact_info")}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-6 space-y-4">
+                <CardContent className="p-5 md:p-6 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.contact_email")} *</Label>
+                      <Label className="text-gray-500 text-xs font-medium">{t("booking.contact_email")} *</Label>
                       <Input
                         {...form.register("contactEmail")}
                         type="email"
@@ -586,7 +588,7 @@ export default function Booking() {
                       )}
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.contact_phone")} *</Label>
+                      <Label className="text-gray-500 text-xs font-medium">{t("booking.contact_phone")} *</Label>
                       <Input
                         {...form.register("contactPhone")}
                         type="tel"
@@ -602,13 +604,17 @@ export default function Booking() {
                 </CardContent>
               </Card>
 
-              <Card className="border border-gray-200 shadow-sm rounded-2xl">
-                <CardHeader className="border-b border-gray-200 gap-2">
-                  <CardTitle className="flex items-center gap-2 text-gray-900">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                    {t("booking.passenger_details")}
-                    <Badge className="ml-auto text-xs bg-gray-100 text-gray-500 border-gray-200">{totalPassengers} {totalPassengers > 1 ? t("booking.passengers_label") : t("booking.passenger")}</Badge>
-                  </CardTitle>
+              <Card className="border border-gray-200 shadow-sm rounded-2xl bg-white">
+                <CardHeader className="border-b border-gray-100 gap-2">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <CardTitle className="flex items-center gap-2 text-gray-900">
+                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                      {t("booking.passenger_details")}
+                    </CardTitle>
+                    <span className="text-xs text-gray-400">
+                      {totalPassengers} {totalPassengers > 1 ? t("booking.passengers_label") : t("booking.passenger")}
+                    </span>
+                  </div>
                 </CardHeader>
                 <CardContent className="p-4 space-y-3">
                   {fields.map((field, index) => (
@@ -644,212 +650,217 @@ export default function Booking() {
                 />
               )}
 
-              <Button 
-                type="submit" 
-                className="w-full h-14 text-base font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all border-0 text-white rounded-xl" 
-                disabled={createBooking.isPending || !flight}
-                data-testid="button-pay"
-              >
-                {createBooking.isPending ? t("booking.processing") : `${t("booking.pay")} ${flight ? new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(grandTotal) : '...'}`}
-              </Button>
+              <div className="space-y-3">
+                <Button 
+                  type="submit" 
+                  className="w-full h-14 text-base font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all border-0 text-white rounded-xl gap-2" 
+                  disabled={createBooking.isPending || !flight}
+                  data-testid="button-pay"
+                >
+                  <CreditCard className="h-5 w-5" />
+                  {createBooking.isPending ? t("booking.processing") : `${t("booking.pay")} ${flight ? new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(grandTotal) : '...'}`}
+                </Button>
+                <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
+                  <Lock className="h-3 w-3" />
+                  <span>{t("booking.secure_stripe") || "Secure payment processed by Stripe"}</span>
+                </div>
+              </div>
             </form>
           </div>
 
           <div className="space-y-6">
-            <Card className="border border-gray-200 shadow-sm rounded-2xl">
-              <CardHeader className="border-b border-gray-200 gap-2">
-                <CardTitle className="text-lg text-gray-900">{t("booking.flight_summary")}</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-5">
-                {flight ? (
-                <>
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 bg-gray-50 rounded-full flex items-center justify-center overflow-hidden p-2 border border-gray-200 shadow-inner">
-                      {flight.logoUrl ? <img src={flight.logoUrl} className="w-full h-full object-contain" alt={flight.airline} /> : <Plane className="h-5 w-5 text-gray-400" />}
-                    </div>
-                    <div>
-                      <div className="font-bold text-gray-900" data-testid="text-airline">{flight.airline}</div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="secondary" className="bg-blue-50 text-blue-600 border border-blue-100 text-xs">
-                          {flight.flightNumber}
-                        </Badge>
-                        {cabinClassName && (
-                          <Badge variant="secondary" className="bg-blue-50 text-blue-600 border border-blue-100 text-xs">
-                            {cabinClassName}
-                          </Badge>
-                        )}
+            <div className="lg:sticky lg:top-6 space-y-5">
+              <Card className="border border-gray-200 shadow-sm rounded-2xl bg-white">
+                <CardHeader className="border-b border-gray-100 gap-2">
+                  <CardTitle className="text-lg text-gray-900">{t("booking.flight_summary")}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-5 md:p-6 space-y-5">
+                  {flight ? (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden p-2 border border-gray-200">
+                        {flight.logoUrl ? <img src={flight.logoUrl} className="w-full h-full object-contain" alt={flight.airline} /> : <Plane className="h-5 w-5 text-gray-400" />}
+                      </div>
+                      <div>
+                        <div className="font-bold text-gray-900" data-testid="text-airline">{flight.airline}</div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs text-gray-400">{flight.flightNumber}</span>
+                          {cabinClassName && (
+                            <span className="text-xs text-gray-400"> - {cabinClassName}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {fareBrand && (
-                    <div className="text-xs text-gray-400 px-1">{t("booking.fare_brand")}: <span className="text-gray-600 font-medium">{fareBrand}</span></div>
-                  )}
+                    {fareBrand && (
+                      <div className="text-xs text-gray-400">{t("booking.fare_brand")}: <span className="text-gray-600 font-medium">{fareBrand}</span></div>
+                    )}
 
-                  {flight.slices && flight.slices.length > 0 ? (
-                    flight.slices.map((slice, si) => (
-                      <div key={si} className="bg-gray-50 rounded-xl p-4 border border-gray-200 space-y-2">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge className="text-[10px] bg-gray-100 text-gray-500 border-gray-200">
-                            {si === 0 ? t("booking.outbound") : t("booking.return_flight")}
-                          </Badge>
-                          <span className="text-xs text-gray-400">
-                            {slice.originCode} <ArrowRight className="h-3 w-3 inline" /> {slice.destinationCode}
-                          </span>
+                    {flight.slices && flight.slices.length > 0 ? (
+                      flight.slices.map((slice, si) => (
+                        <div key={si} className="bg-gray-50 rounded-xl p-4 border border-gray-100 space-y-2">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <span className="text-xs font-medium text-gray-500">
+                              {si === 0 ? t("booking.outbound") : t("booking.return_flight")}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {slice.originCode} <ArrowRight className="h-3 w-3 inline" /> {slice.destinationCode}
+                            </span>
+                          </div>
+                          {slice.segments.map((seg, segi) => (
+                            <SegmentDetail key={segi} segment={seg} t={t} />
+                          ))}
+                          {slice.segments.length > 1 && (
+                            <div className="text-[10px] text-blue-500 text-center pt-1">
+                              {slice.segments.length - 1} {t("booking.connection")}
+                            </div>
+                          )}
                         </div>
-                        {slice.segments.map((seg, segi) => (
-                          <SegmentDetail key={segi} segment={seg} t={t} />
+                      ))
+                    ) : (
+                      <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                        <div className="flex justify-between items-center mb-3">
+                          <div className="text-center">
+                            <div className="text-xl font-bold text-gray-900">{format(parseISO(flight.departureTime), "HH:mm")}</div>
+                            <div className="text-xs text-gray-500 font-medium uppercase">{flight.originCode || "DEP"}</div>
+                            {flight.originCity && <div className="text-[10px] text-gray-400">{flight.originCity}</div>}
+                          </div>
+                          <div className="flex flex-col items-center px-3">
+                            <div className="text-xs text-gray-400 flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {flight.duration.startsWith("P") ? formatDuration(flight.duration) : flight.duration}
+                            </div>
+                            <ArrowRight className="h-4 w-4 text-blue-500 my-1" />
+                            <div className={`text-xs font-medium ${flight.stops === 0 ? "text-emerald-600" : "text-blue-500"}`}>
+                              {stopsLabel}
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-xl font-bold text-gray-900">{format(parseISO(flight.arrivalTime), "HH:mm")}</div>
+                            <div className="text-xs text-gray-500 font-medium uppercase">{flight.destinationCode || "ARR"}</div>
+                            {flight.destinationCity && <div className="text-[10px] text-gray-400">{flight.destinationCity}</div>}
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-400 text-center">
+                          {format(parseISO(flight.departureTime), "EEEE, MMMM d, yyyy")}
+                        </div>
+                      </div>
+                    )}
+
+                    {firstPaxBaggage.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-gray-500 flex items-center gap-2">
+                          <Luggage className="h-3.5 w-3.5 text-blue-500" /> {t("booking.baggage_included")}
+                        </p>
+                        {firstPaxBaggage.map((bag: any, bi: number) => (
+                          <div key={bi} className="flex items-center gap-2 text-sm text-gray-600">
+                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            {bag.quantity}x {bag.type === "checked" ? t("booking.checked_bag") : bag.type === "carry_on" ? t("booking.carry_on") : bag.type}
+                          </div>
                         ))}
-                        {slice.segments.length > 1 && (
-                          <div className="text-[10px] text-blue-500 text-center pt-1">
-                            {slice.segments.length - 1} {t("booking.connection")}
+                      </div>
+                    )}
+
+                    {flight.conditions && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-gray-500 flex items-center gap-2">
+                          <RefreshCw className="h-3.5 w-3.5 text-blue-500" /> {t("booking.fare_conditions")}
+                        </p>
+                        {flight.conditions.changeBeforeDeparture && (
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            {flight.conditions.changeBeforeDeparture.allowed ? (
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                            ) : (
+                              <XIcon className="h-3.5 w-3.5 text-red-500" />
+                            )}
+                            {t("booking.change_allowed")}: {flight.conditions.changeBeforeDeparture.allowed ? t("booking.yes") : t("booking.no")}
+                            {flight.conditions.changeBeforeDeparture.penaltyAmount && (
+                              <span className="text-blue-500 ml-1">({flight.conditions.changeBeforeDeparture.penaltyCurrency} {flight.conditions.changeBeforeDeparture.penaltyAmount})</span>
+                            )}
+                          </div>
+                        )}
+                        {flight.conditions.refundBeforeDeparture && (
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            {flight.conditions.refundBeforeDeparture.allowed ? (
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                            ) : (
+                              <XIcon className="h-3.5 w-3.5 text-red-500" />
+                            )}
+                            {t("booking.refund_allowed")}: {flight.conditions.refundBeforeDeparture.allowed ? t("booking.yes") : t("booking.no")}
+                            {flight.conditions.refundBeforeDeparture.penaltyAmount && (
+                              <span className="text-blue-500 ml-1">({flight.conditions.refundBeforeDeparture.penaltyCurrency} {flight.conditions.refundBeforeDeparture.penaltyAmount})</span>
+                            )}
                           </div>
                         )}
                       </div>
-                    ))
-                  ) : (
-                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                      <div className="flex justify-between items-center mb-3">
-                        <div className="text-center">
-                          <div className="text-xl font-bold text-gray-900">{format(parseISO(flight.departureTime), "HH:mm")}</div>
-                          <div className="text-xs text-gray-500 font-medium uppercase">{flight.originCode || "DEP"}</div>
-                          {flight.originCity && <div className="text-[10px] text-gray-400">{flight.originCity}</div>}
-                        </div>
-                        <div className="flex flex-col items-center px-3">
-                          <div className="text-xs text-gray-500 flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {flight.duration.startsWith("P") ? formatDuration(flight.duration) : flight.duration}
-                          </div>
-                          <ArrowRight className="h-4 w-4 text-blue-500 my-1" />
-                          <div className={`text-xs font-bold ${flight.stops === 0 ? "text-emerald-600" : "text-blue-500"}`}>
-                            {stopsLabel}
-                          </div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-xl font-bold text-gray-900">{format(parseISO(flight.arrivalTime), "HH:mm")}</div>
-                          <div className="text-xs text-gray-500 font-medium uppercase">{flight.destinationCode || "ARR"}</div>
-                          {flight.destinationCity && <div className="text-[10px] text-gray-400">{flight.destinationCity}</div>}
-                        </div>
-                      </div>
-                      <div className="text-xs text-gray-400 text-center">
-                        {format(parseISO(flight.departureTime), "EEEE, MMMM d, yyyy")}
-                      </div>
-                    </div>
-                  )}
-
-                  {firstPaxBaggage.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                        <Luggage className="h-3.5 w-3.5 text-blue-500" /> {t("booking.baggage_included")}
-                      </h4>
-                      {firstPaxBaggage.map((bag: any, bi: number) => (
-                        <div key={bi} className="flex items-center gap-2 text-sm text-gray-600">
-                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                          {bag.quantity}x {bag.type === "checked" ? t("booking.checked_bag") : bag.type === "carry_on" ? t("booking.carry_on") : bag.type}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {flight.conditions && (
-                    <div className="space-y-2">
-                      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                        <RefreshCw className="h-3.5 w-3.5 text-blue-500" /> {t("booking.fare_conditions")}
-                      </h4>
-                      {flight.conditions.changeBeforeDeparture && (
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          {flight.conditions.changeBeforeDeparture.allowed ? (
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                          ) : (
-                            <XIcon className="h-3.5 w-3.5 text-red-500" />
-                          )}
-                          {t("booking.change_allowed")}: {flight.conditions.changeBeforeDeparture.allowed ? t("booking.yes") : t("booking.no")}
-                          {flight.conditions.changeBeforeDeparture.penaltyAmount && (
-                            <span className="text-blue-500 ml-1">({flight.conditions.changeBeforeDeparture.penaltyCurrency} {flight.conditions.changeBeforeDeparture.penaltyAmount})</span>
-                          )}
-                        </div>
-                      )}
-                      {flight.conditions.refundBeforeDeparture && (
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          {flight.conditions.refundBeforeDeparture.allowed ? (
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                          ) : (
-                            <XIcon className="h-3.5 w-3.5 text-red-500" />
-                          )}
-                          {t("booking.refund_allowed")}: {flight.conditions.refundBeforeDeparture.allowed ? t("booking.yes") : t("booking.no")}
-                          {flight.conditions.refundBeforeDeparture.penaltyAmount && (
-                            <span className="text-blue-500 ml-1">({flight.conditions.refundBeforeDeparture.penaltyCurrency} {flight.conditions.refundBeforeDeparture.penaltyAmount})</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  <Separator className="bg-gray-200" />
-                  
-                  <div className="space-y-2">
-                    {flight.baseAmount && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">{t("booking.base_fare")}</span>
-                        <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(parseFloat(flight.baseAmount))}</span>
-                      </div>
                     )}
-                    {flight.taxAmount && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">{t("booking.taxes")}</span>
-                        <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(parseFloat(flight.taxAmount))}</span>
-                      </div>
-                    )}
-                    {!flight.baseAmount && !flight.taxAmount && (
-                      <>
+                    
+                    <Separator className="bg-gray-100" />
+                    
+                    <div className="space-y-2">
+                      {flight.baseAmount && (
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-500">{t("booking.base_fare")}</span>
-                          <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price * 0.9)}</span>
+                          <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(parseFloat(flight.baseAmount))}</span>
                         </div>
+                      )}
+                      {flight.taxAmount && (
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-500">{t("booking.taxes")}</span>
-                          <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price * 0.1)}</span>
+                          <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(parseFloat(flight.taxAmount))}</span>
                         </div>
-                      </>
-                    )}
-                    {totalPassengers > 1 && (
-                      <div className="flex justify-between text-xs text-gray-400">
-                        <span>{t("booking.per_passenger")}</span>
-                        <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price / totalPassengers)}</span>
-                      </div>
-                    )}
-                    {seatExtras > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">{t("booking.seat_selection") || "Seat Selection"}</span>
-                        <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(seatExtras)}</span>
-                      </div>
-                    )}
-                    {baggageExtras > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">{t("booking.extra_baggage") || "Extra Baggage"}</span>
-                        <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(baggageExtras)}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <Separator className="bg-gray-200" />
-                  
-                  <div className="flex justify-between text-xl font-bold">
-                    <span className="text-gray-900">{t("booking.total")}</span>
-                    <span className="text-blue-600" data-testid="text-total-price">
-                      {new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(grandTotal)}
-                    </span>
-                  </div>
-                </>
-                ) : (
-                  <div className="text-center py-4 text-gray-400">{t("booking.loading")}</div>
-                )}
-              </CardContent>
-            </Card>
+                      )}
+                      {!flight.baseAmount && !flight.taxAmount && (
+                        <>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-500">{t("booking.base_fare")}</span>
+                            <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price * 0.9)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-500">{t("booking.taxes")}</span>
+                            <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price * 0.1)}</span>
+                          </div>
+                        </>
+                      )}
+                      {totalPassengers > 1 && (
+                        <div className="flex justify-between text-xs text-gray-400">
+                          <span>{t("booking.per_passenger")}</span>
+                          <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price / totalPassengers)}</span>
+                        </div>
+                      )}
+                      {seatExtras > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">{t("booking.seat_selection") || "Seat Selection"}</span>
+                          <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(seatExtras)}</span>
+                        </div>
+                      )}
+                      {baggageExtras > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">{t("booking.extra_baggage") || "Extra Baggage"}</span>
+                          <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(baggageExtras)}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <Separator className="bg-gray-100" />
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-base font-bold text-gray-900">{t("booking.total")}</span>
+                      <span className="text-xl font-bold text-blue-600" data-testid="text-total-price">
+                        {new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(grandTotal)}
+                      </span>
+                    </div>
+                  </>
+                  ) : (
+                    <div className="text-center py-4 text-gray-400">{t("booking.loading")}</div>
+                  )}
+                </CardContent>
+              </Card>
 
-            <div className="bg-emerald-50 p-4 rounded-xl flex gap-3 text-emerald-700 text-sm border border-emerald-200">
-              <Shield className="h-5 w-5 shrink-0 text-emerald-500" />
-              <p>{t("booking.secure_payment")}</p>
+              <div className="bg-emerald-50 p-4 rounded-xl flex gap-3 text-emerald-700 text-sm border border-emerald-100">
+                <Shield className="h-5 w-5 shrink-0 text-emerald-500" />
+                <p className="text-xs leading-relaxed">{t("booking.secure_payment")}</p>
+              </div>
             </div>
           </div>
         </div>
