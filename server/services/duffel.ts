@@ -625,6 +625,111 @@ export async function searchPlaces(query: string) {
   }
 }
 
+export async function getSeatMap(offerId: string): Promise<any> {
+  try {
+    const token = getActiveToken();
+    if (!token) return null;
+
+    const response = await fetch(`${DUFFEL_BASE}/air/seat_maps?offer_id=${offerId}`, {
+      headers: headers(),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      console.error(`Duffel Seat Map API error: ${response.status}`, body);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("Duffel getSeatMap Error:", error);
+    return null;
+  }
+}
+
+export async function getOfferServices(offerId: string): Promise<any[]> {
+  try {
+    const token = getActiveToken();
+    if (!token) return [];
+
+    const duffel = getActiveDuffelClient();
+    const response = await fetch(
+      `${DUFFEL_BASE}/air/offers/${offerId}/available_services`,
+      { headers: headers() }
+    );
+
+    if (!response.ok) {
+      const body = await response.text();
+      console.error(`Duffel Services API error: ${response.status}`, body);
+      return [];
+    }
+
+    const data = await response.json();
+    return (data.data || []).map((service: any) => ({
+      id: service.id,
+      type: service.type,
+      totalAmount: service.total_amount,
+      totalCurrency: service.total_currency,
+      maxQuantity: service.maximum_quantity || 1,
+      passengerIds: service.passenger_ids || [],
+      segmentIds: service.segment_ids || [],
+      metadata: service.metadata || {},
+    }));
+  } catch (error) {
+    console.error("Duffel getOfferServices Error:", error);
+    return [];
+  }
+}
+
+export async function cancelDuffelOrder(orderId: string): Promise<{ refundAmount?: string; refundCurrency?: string; success: boolean }> {
+  try {
+    const token = getActiveToken();
+    if (!token) return { success: false };
+
+    const duffel = getActiveDuffelClient();
+
+    const cancellation = await duffel.orderCancellations.create({
+      order_id: orderId,
+    });
+
+    const refundAmount = (cancellation.data as any).refund_amount;
+    const refundCurrency = (cancellation.data as any).refund_currency;
+
+    await duffel.orderCancellations.confirm(cancellation.data.id);
+
+    return {
+      success: true,
+      refundAmount,
+      refundCurrency,
+    };
+  } catch (error: any) {
+    console.error("Duffel cancelOrder Error:", error?.errors || error?.message || error);
+    return { success: false };
+  }
+}
+
+export async function getRefundQuote(orderId: string): Promise<{ refundAmount?: string; refundCurrency?: string; allowed: boolean }> {
+  try {
+    const token = getActiveToken();
+    if (!token) return { allowed: false };
+
+    const duffel = getActiveDuffelClient();
+    const cancellation = await duffel.orderCancellations.create({
+      order_id: orderId,
+    });
+
+    return {
+      allowed: true,
+      refundAmount: (cancellation.data as any).refund_amount,
+      refundCurrency: (cancellation.data as any).refund_currency,
+    };
+  } catch (error: any) {
+    console.error("Duffel getRefundQuote Error:", error?.errors || error?.message || error);
+    return { allowed: false };
+  }
+}
+
 export interface DuffelPassenger {
   passengerId: string;
   givenName: string;

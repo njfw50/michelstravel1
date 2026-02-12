@@ -68,6 +68,9 @@ function BookingCard({ booking, defaultExpanded = false }: { booking: Booking; d
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [copied, setCopied] = useState(false);
   const [, setLocation] = useLocation();
+  const [cancelConfirm, setCancelConfirm] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelResult, setCancelResult] = useState<{ success: boolean; message?: string; refundAmount?: string } | null>(null);
 
   const fd = booking.flightData as any;
   const passengers = booking.passengerDetails as any[];
@@ -78,6 +81,29 @@ function BookingCard({ booking, defaultExpanded = false }: { booking: Booking; d
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const handleCancel = async () => {
+    setCancelling(true);
+    try {
+      const res = await fetch(`/api/bookings/${booking.id}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      const data = await res.json();
+      setCancelResult(data);
+      if (data.success) {
+        booking.status = "cancelled";
+      }
+    } catch {
+      setCancelResult({ success: false, message: "Failed to cancel" });
+    } finally {
+      setCancelling(false);
+      setCancelConfirm(false);
+    }
+  };
+
+  const canCancel = booking.status !== "cancelled" && booking.status !== "refunded";
 
   return (
     <motion.div
@@ -234,6 +260,58 @@ function BookingCard({ booking, defaultExpanded = false }: { booking: Booking; d
                   </div>
                 </div>
               </div>
+
+              {cancelResult && (
+                <div className={`p-3 rounded-xl border text-sm ${cancelResult.success ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-red-50 border-red-200 text-red-700"}`}>
+                  <div className="flex items-center gap-2">
+                    {cancelResult.success ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                    <span className="font-medium">{cancelResult.success ? (t("trips.cancelled_success") || "Booking cancelled successfully") : (cancelResult.message || "Cancellation failed")}</span>
+                  </div>
+                  {cancelResult.refundAmount && (
+                    <div className="mt-1 text-xs">{t("trips.refund_amount") || "Refund"}: {booking.currency} {cancelResult.refundAmount}</div>
+                  )}
+                </div>
+              )}
+
+              {canCancel && !cancelResult?.success && (
+                <div className="flex items-center justify-end gap-3">
+                  {cancelConfirm ? (
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200 w-full">
+                      <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                      <span className="text-sm text-red-700 flex-1">{t("trips.cancel_confirm") || "Are you sure you want to cancel this booking?"}</span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setCancelConfirm(false)}
+                        className="border-gray-200"
+                        data-testid={`button-cancel-no-${booking.id}`}
+                      >
+                        {t("booking.no") || "No"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleCancel}
+                        disabled={cancelling}
+                        className="bg-red-600 hover:bg-red-700 text-white border-0"
+                        data-testid={`button-cancel-yes-${booking.id}`}
+                      >
+                        {cancelling ? "..." : (t("trips.yes_cancel") || "Yes, Cancel")}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setCancelConfirm(true)}
+                      className="gap-2 border-red-200 text-red-600 hover:bg-red-50"
+                      data-testid={`button-cancel-booking-${booking.id}`}
+                    >
+                      <XCircle className="h-3.5 w-3.5" />
+                      {t("trips.cancel_booking") || "Cancel Booking"}
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}

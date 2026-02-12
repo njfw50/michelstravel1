@@ -391,18 +391,29 @@ export function registerRoutes(app: Express) {
           });
         }
 
-        // Production: Create real Stripe Checkout Session
+        const flightInfo = bookingData.flightData || {};
         const session = await stripeService.createFlightCheckoutSession(
             (req as any).user?.stripeCustomerId,
             price,
-            bookingData.currency,
+            bookingData.currency || 'USD',
             `${req.protocol}://${req.get('host')}/checkout/success?bookingId=${booking.id}`,
             `${req.protocol}://${req.get('host')}/checkout/cancel?bookingId=${booking.id}`,
             {
                 bookingId: booking.id,
-                origin: bookingData.flightData.origin || 'Flight',
-                destination: bookingData.flightData.destination || 'Destination',
-                contactEmail: bookingData.contactEmail
+                referenceCode: refCode,
+                origin: flightInfo.originCode || flightInfo.origin || '',
+                destination: flightInfo.destinationCode || flightInfo.destination || '',
+                airline: flightInfo.airline || '',
+                flightNumber: flightInfo.flightNumber || '',
+                departureDate: flightInfo.departureTime ? flightInfo.departureTime.split('T')[0] : '',
+                returnDate: flightInfo.slices?.[1]?.segments?.[0]?.departureTime?.split('T')[0] || '',
+                airlineLogo: flightInfo.logoUrl || '',
+                passengerCount: bookingData.passengerDetails?.length || bookingData.passengers?.length || 1,
+                cabinClass: flightInfo.cabinClass || 'economy',
+                contactEmail: bookingData.contactEmail,
+                contactPhone: bookingData.contactPhone || '',
+                passengers: bookingData.passengerDetails || bookingData.passengers || [],
+                locale: bookingData.locale || 'auto',
             }
         );
 
@@ -495,6 +506,141 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Get booking error:", error);
       res.status(500).json({ error: "Failed to fetch booking" });
+    }
+  });
+
+  // === SEAT MAP & SERVICES ROUTES ===
+
+  app.get('/api/flights/:offerId/seat-map', async (req, res) => {
+    try {
+      const { getSeatMap } = await import('./services/duffel');
+      const seatMap = await getSeatMap(req.params.offerId);
+      if (!seatMap) {
+        return res.json({ available: false, cabins: [] });
+      }
+
+      const processed = seatMap.map((sm: any) => ({
+        sliceId: sm.slice_id,
+        segmentId: sm.segment_id,
+        cabins: (sm.cabins || []).map((cabin: any) => ({
+          deckType: cabin.deck || 'main',
+          wings: cabin.wings || null,
+          rows: (cabin.rows || []).map((row: any) => ({
+            sectionNumber: row.sections?.[0]?.number || null,
+            seats: (row.sections || []).flatMap((section: any) =>
+              (section.elements || []).filter((el: any) => el.type === 'seat').map((seat: any) => ({
+                id: seat.designator,
+                designator: seat.designator,
+                available: seat.available_services?.length > 0,
+                type: seat.type || 'standard',
+                disclosures: seat.disclosures || [],
+                price: seat.available_services?.[0]?.total_amount || null,
+                currency: seat.available_services?.[0]?.total_currency || null,
+                serviceId: seat.available_services?.[0]?.id || null,
+              }))
+            ),
+          })),
+        })),
+      }));
+
+      res.json({ available: true, seatMaps: processed });
+    } catch (error) {
+      console.error("Seat map error:", error);
+      res.json({ available: false, cabins: [] });
+    }
+  });
+
+  app.get('/api/flights/:offerId/services', async (req, res) => {
+    try {
+      const { getOfferServices } = await import('./services/duffel');
+      const services = await getOfferServices(req.params.offerId);
+
+      const baggageServices = services.filter(s => s.type === 'baggage');
+      const seatServices = services.filter(s => s.type === 'seat');
+      const otherServices = services.filter(s => s.type !== 'baggage' && s.type !== 'seat');
+
+      res.json({
+        baggage: baggageServices,
+        seats: seatServices,
+        other: otherServices,
+        all: services,
+      });
+    } catch (error) {
+      console.error("Services error:", error);
+      res.json({ baggage: [], seats: [], other: [], all: [] });
+    }
+  });
+
+  app.post('/api/bookings/:id/cancel', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+
+      const booking = await storage.getBooking(id);
+      if (!booking) return res.status(404).json({ error: "Booking not found" });
+
+      const user = (req as any).user;
+      if (booking.userId && (!user || user.id !== booking.userId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      if (booking.status === 'cancelled' || booking.status === 'refunded') {
+        return res.json({ success: false, message: "Booking is already cancelled" });
+      }
+
+      const duffelOrderId = (booking.flightData as any)?.duffelOrderId;
+      let refundInfo = null;
+
+      if (duffelOrderId) {
+        const { cancelDuffelOrder } = await import('./services/duffel');
+        refundInfo = await cancelDuffelOrder(duffelOrderId);
+      }
+
+      await db.update(bookings)
+        .set({ status: 'cancelled' })
+        .where(eq(bookings.id, id));
+
+      res.json({
+        success: true,
+        message: "Booking cancelled",
+        refundAmount: refundInfo?.refundAmount || null,
+        refundCurrency: refundInfo?.refundCurrency || null,
+      });
+    } catch (error) {
+      console.error("Cancel booking error:", error);
+      res.status(500).json({ error: "Failed to cancel booking" });
+    }
+  });
+
+  app.get('/api/bookings/:id/refund-quote', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+
+      const booking = await storage.getBooking(id);
+      if (!booking) return res.status(404).json({ error: "Booking not found" });
+
+      const user = (req as any).user;
+      if (booking.userId && (!user || user.id !== booking.userId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const duffelOrderId = (booking.flightData as any)?.duffelOrderId;
+      if (!duffelOrderId) {
+        const conditions = (booking.flightData as any)?.conditions;
+        return res.json({
+          allowed: conditions?.refundBeforeDeparture?.allowed ?? false,
+          penaltyAmount: conditions?.refundBeforeDeparture?.penaltyAmount || null,
+          penaltyCurrency: conditions?.refundBeforeDeparture?.penaltyCurrency || null,
+        });
+      }
+
+      const { getRefundQuote } = await import('./services/duffel');
+      const quote = await getRefundQuote(duffelOrderId);
+      res.json(quote);
+    } catch (error) {
+      console.error("Refund quote error:", error);
+      res.status(500).json({ error: "Failed to get refund quote" });
     }
   });
 

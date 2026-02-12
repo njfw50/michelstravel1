@@ -23,6 +23,8 @@ import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { useI18n } from "@/lib/i18n";
 import { ScanDocumentDialog } from "@/components/ScanDocumentDialog";
+import SeatMap from "@/components/SeatMap";
+import BaggageSelector from "@/components/BaggageSelector";
 import type { FlightOffer } from "@shared/schema";
 
 const passengerSchema = z.object({
@@ -38,6 +40,8 @@ const passengerSchema = z.object({
   documentIssuingCountry: z.string().optional(),
   nationality: z.string().optional(),
   type: z.enum(["adult", "child", "infant_without_seat"]).default("adult"),
+  loyaltyProgram: z.string().optional(),
+  loyaltyNumber: z.string().optional(),
 });
 
 function createBookingSchema(isDocRequired: boolean) {
@@ -335,6 +339,33 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
               </div>
             </div>
           </div>
+
+          <div className="border-t border-gray-100 pt-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Briefcase className="h-4 w-4 text-blue-500" />
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{t("booking.loyalty_program") || "Frequent Flyer"}</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.loyalty_airline") || "Airline Program"}</Label>
+                <Input
+                  {...register(`passengers.${index}.loyaltyProgram`)}
+                  className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
+                  placeholder="e.g. LATAM Pass, AAdvantage"
+                  data-testid={`input-loyalty-program-${index}`}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-gray-600 text-xs font-bold uppercase tracking-wider">{t("booking.loyalty_number") || "Member Number"}</Label>
+                <Input
+                  {...register(`passengers.${index}.loyaltyNumber`)}
+                  className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
+                  placeholder="e.g. 123456789"
+                  data-testid={`input-loyalty-number-${index}`}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -385,6 +416,8 @@ export default function Booking() {
   const createBooking = useCreateBooking();
 
   const [flight, setFlight] = useState<FlightOffer | null>(null);
+  const [seatSelections, setSeatSelections] = useState<any[]>([]);
+  const [baggageSelections, setBaggageSelections] = useState<any[]>([]);
   const isDocRequired = flight?.passengerIdentityDocumentsRequired ?? false;
   const searchParams = new URLSearchParams(window.location.search);
   const numAdults = parseInt(searchParams.get("adults") || "1", 10);
@@ -408,13 +441,15 @@ export default function Booking() {
         documentIssuingCountry: "",
         nationality: "",
         type: "adult",
+        loyaltyProgram: "",
+        loyaltyNumber: "",
       });
     }
     for (let i = 0; i < numChildren; i++) {
-      pax.push({ givenName: "", familyName: "", bornOn: "", gender: "" as any, email: "", phoneNumber: "", documentType: "passport" as const, documentNumber: "", documentExpiryDate: "", documentIssuingCountry: "", nationality: "", type: "child" });
+      pax.push({ givenName: "", familyName: "", bornOn: "", gender: "" as any, email: "", phoneNumber: "", documentType: "passport" as const, documentNumber: "", documentExpiryDate: "", documentIssuingCountry: "", nationality: "", type: "child", loyaltyProgram: "", loyaltyNumber: "" });
     }
     for (let i = 0; i < numInfants; i++) {
-      pax.push({ givenName: "", familyName: "", bornOn: "", gender: "" as any, email: "", phoneNumber: "", documentType: "passport" as const, documentNumber: "", documentExpiryDate: "", documentIssuingCountry: "", nationality: "", type: "infant_without_seat" });
+      pax.push({ givenName: "", familyName: "", bornOn: "", gender: "" as any, email: "", phoneNumber: "", documentType: "passport" as const, documentNumber: "", documentExpiryDate: "", documentIssuingCountry: "", nationality: "", type: "infant_without_seat", loyaltyProgram: "", loyaltyNumber: "" });
     }
     return pax;
   };
@@ -461,7 +496,7 @@ export default function Booking() {
     const bookingData = {
       contactEmail: data.contactEmail,
       contactPhone: data.contactPhone,
-      totalPrice: flight.price.toString(),
+      totalPrice: grandTotal.toString(),
       currency: flight.currency,
       flightData: {
         id: flight.id,
@@ -473,6 +508,9 @@ export default function Booking() {
         arrivalTime: flight.arrivalTime,
         cabinClass: flight.cabinClass,
         slices: flight.slices,
+        seatSelections: seatSelections.length > 0 ? seatSelections : undefined,
+        baggageSelections: baggageSelections.filter(b => b.quantity > 0).length > 0
+          ? baggageSelections.filter(b => b.quantity > 0) : undefined,
       },
       passengerDetails,
     };
@@ -509,6 +547,10 @@ export default function Booking() {
   const firstPaxBaggage = flight?.passengers?.[0]?.baggages || [];
   const cabinClassName = flight?.passengers?.[0]?.cabinClassName || flight?.cabinClass || "Economy";
   const fareBrand = flight?.passengers?.[0]?.fareBrandName;
+
+  const seatExtras = seatSelections.reduce((sum, s) => sum + (s.price || 0), 0);
+  const baggageExtras = baggageSelections.reduce((sum, s) => sum + (s.price || 0) * (s.quantity || 0), 0);
+  const grandTotal = (flight?.price || 0) + seatExtras + baggageExtras;
 
   return (
     <div className="min-h-screen py-12 px-4">
@@ -585,13 +627,30 @@ export default function Booking() {
                 </CardContent>
               </Card>
 
+              {flight && (
+                <SeatMap
+                  offerId={flight.id}
+                  passengerCount={totalPassengers}
+                  onSeatSelected={setSeatSelections}
+                />
+              )}
+
+              {flight && (
+                <BaggageSelector
+                  offerId={flight.id}
+                  passengerCount={totalPassengers}
+                  onBaggageSelected={setBaggageSelections}
+                  includedBaggage={firstPaxBaggage}
+                />
+              )}
+
               <Button 
                 type="submit" 
                 className="w-full h-14 text-base font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all border-0 text-white rounded-xl" 
                 disabled={createBooking.isPending || !flight}
                 data-testid="button-pay"
               >
-                {createBooking.isPending ? t("booking.processing") : `${t("booking.pay")} ${flight ? new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price) : '...'}`}
+                {createBooking.isPending ? t("booking.processing") : `${t("booking.pay")} ${flight ? new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(grandTotal) : '...'}`}
               </Button>
             </form>
           </div>
@@ -759,6 +818,18 @@ export default function Booking() {
                         <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price / totalPassengers)}</span>
                       </div>
                     )}
+                    {seatExtras > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">{t("booking.seat_selection") || "Seat Selection"}</span>
+                        <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(seatExtras)}</span>
+                      </div>
+                    )}
+                    {baggageExtras > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">{t("booking.extra_baggage") || "Extra Baggage"}</span>
+                        <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(baggageExtras)}</span>
+                      </div>
+                    )}
                   </div>
                   
                   <Separator className="bg-gray-200" />
@@ -766,7 +837,7 @@ export default function Booking() {
                   <div className="flex justify-between text-xl font-bold">
                     <span className="text-gray-900">{t("booking.total")}</span>
                     <span className="text-blue-600" data-testid="text-total-price">
-                      {new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price)}
+                      {new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(grandTotal)}
                     </span>
                   </div>
                 </>

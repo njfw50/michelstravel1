@@ -2,12 +2,7 @@
 import { storage } from './storage';
 import { getUncachableStripeClient } from './stripeClient';
 
-/**
- * StripeService: Handles direct Stripe API operations
- * Pattern: Use Stripe client for write operations, storage for read operations
- */
 export class StripeService {
-  // Create customer in Stripe
   async createCustomer(email: string, userId: string) {
     const stripe = await getUncachableStripeClient();
     return await stripe.customers.create({
@@ -16,7 +11,6 @@ export class StripeService {
     });
   }
 
-  // Create checkout session
   async createCheckoutSession(customerId: string, priceId: string, successUrl: string, cancelUrl: string) {
     const stripe = await getUncachableStripeClient();
     return await stripe.checkout.sessions.create({
@@ -29,7 +23,6 @@ export class StripeService {
     });
   }
 
-  // Create checkout session for flight booking (one-time payment)
   async createFlightCheckoutSession(
     customerId: string | undefined, 
     amount: number, 
@@ -40,40 +33,71 @@ export class StripeService {
   ) {
     const stripe = await getUncachableStripeClient();
     
+    const passengerSummary = metadata.passengers 
+      ? metadata.passengers.map((p: any) => `${p.givenName} ${p.familyName}`).join(', ')
+      : '';
+
+    const flightDescription = [
+      metadata.airline ? `${metadata.airline}` : '',
+      metadata.flightNumber ? `Flight ${metadata.flightNumber}` : '',
+      metadata.origin && metadata.destination ? `${metadata.origin} → ${metadata.destination}` : '',
+      metadata.departureDate ? `Departure: ${metadata.departureDate}` : '',
+      passengerSummary ? `Passengers: ${passengerSummary}` : '',
+    ].filter(Boolean).join(' | ');
+
     const sessionConfig: any = {
-      payment_method_types: ['card'],
       line_items: [{
         price_data: {
-          currency: currency,
+          currency: currency.toLowerCase(),
           product_data: {
-            name: `Flight Booking #${metadata.bookingId}`,
-            description: `Flight from ${metadata.origin || 'Origin'} to ${metadata.destination || 'Destination'}`,
-            // images: [metadata.airlineLogo], // Optional: Add airline logo if available
+            name: `Michels Travel - ${metadata.origin || ''} → ${metadata.destination || ''}`,
+            description: flightDescription || `Flight Booking #${metadata.bookingId}`,
+            images: metadata.airlineLogo ? [metadata.airlineLogo] : [],
           },
-          unit_amount: Math.round(amount * 100), // Stripe expects cents
+          unit_amount: Math.round(amount * 100),
         },
         quantity: 1,
       }],
       mode: 'payment',
       success_url: successUrl,
       cancel_url: cancelUrl,
-      metadata: metadata,
-      client_reference_id: metadata.bookingId.toString(),
+      metadata: {
+        bookingId: String(metadata.bookingId),
+        referenceCode: metadata.referenceCode || '',
+        origin: metadata.origin || '',
+        destination: metadata.destination || '',
+        airline: metadata.airline || '',
+        flightNumber: metadata.flightNumber || '',
+        departureDate: metadata.departureDate || '',
+        returnDate: metadata.returnDate || '',
+        passengerCount: String(metadata.passengerCount || 1),
+        cabinClass: metadata.cabinClass || 'economy',
+        contactEmail: metadata.contactEmail || '',
+        contactPhone: metadata.contactPhone || '',
+      },
+      client_reference_id: String(metadata.bookingId),
+      allow_promotion_codes: true,
+      locale: metadata.locale || 'auto',
+      expires_after: 1800,
+      payment_intent_data: {
+        description: `Michels Travel Booking ${metadata.referenceCode || '#' + metadata.bookingId}: ${metadata.origin || ''} → ${metadata.destination || ''}`,
+        metadata: {
+          bookingId: String(metadata.bookingId),
+          referenceCode: metadata.referenceCode || '',
+        },
+        receipt_email: metadata.contactEmail || undefined,
+      },
     };
 
     if (customerId) {
       sessionConfig.customer = customerId;
-    } else {
-        // For guest checkout, prefill email if available
-        if (metadata.contactEmail) {
-            sessionConfig.customer_email = metadata.contactEmail;
-        }
+    } else if (metadata.contactEmail) {
+      sessionConfig.customer_email = metadata.contactEmail;
     }
 
     return await stripe.checkout.sessions.create(sessionConfig);
   }
 
-  // Create customer portal session
   async createCustomerPortalSession(customerId: string, returnUrl: string) {
     const stripe = await getUncachableStripeClient();
     return await stripe.billingPortal.sessions.create({
@@ -82,7 +106,6 @@ export class StripeService {
     });
   }
 
-  // Read operations - delegate to storage (queries PostgreSQL)
   async getProduct(productId: string) {
     return await storage.getProduct(productId);
   }

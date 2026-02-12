@@ -139,6 +139,12 @@ export function FlightCard({ flight }: FlightCardProps) {
             <div className="text-3xl font-display font-bold text-gray-900" data-testid="text-price">
               {formatPrice(flight.price, flight.currency)}
             </div>
+            {flight.baseAmount && flight.taxAmount && (
+              <div className="text-[10px] text-gray-400 mt-0.5 flex flex-col items-end gap-0">
+                <span>{t("flight.base_fare") || "Base"}: {formatPrice(parseFloat(flight.baseAmount), flight.currency)}</span>
+                <span>{t("flight.taxes") || "Taxes"}: {formatPrice(parseFloat(flight.taxAmount), flight.currency)}</span>
+              </div>
+            )}
           </div>
           <Link href={bookUrl} className="w-full">
             <Button data-testid="button-select-flight" className="w-full rounded-xl font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all h-12 text-base border-0 text-white">
