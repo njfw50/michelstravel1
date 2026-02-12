@@ -9,6 +9,7 @@ import { createDuffelOrder, type DuffelPassenger } from './services/duffel';
 function mapPassengersToDuffelFormat(passengerDetails: any[], contactEmail: string, contactPhone: string): DuffelPassenger[] {
   return passengerDetails.map((p: any) => ({
     passengerId: p.passengerId || p.id || `pax_0`,
+    title: p.title || (p.gender === 'f' ? 'ms' : 'mr'),
     givenName: p.firstName || p.givenName || p.given_name || '',
     familyName: p.lastName || p.familyName || p.family_name || '',
     bornOn: p.dateOfBirth || p.bornOn || p.born_on || '',
@@ -79,8 +80,10 @@ export class WebhookHandlers {
                     updated.contactPhone || ''
                   );
 
-                  console.log(`[WEBHOOK] Creating Duffel order for booking #${id}, offer: ${offerId}`);
-                  const duffelResult = await createDuffelOrder(offerId, duffelPassengers);
+                  const orderAmount = updated.totalPrice || "0";
+                  const orderCurrency = updated.currency || "USD";
+                  console.log(`[WEBHOOK] Creating Duffel order for booking #${id}, offer: ${offerId}, amount: ${orderAmount} ${orderCurrency}`);
+                  const duffelResult = await createDuffelOrder(offerId, duffelPassengers, orderAmount, orderCurrency);
 
                   if (duffelResult) {
                     await db.update(bookings)

@@ -17,7 +17,7 @@ function generateReferenceCode(): string {
   }
   return `MT-${code}`;
 }
-import { searchFlights, getFlight, searchPlaces, getAirlines, getAirports, getAircraft, initializeReferenceData, isTestMode, activeTokenIsTest, hasLiveToken, hasTestToken, setTestModeCache, clearReferenceDataCache, loadTestModeSetting, ensureTestModeLoaded } from "./services/duffel";
+import { searchFlights, getFlight, searchPlaces, getAirlines, getAirports, getAircraft, initializeReferenceData, isTestMode, activeTokenIsTest, hasLiveToken, hasTestToken, setTestModeCache, clearReferenceDataCache, loadTestModeSetting, ensureTestModeLoaded, refreshOffer } from "./services/duffel";
 import { sendBookingConfirmationEmail } from "./services/emailService";
 
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
@@ -132,6 +132,17 @@ export function registerRoutes(app: Express) {
         res.json(flight);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch flight details" });
+    }
+  });
+
+  app.get('/api/flights/:id/refresh', async (req, res) => {
+    try {
+      await ensureTestModeLoaded();
+      const result = await refreshOffer(req.params.id);
+      res.json(result);
+    } catch (error) {
+      console.error("Offer refresh error:", error);
+      res.json({ valid: false });
     }
   });
 

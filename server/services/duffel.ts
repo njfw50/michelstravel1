@@ -717,6 +717,7 @@ export async function getRefundQuote(orderId: string): Promise<{ refundAmount?: 
 
 export interface DuffelPassenger {
   passengerId: string;
+  title?: string;
   givenName: string;
   familyName: string;
   bornOn: string;
@@ -734,9 +735,38 @@ export interface DuffelPassenger {
   type: string;
 }
 
+export async function refreshOffer(offerId: string): Promise<{ valid: boolean; price?: number; currency?: string; expiresAt?: string }> {
+  try {
+    const token = getActiveToken();
+    if (!token) return { valid: false };
+
+    const duffel = getActiveDuffelClient();
+    const offer = await duffel.offers.get(offerId);
+    const data = offer.data as any;
+
+    const expiresAt = data.expires_at;
+    if (expiresAt && new Date(expiresAt) < new Date()) {
+      console.log(`[DUFFEL] Offer ${offerId} has expired (${expiresAt})`);
+      return { valid: false };
+    }
+
+    return {
+      valid: true,
+      price: parseFloat(data.total_amount),
+      currency: data.total_currency,
+      expiresAt: expiresAt || undefined,
+    };
+  } catch (error: any) {
+    console.error("Duffel refreshOffer Error:", error?.errors || error?.message || error);
+    return { valid: false };
+  }
+}
+
 export async function createDuffelOrder(
   offerId: string,
-  passengers: DuffelPassenger[]
+  passengers: DuffelPassenger[],
+  totalAmount?: string,
+  totalCurrency?: string
 ): Promise<{ orderId: string; bookingReference: string } | null> {
   try {
     const token = getActiveToken();
@@ -747,9 +777,14 @@ export async function createDuffelOrder(
 
     const duffel = getActiveDuffelClient();
 
+    const validTitles = ["mr", "mrs", "ms", "miss", "dr"];
+
     const duffelPassengers = passengers.map(pax => {
+      const paxTitle = pax.title && validTitles.includes(pax.title.toLowerCase()) ? pax.title.toLowerCase() : (pax.gender === "f" ? "ms" : "mr");
+      
       const passenger: any = {
         id: pax.passengerId,
+        title: paxTitle,
         given_name: pax.givenName,
         family_name: pax.familyName,
         born_on: pax.bornOn,
@@ -780,14 +815,17 @@ export async function createDuffelOrder(
       return passenger;
     });
 
+    const paymentAmount = totalAmount || "0";
+    const paymentCurrency = totalCurrency || "USD";
+
     const order = await duffel.orders.create({
       type: "instant",
       selected_offers: [offerId],
       passengers: duffelPassengers,
       payments: [{
         type: "balance",
-        amount: "0",
-        currency: "USD",
+        amount: paymentAmount,
+        currency: paymentCurrency,
       }],
     });
 

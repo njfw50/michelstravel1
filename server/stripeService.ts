@@ -34,7 +34,7 @@ export class StripeService {
     const stripe = await getUncachableStripeClient();
     
     const passengerSummary = metadata.passengers 
-      ? metadata.passengers.map((p: any) => `${p.givenName} ${p.familyName}`).join(', ')
+      ? metadata.passengers.map((p: any) => `${p.givenName || p.firstName || ''} ${p.familyName || p.lastName || ''}`).join(', ')
       : '';
 
     const flightDescription = [
@@ -44,6 +44,8 @@ export class StripeService {
       metadata.departureDate ? `Departure: ${metadata.departureDate}` : '',
       passengerSummary ? `Passengers: ${passengerSummary}` : '',
     ].filter(Boolean).join(' | ');
+
+    const expiresAt = Math.floor(Date.now() / 1000) + 1800;
 
     const sessionConfig: any = {
       line_items: [{
@@ -65,7 +67,6 @@ export class StripeService {
       phone_number_collection: {
         enabled: true,
       },
-      payment_method_types: ['card'],
       metadata: {
         bookingId: String(metadata.bookingId),
         referenceCode: metadata.referenceCode || '',
@@ -83,26 +84,39 @@ export class StripeService {
       client_reference_id: String(metadata.bookingId),
       allow_promotion_codes: true,
       locale: metadata.locale || 'auto',
-      expires_after: 1800,
+      expires_at: expiresAt,
       custom_text: {
         submit: {
           message: `Michels Travel - ${metadata.referenceCode || ''} | ${metadata.origin || ''} → ${metadata.destination || ''}`,
         },
+        after_submit: {
+          message: `Your booking reference is ${metadata.referenceCode || ''}. You will receive a confirmation email shortly.`,
+        },
       },
       payment_intent_data: {
         description: `Michels Travel Booking ${metadata.referenceCode || '#' + metadata.bookingId}: ${metadata.origin || ''} → ${metadata.destination || ''}`,
+        statement_descriptor: 'MICHELS TRAVEL',
+        statement_descriptor_suffix: (metadata.referenceCode || '').substring(0, 22),
         metadata: {
           bookingId: String(metadata.bookingId),
           referenceCode: metadata.referenceCode || '',
         },
         receipt_email: metadata.contactEmail || undefined,
       },
+      consent_collection: {
+        terms_of_service: 'none',
+      },
     };
 
     if (customerId) {
       sessionConfig.customer = customerId;
+      sessionConfig.customer_update = {
+        address: 'auto',
+        name: 'auto',
+      };
     } else if (metadata.contactEmail) {
       sessionConfig.customer_email = metadata.contactEmail;
+      sessionConfig.customer_creation = 'always';
     }
 
     return await stripe.checkout.sessions.create(sessionConfig);

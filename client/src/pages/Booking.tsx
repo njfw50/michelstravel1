@@ -27,6 +27,7 @@ import BaggageSelector from "@/components/BaggageSelector";
 import type { FlightOffer } from "@shared/schema";
 
 const passengerSchema = z.object({
+  title: z.enum(["mr", "mrs", "ms", "miss", "dr"]).default("mr"),
   givenName: z.string().min(1, "Required").max(20),
   familyName: z.string().min(1, "Required").max(20),
   bornOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD"),
@@ -178,8 +179,29 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
             passengerIndex={index}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
+            <div className="space-y-1.5 col-span-1">
+              <Label className="text-gray-500 text-xs font-medium">{t("booking.passenger_title")} *</Label>
+              <Select
+                defaultValue="mr"
+                onValueChange={(val) => {
+                  const event = { target: { name: `passengers.${index}.title`, value: val } };
+                  register(`passengers.${index}.title`).onChange(event);
+                }}
+              >
+                <SelectTrigger className="bg-white border-gray-200 text-gray-900" data-testid={`select-title-${index}`}>
+                  <SelectValue placeholder={t("booking.passenger_title")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mr">{t("booking.title_mr")}</SelectItem>
+                  <SelectItem value="mrs">{t("booking.title_mrs")}</SelectItem>
+                  <SelectItem value="ms">{t("booking.title_ms")}</SelectItem>
+                  <SelectItem value="miss">{t("booking.title_miss")}</SelectItem>
+                  <SelectItem value="dr">{t("booking.title_dr")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5 col-span-1 md:col-span-2">
               <Label className="text-gray-500 text-xs font-medium">{t("booking.given_name")} *</Label>
               <Input
                 {...register(`passengers.${index}.givenName`)}
@@ -189,7 +211,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
               />
               {paxErrors?.givenName && <p className="text-xs text-red-400">{paxErrors.givenName.message}</p>}
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 col-span-1 md:col-span-2">
               <Label className="text-gray-500 text-xs font-medium">{t("booking.family_name")} *</Label>
               <Input
                 {...register(`passengers.${index}.familyName`)}
@@ -427,6 +449,7 @@ export default function Booking() {
     const pax: any[] = [];
     for (let i = 0; i < numAdults; i++) {
       pax.push({
+        title: "mr" as const,
         givenName: i === 0 ? (user?.firstName || "") : "",
         familyName: i === 0 ? (user?.lastName || "") : "",
         bornOn: "",
@@ -444,10 +467,10 @@ export default function Booking() {
       });
     }
     for (let i = 0; i < numChildren; i++) {
-      pax.push({ givenName: "", familyName: "", bornOn: "", gender: "" as any, email: "", phoneNumber: "", documentType: "passport" as const, documentNumber: "", documentExpiryDate: "", documentIssuingCountry: "", nationality: "", type: "child", loyaltyProgram: "", loyaltyNumber: "" });
+      pax.push({ title: "mr" as const, givenName: "", familyName: "", bornOn: "", gender: "" as any, email: "", phoneNumber: "", documentType: "passport" as const, documentNumber: "", documentExpiryDate: "", documentIssuingCountry: "", nationality: "", type: "child", loyaltyProgram: "", loyaltyNumber: "" });
     }
     for (let i = 0; i < numInfants; i++) {
-      pax.push({ givenName: "", familyName: "", bornOn: "", gender: "" as any, email: "", phoneNumber: "", documentType: "passport" as const, documentNumber: "", documentExpiryDate: "", documentIssuingCountry: "", nationality: "", type: "infant_without_seat", loyaltyProgram: "", loyaltyNumber: "" });
+      pax.push({ title: "mr" as const, givenName: "", familyName: "", bornOn: "", gender: "" as any, email: "", phoneNumber: "", documentType: "passport" as const, documentNumber: "", documentExpiryDate: "", documentIssuingCountry: "", nationality: "", type: "infant_without_seat", loyaltyProgram: "", loyaltyNumber: "" });
     }
     return pax;
   };
@@ -483,8 +506,34 @@ export default function Booking() {
     }
   }, [params?.id]);
 
-  const onSubmit = (data: BookingFormValues) => {
+  const onSubmit = async (data: BookingFormValues) => {
     if (!flight) return;
+
+    try {
+      const refreshRes = await fetch(`/api/flights/${flight.id}/refresh`);
+      const refreshData = await refreshRes.json();
+      
+      if (!refreshData.valid) {
+        toast({ 
+          title: t("booking.offer_expired") || "Offer Expired", 
+          description: t("booking.offer_expired_desc") || "This flight offer has expired. Please search again for updated prices.",
+          variant: "destructive" 
+        });
+        return;
+      }
+
+      if (refreshData.price && Math.abs(refreshData.price - flight.price) > 0.01) {
+        setFlight({ ...flight, price: refreshData.price, currency: refreshData.currency || flight.currency });
+        toast({ 
+          title: t("booking.price_updated") || "Price Updated", 
+          description: t("booking.price_updated_desc") || "The flight price has been updated. Please review the new total before proceeding.",
+          variant: "default" 
+        });
+        return;
+      }
+    } catch (err) {
+      console.warn("Could not refresh offer, proceeding with current price");
+    }
 
     const passengerDetails = data.passengers.map((p, i) => ({
       ...p,
@@ -506,6 +555,7 @@ export default function Booking() {
         arrivalTime: flight.arrivalTime,
         cabinClass: flight.cabinClass,
         slices: flight.slices,
+        logoUrl: flight.logoUrl,
         baggageSelections: baggageSelections.filter(b => b.quantity > 0).length > 0
           ? baggageSelections.filter(b => b.quantity > 0) : undefined,
       },
@@ -636,6 +686,54 @@ export default function Booking() {
                   onBaggageSelected={setBaggageSelections}
                   includedBaggage={firstPaxBaggage}
                 />
+              )}
+
+              {flight?.conditions && (
+                <Card className="border border-amber-200 bg-amber-50 rounded-xl">
+                  <CardContent className="p-4 space-y-2">
+                    <h4 className="text-sm font-semibold text-amber-800 flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      {t("booking.fare_rules") || "Fare Rules"}
+                    </h4>
+                    <div className="space-y-1.5 text-xs text-amber-700">
+                      {flight.conditions.changeBeforeDeparture && (
+                        <div className="flex items-start gap-2">
+                          {flight.conditions.changeBeforeDeparture.allowed ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 mt-0.5 shrink-0" />
+                          ) : (
+                            <XIcon className="h-3.5 w-3.5 text-red-600 mt-0.5 shrink-0" />
+                          )}
+                          <span>
+                            {t("booking.change_before_departure")}: {flight.conditions.changeBeforeDeparture.allowed 
+                              ? (flight.conditions.changeBeforeDeparture.penaltyAmount 
+                                ? `${t("booking.allowed_with_fee")} ${flight.conditions.changeBeforeDeparture.penaltyCurrency} ${flight.conditions.changeBeforeDeparture.penaltyAmount}`
+                                : t("booking.allowed_free"))
+                              : t("booking.not_allowed")}
+                          </span>
+                        </div>
+                      )}
+                      {flight.conditions.refundBeforeDeparture && (
+                        <div className="flex items-start gap-2">
+                          {flight.conditions.refundBeforeDeparture.allowed ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 mt-0.5 shrink-0" />
+                          ) : (
+                            <XIcon className="h-3.5 w-3.5 text-red-600 mt-0.5 shrink-0" />
+                          )}
+                          <span>
+                            {t("booking.refund_before_departure")}: {flight.conditions.refundBeforeDeparture.allowed 
+                              ? (flight.conditions.refundBeforeDeparture.penaltyAmount 
+                                ? `${t("booking.allowed_with_fee")} ${flight.conditions.refundBeforeDeparture.penaltyCurrency} ${flight.conditions.refundBeforeDeparture.penaltyAmount}`
+                                : t("booking.allowed_free"))
+                              : t("booking.not_allowed")}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-amber-600 pt-1">
+                      {t("booking.conditions_disclaimer") || "By proceeding, you accept these fare conditions and the airline's terms of carriage."}
+                    </p>
+                  </CardContent>
+                </Card>
               )}
 
               <div className="space-y-3">
