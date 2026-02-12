@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/Layout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { CookieConsent } from "@/components/CookieConsent";
 import { useI18n } from "@/lib/i18n";
 import { ShieldCheck } from "lucide-react";
 import { HelmetProvider } from "react-helmet-async";
@@ -86,6 +87,7 @@ function App() {
             <LanguageSelector />
             <TestModeBanner />
             <Router />
+            <CookieConsent />
           </TooltipProvider>
         </QueryClientProvider>
       </HelmetProvider>

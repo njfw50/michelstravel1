@@ -522,6 +522,12 @@ const translations: Record<Language, Record<string, string>> = {
     "trips.login_title": "Quer ver todas as suas viagens?",
     "trips.login_desc": "Entre na sua conta para acompanhar todas as suas reservas, ver o que já viajou e o que ainda vem por aí.",
     "trips.contact_note": "Precisa alterar, cancelar ou tem dúvidas sobre bagagem? Fale com a gente pelo menos 24 horas antes do embarque. Estamos aqui pra ajudar!",
+
+    "cookie.message": "Usamos cookies para melhorar sua experiência de navegação, personalizar conteúdo e analisar nosso tráfego. Ao continuar usando nosso site, você concorda com o uso de cookies.",
+    "cookie.accept": "Aceitar",
+    "cookie.decline": "Recusar",
+    "cookie.settings": "Configurações",
+    "cookie.privacy": "Política de Privacidade",
   },
   en: {
     // Header & Footer
@@ -1035,6 +1041,12 @@ const translations: Record<Language, Record<string, string>> = {
     "trips.login_title": "Want to see all your trips?",
     "trips.login_desc": "Sign in to your account to see all your bookings, past trips, and upcoming flights in one place.",
     "trips.contact_note": "Need to change, cancel, or have questions about baggage? Reach out to us at least 24 hours before departure. We're here to help!",
+
+    "cookie.message": "We use cookies to enhance your browsing experience, personalize content, and analyze our traffic. By continuing to use our site, you agree to our use of cookies.",
+    "cookie.accept": "Accept",
+    "cookie.decline": "Decline",
+    "cookie.settings": "Settings",
+    "cookie.privacy": "Privacy Policy",
   },
   es: {
     // Header & Footer
@@ -1548,6 +1560,12 @@ const translations: Record<Language, Record<string, string>> = {
     "trips.login_title": "¿Quieres ver todos tus viajes?",
     "trips.login_desc": "Inicia sesión para ver todas tus reservas, viajes pasados y los que vienen.",
     "trips.contact_note": "¿Necesitas cambiar, cancelar o tienes dudas sobre equipaje? Escríbenos al menos 24 horas antes de tu vuelo. ¡Estamos para ayudarte!",
+
+    "cookie.message": "Usamos cookies para mejorar tu experiencia de navegación, personalizar contenido y analizar nuestro tráfico. Al continuar usando nuestro sitio, aceptas el uso de cookies.",
+    "cookie.accept": "Aceptar",
+    "cookie.decline": "Rechazar",
+    "cookie.settings": "Configuración",
+    "cookie.privacy": "Política de Privacidad",
   }
 };
 
