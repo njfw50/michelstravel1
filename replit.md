@@ -56,16 +56,14 @@ Preferred communication style: Simple, everyday language.
 ### Duffel API (Flight Search & Ancillary Services)
 - Provides real-time flight search, offer requests, and place/airport autocomplete
 - Supports multi-city (multi-slice) searches via `legs` param with `tripType=multi-city`
-- Seat map API: `GET /api/flights/:offerId/seat-map` — returns cabin layouts with per-seat pricing
 - Baggage services: `GET /api/flights/:offerId/baggage` — available extra bag options
 - Order cancellation: `POST /api/bookings/:id/cancel` — cancels via Duffel, returns refund amount
 - Refund quotes: `GET /api/flights/orders/:orderId/refund-quote`
 - Requires `DUFFEL_API_TOKEN` environment variable
-- Integration in `server/services/duffel.ts` (searchFlights, getSeatMap, getBaggageServices, cancelOrder, getRefundQuote)
+- Integration in `server/services/duffel.ts` (searchFlights, getBaggageServices, cancelOrder, getRefundQuote)
 - Falls back gracefully (empty results) if token is missing
 
 ### Ancillary Features
-- **Seat Selection**: Visual seat map picker (`client/src/components/SeatMap.tsx`) with per-segment, per-passenger selection. Supports multi-segment flights with segment tabs
 - **Baggage Services**: Extra bag purchase (`client/src/components/BaggageSelector.tsx`) with per-passenger pricing added to checkout total
 - **Loyalty Programs**: Optional frequent flyer number + airline program fields in passenger booking form
 - **Multi-city Search**: Trip type tabs (round-trip, one-way, multi-city) with dynamic leg builder (2-5 legs). Backend builds multi-slice Duffel offer requests

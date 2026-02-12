@@ -23,7 +23,6 @@ import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { useI18n } from "@/lib/i18n";
 import { ScanDocumentDialog } from "@/components/ScanDocumentDialog";
-import SeatMap from "@/components/SeatMap";
 import BaggageSelector from "@/components/BaggageSelector";
 import type { FlightOffer } from "@shared/schema";
 
@@ -416,7 +415,6 @@ export default function Booking() {
   const createBooking = useCreateBooking();
 
   const [flight, setFlight] = useState<FlightOffer | null>(null);
-  const [seatSelections, setSeatSelections] = useState<any[]>([]);
   const [baggageSelections, setBaggageSelections] = useState<any[]>([]);
   const isDocRequired = flight?.passengerIdentityDocumentsRequired ?? false;
   const searchParams = new URLSearchParams(window.location.search);
@@ -508,7 +506,6 @@ export default function Booking() {
         arrivalTime: flight.arrivalTime,
         cabinClass: flight.cabinClass,
         slices: flight.slices,
-        seatSelections: seatSelections.length > 0 ? seatSelections : undefined,
         baggageSelections: baggageSelections.filter(b => b.quantity > 0).length > 0
           ? baggageSelections.filter(b => b.quantity > 0) : undefined,
       },
@@ -548,9 +545,8 @@ export default function Booking() {
   const cabinClassName = flight?.passengers?.[0]?.cabinClassName || flight?.cabinClass || "Economy";
   const fareBrand = flight?.passengers?.[0]?.fareBrandName;
 
-  const seatExtras = seatSelections.reduce((sum, s) => sum + (s.price || 0), 0);
   const baggageExtras = baggageSelections.reduce((sum, s) => sum + (s.price || 0) * (s.quantity || 0), 0);
-  const grandTotal = (flight?.price || 0) + seatExtras + baggageExtras;
+  const grandTotal = (flight?.price || 0) + baggageExtras;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -632,14 +628,6 @@ export default function Booking() {
                   ))}
                 </CardContent>
               </Card>
-
-              {flight && (
-                <SeatMap
-                  offerId={flight.id}
-                  passengerCount={totalPassengers}
-                  onSeatSelected={setSeatSelections}
-                />
-              )}
 
               {flight && (
                 <BaggageSelector
@@ -826,12 +814,6 @@ export default function Booking() {
                         <div className="flex justify-between text-xs text-gray-400">
                           <span>{t("booking.per_passenger")}</span>
                           <span>{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(flight.price / totalPassengers)}</span>
-                        </div>
-                      )}
-                      {seatExtras > 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-500">{t("booking.seat_selection") || "Seat Selection"}</span>
-                          <span className="font-medium text-gray-900">{new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(seatExtras)}</span>
                         </div>
                       )}
                       {baggageExtras > 0 && (

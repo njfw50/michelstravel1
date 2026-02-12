@@ -633,29 +633,6 @@ export async function searchPlaces(query: string) {
   }
 }
 
-export async function getSeatMap(offerId: string): Promise<any> {
-  try {
-    const token = getActiveToken();
-    if (!token) return null;
-
-    const response = await fetch(`${DUFFEL_BASE}/air/seat_maps?offer_id=${offerId}`, {
-      headers: headers(),
-    });
-
-    if (!response.ok) {
-      const body = await response.text();
-      console.error(`Duffel Seat Map API error: ${response.status}`, body);
-      return null;
-    }
-
-    const data = await response.json();
-    return data.data;
-  } catch (error) {
-    console.error("Duffel getSeatMap Error:", error);
-    return null;
-  }
-}
-
 export async function getOfferServices(offerId: string): Promise<any[]> {
   try {
     const token = getActiveToken();
