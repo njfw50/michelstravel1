@@ -650,7 +650,7 @@ export default function Booking() {
                 </Button>
                 <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
                   <Lock className="h-3 w-3" />
-                  <span>{t("booking.secure_stripe") || "Secure payment processed by Stripe"}</span>
+                  <span>{t("booking.secure_payment")}</span>
                 </div>
               </div>
             </form>
