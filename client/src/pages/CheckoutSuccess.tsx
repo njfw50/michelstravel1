@@ -118,17 +118,34 @@ export default function CheckoutSuccess() {
 
   const searchParams = new URLSearchParams(window.location.search);
   const bookingId = parseInt(searchParams.get("bookingId") || "0", 10);
+  const isTestMode = searchParams.get("test") === "true";
 
-  const { data: booking, isLoading, error } = useBooking(bookingId);
+  const { data: booking, isLoading, error, refetch } = useBooking(bookingId);
   const emailSentRef = useRef(false);
+  const verifiedRef = useRef(false);
 
   useEffect(() => {
-    if (booking && bookingId && !emailSentRef.current) {
-      emailSentRef.current = true;
-      fetch(`/api/bookings/${bookingId}/send-confirmation`, { method: "POST" })
-        .catch(() => {});
+    if (booking && bookingId && !verifiedRef.current) {
+      verifiedRef.current = true;
+
+      if (isTestMode || booking.status === 'confirmed') {
+        if (!emailSentRef.current) {
+          emailSentRef.current = true;
+          fetch(`/api/bookings/${bookingId}/send-confirmation`, { method: "POST" })
+            .catch(() => {});
+        }
+      } else {
+        fetch(`/api/bookings/${bookingId}/verify-payment`, { method: "POST" })
+          .then(res => res.json())
+          .then(data => {
+            if (data.verified) {
+              refetch();
+            }
+          })
+          .catch(() => {});
+      }
     }
-  }, [booking, bookingId]);
+  }, [booking, bookingId, isTestMode, refetch]);
 
   const handleCopyRef = () => {
     if (booking?.referenceCode) {

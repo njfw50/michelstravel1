@@ -454,6 +454,11 @@ export function registerRoutes(app: Express) {
       const booking = await storage.getBooking(id);
       if (!booking) return res.status(404).json({ error: "Booking not found" });
 
+      const user = (req as any).user;
+      if (booking.userId && (!user || user.id !== booking.userId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
       emailSentCache.add(id);
 
       const sent = await sendBookingConfirmationEmail({
@@ -556,6 +561,73 @@ export function registerRoutes(app: Express) {
   });
 
   // === STRIPE ROUTES ===
+
+  app.get('/api/stripe-key', async (_req, res) => {
+    try {
+      const { getStripePublishableKey } = await import('./stripeClient');
+      const key = await getStripePublishableKey();
+      res.json({ publishableKey: key });
+    } catch (error) {
+      console.error('Failed to get Stripe publishable key:', error);
+      res.status(500).json({ error: 'Stripe not configured' });
+    }
+  });
+
+  app.post('/api/bookings/:id/verify-payment', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+
+      const booking = await storage.getBooking(id);
+      if (!booking) return res.status(404).json({ error: "Booking not found" });
+
+      const user = (req as any).user;
+      if (booking.userId && (!user || user.id !== booking.userId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      if (booking.status === 'confirmed' || booking.stripePaymentStatus === 'paid') {
+        return res.json({ verified: true, status: 'confirmed', booking });
+      }
+
+      const paymentId = booking.stripePaymentIntentId;
+      const isTestPayment = !paymentId || paymentId.includes('_test_') || paymentId.startsWith('test_');
+
+      if (paymentId && !isTestPayment) {
+        try {
+          const { getUncachableStripeClient } = await import('./stripeClient');
+          const stripe = await getUncachableStripeClient();
+
+          if (paymentId.startsWith('cs_')) {
+            const session = await stripe.checkout.sessions.retrieve(paymentId);
+            if (session.payment_status === 'paid') {
+              const [updated] = await db.update(bookings)
+                .set({ status: 'confirmed', stripePaymentStatus: 'paid' })
+                .where(eq(bookings.id, id))
+                .returning();
+              return res.json({ verified: true, status: 'confirmed', booking: updated });
+            }
+          } else if (paymentId.startsWith('pi_')) {
+            const pi = await stripe.paymentIntents.retrieve(paymentId);
+            if (pi.status === 'succeeded') {
+              const [updated] = await db.update(bookings)
+                .set({ status: 'confirmed', stripePaymentStatus: 'paid' })
+                .where(eq(bookings.id, id))
+                .returning();
+              return res.json({ verified: true, status: 'confirmed', booking: updated });
+            }
+          }
+        } catch (stripeErr) {
+          console.error('Payment verification error:', stripeErr);
+        }
+      }
+
+      res.json({ verified: false, status: booking.status, booking });
+    } catch (error) {
+      console.error("Payment verification error:", error);
+      res.status(500).json({ error: "Failed to verify payment" });
+    }
+  });
 
   // Get user subscription
   app.get('/api/subscription', async (req, res) => {
