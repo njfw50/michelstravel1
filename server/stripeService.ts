@@ -61,6 +61,11 @@ export class StripeService {
       mode: 'payment',
       success_url: successUrl,
       cancel_url: cancelUrl,
+      billing_address_collection: 'required',
+      phone_number_collection: {
+        enabled: true,
+      },
+      payment_method_types: ['card'],
       metadata: {
         bookingId: String(metadata.bookingId),
         referenceCode: metadata.referenceCode || '',
@@ -79,6 +84,11 @@ export class StripeService {
       allow_promotion_codes: true,
       locale: metadata.locale || 'auto',
       expires_after: 1800,
+      custom_text: {
+        submit: {
+          message: `Michels Travel - ${metadata.referenceCode || ''} | ${metadata.origin || ''} → ${metadata.destination || ''}`,
+        },
+      },
       payment_intent_data: {
         description: `Michels Travel Booking ${metadata.referenceCode || '#' + metadata.bookingId}: ${metadata.origin || ''} → ${metadata.destination || ''}`,
         metadata: {
