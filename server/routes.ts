@@ -57,7 +57,7 @@ export function registerRoutes(app: Express) {
   app.get('/api/flights/search', async (req, res) => {
     try {
       await ensureTestModeLoaded();
-      const { origin, destination, date, passengers, cabinClass, returnDate, adults, children, infants } = req.query;
+      const { origin, destination, date, passengers, cabinClass, returnDate, adults, children, infants, tripType, legs } = req.query;
 
       const searchParams: FlightSearchParams = {
         origin: origin as string,
@@ -69,7 +69,16 @@ export function registerRoutes(app: Express) {
         children: children as string,
         infants: infants as string,
         cabinClass: cabinClass as string,
+        tripType: tripType as string | undefined,
       };
+
+      if (tripType === 'multi-city' && legs) {
+        try {
+          searchParams.legs = JSON.parse(legs as string);
+        } catch (e) {
+          console.error('Failed to parse multi-city legs:', e);
+        }
+      }
 
       // Call Duffel Service
       const flights = await searchFlights(searchParams);

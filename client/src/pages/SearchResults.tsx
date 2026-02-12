@@ -73,6 +73,8 @@ export default function SearchResults() {
     children: searchParams.get('children') || "0",
     infants: searchParams.get('infants') || "0",
     cabinClass: searchParams.get('cabinClass') || "economy",
+    tripType: 'multi-city',
+    legs: legsRaw || undefined,
   } : {
     origin: searchParams.get('origin') || "",
     destination: searchParams.get('destination') || "",

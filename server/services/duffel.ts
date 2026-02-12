@@ -315,23 +315,31 @@ export async function searchFlights(params: FlightSearchParams): Promise<FlightO
       ...Array(parseInt(params.infants || "0")).fill({ type: "infant_without_seat" }),
     ];
 
+    const slices = params.legs && params.legs.length > 0
+      ? params.legs.map((leg) => ({
+          origin: leg.origin,
+          destination: leg.destination,
+          departure_date: leg.date,
+        } as any))
+      : [
+          {
+            origin: params.origin,
+            destination: params.destination,
+            departure_date: params.date,
+          } as any,
+          ...(params.returnDate
+            ? [
+                {
+                  origin: params.destination,
+                  destination: params.origin,
+                  departure_date: params.returnDate,
+                } as any,
+              ]
+            : []),
+        ];
+
     const offerRequest = await duffel.offerRequests.create({
-      slices: [
-        {
-          origin: params.origin,
-          destination: params.destination,
-          departure_date: params.date,
-        } as any,
-        ...(params.returnDate
-          ? [
-              {
-                origin: params.destination,
-                destination: params.origin,
-                departure_date: params.returnDate,
-              } as any,
-            ]
-          : []),
-      ],
+      slices,
       passengers,
       cabin_class: (params.cabinClass as any) || "economy",
     });

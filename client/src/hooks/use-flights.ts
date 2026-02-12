@@ -29,8 +29,7 @@ interface DuffelAircraft {
   iataCode: string | null;
 }
 
-export function useFlightSearch(params: Partial<FlightSearchParams>) {
-  // Only enable query if essential params are present
+export function useFlightSearch(params: Partial<FlightSearchParams> & { legs?: string }) {
   const isEnabled = !!(params.origin && params.destination && params.date);
 
   return useQuery({

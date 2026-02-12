@@ -1,7 +1,8 @@
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/lib/i18n";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -69,8 +70,26 @@ function BookingCard({ booking, defaultExpanded = false }: { booking: Booking; d
   const [copied, setCopied] = useState(false);
   const [, setLocation] = useLocation();
   const [cancelConfirm, setCancelConfirm] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
   const [cancelResult, setCancelResult] = useState<{ success: boolean; message?: string; refundAmount?: string } | null>(null);
+
+  const cancelMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/bookings/${booking.id}/cancel`);
+      return await res.json();
+    },
+    onSuccess: (data: { success: boolean; message?: string; refundAmount?: string }) => {
+      setCancelResult(data);
+      setCancelConfirm(false);
+      if (data.success) {
+        queryClient.invalidateQueries({ queryKey: ["/api/bookings"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/bookings/lookup"] });
+      }
+    },
+    onError: () => {
+      setCancelResult({ success: false, message: "Failed to cancel" });
+      setCancelConfirm(false);
+    },
+  });
 
   const fd = booking.flightData as any;
   const passengers = booking.passengerDetails as any[];
@@ -80,27 +99,6 @@ function BookingCard({ booking, defaultExpanded = false }: { booking: Booking; d
     navigator.clipboard.writeText(booking.referenceCode || "");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleCancel = async () => {
-    setCancelling(true);
-    try {
-      const res = await fetch(`/api/bookings/${booking.id}/cancel`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
-      const data = await res.json();
-      setCancelResult(data);
-      if (data.success) {
-        booking.status = "cancelled";
-      }
-    } catch {
-      setCancelResult({ success: false, message: "Failed to cancel" });
-    } finally {
-      setCancelling(false);
-      setCancelConfirm(false);
-    }
   };
 
   const canCancel = booking.status !== "cancelled" && booking.status !== "refunded";
@@ -290,12 +288,12 @@ function BookingCard({ booking, defaultExpanded = false }: { booking: Booking; d
                       </Button>
                       <Button
                         size="sm"
-                        onClick={handleCancel}
-                        disabled={cancelling}
+                        onClick={() => cancelMutation.mutate()}
+                        disabled={cancelMutation.isPending}
                         className="bg-red-600 hover:bg-red-700 text-white border-0"
                         data-testid={`button-cancel-yes-${booking.id}`}
                       >
-                        {cancelling ? "..." : (t("trips.yes_cancel") || "Yes, Cancel")}
+                        {cancelMutation.isPending ? "..." : (t("trips.yes_cancel") || "Yes, Cancel")}
                       </Button>
                     </div>
                   ) : (

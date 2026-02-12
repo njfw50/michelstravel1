@@ -78,15 +78,29 @@ function isExtraLegroom(seat: SeatData): boolean {
   );
 }
 
+function seatsForSegment(selectedSeats: Map<string, SeatSelection>, segmentId: string): number {
+  let count = 0;
+  selectedSeats.forEach((v) => {
+    if (v.segmentId === segmentId) count++;
+  });
+  return count;
+}
+
 export default function SeatMap({ offerId, onSeatSelected, passengerCount }: SeatMapProps) {
   const { t } = useI18n();
   const [selectedSeats, setSelectedSeats] = useState<Map<string, SeatSelection>>(new Map());
   const [currentPassenger, setCurrentPassenger] = useState(0);
+  const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery<SeatMapResponse>({
     queryKey: ["/api/flights", offerId, "seat-map"],
     enabled: !!offerId,
   });
+
+  const segments = data?.seatMaps ?? [];
+  const effectiveSegmentId = activeSegmentId ?? segments[0]?.segmentId ?? "";
+  const segmentIndex = segments.findIndex((s) => s.segmentId === effectiveSegmentId);
+  const segmentLabel = segmentIndex >= 0 ? segmentIndex + 1 : 1;
 
   const handleSeatClick = useCallback(
     (seat: SeatData, segmentId: string) => {
@@ -94,32 +108,31 @@ export default function SeatMap({ offerId, onSeatSelected, passengerCount }: Sea
 
       setSelectedSeats((prev) => {
         const next = new Map(prev);
-        const existingKey = Array.from(next.entries()).find(
+        const compositeKey = `pax-${currentPassenger}-seg-${segmentId}`;
+
+        const existingEntry = Array.from(next.entries()).find(
           ([, v]) => v.designator === seat.designator && v.segmentId === segmentId
         );
 
-        if (existingKey) {
-          next.delete(existingKey[0]);
-          const remaining = Array.from(next.entries());
-          const reindexed = new Map<string, SeatSelection>();
-          remaining.forEach(([, v], i) => {
-            reindexed.set(`pax-${i}`, v);
-          });
+        if (existingEntry) {
+          next.delete(existingEntry[0]);
 
-          const nextPax = Math.min(reindexed.size, passengerCount - 1);
+          const nextPax = findNextOpenPassenger(next, segmentId, 0, passengerCount);
           setCurrentPassenger(nextPax);
 
           setTimeout(() => {
-            onSeatSelected(Array.from(reindexed.values()));
+            onSeatSelected(Array.from(next.values()));
           }, 0);
-
-          return reindexed;
+          return next;
         }
 
-        if (next.size >= passengerCount) return prev;
+        if (seatsForSegment(next, segmentId) >= passengerCount) return prev;
 
-        const key = `pax-${currentPassenger}`;
-        next.set(key, {
+        if (next.has(compositeKey)) {
+          next.delete(compositeKey);
+        }
+
+        next.set(compositeKey, {
           segmentId,
           designator: seat.designator,
           serviceId: seat.serviceId,
@@ -127,22 +140,8 @@ export default function SeatMap({ offerId, onSeatSelected, passengerCount }: Sea
           currency: seat.currency,
         });
 
-        const nextPax = Math.min(currentPassenger + 1, passengerCount - 1);
-        if (next.size < passengerCount) {
-          let candidate = nextPax;
-          while (next.has(`pax-${candidate}`) && candidate < passengerCount) {
-            candidate++;
-          }
-          if (candidate >= passengerCount) {
-            candidate = 0;
-            while (next.has(`pax-${candidate}`) && candidate < passengerCount) {
-              candidate++;
-            }
-          }
-          setCurrentPassenger(candidate < passengerCount ? candidate : nextPax);
-        } else {
-          setCurrentPassenger(nextPax);
-        }
+        const nextPax = findNextOpenPassenger(next, segmentId, currentPassenger + 1, passengerCount);
+        setCurrentPassenger(nextPax);
 
         setTimeout(() => {
           onSeatSelected(Array.from(next.values()));
@@ -208,6 +207,13 @@ export default function SeatMap({ offerId, onSeatSelected, passengerCount }: Sea
     );
   }
 
+  const groupedBySegment = segments.map((seg, idx) => {
+    const entries = Array.from(selectedSeats.entries()).filter(
+      ([, v]) => v.segmentId === seg.segmentId
+    );
+    return { segment: seg, segIndex: idx, entries };
+  });
+
   return (
     <Card>
       <CardHeader>
@@ -221,54 +227,91 @@ export default function SeatMap({ offerId, onSeatSelected, passengerCount }: Sea
           <Users className="h-4 w-4 text-blue-600" />
           <span className="text-sm font-medium text-blue-700">
             {t("seatmap.select_for") || "Select seat for"}{" "}
-            {t("seatmap.passenger") || "Passenger"} {currentPassenger + 1} / {passengerCount}
+            {t("seatmap.passenger") || "Passenger"} {currentPassenger + 1}
+            {segments.length > 1 && (
+              <> on Segment {segmentLabel}</>
+            )}
           </span>
         </div>
 
         {selectedSeats.size > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {Array.from(selectedSeats.entries()).map(([key, sel]) => (
-              <Badge
-                key={key}
-                className="gap-1 bg-blue-100 text-blue-700 border-blue-200"
-                data-testid={`badge-selected-seat-${sel.designator}`}
+          <div className="space-y-2">
+            {groupedBySegment.map(({ segment, segIndex, entries }) =>
+              entries.length > 0 ? (
+                <div key={segment.segmentId} className="flex flex-wrap gap-2">
+                  {entries.map(([key, sel]) => {
+                    const paxNum = parseInt(key.split("-seg-")[0].replace("pax-", "")) + 1;
+                    return (
+                      <Badge
+                        key={key}
+                        className="gap-1 bg-blue-100 text-blue-700 border-blue-200"
+                        data-testid={`badge-selected-seat-${sel.designator}`}
+                      >
+                        P{paxNum}{segments.length > 1 && <> Seg{segIndex + 1}</>}: {sel.designator}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedSeats((prev) => {
+                              const next = new Map(prev);
+                              next.delete(key);
+                              const paxIdx = parseInt(key.split("-seg-")[0].replace("pax-", ""));
+                              setCurrentPassenger(Math.min(paxIdx, passengerCount - 1));
+                              setActiveSegmentId(sel.segmentId);
+                              setTimeout(() => {
+                                onSeatSelected(Array.from(next.values()));
+                              }, 0);
+                              return next;
+                            });
+                          }}
+                          data-testid={`button-remove-seat-${sel.designator}`}
+                        >
+                          <XCircle className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                </div>
+              ) : null
+            )}
+          </div>
+        )}
+
+        {segments.length > 1 && (
+          <div className="flex gap-2" data-testid="seatmap-segment-tabs">
+            {segments.map((seg, idx) => (
+              <button
+                key={seg.segmentId}
+                type="button"
+                onClick={() => {
+                  setActiveSegmentId(seg.segmentId);
+                  const nextPax = findNextOpenPassenger(selectedSeats, seg.segmentId, 0, passengerCount);
+                  setCurrentPassenger(nextPax);
+                }}
+                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  effectiveSegmentId === seg.segmentId
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+                data-testid={`button-segment-tab-${idx + 1}`}
               >
-                {t("seatmap.passenger") || "Passenger"} {parseInt(key.replace("pax-", "")) + 1}: {sel.designator}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedSeats((prev) => {
-                      const next = new Map(prev);
-                      next.delete(key);
-                      const remaining = Array.from(next.entries());
-                      const reindexed = new Map<string, SeatSelection>();
-                      remaining.forEach(([, v], i) => {
-                        reindexed.set(`pax-${i}`, v);
-                      });
-                      setCurrentPassenger(Math.min(parseInt(key.replace("pax-", "")), passengerCount - 1));
-                      setTimeout(() => {
-                        onSeatSelected(Array.from(reindexed.values()));
-                      }, 0);
-                      return reindexed;
-                    });
-                  }}
-                  data-testid={`button-remove-seat-${sel.designator}`}
-                >
-                  <XCircle className="h-3 w-3" />
-                </button>
-              </Badge>
+                Segment {idx + 1}
+              </button>
             ))}
           </div>
         )}
 
-        {data.seatMaps.map((seatMap) => (
-          <SeatMapGrid
+        {segments.map((seatMap) => (
+          <div
             key={seatMap.segmentId}
-            seatMap={seatMap}
-            selectedSeats={selectedSeats}
-            onSeatClick={handleSeatClick}
-            t={t}
-          />
+            style={{ display: segments.length > 1 && seatMap.segmentId !== effectiveSegmentId ? "none" : undefined }}
+          >
+            <SeatMapGrid
+              seatMap={seatMap}
+              selectedSeats={selectedSeats}
+              onSeatClick={handleSeatClick}
+              t={t}
+            />
+          </div>
         ))}
 
         <SeatLegend t={t} />
@@ -289,6 +332,21 @@ export default function SeatMap({ offerId, onSeatSelected, passengerCount }: Sea
       </CardContent>
     </Card>
   );
+}
+
+function findNextOpenPassenger(
+  seats: Map<string, SeatSelection>,
+  segmentId: string,
+  startFrom: number,
+  passengerCount: number
+): number {
+  for (let i = startFrom; i < passengerCount; i++) {
+    if (!seats.has(`pax-${i}-seg-${segmentId}`)) return i;
+  }
+  for (let i = 0; i < startFrom; i++) {
+    if (!seats.has(`pax-${i}-seg-${segmentId}`)) return i;
+  }
+  return Math.min(startFrom, passengerCount - 1);
 }
 
 function SeatMapGrid({

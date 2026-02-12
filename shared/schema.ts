@@ -106,8 +106,8 @@ export interface FlightSearchParams {
   children?: string;
   infants?: string;
   cabinClass?: string;
-  // Multi-city support could be added here later as an array of slices
-  // slices?: Array<{ origin: string; destination: string; date: string }>;
+  tripType?: string;
+  legs?: { origin: string; destination: string; date: string }[];
 }
 
 export interface FlightSegment {
