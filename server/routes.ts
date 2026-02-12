@@ -518,7 +518,46 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // === SERVICES ROUTES ===
+  // === SEAT MAP & SERVICES ROUTES ===
+
+  app.get('/api/flights/:offerId/seat-map', async (req, res) => {
+    try {
+      const { getSeatMap } = await import('./services/duffel');
+      const seatMap = await getSeatMap(req.params.offerId);
+      if (!seatMap) {
+        return res.json({ available: false, cabins: [] });
+      }
+
+      const processed = seatMap.map((sm: any) => ({
+        sliceId: sm.slice_id,
+        segmentId: sm.segment_id,
+        cabins: (sm.cabins || []).map((cabin: any) => ({
+          deckType: cabin.deck || 'main',
+          wings: cabin.wings || null,
+          rows: (cabin.rows || []).map((row: any) => ({
+            sectionNumber: row.sections?.[0]?.number || null,
+            seats: (row.sections || []).flatMap((section: any) =>
+              (section.elements || []).filter((el: any) => el.type === 'seat').map((seat: any) => ({
+                id: seat.designator,
+                designator: seat.designator,
+                available: seat.available_services?.length > 0,
+                type: seat.type || 'standard',
+                disclosures: seat.disclosures || [],
+                price: seat.available_services?.[0]?.total_amount || null,
+                currency: seat.available_services?.[0]?.total_currency || null,
+                serviceId: seat.available_services?.[0]?.id || null,
+              }))
+            ),
+          })),
+        })),
+      }));
+
+      res.json({ available: true, seatMaps: processed });
+    } catch (error) {
+      console.error("Seat map error:", error);
+      res.json({ available: false, cabins: [] });
+    }
+  });
 
   app.get('/api/flights/:offerId/services', async (req, res) => {
     try {
