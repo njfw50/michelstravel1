@@ -528,6 +528,14 @@ const translations: Record<Language, Record<string, string>> = {
     "cookie.decline": "Recusar",
     "cookie.settings": "Configurações",
     "cookie.privacy": "Política de Privacidade",
+
+    "search_loading.title": "Buscando os melhores voos",
+    "search_loading.step1": "Conectando com companhias aéreas...",
+    "search_loading.step2": "Comparando tarifas e classes...",
+    "search_loading.step3": "Verificando disponibilidade de assentos...",
+    "search_loading.step4": "Encontrando as melhores ofertas para você...",
+    "search_loading.step5": "Quase lá! Organizando resultados...",
+    "search_loading.tip": "Dica: Voos com conexão costumam ser mais baratos",
   },
   en: {
     // Header & Footer
@@ -1047,6 +1055,14 @@ const translations: Record<Language, Record<string, string>> = {
     "cookie.decline": "Decline",
     "cookie.settings": "Settings",
     "cookie.privacy": "Privacy Policy",
+
+    "search_loading.title": "Searching for the best flights",
+    "search_loading.step1": "Connecting with airlines...",
+    "search_loading.step2": "Comparing fares and classes...",
+    "search_loading.step3": "Checking seat availability...",
+    "search_loading.step4": "Finding the best deals for you...",
+    "search_loading.step5": "Almost there! Organizing results...",
+    "search_loading.tip": "Tip: Connecting flights are often cheaper",
   },
   es: {
     // Header & Footer
@@ -1566,6 +1582,14 @@ const translations: Record<Language, Record<string, string>> = {
     "cookie.decline": "Rechazar",
     "cookie.settings": "Configuración",
     "cookie.privacy": "Política de Privacidad",
+
+    "search_loading.title": "Buscando los mejores vuelos",
+    "search_loading.step1": "Conectando con aerolíneas...",
+    "search_loading.step2": "Comparando tarifas y clases...",
+    "search_loading.step3": "Verificando disponibilidad de asientos...",
+    "search_loading.step4": "Encontrando las mejores ofertas para ti...",
+    "search_loading.step5": "¡Ya casi! Organizando resultados...",
+    "search_loading.tip": "Dato: Los vuelos con escala suelen ser más baratos",
   }
 };
 

@@ -35,13 +35,16 @@ export function useFlightSearch(params: Partial<FlightSearchParams> & { legs?: s
   return useQuery({
     queryKey: [api.flights.search.path, params],
     queryFn: async () => {
-      // Create a URLSearchParams object but filter out undefined values
       const searchParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
         if (value) searchParams.append(key, String(value));
       });
 
       const url = `${api.flights.search.path}?${searchParams.toString()}`;
+
+      const MIN_SEARCH_TIME = 3500;
+      const startTime = Date.now();
+
       const res = await fetch(url, { credentials: "include" });
       
       if (!res.ok) {
@@ -49,7 +52,14 @@ export function useFlightSearch(params: Partial<FlightSearchParams> & { legs?: s
         throw new Error("Failed to search flights");
       }
       
-      return api.flights.search.responses[200].parse(await res.json());
+      const data = api.flights.search.responses[200].parse(await res.json());
+
+      const elapsed = Date.now() - startTime;
+      if (elapsed < MIN_SEARCH_TIME) {
+        await new Promise(resolve => setTimeout(resolve, MIN_SEARCH_TIME - elapsed));
+      }
+
+      return data;
     },
     enabled: isEnabled,
   });

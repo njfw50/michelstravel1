@@ -4,6 +4,28 @@ import { db } from './db';
 import { bookings } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { sendBookingConfirmationEmail } from './services/emailService';
+import { createDuffelOrder, type DuffelPassenger } from './services/duffel';
+
+function mapPassengersToDuffelFormat(passengerDetails: any[], contactEmail: string, contactPhone: string): DuffelPassenger[] {
+  return passengerDetails.map((p: any) => ({
+    passengerId: p.passengerId || p.id || `pax_0`,
+    givenName: p.firstName || p.givenName || p.given_name || '',
+    familyName: p.lastName || p.familyName || p.family_name || '',
+    bornOn: p.dateOfBirth || p.bornOn || p.born_on || '',
+    gender: (p.gender === 'male' || p.gender === 'm') ? 'm' : 'f',
+    email: p.email || contactEmail,
+    phoneNumber: p.phone || p.phoneNumber || contactPhone || '',
+    documentType: p.documentType || p.document_type || 'passport',
+    documentNumber: p.documentNumber || p.passportNumber || p.passport_number || '',
+    documentExpiryDate: p.documentExpiryDate || p.passportExpiryDate || '',
+    documentIssuingCountry: p.documentIssuingCountry || p.passportIssuingCountry || p.nationality || '',
+    passportNumber: p.passportNumber || p.passport_number || '',
+    passportExpiryDate: p.passportExpiryDate || '',
+    passportIssuingCountry: p.passportIssuingCountry || '',
+    nationality: p.nationality || '',
+    type: p.type || 'adult',
+  }));
+}
 
 export class WebhookHandlers {
   static async processWebhook(payload: Buffer, signature: string): Promise<void> {
@@ -43,6 +65,62 @@ export class WebhookHandlers {
 
             if (updated) {
               console.log(`[WEBHOOK] Booking #${id} confirmed (payment successful)`);
+
+              const flightData = updated.flightData as any;
+              const offerId = flightData?.id;
+              const isTestMode = flightData?._testMode === true;
+
+              if (offerId && !isTestMode) {
+                try {
+                  const passengers = (updated.passengerDetails as any[]) || [];
+                  const duffelPassengers = mapPassengersToDuffelFormat(
+                    passengers,
+                    updated.contactEmail,
+                    updated.contactPhone || ''
+                  );
+
+                  console.log(`[WEBHOOK] Creating Duffel order for booking #${id}, offer: ${offerId}`);
+                  const duffelResult = await createDuffelOrder(offerId, duffelPassengers);
+
+                  if (duffelResult) {
+                    await db.update(bookings)
+                      .set({
+                        flightData: {
+                          ...flightData,
+                          duffelOrderId: duffelResult.orderId,
+                          duffelBookingReference: duffelResult.bookingReference,
+                          ticketIssued: true,
+                        },
+                      })
+                      .where(eq(bookings.id, id));
+                    console.log(`[WEBHOOK] Duffel order created for booking #${id}: ${duffelResult.orderId} (ref: ${duffelResult.bookingReference})`);
+                  } else {
+                    console.error(`[WEBHOOK] Failed to create Duffel order for booking #${id}`);
+                    await db.update(bookings)
+                      .set({
+                        flightData: {
+                          ...flightData,
+                          ticketIssued: false,
+                          ticketError: 'Failed to create Duffel order after payment',
+                        },
+                      })
+                      .where(eq(bookings.id, id));
+                  }
+                } catch (duffelError: any) {
+                  console.error(`[WEBHOOK] Duffel order creation error for booking #${id}:`, duffelError?.message || duffelError);
+                  await db.update(bookings)
+                    .set({
+                      flightData: {
+                        ...flightData,
+                        ticketIssued: false,
+                        ticketError: duffelError?.message || 'Unknown Duffel error',
+                      },
+                    })
+                    .where(eq(bookings.id, id));
+                }
+              } else if (isTestMode) {
+                console.log(`[WEBHOOK] Test mode booking #${id} - skipping Duffel order creation`);
+              }
 
               if (!updated.confirmationEmailSent) {
                 sendBookingConfirmationEmail({
