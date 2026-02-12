@@ -110,11 +110,116 @@ function SegmentCard({ segment, t }: { segment: any; t: (k: string) => string })
   );
 }
 
+function ProcessingScreen({ t }: { t: (k: string) => string }) {
+  const [currentStep, setCurrentStep] = useState(0);
+  const steps = [
+    { icon: CreditCard, label: t("confirm.processing_step1") || "Verifying payment..." },
+    { icon: Shield, label: t("confirm.processing_step2") || "Confirming with the airline..." },
+    { icon: Plane, label: t("confirm.processing_step3") || "Issuing your ticket..." },
+    { icon: Mail, label: t("confirm.processing_step4") || "Preparing confirmation..." },
+  ];
+
+  useEffect(() => {
+    const timers = steps.map((_, idx) =>
+      setTimeout(() => setCurrentStep(idx), idx * 1200)
+    );
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-blue-50 to-white">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-md"
+      >
+        <Card className="bg-white border-gray-200 shadow-2xl rounded-2xl overflow-visible">
+          <CardContent className="pt-10 pb-10 px-8 flex flex-col items-center text-center space-y-8">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="h-16 w-16 rounded-full bg-blue-50 flex items-center justify-center border-2 border-blue-200"
+            >
+              <Plane className="h-8 w-8 text-blue-600" />
+            </motion.div>
+
+            <div className="space-y-2">
+              <h1 className="text-xl font-bold text-gray-900">
+                {t("confirm.processing_title") || "Processing Your Booking"}
+              </h1>
+              <p className="text-gray-500 text-sm">
+                {t("confirm.processing_subtitle") || "Please wait while we finalize everything..."}
+              </p>
+            </div>
+
+            <div className="w-full space-y-3">
+              {steps.map((step, idx) => {
+                const StepIcon = step.icon;
+                const isActive = idx === currentStep;
+                const isDone = idx < currentStep;
+                return (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: idx <= currentStep ? 1 : 0.3, x: 0 }}
+                    transition={{ delay: idx * 0.15, duration: 0.3 }}
+                    className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                      isActive ? "bg-blue-50 border border-blue-200" :
+                      isDone ? "bg-emerald-50 border border-emerald-200" :
+                      "bg-gray-50 border border-gray-100"
+                    }`}
+                  >
+                    <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${
+                      isDone ? "bg-emerald-100" :
+                      isActive ? "bg-blue-100" :
+                      "bg-gray-100"
+                    }`}>
+                      {isDone ? (
+                        <CheckCircle className="h-4 w-4 text-emerald-600" />
+                      ) : isActive ? (
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                        >
+                          <StepIcon className="h-4 w-4 text-blue-600" />
+                        </motion.div>
+                      ) : (
+                        <StepIcon className="h-4 w-4 text-gray-400" />
+                      )}
+                    </div>
+                    <span className={`text-sm font-medium ${
+                      isDone ? "text-emerald-700" :
+                      isActive ? "text-blue-700" :
+                      "text-gray-400"
+                    }`}>
+                      {step.label}
+                    </span>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+              <motion.div
+                className="h-full bg-blue-600 rounded-full"
+                initial={{ width: "0%" }}
+                animate={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function CheckoutSuccess() {
   const [_, setLocation] = useLocation();
   const { t } = useI18n();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
+  const [showProcessing, setShowProcessing] = useState(true);
 
   const searchParams = new URLSearchParams(window.location.search);
   const bookingId = parseInt(searchParams.get("bookingId") || "0", 10);
@@ -123,6 +228,11 @@ export default function CheckoutSuccess() {
   const { data: booking, isLoading, error, refetch } = useBooking(bookingId);
   const emailSentRef = useRef(false);
   const verifiedRef = useRef(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowProcessing(false), 5000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (booking && bookingId && !verifiedRef.current) {
@@ -184,15 +294,8 @@ export default function CheckoutSuccess() {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-          <p className="text-gray-500 text-sm">{t("confirm.loading") || "Loading your booking..."}</p>
-        </div>
-      </div>
-    );
+  if (showProcessing || isLoading) {
+    return <ProcessingScreen t={t} />;
   }
 
   if (error || !booking) {
