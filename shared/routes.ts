@@ -70,7 +70,7 @@ export const api = {
       responses: {
         201: z.object({
           booking: z.custom<typeof bookings.$inferSelect>(),
-          checkoutUrl: z.string(),
+          clientSecret: z.string(),
         }),
         400: errorSchemas.validation,
       },

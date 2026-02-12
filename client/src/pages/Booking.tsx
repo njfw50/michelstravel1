@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CheckCircle2, Plane, Clock, ArrowRight, Shield, Luggage, User, ChevronDown, ChevronUp, RefreshCw, X as XIcon, Briefcase, ScanLine, CreditCard, Lock } from "lucide-react";
+import { CheckCircle2, Plane, Clock, ArrowRight, Shield, Luggage, User, ChevronDown, ChevronUp, RefreshCw, X as XIcon, Briefcase, ScanLine, CreditCard, Lock, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
@@ -24,6 +24,7 @@ import { format, parseISO } from "date-fns";
 import { useI18n } from "@/lib/i18n";
 import { ScanDocumentDialog } from "@/components/ScanDocumentDialog";
 import BaggageSelector from "@/components/BaggageSelector";
+import PaymentForm from "@/components/PaymentForm";
 import type { FlightOffer } from "@shared/schema";
 
 const passengerSchema = z.object({
@@ -438,6 +439,14 @@ export default function Booking() {
 
   const [flight, setFlight] = useState<FlightOffer | null>(null);
   const [baggageSelections, setBaggageSelections] = useState<any[]>([]);
+  const [paymentStep, setPaymentStep] = useState(false);
+  const [paymentData, setPaymentData] = useState<{
+    clientSecret: string;
+    bookingId: number;
+    referenceCode: string;
+    amount: number;
+    currency: string;
+  } | null>(null);
   const isDocRequired = flight?.passengerIdentityDocumentsRequired ?? false;
   const searchParams = new URLSearchParams(window.location.search);
   const numAdults = parseInt(searchParams.get("adults") || "1", 10);
@@ -564,11 +573,18 @@ export default function Booking() {
 
     createBooking.mutate(bookingData as any, {
       onSuccess: (response: any) => {
-        toast({ title: t("booking.initiated"), description: t("booking.redirect") });
-        if (response.checkoutUrl) {
-          window.location.href = response.checkoutUrl;
+        if (response.clientSecret) {
+          setPaymentData({
+            clientSecret: response.clientSecret,
+            bookingId: response.booking.id,
+            referenceCode: response.booking.referenceCode,
+            amount: grandTotal,
+            currency: flight.currency,
+          });
+          setPaymentStep(true);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
-          setLocation("/");
+          toast({ title: t("booking.failed"), description: t("booking.failed_desc") || "Could not initialize payment. Please try again.", variant: "destructive" });
         }
       },
       onError: () => {
@@ -602,14 +618,68 @@ export default function Booking() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200">
         <div className="container mx-auto max-w-6xl px-4 py-8 md:py-10">
-          <h1 className="text-2xl md:text-3xl font-bold font-display text-gray-900 mb-1" data-testid="text-booking-title">{t("booking.title")}</h1>
-          <p className="text-gray-400 text-sm">{t("booking.subtitle")}</p>
+          <div className="flex items-center gap-4 mb-2">
+            {paymentStep && !paymentData && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setPaymentStep(false)}
+                data-testid="button-back-to-details"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            )}
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold font-display text-gray-900 mb-1" data-testid="text-booking-title">
+                {paymentStep ? (t("payment.title") || "Payment Details") : t("booking.title")}
+              </h1>
+              <p className="text-gray-400 text-sm">
+                {paymentStep ? (t("payment.subtitle") || "Complete your payment to confirm the booking") : t("booking.subtitle")}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 mt-3">
+            <div className={`flex items-center gap-1.5 text-xs font-medium ${!paymentStep ? 'text-blue-600' : 'text-emerald-600'}`}>
+              <div className={`h-6 w-6 rounded-full flex items-center justify-center text-white text-xs ${!paymentStep ? 'bg-blue-600' : 'bg-emerald-500'}`}>
+                {paymentStep ? <CheckCircle2 className="h-3.5 w-3.5" /> : '1'}
+              </div>
+              {t("booking.step_details") || "Passenger Details"}
+            </div>
+            <div className="w-8 h-px bg-gray-300" />
+            <div className={`flex items-center gap-1.5 text-xs font-medium ${paymentStep ? 'text-blue-600' : 'text-gray-400'}`}>
+              <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs ${paymentStep ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
+                2
+              </div>
+              {t("booking.step_payment") || "Payment"}
+            </div>
+          </div>
         </div>
       </div>
       
       <div className="container mx-auto max-w-6xl px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
+
+            {paymentStep && paymentData ? (
+              <Card className="border border-gray-200 shadow-sm rounded-2xl bg-white">
+                <CardContent className="p-5 md:p-6">
+                  <PaymentForm
+                    clientSecret={paymentData.clientSecret}
+                    bookingId={paymentData.bookingId}
+                    referenceCode={paymentData.referenceCode}
+                    amount={paymentData.amount}
+                    currency={paymentData.currency}
+                    onSuccess={() => {
+                      setLocation(`/checkout/success?bookingId=${paymentData.bookingId}`);
+                    }}
+                    onError={(error) => {
+                      toast({ title: t("payment.error") || "Payment Error", description: error, variant: "destructive" });
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            ) : (
+
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <Card className="border border-gray-200 shadow-sm rounded-2xl bg-white">
                 <CardHeader className="border-b border-gray-100 gap-2">
@@ -739,12 +809,14 @@ export default function Booking() {
               <div className="space-y-3">
                 <Button 
                   type="submit" 
-                  className="w-full h-14 text-base font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all border-0 text-white rounded-xl gap-2" 
+                  className="w-full h-14 text-base font-bold bg-blue-600 shadow-lg shadow-blue-600/20 transition-all border-0 text-white rounded-xl gap-2" 
                   disabled={createBooking.isPending || !flight}
                   data-testid="button-pay"
                 >
                   <CreditCard className="h-5 w-5" />
-                  {createBooking.isPending ? t("booking.processing") : `${t("booking.pay")} ${flight ? new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(grandTotal) : '...'}`}
+                  {createBooking.isPending 
+                    ? t("booking.processing") 
+                    : `${t("booking.continue_to_payment") || "Continue to Payment"} - ${flight ? new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(grandTotal) : '...'}`}
                 </Button>
                 <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
                   <Lock className="h-3 w-3" />
@@ -752,6 +824,7 @@ export default function Booking() {
                 </div>
               </div>
             </form>
+            )}
           </div>
 
           <div className="space-y-6">

@@ -150,6 +150,102 @@ export class WebhookHandlers {
         break;
       }
 
+      case 'payment_intent.succeeded': {
+        const paymentIntent = event.data.object;
+        const bookingId = paymentIntent.metadata?.bookingId;
+
+        if (bookingId) {
+          const id = parseInt(bookingId, 10);
+          if (!isNaN(id)) {
+            const [existing] = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
+            if (existing && existing.status !== 'confirmed') {
+              const [updated] = await db.update(bookings)
+                .set({
+                  status: 'confirmed',
+                  stripePaymentStatus: 'paid',
+                  stripePaymentIntentId: paymentIntent.id,
+                })
+                .where(eq(bookings.id, id))
+                .returning();
+
+              if (updated) {
+                console.log(`[WEBHOOK] Booking #${id} confirmed via payment_intent.succeeded`);
+
+                const flightData = updated.flightData as any;
+                const offerId = flightData?.id;
+                const isTestMode = flightData?._testMode === true;
+
+                if (offerId && !isTestMode) {
+                  try {
+                    const passengers = (updated.passengerDetails as any[]) || [];
+                    const duffelPassengers = mapPassengersToDuffelFormat(
+                      passengers,
+                      updated.contactEmail,
+                      updated.contactPhone || ''
+                    );
+
+                    const orderAmount = updated.totalPrice || "0";
+                    const orderCurrency = updated.currency || "USD";
+                    console.log(`[WEBHOOK] Creating Duffel order for booking #${id}, offer: ${offerId}`);
+                    const duffelResult = await createDuffelOrder(offerId, duffelPassengers, orderAmount, orderCurrency);
+
+                    if (duffelResult) {
+                      await db.update(bookings)
+                        .set({
+                          flightData: {
+                            ...flightData,
+                            duffelOrderId: duffelResult.orderId,
+                            duffelBookingReference: duffelResult.bookingReference,
+                            ticketIssued: true,
+                          },
+                        })
+                        .where(eq(bookings.id, id));
+                      console.log(`[WEBHOOK] Duffel order created for booking #${id}: ${duffelResult.orderId}`);
+                    } else {
+                      await db.update(bookings)
+                        .set({
+                          flightData: { ...flightData, ticketIssued: false, ticketError: 'Failed to create Duffel order' },
+                        })
+                        .where(eq(bookings.id, id));
+                    }
+                  } catch (duffelError: any) {
+                    console.error(`[WEBHOOK] Duffel error for booking #${id}:`, duffelError?.message);
+                    await db.update(bookings)
+                      .set({
+                        flightData: { ...flightData, ticketIssued: false, ticketError: duffelError?.message || 'Unknown error' },
+                      })
+                      .where(eq(bookings.id, id));
+                  }
+                } else if (isTestMode) {
+                  console.log(`[WEBHOOK] Test mode booking #${id} - skipping Duffel order creation`);
+                }
+
+                if (!updated.confirmationEmailSent) {
+                  sendBookingConfirmationEmail({
+                    referenceCode: updated.referenceCode || `MT-${updated.id}`,
+                    contactEmail: updated.contactEmail,
+                    contactPhone: updated.contactPhone,
+                    totalPrice: updated.totalPrice,
+                    currency: updated.currency || 'USD',
+                    status: 'confirmed',
+                    flightData: updated.flightData,
+                    passengerDetails: (updated.passengerDetails as any[]) || [],
+                    createdAt: updated.createdAt?.toString() || new Date().toISOString(),
+                  }).then(() => {
+                    db.update(bookings)
+                      .set({ confirmationEmailSent: true })
+                      .where(eq(bookings.id, id))
+                      .execute()
+                      .catch(() => {});
+                  }).catch(err => console.error('[WEBHOOK] Email send failed:', err));
+                }
+              }
+            }
+          }
+        }
+        break;
+      }
+
       case 'checkout.session.expired': {
         const session = event.data.object;
         const bookingId = session.metadata?.bookingId || session.client_reference_id;

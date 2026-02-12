@@ -244,19 +244,32 @@ export default function CheckoutSuccess() {
             .catch(() => {});
         }
       } else {
-        fetch(`/api/bookings/${bookingId}/verify-payment`, { method: "POST" })
-          .then(res => res.json())
-          .then(data => {
-            if (data.verified) {
-              refetch();
-              if (!emailSentRef.current) {
-                emailSentRef.current = true;
-                fetch(`/api/bookings/${bookingId}/send-confirmation`, { method: "POST" })
-                  .catch(() => {});
+        let attempts = 0;
+        const maxAttempts = 5;
+        const verify = () => {
+          fetch(`/api/bookings/${bookingId}/verify-payment`, { method: "POST" })
+            .then(res => res.json())
+            .then(data => {
+              if (data.verified) {
+                refetch();
+                if (!emailSentRef.current) {
+                  emailSentRef.current = true;
+                  fetch(`/api/bookings/${bookingId}/send-confirmation`, { method: "POST" })
+                    .catch(() => {});
+                }
+              } else if (attempts < maxAttempts) {
+                attempts++;
+                setTimeout(verify, 2000);
               }
-            }
-          })
-          .catch(() => {});
+            })
+            .catch(() => {
+              if (attempts < maxAttempts) {
+                attempts++;
+                setTimeout(verify, 2000);
+              }
+            });
+        };
+        verify();
       }
     }
   }, [booking, bookingId, refetch]);

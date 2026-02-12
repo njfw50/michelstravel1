@@ -70,6 +70,11 @@ Preferred communication style: Simple, everyday language.
 - **Booking Cancellation**: Cancel button on My Trips page with confirmation dialog, refund amount display, and proper react-query cache invalidation
 
 ### Stripe (Payments)
+- Embedded payment form using Stripe Elements (PaymentElement) — card fields shown directly in the booking page
+- Two-step booking flow: Step 1 = passenger details, Step 2 = embedded payment form with card number, expiry, CVC
+- Backend creates PaymentIntent (not Checkout Session) and returns clientSecret to frontend
+- Frontend uses @stripe/react-stripe-js Elements to render payment form
+- Webhook handles both `payment_intent.succeeded` and `checkout.session.completed` events
 - Handles one-time flight booking payments and subscription checkout sessions
 - Uses Replit's Stripe connector for credentials (`server/stripeClient.ts`) — fetches keys dynamically based on deployment environment (dev vs production)
 - `stripe-replit-sync` manages webhook registration and syncs product/price data to PostgreSQL

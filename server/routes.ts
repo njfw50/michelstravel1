@@ -386,36 +386,46 @@ export function registerRoutes(app: Express) {
         }).returning();
 
         const flightInfo = bookingData.flightData || {};
-        const session = await stripeService.createFlightCheckoutSession(
-            (req as any).user?.stripeCustomerId,
-            price,
-            bookingData.currency || 'USD',
-            `${req.protocol}://${req.get('host')}/checkout/success?bookingId=${booking.id}`,
-            `${req.protocol}://${req.get('host')}/checkout/cancel?bookingId=${booking.id}`,
-            {
-                bookingId: booking.id,
-                referenceCode: refCode,
-                origin: flightInfo.originCode || flightInfo.origin || '',
-                destination: flightInfo.destinationCode || flightInfo.destination || '',
-                airline: flightInfo.airline || '',
-                flightNumber: flightInfo.flightNumber || '',
-                departureDate: flightInfo.departureTime ? flightInfo.departureTime.split('T')[0] : '',
-                returnDate: flightInfo.slices?.[1]?.segments?.[0]?.departureTime?.split('T')[0] || '',
-                airlineLogo: flightInfo.logoUrl || '',
-                passengerCount: bookingData.passengerDetails?.length || bookingData.passengers?.length || 1,
-                cabinClass: flightInfo.cabinClass || 'economy',
-                contactEmail: bookingData.contactEmail,
-                contactPhone: bookingData.contactPhone || '',
-                passengers: bookingData.passengerDetails || bookingData.passengers || [],
-                locale: bookingData.locale || 'auto',
-            }
-        );
+        const stripe = await getUncachableStripeClient();
+
+        const passengerSummary = (bookingData.passengerDetails || bookingData.passengers || [])
+          .map((p: any) => `${p.givenName || ''} ${p.familyName || ''}`.trim())
+          .filter(Boolean)
+          .join(', ');
+
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: Math.round(price * 100),
+          currency: (bookingData.currency || 'USD').toLowerCase(),
+          automatic_payment_methods: { enabled: true },
+          description: `Michels Travel Booking ${refCode}: ${flightInfo.originCode || flightInfo.origin || ''} → ${flightInfo.destinationCode || flightInfo.destination || ''}`,
+          statement_descriptor: 'MICHELS TRAVEL',
+          statement_descriptor_suffix: refCode.substring(0, 22),
+          receipt_email: bookingData.contactEmail || undefined,
+          metadata: {
+            bookingId: String(booking.id),
+            referenceCode: refCode,
+            origin: flightInfo.originCode || flightInfo.origin || '',
+            destination: flightInfo.destinationCode || flightInfo.destination || '',
+            airline: flightInfo.airline || '',
+            flightNumber: flightInfo.flightNumber || '',
+            departureDate: flightInfo.departureTime ? flightInfo.departureTime.split('T')[0] : '',
+            passengerCount: String(bookingData.passengerDetails?.length || bookingData.passengers?.length || 1),
+            cabinClass: flightInfo.cabinClass || 'economy',
+            contactEmail: bookingData.contactEmail || '',
+            contactPhone: bookingData.contactPhone || '',
+            passengerSummary,
+          },
+        });
 
         await db.update(bookings)
-            .set({ stripePaymentIntentId: session.id })
+            .set({ stripePaymentIntentId: paymentIntent.id })
             .where(eq(bookings.id, booking.id));
 
-        res.status(201).json({ booking, checkoutUrl: session.url, testMode: isTestModeActive });
+        res.status(201).json({ 
+          booking, 
+          clientSecret: paymentIntent.client_secret,
+          testMode: isTestModeActive 
+        });
 
     } catch (error) {
         console.error("Booking creation error:", error);
