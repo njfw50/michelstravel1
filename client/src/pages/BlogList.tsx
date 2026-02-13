@@ -9,7 +9,7 @@ import { SEO } from "@/components/SEO";
 
 function estimateReadTime(content: string | null | undefined): number {
   if (!content) return 3;
-  const words = content.split(/\s+/).length;
+  const words = content.replace(/<[^>]*>/g, "").split(/\s+/).length;
   return Math.max(2, Math.ceil(words / 200));
 }
 
@@ -31,7 +31,7 @@ export default function BlogList() {
 
       <div className="container mx-auto px-4 py-10 pb-20 max-w-6xl">
         {isLoading ? (
-          <div className="flex justify-center py-20">
+          <div className="flex justify-center items-center gap-2 py-20">
             <Loader2 className="animate-spin h-8 w-8 text-blue-500" />
           </div>
         ) : posts && posts.length > 0 ? (
@@ -39,10 +39,10 @@ export default function BlogList() {
             {featuredPost && (
               <Link href={`/blog/${featuredPost.slug}`}>
                 <Card
-                  className="group cursor-pointer overflow-hidden bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg hover:border-blue-200 transition-all"
+                  className="group cursor-pointer overflow-visible bg-white border border-gray-200 rounded-2xl hover-elevate"
                   data-testid={`blog-card-featured-${featuredPost.slug}`}
                 >
-                  <div className="flex flex-col md:flex-row">
+                  <div className="flex flex-col md:flex-row overflow-hidden rounded-2xl">
                     <div className="md:w-1/2 h-56 md:h-auto min-h-[280px] overflow-hidden bg-gray-100 relative">
                       {featuredPost.coverImage ? (
                         <img
@@ -51,11 +51,11 @@ export default function BlogList() {
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
+                        <div className="w-full h-full flex items-center justify-center gap-2">
                           <BookOpen className="h-16 w-16 text-gray-300" />
                         </div>
                       )}
-                      <Badge className="absolute top-4 left-4 bg-blue-600 text-white border-0 text-xs">
+                      <Badge className="absolute top-4 left-4 bg-blue-600 text-white border-0 text-xs no-default-hover-elevate no-default-active-elevate">
                         {t("blog.featured") || "Destaque"}
                       </Badge>
                     </div>
@@ -73,7 +73,7 @@ export default function BlogList() {
                         {featuredPost.title}
                       </h2>
                       <p className="text-gray-500 line-clamp-3 mb-5 text-base leading-relaxed">{featuredPost.excerpt}</p>
-                      <span className="text-sm font-bold text-blue-600 flex items-center gap-1 group-hover:gap-2 transition-all" data-testid="link-read-featured">
+                      <span className="text-sm font-bold text-blue-600 flex items-center gap-1 flex-wrap" data-testid="link-read-featured">
                         {t("blog.read_article")} <ArrowRight className="h-4 w-4" />
                       </span>
                     </div>
@@ -87,10 +87,10 @@ export default function BlogList() {
                 {remainingPosts.map((post) => (
                   <Link key={post.slug} href={`/blog/${post.slug}`}>
                     <Card
-                      className="h-full group cursor-pointer overflow-hidden bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-lg hover:border-blue-200 transition-all flex flex-col"
+                      className="h-full group cursor-pointer overflow-visible bg-white border border-gray-200 rounded-2xl hover-elevate flex flex-col"
                       data-testid={`blog-card-${post.slug}`}
                     >
-                      <div className="h-44 overflow-hidden bg-gray-100 shrink-0">
+                      <div className="h-44 overflow-hidden bg-gray-100 shrink-0 rounded-t-2xl">
                         {post.coverImage ? (
                           <img
                             src={post.coverImage}
@@ -98,7 +98,7 @@ export default function BlogList() {
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center">
+                          <div className="w-full h-full flex items-center justify-center gap-2">
                             <BookOpen className="h-10 w-10 text-gray-300" />
                           </div>
                         )}
@@ -117,7 +117,7 @@ export default function BlogList() {
                           {post.title}
                         </h3>
                         <p className="text-sm text-gray-500 line-clamp-2 mb-4 flex-1">{post.excerpt}</p>
-                        <span className="text-sm font-bold text-blue-600 flex items-center gap-1 group-hover:gap-2 transition-all mt-auto" data-testid={`link-read-${post.slug}`}>
+                        <span className="text-sm font-bold text-blue-600 flex items-center gap-1 flex-wrap mt-auto" data-testid={`link-read-${post.slug}`}>
                           {t("blog.read_article")} <ArrowRight className="h-4 w-4" />
                         </span>
                       </div>
@@ -128,7 +128,7 @@ export default function BlogList() {
             )}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-gray-200">
+          <div className="flex flex-col items-center justify-center gap-2 py-20 bg-white rounded-2xl shadow-sm border border-gray-200">
             <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
               <BookOpen className="h-8 w-8 text-gray-300" />
             </div>
