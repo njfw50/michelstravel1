@@ -95,6 +95,19 @@
       "inLanguage": ["pt-BR", "en-US", "es-ES"]
     }
     </script>
+    <style>
+      iframe[src*="replit"], div[class*="replit-ui-theme-root"], #replit-badge, .replit-badge,
+      div[data-replit-feedback], div[class*="ReplitBadge"], div[id*="replit"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        position: absolute !important;
+        left: -9999px !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
@@ -107,5 +120,28 @@
       window.__vite_plugin_react_preamble_installed__ = true
     </script>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      (function hideExternalWidgets() {
+        var obs = new MutationObserver(function(mutations) {
+          mutations.forEach(function(m) {
+            m.addedNodes.forEach(function(node) {
+              if (node.nodeType === 1) {
+                var el = node;
+                var isExternal = (el.id && el.id.toLowerCase().indexOf('replit') !== -1) ||
+                  (el.className && typeof el.className === 'string' && el.className.toLowerCase().indexOf('replit') !== -1) ||
+                  (el.tagName === 'IFRAME' && el.src && el.src.indexOf('replit') !== -1) ||
+                  (el.getAttribute && el.getAttribute('data-replit-feedback'));
+                if (isExternal) {
+                  el.style.display = 'none';
+                  el.style.visibility = 'hidden';
+                  el.remove();
+                }
+              }
+            });
+          });
+        });
+        obs.observe(document.documentElement, { childList: true, subtree: true });
+      })();
+    </script>
   </body>
 </html>

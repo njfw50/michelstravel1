@@ -349,7 +349,7 @@ export async function searchFlights(params: FlightSearchParams): Promise<FlightO
       limit: 50,
     });
 
-    return offers.data.map((offer) => {
+    const allOffers = offers.data.map((offer) => {
       const slice = offer.slices[0];
       const segment = slice.segments[0];
       const lastSegment = slice.segments[slice.segments.length - 1];
@@ -460,6 +460,20 @@ export async function searchFlights(params: FlightSearchParams): Promise<FlightO
         } : null,
       };
     });
+
+    const deduped = new Map<string, FlightOffer>();
+    for (const flight of allOffers) {
+      const allSegIds = flight.slices
+        ? flight.slices.map(s => s.segments.map(seg => `${seg.flightNumber}-${seg.departureTime}`).join('|')).join('||')
+        : `${flight.flightNumber}-${flight.departureTime}-${flight.arrivalTime}`;
+      const key = `${allSegIds}-${flight.stops}`;
+      const existing = deduped.get(key);
+      if (!existing || flight.price < existing.price) {
+        deduped.set(key, flight);
+      }
+    }
+
+    return Array.from(deduped.values());
   } catch (error) {
     console.error("Duffel API Error:", error);
     return [];
