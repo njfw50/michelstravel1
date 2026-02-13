@@ -445,11 +445,12 @@ export default function Home() {
                   </div>
 
                   <Button
+                    size="lg"
                     onClick={() => {
                       const chatBtn = document.querySelector('[data-testid="button-chatbot-toggle"]') as HTMLButtonElement;
                       if (chatBtn) chatBtn.click();
                     }}
-                    className="rounded-full px-8 py-6 text-base font-bold bg-white text-[#0f2240] border-0 shadow-lg shadow-black/20 transition-all"
+                    className="rounded-full bg-white text-[#0f2240] border-white shadow-lg shadow-black/20"
                     data-testid="button-open-assistant"
                   >
                     <MessageCircle className="mr-2 h-5 w-5" />
@@ -475,24 +476,24 @@ export default function Home() {
                       <div className="space-y-2.5">
                         <div className="flex justify-start">
                           <div className="bg-gray-100 rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[85%]">
-                            <p className="text-sm text-gray-700">Oi! Sou a Mia, sua assistente de viagens. Como posso ajudar?</p>
+                            <p className="text-sm text-gray-700">{t("home.assistant.chat_greeting")}</p>
                           </div>
                         </div>
                         <div className="flex justify-end">
                           <div className="bg-blue-500 rounded-2xl rounded-tr-md px-4 py-2.5 max-w-[85%]">
-                            <p className="text-sm text-white">Quero viajar para Miami</p>
+                            <p className="text-sm text-white">{t("home.assistant.chat_user")}</p>
                           </div>
                         </div>
                         <div className="flex justify-start">
                           <div className="bg-gray-100 rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[85%]">
-                            <p className="text-sm text-gray-700">Encontrei voos a partir de $680! Quer que eu busque as melhores ofertas?</p>
+                            <p className="text-sm text-gray-700">{t("home.assistant.chat_reply")}</p>
                           </div>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2 pt-2">
                         <div className="flex-1 bg-gray-50 rounded-full px-4 py-2.5 border border-gray-200">
-                          <span className="text-xs text-gray-400">Digite sua mensagem...</span>
+                          <span className="text-xs text-gray-400">{t("home.assistant.chat_placeholder")}</span>
                         </div>
                         <div className="h-9 w-9 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
                           <ArrowRight className="h-4 w-4 text-white" />
