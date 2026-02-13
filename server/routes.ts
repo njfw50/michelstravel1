@@ -6,7 +6,7 @@ import { getUncachableStripeClient } from './stripeClient';
 import { db } from "./db";
 import { flightSearches, bookings, siteSettings, conversations, messages, type FlightSearchParams } from "@shared/schema";
 import { users } from "@shared/models/auth";
-import { desc, eq, and } from "drizzle-orm";
+import { desc, eq, and, gt } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import OpenAI from "openai";
 
@@ -1228,22 +1228,34 @@ BEHAVIOR:
       let clientDisconnected = false;
       req.on("close", () => { clientDisconnected = true; });
 
-      const stream = await chatbotOpenai.chat.completions.create({
-        model: "gpt-5-nano",
-        messages: chatHistory,
-        stream: true,
-        max_completion_tokens: 512,
-      });
-
       let fullResponse = "";
-      for await (const chunk of stream) {
-        if (clientDisconnected) break;
-        const text = chunk.choices[0]?.delta?.content || "";
-        if (text) {
-          fullResponse += text;
-          res.write(`data: ${JSON.stringify({ content: text })}\n\n`);
-          if (typeof (res as any).flush === "function") (res as any).flush();
+
+      try {
+        const completion = await chatbotOpenai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: chatHistory,
+          max_tokens: 512,
+        });
+
+        fullResponse = completion.choices[0]?.message?.content || "";
+      } catch (modelError: any) {
+        console.error("Primary model failed, trying fallback:", modelError.message);
+        try {
+          const fallback = await chatbotOpenai.chat.completions.create({
+            model: "gpt-5-nano",
+            messages: chatHistory,
+            max_tokens: 512,
+          });
+          fullResponse = fallback.choices[0]?.message?.content || "";
+        } catch (fallbackError: any) {
+          console.error("Fallback model also failed:", fallbackError.message);
+          fullResponse = "Desculpe, estou com dificuldades técnicas no momento. Por favor, tente novamente em alguns instantes ou entre em contato pelo WhatsApp: +1 (862) 350-1161.";
         }
+      }
+
+      if (fullResponse && !clientDisconnected) {
+        res.write(`data: ${JSON.stringify({ content: fullResponse })}\n\n`);
+        if (typeof (res as any).flush === "function") (res as any).flush();
       }
 
       await db.insert(messages).values({
@@ -1592,6 +1604,82 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
     } catch (error) {
       console.error('Resolve escalation error:', error);
       res.status(500).json({ error: "Failed to resolve escalation" });
+    }
+  });
+
+  app.post('/api/admin/chatbot/reply', requireAdmin, async (req, res) => {
+    try {
+      const { conversationId, content } = req.body;
+      if (!conversationId || !content) {
+        return res.status(400).json({ error: "conversationId and content are required" });
+      }
+
+      await db.insert(messages).values({
+        conversationId,
+        role: "admin",
+        content,
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Admin reply error:', error);
+      res.status(500).json({ error: "Failed to send reply" });
+    }
+  });
+
+  app.get('/api/chatbot/poll/:sessionId', async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const afterId = parseInt(req.query.afterId as string) || 0;
+
+      const newMessages = await db.select().from(messages)
+        .where(
+          and(
+            eq(messages.conversationId, sessionId),
+            eq(messages.role, "admin"),
+            afterId > 0 ? gt(messages.id, afterId) : undefined
+          )
+        )
+        .orderBy(messages.createdAt);
+
+      res.json(newMessages);
+    } catch (error) {
+      console.error('Poll messages error:', error);
+      res.status(500).json({ error: "Failed to poll messages" });
+    }
+  });
+
+  app.get('/api/admin/chatbot/conversations', requireAdmin, async (req, res) => {
+    try {
+      const allConversations = await db.select().from(conversations)
+        .orderBy(desc(conversations.createdAt));
+
+      const convsWithMessages = await Promise.all(
+        allConversations.map(async (conv) => {
+          const msgs = await db.select().from(messages)
+            .where(eq(messages.conversationId, conv.id))
+            .orderBy(messages.createdAt);
+          return { ...conv, messages: msgs };
+        })
+      );
+
+      res.json(convsWithMessages);
+    } catch (error) {
+      console.error('Admin conversations error:', error);
+      res.status(500).json({ error: "Failed to fetch conversations" });
+    }
+  });
+
+  app.get('/api/admin/chatbot/conversations/:id/messages', requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const msgs = await db.select().from(messages)
+        .where(eq(messages.conversationId, id))
+        .orderBy(messages.createdAt);
+      res.json(msgs);
+    } catch (error) {
+      console.error('Admin conversation messages error:', error);
+      res.status(500).json({ error: "Failed to fetch messages" });
     }
   });
 }

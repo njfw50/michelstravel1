@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, X, Send, Loader2, User, Bot, AlertTriangle, Headphones, Plane, ToggleLeft, ToggleRight, Clock, ArrowRight } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, User, Bot, AlertTriangle, Headphones, Plane, ToggleLeft, ToggleRight, Clock, ArrowRight, UserCheck } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -26,7 +26,7 @@ interface FlightResult {
 
 interface ChatMessage {
   id: number;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "admin";
   content: string;
   createdAt?: string;
   flights?: FlightResult[];
@@ -42,8 +42,10 @@ export function Chatbot() {
   const [escalated, setEscalated] = useState(false);
   const [agentMode, setAgentMode] = useState(false);
   const [showPulse, setShowPulse] = useState(true);
+  const [lastAdminMsgId, setLastAdminMsgId] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -58,6 +60,40 @@ export function Chatbot() {
       inputRef.current.focus();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (escalated && sessionId && isOpen) {
+      const poll = async () => {
+        try {
+          const res = await fetch(`/api/chatbot/poll/${sessionId}?afterId=${lastAdminMsgId}`);
+          if (res.ok) {
+            const newMsgs = await res.json();
+            if (newMsgs.length > 0) {
+              const mapped: ChatMessage[] = newMsgs.map((m: any) => ({
+                id: m.id,
+                role: "admin" as const,
+                content: m.content,
+                createdAt: m.createdAt,
+              }));
+              setChatMessages(prev => [...prev, ...mapped]);
+              setLastAdminMsgId(newMsgs[newMsgs.length - 1].id);
+            }
+          }
+        } catch {
+          // silently retry on next interval
+        }
+      };
+
+      pollIntervalRef.current = setInterval(poll, 3000);
+      poll();
+      return () => {
+        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+      };
+    }
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+    };
+  }, [escalated, sessionId, isOpen, lastAdminMsgId]);
 
   const createSession = async () => {
     try {
@@ -135,90 +171,91 @@ export function Chatbot() {
     const endpoint = agentMode ? "/api/chatbot/agent-message" : "/api/chatbot/message";
 
     try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: currentSessionId, content: userMessage.content }),
+      await new Promise<void>((resolve, reject) => {
+        let fullContent = "";
+        let collectedFlights: FlightResult[] = [];
+        let lastProcessed = 0;
+
+        const processSSELine = (line: string) => {
+          if (!line.startsWith("data: ")) return;
+          const jsonStr = line.slice(6).trim();
+          if (!jsonStr) return;
+          try {
+            const event = JSON.parse(jsonStr);
+
+            if (event.type === "flights" && event.flights) {
+              collectedFlights = event.flights;
+              setChatMessages(prev => {
+                const updated = [...prev];
+                const lastIdx = updated.length - 1;
+                if (updated[lastIdx]?.role === "assistant") {
+                  updated[lastIdx] = { ...updated[lastIdx], flights: collectedFlights };
+                }
+                return updated;
+              });
+            }
+
+            if (event.content) {
+              fullContent += event.content;
+              setChatMessages(prev => {
+                const updated = [...prev];
+                const lastIdx = updated.length - 1;
+                if (updated[lastIdx]?.role === "assistant") {
+                  updated[lastIdx] = { ...updated[lastIdx], content: fullContent, flights: collectedFlights.length > 0 ? collectedFlights : updated[lastIdx].flights };
+                }
+                return updated;
+              });
+            }
+            if (event.done) {
+              if (event.escalated) {
+                setEscalated(true);
+              }
+            }
+          } catch (e) {
+            // skip unparseable lines
+          }
+        };
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", endpoint);
+        xhr.setRequestHeader("Content-Type", "application/json");
+
+        xhr.onprogress = () => {
+          const newData = xhr.responseText.substring(lastProcessed);
+          lastProcessed = xhr.responseText.length;
+          const lines = newData.split("\n");
+          for (const line of lines) {
+            if (line.trim()) processSSELine(line.trim());
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const remaining = xhr.responseText.substring(lastProcessed);
+            if (remaining.trim()) {
+              const lines = remaining.split("\n");
+              for (const line of lines) {
+                if (line.trim()) processSSELine(line.trim());
+              }
+            }
+            if (!fullContent) {
+              const allLines = xhr.responseText.split("\n");
+              for (const line of allLines) {
+                if (line.trim()) processSSELine(line.trim());
+              }
+            }
+            resolve();
+          } else {
+            reject(new Error(`Server error: ${xhr.status}`));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error("Network error"));
+        xhr.ontimeout = () => reject(new Error("Request timeout"));
+        xhr.timeout = 60000;
+
+        xhr.send(JSON.stringify({ sessionId: currentSessionId, content: userMessage.content }));
       });
-
-      if (!res.ok) {
-        throw new Error(`Server error: ${res.status}`);
-      }
-
-      let fullContent = "";
-      let collectedFlights: FlightResult[] = [];
-
-      const processSSELine = (line: string) => {
-        if (!line.startsWith("data: ")) return;
-        const jsonStr = line.slice(6).trim();
-        if (!jsonStr) return;
-        try {
-          const event = JSON.parse(jsonStr);
-
-          if (event.type === "flights" && event.flights) {
-            collectedFlights = event.flights;
-            setChatMessages(prev => {
-              const updated = [...prev];
-              const lastIdx = updated.length - 1;
-              if (updated[lastIdx]?.role === "assistant") {
-                updated[lastIdx] = { ...updated[lastIdx], flights: collectedFlights };
-              }
-              return updated;
-            });
-          }
-
-          if (event.content) {
-            fullContent += event.content;
-            setChatMessages(prev => {
-              const updated = [...prev];
-              const lastIdx = updated.length - 1;
-              if (updated[lastIdx]?.role === "assistant") {
-                updated[lastIdx] = { ...updated[lastIdx], content: fullContent, flights: collectedFlights.length > 0 ? collectedFlights : updated[lastIdx].flights };
-              }
-              return updated;
-            });
-          }
-          if (event.done) {
-            if (event.escalated) {
-              setEscalated(true);
-            }
-          }
-        } catch (e) {
-          console.error("SSE parse error:", e, "line:", line);
-        }
-      };
-
-      if (res.body && typeof res.body.getReader === "function") {
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n");
-            buffer = lines.pop() || "";
-
-            for (const line of lines) {
-              processSSELine(line);
-            }
-          }
-          if (buffer.trim()) {
-            processSSELine(buffer.trim());
-          }
-        } catch (streamError) {
-          console.error("Stream read error, falling back:", streamError);
-        }
-      } else {
-        const text = await res.text();
-        const lines = text.split("\n");
-        for (const line of lines) {
-          processSSELine(line);
-        }
-      }
 
     } catch (error) {
       console.error("Chat error:", error);
@@ -396,18 +433,27 @@ export function Chatbot() {
                         <div className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${
                           msg.role === "user" 
                             ? "bg-[#0074DE] text-white" 
+                            : msg.role === "admin"
+                            ? "bg-emerald-600 text-white"
                             : "bg-muted text-muted-foreground"
                         }`}>
-                          {msg.role === "user" ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
+                          {msg.role === "user" ? <User className="h-3 w-3" /> : msg.role === "admin" ? <UserCheck className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
                         </div>
                         <div
                           className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
                             msg.role === "user"
                               ? "bg-[#0074DE] text-white rounded-br-md"
+                              : msg.role === "admin"
+                              ? "bg-emerald-50 dark:bg-emerald-950/40 text-foreground rounded-bl-md border border-emerald-200 dark:border-emerald-800"
                               : "bg-muted text-foreground rounded-bl-md"
                           }`}
                           data-testid={`chatbot-message-${msg.role}`}
                         >
+                          {msg.role === "admin" && (
+                            <div className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 mb-0.5">
+                              {language === "pt" ? "Agente Humano" : language === "es" ? "Agente Humano" : "Human Agent"}
+                            </div>
+                          )}
                           {msg.role === "assistant" && msg.content === "" && isStreaming && !msg.flights ? (
                             <div className="flex items-center gap-1">
                               <div className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "0ms" }} />

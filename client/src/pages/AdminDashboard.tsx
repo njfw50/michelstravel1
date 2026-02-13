@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut } from "lucide-react";
+import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -333,15 +333,26 @@ export default function AdminDashboard() {
             <h1 className="text-3xl font-bold font-display text-gray-900" data-testid="text-admin-title">{t("admin.dashboard")}</h1>
             <p className="text-gray-500">{t("admin.welcome")}. {t("admin.happening")}</p>
           </div>
-          <Button
-            data-testid="button-admin-logout"
-            variant="outline"
-            onClick={handleLogout}
-            className="gap-2"
-          >
-            <LogOut className="h-4 w-4" />
-            {t("admin.logout")}
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              data-testid="button-admin-live-chat"
+              variant="default"
+              onClick={() => setLocation("/admin/live-chat")}
+              className="gap-2"
+            >
+              <MessageSquare className="h-4 w-4" />
+              Atendimento ao Vivo
+            </Button>
+            <Button
+              data-testid="button-admin-logout"
+              variant="outline"
+              onClick={handleLogout}
+              className="gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              {t("admin.logout")}
+            </Button>
+          </div>
         </div>
 
         <TestModeControl />
