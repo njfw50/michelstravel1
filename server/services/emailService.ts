@@ -225,7 +225,10 @@ export async function sendChatEscalationEmail(sessionId: number, chatLog: string
         <h3>Histórico da Conversa:</h3>
         <pre style="background: white; padding: 16px; border-radius: 8px; border: 1px solid #e5e7eb; white-space: pre-wrap; font-size: 13px; line-height: 1.5;">${chatLog.replace("[ESCALATE]", "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
         <p style="margin-top: 16px; color: #6b7280; font-size: 13px;">
-          Acesse o painel admin em michelstravel.com/admin para ver e resolver esta solicitação.
+          Acesse o painel admin em buyflights.net/admin para ver e resolver esta solicitação.
+        </p>
+        <p style="margin-top: 8px; color: #6b7280; font-size: 13px;">
+          O cliente foi direcionado para entrar em contato pelo <a href="https://m.me/michelstravelusa" style="color: #0074DE;">Facebook Messenger</a> ou WhatsApp.
         </p>
       </div>
     </div>
