@@ -46,7 +46,6 @@ function CheckoutForm({
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentReady, setPaymentReady] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { t } = useI18n();
 
@@ -64,6 +63,13 @@ function CheckoutForm({
     setErrorMessage(null);
 
     try {
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        setErrorMessage(submitError.message || t("payment.generic_error") || "Please complete all payment fields.");
+        setIsProcessing(false);
+        return;
+      }
+
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
@@ -77,6 +83,9 @@ function CheckoutForm({
         setIsProcessing(false);
       } else if (paymentIntent && paymentIntent.status === "succeeded") {
         onSuccess();
+      } else if (paymentIntent && paymentIntent.status === "requires_action") {
+        setErrorMessage(null);
+        setIsProcessing(false);
       } else {
         setIsProcessing(false);
       }
@@ -122,7 +131,6 @@ function CheckoutForm({
             business: { name: "Michels Travel" },
           }}
           onChange={(event) => {
-            setPaymentReady(event.complete);
             if (event.complete) setErrorMessage(null);
           }}
         />
@@ -140,7 +148,7 @@ function CheckoutForm({
 
       <Button
         type="submit"
-        disabled={!stripe || !elements || isProcessing || !paymentReady}
+        disabled={!stripe || !elements || isProcessing}
         className="w-full h-14 text-base font-bold bg-blue-600 shadow-lg shadow-blue-600/20 transition-all border-0 text-white rounded-xl gap-2"
         data-testid="button-confirm-payment"
       >
