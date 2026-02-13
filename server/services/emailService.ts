@@ -207,3 +207,47 @@ export async function sendBookingConfirmationEmail(booking: BookingEmailData): P
     return false;
   }
 }
+
+export async function sendChatEscalationEmail(sessionId: number, chatLog: string): Promise<boolean> {
+  const transporter = getTransporter();
+  
+  const subject = `[URGENTE] Cliente solicitou atendimento humano - Chat #${sessionId}`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: #dc2626; color: white; padding: 16px 24px; border-radius: 8px 8px 0 0;">
+        <h2 style="margin: 0;">Cliente Precisa de Atendimento</h2>
+      </div>
+      <div style="padding: 24px; background: #f9fafb; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+        <p>Um cliente no chatbot solicitou falar com um atendente humano.</p>
+        <p><strong>Chat ID:</strong> #${sessionId}</p>
+        <p><strong>Data:</strong> ${new Date().toLocaleString("pt-BR", { timeZone: "America/New_York" })}</p>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 16px 0;" />
+        <h3>Histórico da Conversa:</h3>
+        <pre style="background: white; padding: 16px; border-radius: 8px; border: 1px solid #e5e7eb; white-space: pre-wrap; font-size: 13px; line-height: 1.5;">${chatLog.replace("[ESCALATE]", "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
+        <p style="margin-top: 16px; color: #6b7280; font-size: 13px;">
+          Acesse o painel admin em michelstravel.com/admin para ver e resolver esta solicitação.
+        </p>
+      </div>
+    </div>
+  `;
+
+  if (!transporter) {
+    console.log(`[EMAIL-ESCALATION] SMTP not configured. Escalation for Chat #${sessionId}:`);
+    console.log(`[EMAIL-ESCALATION] Chat log:\n${chatLog}`);
+    return false;
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"${AGENCY_NAME}" <${process.env.SMTP_USER}>`,
+      to: AGENCY_EMAIL,
+      subject,
+      html,
+    });
+    console.log(`[EMAIL] Escalation notification sent for Chat #${sessionId}`);
+    return true;
+  } catch (error) {
+    console.error("[EMAIL] Failed to send escalation:", error);
+    return false;
+  }
+}

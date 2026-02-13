@@ -4,10 +4,11 @@ import { storage } from './storage';
 import { stripeService } from './stripeService';
 import { getUncachableStripeClient } from './stripeClient';
 import { db } from "./db";
-import { flightSearches, bookings, siteSettings, type FlightSearchParams } from "@shared/schema";
+import { flightSearches, bookings, siteSettings, conversations, messages, type FlightSearchParams } from "@shared/schema";
 import { users } from "@shared/models/auth";
 import { desc, eq, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import OpenAI from "openai";
 
 function generateReferenceCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -18,7 +19,7 @@ function generateReferenceCode(): string {
   return `MT-${code}`;
 }
 import { searchFlights, getFlight, searchPlaces, getAirlines, getAirports, getAircraft, initializeReferenceData, isTestMode, activeTokenIsTest, hasLiveToken, hasTestToken, setTestModeCache, clearReferenceDataCache, loadTestModeSetting, ensureTestModeLoaded, refreshOffer } from "./services/duffel";
-import { sendBookingConfirmationEmail } from "./services/emailService";
+import { sendBookingConfirmationEmail, sendChatEscalationEmail } from "./services/emailService";
 
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
   if (!(req.session as any)?.isAdmin) {
@@ -1131,6 +1132,195 @@ Sitemap: ${SITE_URL}/sitemap.xml
     } catch (error) {
       console.error('Sitemap generation error:', error);
       res.status(500).send('Error generating sitemap');
+    }
+  });
+
+  // === AI CHATBOT ROUTES ===
+
+  const chatbotOpenai = new OpenAI({
+    apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  });
+
+  const CHATBOT_SYSTEM_PROMPT = `You are the friendly customer support assistant for Michels Travel ("Opção Eficiente"), a flight booking agency based in New Jersey, USA. Your name is Mia.
+
+ABOUT THE COMPANY:
+- Website: michelstravel.com
+- Contact email: reservastrens@gmail.com
+- Phone/WhatsApp: +1 (862) 350-1161
+- Location: New Jersey, USA
+- Services: Flight search and booking with competitive prices worldwide
+- Payment: Secure credit card payment via Stripe (card details entered directly on our site)
+- Languages: Portuguese, English, Spanish
+
+KEY INFORMATION YOU CAN HELP WITH:
+- How to search for flights (use the search bar on the homepage)
+- How the booking process works (search → select flight → enter passenger details → pay with card)
+- Baggage policies (vary by airline, shown during booking)
+- Multi-city trips (supported, use "Multi-city" tab in search)
+- Booking changes/cancellations (available on the "My Trips" page)
+- Looking up existing bookings (need reference code starting with "MT-" and email)
+- Payment questions (we use secure Stripe payment, cards accepted)
+- General travel tips
+
+ESCALATION RULES:
+- If the customer explicitly asks to speak with a human/agent/attendant/pessoa, or if the issue is complex (refund disputes, payment failures, urgent changes within 24h of flight), respond with the EXACT text "[ESCALATE]" at the START of your message, followed by your normal helpful response explaining you're connecting them to a human.
+- If the customer is frustrated or repeating the same issue multiple times, also escalate.
+
+BEHAVIOR:
+- Always respond in the SAME LANGUAGE the customer writes in. If they write in Portuguese, respond in Portuguese. If English, respond in English. If Spanish, respond in Spanish.
+- Be warm, professional, and concise
+- Use the customer's name if they provide it
+- Never make up flight prices or availability - direct them to search on the site
+- Never share internal system details or API information
+- If you don't know something, say so honestly and offer to connect them with a human agent
+- Keep responses under 200 words unless more detail is needed`;
+
+  app.post('/api/chatbot/session', async (req, res) => {
+    try {
+      const { visitorId, language } = req.body;
+      const [conversation] = await db.insert(conversations).values({
+        title: "Customer Support Chat",
+        visitorId: visitorId || nanoid(10),
+        language: language || "pt",
+        escalated: false,
+        resolved: false,
+      }).returning();
+      res.json({ sessionId: conversation.id, visitorId: conversation.visitorId });
+    } catch (error) {
+      console.error('Chatbot session creation error:', error);
+      res.status(500).json({ error: "Failed to create chat session" });
+    }
+  });
+
+  app.post('/api/chatbot/message', async (req, res) => {
+    try {
+      const { sessionId, content } = req.body;
+      if (!sessionId || !content) {
+        return res.status(400).json({ error: "sessionId and content are required" });
+      }
+
+      await db.insert(messages).values({
+        conversationId: sessionId,
+        role: "user",
+        content,
+      });
+
+      const existingMessages = await db.select().from(messages)
+        .where(eq(messages.conversationId, sessionId))
+        .orderBy(messages.createdAt);
+
+      const chatHistory: { role: "system" | "user" | "assistant"; content: string }[] = [
+        { role: "system", content: CHATBOT_SYSTEM_PROMPT },
+        ...existingMessages.map(m => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        })),
+      ];
+
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+
+      let clientDisconnected = false;
+      req.on("close", () => { clientDisconnected = true; });
+
+      const stream = await chatbotOpenai.chat.completions.create({
+        model: "gpt-5-nano",
+        messages: chatHistory,
+        stream: true,
+        max_completion_tokens: 512,
+      });
+
+      let fullResponse = "";
+      for await (const chunk of stream) {
+        if (clientDisconnected) break;
+        const text = chunk.choices[0]?.delta?.content || "";
+        if (text) {
+          fullResponse += text;
+          res.write(`data: ${JSON.stringify({ content: text })}\n\n`);
+        }
+      }
+
+      await db.insert(messages).values({
+        conversationId: sessionId,
+        role: "assistant",
+        content: fullResponse,
+      });
+
+      const shouldEscalate = fullResponse.trimStart().startsWith("[ESCALATE]");
+      if (shouldEscalate) {
+        await db.update(conversations)
+          .set({ escalated: true, escalatedAt: new Date() })
+          .where(eq(conversations.id, sessionId));
+
+        const allMsgs = await db.select().from(messages)
+          .where(eq(messages.conversationId, sessionId))
+          .orderBy(messages.createdAt);
+        const chatLog = allMsgs.map(m => `[${m.role}]: ${m.content}`).join("\n\n");
+        sendChatEscalationEmail(sessionId, chatLog).catch(err => 
+          console.error("Failed to send escalation email:", err)
+        );
+      }
+
+      res.write(`data: ${JSON.stringify({ done: true, escalated: shouldEscalate })}\n\n`);
+      res.end();
+    } catch (error) {
+      console.error('Chatbot message error:', error);
+      if (res.headersSent) {
+        res.write(`data: ${JSON.stringify({ error: "Failed to process message" })}\n\n`);
+        res.end();
+      } else {
+        res.status(500).json({ error: "Failed to process message" });
+      }
+    }
+  });
+
+  app.get('/api/chatbot/history/:sessionId', async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const chatMessages = await db.select().from(messages)
+        .where(eq(messages.conversationId, sessionId))
+        .orderBy(messages.createdAt);
+      res.json(chatMessages);
+    } catch (error) {
+      console.error('Chatbot history error:', error);
+      res.status(500).json({ error: "Failed to fetch chat history" });
+    }
+  });
+
+  app.get('/api/admin/chatbot/escalations', requireAdmin, async (req, res) => {
+    try {
+      const escalated = await db.select().from(conversations)
+        .where(eq(conversations.escalated, true))
+        .orderBy(desc(conversations.escalatedAt));
+
+      const escalationsWithMessages = await Promise.all(
+        escalated.map(async (conv) => {
+          const msgs = await db.select().from(messages)
+            .where(eq(messages.conversationId, conv.id))
+            .orderBy(messages.createdAt);
+          return { ...conv, messages: msgs };
+        })
+      );
+
+      res.json(escalationsWithMessages);
+    } catch (error) {
+      console.error('Admin escalations error:', error);
+      res.status(500).json({ error: "Failed to fetch escalations" });
+    }
+  });
+
+  app.post('/api/admin/chatbot/escalations/:id/resolve', requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await db.update(conversations)
+        .set({ resolved: true })
+        .where(eq(conversations.id, id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Resolve escalation error:', error);
+      res.status(500).json({ error: "Failed to resolve escalation" });
     }
   });
 }

@@ -7,6 +7,9 @@ import { z } from "zod";
 export * from "./models/auth";
 import { users } from "./models/auth";
 
+// Import chat models for AI chatbot
+export * from "./models/chat";
+
 // === FLIGHT SEARCH CACHE (For SEO & History) ===
 export const flightSearches = pgTable("flight_searches", {
   id: serial("id").primaryKey(),

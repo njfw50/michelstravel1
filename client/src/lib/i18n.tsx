@@ -592,6 +592,12 @@ const translations: Record<Language, Record<string, string>> = {
     "search_loading.step4": "Encontrando as melhores ofertas para você...",
     "search_loading.step5": "Quase lá! Organizando resultados...",
     "search_loading.tip": "Dica: Voos com conexão costumam ser mais baratos",
+
+    "chatbot.subtitle": "Assistente Michels Travel",
+    "chatbot.placeholder": "Digite sua mensagem...",
+    "chatbot.powered_by": "Assistente IA da Michels Travel",
+    "chatbot.error": "Desculpe, ocorreu um erro. Tente novamente ou entre em contato pelo WhatsApp: +1 (862) 350-1161",
+    "chatbot.escalated_notice": "Um atendente humano foi notificado e entrará em contato em breve.",
   },
   en: {
     // Header & Footer
@@ -1175,6 +1181,12 @@ const translations: Record<Language, Record<string, string>> = {
     "search_loading.step4": "Finding the best deals for you...",
     "search_loading.step5": "Almost there! Organizing results...",
     "search_loading.tip": "Tip: Connecting flights are often cheaper",
+
+    "chatbot.subtitle": "Michels Travel Assistant",
+    "chatbot.placeholder": "Type your message...",
+    "chatbot.powered_by": "Michels Travel AI Assistant",
+    "chatbot.error": "Sorry, an error occurred. Please try again or contact us via WhatsApp: +1 (862) 350-1161",
+    "chatbot.escalated_notice": "A human agent has been notified and will reach out to you shortly.",
   },
   es: {
     // Header & Footer
@@ -1758,6 +1770,12 @@ const translations: Record<Language, Record<string, string>> = {
     "search_loading.step4": "Encontrando las mejores ofertas para ti...",
     "search_loading.step5": "¡Ya casi! Organizando resultados...",
     "search_loading.tip": "Dato: Los vuelos con escala suelen ser más baratos",
+
+    "chatbot.subtitle": "Asistente Michels Travel",
+    "chatbot.placeholder": "Escribe tu mensaje...",
+    "chatbot.powered_by": "Asistente IA de Michels Travel",
+    "chatbot.error": "Lo sentimos, ocurrió un error. Intenta de nuevo o contáctanos por WhatsApp: +1 (862) 350-1161",
+    "chatbot.escalated_notice": "Un agente humano ha sido notificado y se comunicará contigo pronto.",
   }
 };
 

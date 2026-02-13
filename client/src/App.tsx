@@ -11,6 +11,7 @@ import { useI18n } from "@/lib/i18n";
 import { ShieldCheck } from "lucide-react";
 import { HelmetProvider } from "react-helmet-async";
 import NotFound from "@/pages/not-found";
+import { Chatbot } from "@/components/Chatbot";
 
 import Home from "@/pages/Home";
 import SearchResults from "@/pages/SearchResults";
@@ -87,6 +88,7 @@ function App() {
             <LanguageSelector />
             <TestModeBanner />
             <Router />
+            <Chatbot />
             <CookieConsent />
           </TooltipProvider>
         </QueryClientProvider>

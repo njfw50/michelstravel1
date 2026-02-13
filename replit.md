@@ -100,6 +100,19 @@ Preferred communication style: Simple, everyday language.
 - Key file: `server/services/emailService.ts`
 - Optional env vars: `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_PORT`
 
+### AI Chatbot (Customer Support)
+- Floating chat widget on all pages with AI assistant "Mia"
+- Uses Replit AI Integrations (OpenAI-compatible, gpt-5-nano model) - no API key needed
+- Multi-language support: responds in same language customer writes (pt/en/es)
+- System prompt trained on Michels Travel business info (services, booking flow, contact)
+- Streaming responses via SSE for real-time chat experience
+- Escalation system: AI detects when customer needs human help via `[ESCALATE]` marker
+- When escalation triggers: updates DB, sends email notification to owner (reservastrens@gmail.com)
+- Admin can view escalated conversations at `/api/admin/chatbot/escalations`
+- Database tables: `conversations` (with escalation tracking) and `messages`
+- Key files: `client/src/components/Chatbot.tsx`, chatbot routes in `server/routes.ts`
+- API endpoints: `POST /api/chatbot/session`, `POST /api/chatbot/message`, `GET /api/chatbot/history/:id`
+
 ### Post-Sale System
 - **Reference Codes**: MT-XXXXXX format generated for every booking
 - **Confirmation Page**: `/checkout/success` — comprehensive booking confirmation with print support
