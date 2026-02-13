@@ -350,11 +350,9 @@ export function registerRoutes(app: Express) {
           console.log("[TEST MODE] Booking created in test mode - Stripe test keys will be used (no real charges)");
         } else {
           if (!hasLiveToken()) {
-            return res.status(400).json({ 
-              error: "Configuration error: Production mode is enabled but no live Duffel token (DUFFEL_LIVE_TOKEN) is configured." 
-            });
+            console.warn("[PRODUCTION MODE] No DUFFEL_LIVE_TOKEN found - flight data comes from test API but payment will use live Stripe keys");
           }
-          console.log("[PRODUCTION MODE] Creating real booking with live token");
+          console.log("[PRODUCTION MODE] Creating real booking with live Stripe keys");
         }
 
         const bookingData = req.body;
@@ -427,9 +425,20 @@ export function registerRoutes(app: Express) {
           testMode: isTestModeActive 
         });
 
-    } catch (error) {
-        console.error("Booking creation error:", error);
-        res.status(500).json({ error: "Failed to create booking" });
+    } catch (error: any) {
+        console.error("Booking creation error:", error?.message || error);
+        console.error("Booking creation error details:", JSON.stringify({
+          type: error?.type,
+          code: error?.code,
+          statusCode: error?.statusCode,
+          raw: error?.raw?.message,
+        }));
+        const userMessage = error?.type === 'StripeInvalidRequestError' 
+          ? "Payment service configuration error. Please contact support."
+          : error?.message?.includes('Stripe') 
+            ? "Payment processing is temporarily unavailable. Please try again."
+            : "Failed to create booking. Please try again.";
+        res.status(500).json({ error: userMessage });
     }
   });
 

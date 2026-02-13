@@ -36,7 +36,10 @@ export function useCreateBooking() {
         body: JSON.stringify(data),
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to create booking");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to create booking");
+      }
       return api.bookings.create.responses[201].parse(await res.json());
     },
     onSuccess: () => {

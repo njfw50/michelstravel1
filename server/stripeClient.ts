@@ -3,10 +3,24 @@ import Stripe from 'stripe';
 
 let connectionSettings: any;
 
-async function getCredentials() {
-  const isProduction = process.env.REPLIT_DEPLOYMENT === '1';
+async function getAppTestMode(): Promise<boolean> {
+  try {
+    const { db } = await import('./db');
+    const { siteSettings } = await import('@shared/schema');
+    const [settings] = await db.select().from(siteSettings).limit(1);
+    return settings?.testMode ?? true;
+  } catch {
+    return true;
+  }
+}
 
-  if (isProduction && process.env.STRIPE_LIVE_SECRET_KEY && process.env.STRIPE_LIVE_PUBLISHABLE_KEY) {
+async function getCredentials() {
+  const isDeployment = process.env.REPLIT_DEPLOYMENT === '1';
+  const appTestMode = await getAppTestMode();
+  const useLiveKeys = isDeployment || !appTestMode;
+
+  if (useLiveKeys && process.env.STRIPE_LIVE_SECRET_KEY && process.env.STRIPE_LIVE_PUBLISHABLE_KEY) {
+    console.log(`[Stripe] Using live keys (deployment=${isDeployment}, testMode=${appTestMode})`);
     return {
       publishableKey: process.env.STRIPE_LIVE_PUBLISHABLE_KEY,
       secretKey: process.env.STRIPE_LIVE_SECRET_KEY,
@@ -31,7 +45,7 @@ async function getCredentials() {
   }
 
   const connectorName = 'stripe';
-  const targetEnvironment = isProduction ? 'production' : 'development';
+  const targetEnvironment = isDeployment ? 'production' : 'development';
 
   const url = new URL(`https://${hostname}/api/v2/connection`);
   url.searchParams.set('include_secrets', 'true');
@@ -65,33 +79,25 @@ async function getCredentials() {
   };
 }
 
-// WARNING: Never cache this client.
-// Always call this function again to get a fresh client.
-// Use getUncachableStripeClient() for server-side operations with secret key
 export async function getUncachableStripeClient() {
   const { secretKey } = await getCredentials();
 
   return new Stripe(secretKey, {
-    // Note that this is the latest API version, don't change it to a old version of the
-    // API.
     apiVersion: '2025-02-24.acacia' as any,
   });
 }
 
-// Use getStripePublishableKey() for client-side operations
 export async function getStripePublishableKey() {
   const { publishableKey } = await getCredentials();
 
   return publishableKey;
 }
 
-// Use getStripeSecretKey() for server-side operations requiring the secret key
 export async function getStripeSecretKey() {
   const { secretKey } = await getCredentials();
   return secretKey;
 }
 
-// StripeSync singleton for webhook processing and data sync
 let stripeSync: any = null;
 
 export async function getStripeSync() {

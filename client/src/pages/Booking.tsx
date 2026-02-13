@@ -587,8 +587,9 @@ export default function Booking() {
           toast({ title: t("booking.failed"), description: t("booking.failed_desc") || "Could not initialize payment. Please try again.", variant: "destructive" });
         }
       },
-      onError: () => {
-        toast({ title: t("booking.failed"), description: t("booking.failed_desc"), variant: "destructive" });
+      onError: (error: any) => {
+        const serverMessage = error?.message || t("booking.failed_desc");
+        toast({ title: t("booking.failed"), description: serverMessage, variant: "destructive" });
       },
     });
   };
