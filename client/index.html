@@ -95,19 +95,6 @@
       "inLanguage": ["pt-BR", "en-US", "es-ES"]
     }
     </script>
-    <style>
-      iframe[src*="replit"], div[class*="replit-ui-theme-root"], #replit-badge, .replit-badge,
-      div[data-replit-feedback], div[class*="ReplitBadge"], div[id*="replit"] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-        width: 0 !important;
-        height: 0 !important;
-        position: absolute !important;
-        left: -9999px !important;
-      }
-    </style>
   </head>
   <body>
     <div id="root"></div>
@@ -121,26 +108,69 @@
     </script>
     <script type="module" src="/src/main.tsx"></script>
     <script>
-      (function hideExternalWidgets() {
-        var obs = new MutationObserver(function(mutations) {
-          mutations.forEach(function(m) {
-            m.addedNodes.forEach(function(node) {
-              if (node.nodeType === 1) {
-                var el = node;
-                var isExternal = (el.id && el.id.toLowerCase().indexOf('replit') !== -1) ||
-                  (el.className && typeof el.className === 'string' && el.className.toLowerCase().indexOf('replit') !== -1) ||
-                  (el.tagName === 'IFRAME' && el.src && el.src.indexOf('replit') !== -1) ||
-                  (el.getAttribute && el.getAttribute('data-replit-feedback'));
-                if (isExternal) {
-                  el.style.display = 'none';
-                  el.style.visibility = 'hidden';
-                  el.remove();
-                }
+      (function() {
+        function removeExternal(el) {
+          if (!el || el.id === 'root') return;
+          el.style.setProperty('display', 'none', 'important');
+          el.style.setProperty('visibility', 'hidden', 'important');
+          el.style.setProperty('opacity', '0', 'important');
+          el.style.setProperty('pointer-events', 'none', 'important');
+          el.style.setProperty('width', '0', 'important');
+          el.style.setProperty('height', '0', 'important');
+          el.style.setProperty('position', 'absolute', 'important');
+          el.style.setProperty('left', '-9999px', 'important');
+          try { el.remove(); } catch(e) {}
+        }
+        function isExtWidget(el) {
+          if (!el || el.nodeType !== 1) return false;
+          var tag = el.tagName ? el.tagName.toLowerCase() : '';
+          var id = (el.id || '').toLowerCase();
+          var cls = (typeof el.className === 'string' ? el.className : '').toLowerCase();
+          var src = el.src ? el.src.toLowerCase() : '';
+          if (id.indexOf('replit') !== -1) return true;
+          if (cls.indexOf('replit') !== -1) return true;
+          if (tag === 'iframe' && (src.indexOf('replit') !== -1 || src.indexOf('pid-') !== -1)) return true;
+          if (el.hasAttribute && el.hasAttribute('data-replit-feedback')) return true;
+          if (el.parentNode === document.body && el.id !== 'root' && tag !== 'script' && tag !== 'link' && tag !== 'style' && tag !== 'meta') {
+            var style = window.getComputedStyle ? window.getComputedStyle(el) : null;
+            if (style && (style.position === 'fixed' || style.position === 'absolute') && style.zIndex > 999) {
+              var rect = el.getBoundingClientRect();
+              if (rect.bottom > window.innerHeight - 120 && rect.right > window.innerWidth - 200) {
+                return true;
               }
-            });
-          });
+            }
+          }
+          return false;
+        }
+        function sweep() {
+          var children = document.body ? document.body.children : [];
+          for (var i = children.length - 1; i >= 0; i--) {
+            var c = children[i];
+            if (isExtWidget(c)) removeExternal(c);
+          }
+          var iframes = document.querySelectorAll('iframe');
+          for (var j = 0; j < iframes.length; j++) {
+            if (isExtWidget(iframes[j])) removeExternal(iframes[j]);
+          }
+        }
+        var obs = new MutationObserver(function(mutations) {
+          for (var i = 0; i < mutations.length; i++) {
+            var added = mutations[i].addedNodes;
+            for (var j = 0; j < added.length; j++) {
+              if (isExtWidget(added[j])) removeExternal(added[j]);
+            }
+          }
         });
-        obs.observe(document.documentElement, { childList: true, subtree: true });
+        if (document.body) {
+          obs.observe(document.body, { childList: true, subtree: true });
+        } else {
+          document.addEventListener('DOMContentLoaded', function() {
+            obs.observe(document.body, { childList: true, subtree: true });
+          });
+        }
+        setInterval(sweep, 1000);
+        document.addEventListener('DOMContentLoaded', sweep);
+        window.addEventListener('load', sweep);
       })();
     </script>
   </body>
