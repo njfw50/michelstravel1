@@ -3,15 +3,33 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, X, Send, Loader2, User, Bot, AlertTriangle } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, User, Bot, AlertTriangle, Headphones, Plane, ToggleLeft, ToggleRight, Clock, ArrowRight } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
+
+interface FlightResult {
+  id: string;
+  airline: string;
+  flightNumber: string;
+  departureTime: string;
+  arrivalTime: string;
+  duration: string;
+  price: number;
+  currency: string;
+  stops: number;
+  logoUrl?: string | null;
+  originCode?: string;
+  destinationCode?: string;
+  originCity?: string | null;
+  destinationCity?: string | null;
+}
 
 interface ChatMessage {
   id: number;
   role: "user" | "assistant";
   content: string;
   createdAt?: string;
+  flights?: FlightResult[];
 }
 
 export function Chatbot() {
@@ -22,6 +40,7 @@ export function Chatbot() {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [escalated, setEscalated] = useState(false);
+  const [agentMode, setAgentMode] = useState(false);
   const [showPulse, setShowPulse] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -82,9 +101,9 @@ export function Chatbot() {
     if (language === "en") {
       return "Hi! I'm Mia, your travel assistant at Michels Travel. How can I help you today? I can assist with flight searches, bookings, baggage questions, and more!";
     } else if (language === "es") {
-      return "¡Hola! Soy Mia, tu asistente de viajes en Michels Travel. ¿En qué puedo ayudarte hoy? Puedo asistirte con búsqueda de vuelos, reservas, preguntas sobre equipaje y mucho más.";
+      return "\u00a1Hola! Soy Mia, tu asistente de viajes en Michels Travel. \u00bfEn qu\u00e9 puedo ayudarte hoy? Puedo asistirte con b\u00fasqueda de vuelos, reservas, preguntas sobre equipaje y mucho m\u00e1s.";
     }
-    return "Olá! Eu sou a Mia, sua assistente de viagens na Michels Travel. Como posso te ajudar hoje? Posso ajudar com busca de voos, reservas, dúvidas sobre bagagem e muito mais!";
+    return "Ol\u00e1! Eu sou a Mia, sua assistente de viagens na Michels Travel. Como posso te ajudar hoje? Posso ajudar com busca de voos, reservas, d\u00favidas sobre bagagem e muito mais!";
   };
 
   const sendMessage = async () => {
@@ -113,8 +132,10 @@ export function Chatbot() {
     };
     setChatMessages(prev => [...prev, assistantMsg]);
 
+    const endpoint = agentMode ? "/api/chatbot/agent-message" : "/api/chatbot/message";
+
     try {
-      const res = await fetch("/api/chatbot/message", {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: currentSessionId, content: userMessage.content }),
@@ -130,6 +151,7 @@ export function Chatbot() {
       const decoder = new TextDecoder();
       let buffer = "";
       let fullContent = "";
+      let collectedFlights: FlightResult[] = [];
 
       while (true) {
         const { done, value } = await reader.read();
@@ -143,13 +165,26 @@ export function Chatbot() {
           if (!line.startsWith("data: ")) continue;
           try {
             const event = JSON.parse(line.slice(6));
+
+            if (event.type === "flights" && event.flights) {
+              collectedFlights = event.flights;
+              setChatMessages(prev => {
+                const updated = [...prev];
+                const lastIdx = updated.length - 1;
+                if (updated[lastIdx]?.role === "assistant") {
+                  updated[lastIdx] = { ...updated[lastIdx], flights: collectedFlights };
+                }
+                return updated;
+              });
+            }
+
             if (event.content) {
               fullContent += event.content;
               setChatMessages(prev => {
                 const updated = [...prev];
                 const lastIdx = updated.length - 1;
                 if (updated[lastIdx]?.role === "assistant") {
-                  updated[lastIdx] = { ...updated[lastIdx], content: fullContent };
+                  updated[lastIdx] = { ...updated[lastIdx], content: fullContent, flights: collectedFlights.length > 0 ? collectedFlights : updated[lastIdx].flights };
                 }
                 return updated;
               });
@@ -187,9 +222,106 @@ export function Chatbot() {
     }
   };
 
-  const formatContent = (content: string) => {
-    return content.replace(/\[ESCALATE\]/gi, "").trim();
+  const handleAgentMode = async () => {
+    if (escalated || isStreaming) return;
+
+    let currentSessionId = sessionId;
+    if (!currentSessionId) {
+      currentSessionId = await createSession();
+      if (!currentSessionId) return;
+    }
+
+    setEscalated(true);
+
+    setChatMessages(prev => [...prev, {
+      id: Date.now(),
+      role: "assistant",
+      content: t("chatbot.agent_mode_confirm"),
+    }]);
+
+    try {
+      await fetch("/api/chatbot/escalate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: currentSessionId }),
+      });
+    } catch (error) {
+      console.error("Escalation error:", error);
+    }
   };
+
+  const formatContent = (content: string) => {
+    return content.replace(/\[ESCALATE\]/gi, "").replace(/\[AGENT:.*?\]/g, "").trim();
+  };
+
+  const formatTime = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const formatPrice = (price: number, currency: string) => {
+    try {
+      return new Intl.NumberFormat(language === "pt" ? "pt-BR" : language === "es" ? "es-ES" : "en-US", {
+        style: "currency",
+        currency,
+      }).format(price);
+    } catch {
+      return `${currency} ${price.toFixed(2)}`;
+    }
+  };
+
+  const renderFlightCard = (flight: FlightResult) => (
+    <div
+      key={flight.id}
+      className="rounded-lg border border-border/60 bg-background p-2.5 mb-1.5"
+      data-testid={`chatbot-flight-card-${flight.id}`}
+    >
+      <div className="flex items-center justify-between gap-2 mb-1.5">
+        <div className="flex items-center gap-1.5">
+          {flight.logoUrl && (
+            <img src={flight.logoUrl} alt={flight.airline} className="h-4 w-4 rounded" />
+          )}
+          <span className="text-xs font-medium text-foreground">{flight.airline}</span>
+        </div>
+        <span className="text-xs font-bold text-[#0074DE]">
+          {formatPrice(flight.price, flight.currency)}
+        </span>
+      </div>
+      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-1.5">
+        <span className="font-medium text-foreground">{formatTime(flight.departureTime)}</span>
+        <span>{flight.originCode}</span>
+        <ArrowRight className="h-3 w-3" />
+        <span className="font-medium text-foreground">{formatTime(flight.arrivalTime)}</span>
+        <span>{flight.destinationCode}</span>
+      </div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+          <span className="flex items-center gap-0.5">
+            <Clock className="h-2.5 w-2.5" />
+            {flight.duration}
+          </span>
+          <span>
+            {flight.stops === 0
+              ? (language === "pt" ? "Direto" : language === "es" ? "Directo" : "Nonstop")
+              : `${flight.stops} ${flight.stops === 1 ? "stop" : "stops"}`
+            }
+          </span>
+        </div>
+        <a
+          href={`/book/${flight.id}`}
+          className="inline-flex items-center gap-1 rounded-md bg-[#0074DE] px-2 py-1 text-[10px] font-medium text-white transition-opacity hover:opacity-90"
+          data-testid={`button-book-flight-${flight.id}`}
+        >
+          <Plane className="h-2.5 w-2.5" />
+          {language === "pt" ? "Reservar" : language === "es" ? "Reservar" : "Book"}
+        </a>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -234,35 +366,41 @@ export function Chatbot() {
               <div className="flex-1 overflow-y-auto p-3" style={{ height: "360px", maxHeight: "50vh" }}>
                 <div className="flex flex-col gap-3">
                   {chatMessages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
-                    >
-                      <div className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${
-                        msg.role === "user" 
-                          ? "bg-[#0074DE] text-white" 
-                          : "bg-muted text-muted-foreground"
-                      }`}>
-                        {msg.role === "user" ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
-                      </div>
+                    <div key={msg.id}>
                       <div
-                        className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
-                          msg.role === "user"
-                            ? "bg-[#0074DE] text-white rounded-br-md"
-                            : "bg-muted text-foreground rounded-bl-md"
-                        }`}
-                        data-testid={`chatbot-message-${msg.role}`}
+                        className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
                       >
-                        {msg.role === "assistant" && msg.content === "" && isStreaming ? (
-                          <div className="flex items-center gap-1">
-                            <div className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "0ms" }} />
-                            <div className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "150ms" }} />
-                            <div className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "300ms" }} />
-                          </div>
-                        ) : (
-                          formatContent(msg.content)
-                        )}
+                        <div className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${
+                          msg.role === "user" 
+                            ? "bg-[#0074DE] text-white" 
+                            : "bg-muted text-muted-foreground"
+                        }`}>
+                          {msg.role === "user" ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
+                        </div>
+                        <div
+                          className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
+                            msg.role === "user"
+                              ? "bg-[#0074DE] text-white rounded-br-md"
+                              : "bg-muted text-foreground rounded-bl-md"
+                          }`}
+                          data-testid={`chatbot-message-${msg.role}`}
+                        >
+                          {msg.role === "assistant" && msg.content === "" && isStreaming && !msg.flights ? (
+                            <div className="flex items-center gap-1">
+                              <div className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "0ms" }} />
+                              <div className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "150ms" }} />
+                              <div className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "300ms" }} />
+                            </div>
+                          ) : (
+                            formatContent(msg.content)
+                          )}
+                        </div>
                       </div>
+                      {msg.flights && msg.flights.length > 0 && (
+                        <div className="mt-2 ml-8" data-testid="chatbot-flight-results">
+                          {msg.flights.map(renderFlightCard)}
+                        </div>
+                      )}
                     </div>
                   ))}
                   <div ref={messagesEndRef} />
@@ -270,13 +408,41 @@ export function Chatbot() {
               </div>
 
               <div className="border-t p-3">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <button
+                    onClick={() => setAgentMode(!agentMode)}
+                    className="flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors"
+                    disabled={isStreaming}
+                    data-testid="button-chatbot-agent-toggle"
+                  >
+                    {agentMode ? (
+                      <ToggleRight className="h-4 w-4 text-[#0074DE]" />
+                    ) : (
+                      <ToggleLeft className="h-4 w-4" />
+                    )}
+                    <span className={agentMode ? "text-[#0074DE] font-medium" : ""}>
+                      {t("chatbot.agent_mode")}
+                    </span>
+                  </button>
+                  {!escalated && (
+                    <button
+                      onClick={handleAgentMode}
+                      disabled={isStreaming}
+                      className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                      data-testid="button-chatbot-human-agent"
+                    >
+                      <Headphones className="h-3.5 w-3.5" />
+                      <span>{t("chatbot.talk_to_human")}</span>
+                    </button>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   <Input
                     ref={inputRef}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder={t("chatbot.placeholder")}
+                    placeholder={agentMode ? t("chatbot.agent_placeholder") : t("chatbot.placeholder")}
                     disabled={isStreaming}
                     className="flex-1 text-sm"
                     data-testid="input-chatbot-message"

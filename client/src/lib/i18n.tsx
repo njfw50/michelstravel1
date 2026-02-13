@@ -598,6 +598,10 @@ const translations: Record<Language, Record<string, string>> = {
     "chatbot.powered_by": "Assistente IA da Michels Travel",
     "chatbot.error": "Desculpe, ocorreu um erro. Tente novamente ou entre em contato pelo WhatsApp: +1 (862) 350-1161",
     "chatbot.escalated_notice": "Um atendente humano foi notificado e entrará em contato em breve.",
+    "chatbot.agent_mode": "Modo Agente",
+    "chatbot.agent_placeholder": "Ex: Quero voar de SP para Miami dia 15/03...",
+    "chatbot.talk_to_human": "Falar com Humano",
+    "chatbot.agent_mode_confirm": "Entendi! Vou transferir para um atendente humano agora. Um agente foi notificado e entrará em contato em breve. Enquanto isso, como posso te ajudar?",
   },
   en: {
     // Header & Footer
@@ -1187,6 +1191,10 @@ const translations: Record<Language, Record<string, string>> = {
     "chatbot.powered_by": "Michels Travel AI Assistant",
     "chatbot.error": "Sorry, an error occurred. Please try again or contact us via WhatsApp: +1 (862) 350-1161",
     "chatbot.escalated_notice": "A human agent has been notified and will reach out to you shortly.",
+    "chatbot.agent_mode": "Agent Mode",
+    "chatbot.agent_placeholder": "Ex: Find flights from NYC to Miami on March 15...",
+    "chatbot.talk_to_human": "Talk to Human",
+    "chatbot.agent_mode_confirm": "Got it! I'm transferring you to a human agent now. An agent has been notified and will reach out shortly. In the meantime, how can I help?",
   },
   es: {
     // Header & Footer
@@ -1776,6 +1784,10 @@ const translations: Record<Language, Record<string, string>> = {
     "chatbot.powered_by": "Asistente IA de Michels Travel",
     "chatbot.error": "Lo sentimos, ocurrió un error. Intenta de nuevo o contáctanos por WhatsApp: +1 (862) 350-1161",
     "chatbot.escalated_notice": "Un agente humano ha sido notificado y se comunicará contigo pronto.",
+    "chatbot.agent_mode": "Modo Agente",
+    "chatbot.agent_placeholder": "Ej: Quiero volar de SP a Miami el 15/03...",
+    "chatbot.talk_to_human": "Hablar con Humano",
+    "chatbot.agent_mode_confirm": "Entendido! Te estoy transfiriendo a un agente humano. Un agente ha sido notificado y se comunicará contigo pronto. Mientras tanto, \u00bfen qu\u00e9 puedo ayudarte?",
   }
 };
 

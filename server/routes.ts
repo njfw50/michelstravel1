@@ -1289,6 +1289,262 @@ BEHAVIOR:
     }
   });
 
+  const AGENT_SYSTEM_PROMPT = `${CHATBOT_SYSTEM_PROMPT}
+
+AGENT MODE - IMPORTANT:
+You are now in AGENT MODE. You have the ability to search for real flights using the search_flights function.
+
+WHEN TO USE search_flights:
+- When a customer asks to find or search for flights
+- When they mention traveling from one place to another
+- When they want to know prices or availability
+- When they say things like "I want to fly to...", "find me flights...", "quanto custa voo para...", "buscar voo..."
+
+HOW TO USE search_flights:
+- You MUST extract: origin airport code (3-letter IATA), destination airport code (3-letter IATA), and departure date
+- If the customer doesn't provide airport codes, use your knowledge to determine the correct IATA codes (e.g., "São Paulo" → "GRU", "New York" → "JFK", "Miami" → "MIA", "Orlando" → "MCO", "Lisboa" → "LIS")
+- If date is missing, ask the customer for the travel date
+- If origin is missing, ask where they're departing from
+- Default to 1 adult passenger if not specified
+- Default to "economy" cabin class if not specified
+
+AFTER SEARCH RESULTS:
+- Present the results in a friendly, helpful way
+- Mention the airline, price, departure/arrival times, and stops
+- Tell them they can click "Book" on any result to start the booking process
+- If no results found, suggest trying different dates or nearby airports
+
+IMPORTANT: Always use the search_flights function when the customer wants to find flights. Never make up flight prices or availability.`;
+
+  const AGENT_TOOLS: any[] = [
+    {
+      type: "function",
+      function: {
+        name: "search_flights",
+        description: "Search for real flight offers. Use this when a customer wants to find flights.",
+        parameters: {
+          type: "object",
+          properties: {
+            origin: {
+              type: "string",
+              description: "Origin airport IATA code (3 letters), e.g. GRU, JFK, MIA"
+            },
+            destination: {
+              type: "string",
+              description: "Destination airport IATA code (3 letters), e.g. MCO, LIS, CDG"
+            },
+            date: {
+              type: "string",
+              description: "Departure date in YYYY-MM-DD format"
+            },
+            returnDate: {
+              type: "string",
+              description: "Return date in YYYY-MM-DD format (optional, for round trips)"
+            },
+            adults: {
+              type: "string",
+              description: "Number of adult passengers, default '1'"
+            },
+            cabinClass: {
+              type: "string",
+              enum: ["economy", "premium_economy", "business", "first"],
+              description: "Cabin class preference, default 'economy'"
+            }
+          },
+          required: ["origin", "destination", "date"]
+        }
+      }
+    }
+  ];
+
+  app.post('/api/chatbot/agent-message', async (req, res) => {
+    try {
+      const { sessionId, content } = req.body;
+      if (!sessionId || !content) {
+        return res.status(400).json({ error: "sessionId and content are required" });
+      }
+
+      await db.insert(messages).values({
+        conversationId: sessionId,
+        role: "user",
+        content,
+      });
+
+      const existingMessages = await db.select().from(messages)
+        .where(eq(messages.conversationId, sessionId))
+        .orderBy(messages.createdAt);
+
+      const chatHistory: { role: "system" | "user" | "assistant"; content: string }[] = [
+        { role: "system", content: AGENT_SYSTEM_PROMPT },
+        ...existingMessages.map(m => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        })),
+      ];
+
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+
+      let clientDisconnected = false;
+      req.on("close", () => { clientDisconnected = true; });
+
+      const initialResponse = await chatbotOpenai.chat.completions.create({
+        model: "gpt-5-nano",
+        messages: chatHistory,
+        tools: AGENT_TOOLS,
+        max_completion_tokens: 512,
+      });
+
+      const choice = initialResponse.choices[0];
+
+      if (choice.finish_reason === "tool_calls" && choice.message.tool_calls) {
+        const toolCall = choice.message.tool_calls[0] as any;
+        if (toolCall.function?.name === "search_flights") {
+          let args: any;
+          try {
+            args = JSON.parse(toolCall.function.arguments);
+          } catch {
+            args = {};
+          }
+
+          res.write(`data: ${JSON.stringify({ content: "🔍 ", type: "text" })}\n\n`);
+
+          const searchingMsg = args.origin && args.destination
+            ? `Searching flights from ${args.origin} to ${args.destination}...`
+            : "Searching flights...";
+          res.write(`data: ${JSON.stringify({ content: searchingMsg, type: "text" })}\n\n`);
+
+          try {
+            const { searchFlights } = await import("./services/duffel");
+            const flights = await searchFlights({
+              origin: args.origin,
+              destination: args.destination,
+              date: args.date,
+              returnDate: args.returnDate,
+              adults: args.adults || "1",
+              cabinClass: args.cabinClass || "economy",
+              passengers: args.adults || "1",
+            });
+
+            const topFlights = flights.slice(0, 5).map(f => ({
+              id: f.id,
+              airline: f.airline,
+              flightNumber: f.flightNumber,
+              departureTime: f.departureTime,
+              arrivalTime: f.arrivalTime,
+              duration: f.duration,
+              price: f.price,
+              currency: f.currency,
+              stops: f.stops,
+              logoUrl: f.logoUrl,
+              originCode: f.originCode || args.origin,
+              destinationCode: f.destinationCode || args.destination,
+              originCity: f.originCity,
+              destinationCity: f.destinationCity,
+            }));
+
+            res.write(`data: ${JSON.stringify({ flights: topFlights, type: "flights" })}\n\n`);
+
+            chatHistory.push({
+              role: "assistant",
+              content: `[Function called: search_flights] Found ${flights.length} flights from ${args.origin} to ${args.destination} on ${args.date}. Top ${topFlights.length} results shown to customer with prices ranging from ${topFlights.length > 0 ? topFlights[0].currency + ' ' + Math.min(...topFlights.map(f => f.price)) : 'N/A'} to ${topFlights.length > 0 ? topFlights[0].currency + ' ' + Math.max(...topFlights.map(f => f.price)) : 'N/A'}.`,
+            });
+
+            const followUpMessages = [
+              ...chatHistory,
+              { role: "user" as const, content: `The search results are now displayed to the customer. Write a brief friendly summary message about the results found. Mention how many flights were found and the price range. Tell them they can click "Book" on any option. Respond in the same language the customer has been using.` },
+            ];
+
+            const followUp = await chatbotOpenai.chat.completions.create({
+              model: "gpt-5-nano",
+              messages: followUpMessages,
+              stream: true,
+              max_completion_tokens: 256,
+            });
+
+            let fullResponse = "";
+            for await (const chunk of followUp) {
+              if (clientDisconnected) break;
+              const text = chunk.choices[0]?.delta?.content || "";
+              if (text) {
+                fullResponse += text;
+                res.write(`data: ${JSON.stringify({ content: text, type: "text" })}\n\n`);
+              }
+            }
+
+            const savedContent = `[AGENT: Searched ${args.origin}→${args.destination} on ${args.date}, found ${flights.length} results]\n${fullResponse}`;
+            await db.insert(messages).values({
+              conversationId: sessionId,
+              role: "assistant",
+              content: savedContent,
+            });
+
+          } catch (searchError) {
+            console.error("Flight search error in agent mode:", searchError);
+            const errorMsg = "I tried searching for flights but encountered an error. Please try using the search bar on our homepage, or I can try again with different details.";
+            res.write(`data: ${JSON.stringify({ content: errorMsg, type: "text" })}\n\n`);
+
+            await db.insert(messages).values({
+              conversationId: sessionId,
+              role: "assistant",
+              content: errorMsg,
+            });
+          }
+        }
+      } else {
+        const textContent = choice.message.content || "";
+        if (textContent) {
+          res.write(`data: ${JSON.stringify({ content: textContent, type: "text" })}\n\n`);
+
+          await db.insert(messages).values({
+            conversationId: sessionId,
+            role: "assistant",
+            content: textContent,
+          });
+        }
+      }
+
+      const shouldEscalate = false;
+      res.write(`data: ${JSON.stringify({ done: true, escalated: shouldEscalate })}\n\n`);
+      res.end();
+    } catch (error) {
+      console.error('Agent message error:', error);
+      if (res.headersSent) {
+        res.write(`data: ${JSON.stringify({ error: "Failed to process agent message" })}\n\n`);
+        res.end();
+      } else {
+        res.status(500).json({ error: "Failed to process agent message" });
+      }
+    }
+  });
+
+  app.post('/api/chatbot/escalate', async (req, res) => {
+    try {
+      const { sessionId } = req.body;
+      if (!sessionId) return res.status(400).json({ error: "Session ID required" });
+
+      await db.update(conversations)
+        .set({ escalated: true, escalatedAt: new Date() })
+        .where(eq(conversations.id, sessionId));
+
+      const allMsgs = await db.select().from(messages)
+        .where(eq(messages.conversationId, sessionId))
+        .orderBy(messages.createdAt);
+
+      const { sendChatEscalationEmail } = await import("./services/emailService");
+      const chatLog = allMsgs.map(m => `[${m.role}]: ${m.content}`).join("\n\n");
+      sendChatEscalationEmail(sessionId, chatLog).catch((err: any) =>
+        console.error("Failed to send escalation email:", err)
+      );
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Chatbot escalation error:', error);
+      res.status(500).json({ error: "Failed to escalate" });
+    }
+  });
+
   app.get('/api/admin/chatbot/escalations', requireAdmin, async (req, res) => {
     try {
       const escalated = await db.select().from(conversations)
