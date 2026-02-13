@@ -1218,9 +1218,12 @@ BEHAVIOR:
         })),
       ];
 
-      res.setHeader("Content-Type", "text/event-stream");
-      res.setHeader("Cache-Control", "no-cache");
-      res.setHeader("Connection", "keep-alive");
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-store",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+      });
 
       let clientDisconnected = false;
       req.on("close", () => { clientDisconnected = true; });
@@ -1239,6 +1242,7 @@ BEHAVIOR:
         if (text) {
           fullResponse += text;
           res.write(`data: ${JSON.stringify({ content: text })}\n\n`);
+          if (typeof (res as any).flush === "function") (res as any).flush();
         }
       }
 
@@ -1264,6 +1268,7 @@ BEHAVIOR:
       }
 
       res.write(`data: ${JSON.stringify({ done: true, escalated: shouldEscalate })}\n\n`);
+      if (typeof (res as any).flush === "function") (res as any).flush();
       res.end();
     } catch (error) {
       console.error('Chatbot message error:', error);
@@ -1382,9 +1387,12 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
         })),
       ];
 
-      res.setHeader("Content-Type", "text/event-stream");
-      res.setHeader("Cache-Control", "no-cache");
-      res.setHeader("Connection", "keep-alive");
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-store",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+      });
 
       let clientDisconnected = false;
       req.on("close", () => { clientDisconnected = true; });
@@ -1409,11 +1417,13 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
           }
 
           res.write(`data: ${JSON.stringify({ content: "🔍 ", type: "text" })}\n\n`);
+          if (typeof (res as any).flush === "function") (res as any).flush();
 
           const searchingMsg = args.origin && args.destination
             ? `Searching flights from ${args.origin} to ${args.destination}...`
             : "Searching flights...";
           res.write(`data: ${JSON.stringify({ content: searchingMsg, type: "text" })}\n\n`);
+          if (typeof (res as any).flush === "function") (res as any).flush();
 
           try {
             const { searchFlights } = await import("./services/duffel");
@@ -1445,6 +1455,7 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
             }));
 
             res.write(`data: ${JSON.stringify({ flights: topFlights, type: "flights" })}\n\n`);
+            if (typeof (res as any).flush === "function") (res as any).flush();
 
             chatHistory.push({
               role: "assistant",
@@ -1470,6 +1481,7 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
               if (text) {
                 fullResponse += text;
                 res.write(`data: ${JSON.stringify({ content: text, type: "text" })}\n\n`);
+                if (typeof (res as any).flush === "function") (res as any).flush();
               }
             }
 
@@ -1484,6 +1496,7 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
             console.error("Flight search error in agent mode:", searchError);
             const errorMsg = "I tried searching for flights but encountered an error. Please try using the search bar on our homepage, or I can try again with different details.";
             res.write(`data: ${JSON.stringify({ content: errorMsg, type: "text" })}\n\n`);
+            if (typeof (res as any).flush === "function") (res as any).flush();
 
             await db.insert(messages).values({
               conversationId: sessionId,
@@ -1496,6 +1509,7 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
         const textContent = choice.message.content || "";
         if (textContent) {
           res.write(`data: ${JSON.stringify({ content: textContent, type: "text" })}\n\n`);
+          if (typeof (res as any).flush === "function") (res as any).flush();
 
           await db.insert(messages).values({
             conversationId: sessionId,
@@ -1507,6 +1521,7 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
 
       const shouldEscalate = false;
       res.write(`data: ${JSON.stringify({ done: true, escalated: shouldEscalate })}\n\n`);
+      if (typeof (res as any).flush === "function") (res as any).flush();
       res.end();
     } catch (error) {
       console.error('Agent message error:', error);

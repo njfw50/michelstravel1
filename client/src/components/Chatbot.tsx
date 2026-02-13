@@ -145,58 +145,81 @@ export function Chatbot() {
         throw new Error(`Server error: ${res.status}`);
       }
 
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error("No response body");
-
-      const decoder = new TextDecoder();
-      let buffer = "";
       let fullContent = "";
       let collectedFlights: FlightResult[] = [];
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      const processSSELine = (line: string) => {
+        if (!line.startsWith("data: ")) return;
+        const jsonStr = line.slice(6).trim();
+        if (!jsonStr) return;
+        try {
+          const event = JSON.parse(jsonStr);
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          try {
-            const event = JSON.parse(line.slice(6));
-
-            if (event.type === "flights" && event.flights) {
-              collectedFlights = event.flights;
-              setChatMessages(prev => {
-                const updated = [...prev];
-                const lastIdx = updated.length - 1;
-                if (updated[lastIdx]?.role === "assistant") {
-                  updated[lastIdx] = { ...updated[lastIdx], flights: collectedFlights };
-                }
-                return updated;
-              });
-            }
-
-            if (event.content) {
-              fullContent += event.content;
-              setChatMessages(prev => {
-                const updated = [...prev];
-                const lastIdx = updated.length - 1;
-                if (updated[lastIdx]?.role === "assistant") {
-                  updated[lastIdx] = { ...updated[lastIdx], content: fullContent, flights: collectedFlights.length > 0 ? collectedFlights : updated[lastIdx].flights };
-                }
-                return updated;
-              });
-            }
-            if (event.done) {
-              if (event.escalated) {
-                setEscalated(true);
+          if (event.type === "flights" && event.flights) {
+            collectedFlights = event.flights;
+            setChatMessages(prev => {
+              const updated = [...prev];
+              const lastIdx = updated.length - 1;
+              if (updated[lastIdx]?.role === "assistant") {
+                updated[lastIdx] = { ...updated[lastIdx], flights: collectedFlights };
               }
+              return updated;
+            });
+          }
+
+          if (event.content) {
+            fullContent += event.content;
+            setChatMessages(prev => {
+              const updated = [...prev];
+              const lastIdx = updated.length - 1;
+              if (updated[lastIdx]?.role === "assistant") {
+                updated[lastIdx] = { ...updated[lastIdx], content: fullContent, flights: collectedFlights.length > 0 ? collectedFlights : updated[lastIdx].flights };
+              }
+              return updated;
+            });
+          }
+          if (event.done) {
+            if (event.escalated) {
+              setEscalated(true);
             }
-          } catch {}
+          }
+        } catch (e) {
+          console.error("SSE parse error:", e, "line:", line);
+        }
+      };
+
+      if (res.body && typeof res.body.getReader === "function") {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop() || "";
+
+            for (const line of lines) {
+              processSSELine(line);
+            }
+          }
+          if (buffer.trim()) {
+            processSSELine(buffer.trim());
+          }
+        } catch (streamError) {
+          console.error("Stream read error, falling back:", streamError);
+        }
+      } else {
+        const text = await res.text();
+        const lines = text.split("\n");
+        for (const line of lines) {
+          processSSELine(line);
         }
       }
+
     } catch (error) {
       console.error("Chat error:", error);
       setChatMessages(prev => {
