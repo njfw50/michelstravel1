@@ -4,7 +4,7 @@ import { FlightBoard } from "@/components/FlightBoard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldCheck, Zap, Globe, ArrowRight, MapPin, Plane, Search, CreditCard, Ticket, Star, Clock, Headphones, Users, TrendingUp, ChevronRight, Sparkles } from "lucide-react";
+import { ShieldCheck, Zap, Globe, ArrowRight, MapPin, Plane, Search, CreditCard, Ticket, Star, Clock, Headphones, Users, TrendingUp, ChevronRight, Sparkles, MessageCircle, CheckCircle2, Languages, UserCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
@@ -400,6 +400,112 @@ export default function Home() {
                 </div>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-24 md:py-32 bg-white" data-testid="section-assistant">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="max-w-6xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#0a1628] via-[#0f2240] to-[#1a3a6e]"
+            >
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-10 left-10 w-72 h-72 bg-blue-400 rounded-full blur-3xl" />
+                <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-300 rounded-full blur-3xl" />
+              </div>
+
+              <div className="relative z-10 flex flex-col lg:flex-row items-center gap-10 lg:gap-16 p-8 md:p-12 lg:p-16">
+                <div className="flex-1 text-center lg:text-left">
+                  <span className="text-xs font-bold text-blue-300 uppercase tracking-[0.2em] mb-4 block">{t("home.assistant.label")}</span>
+                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold font-display text-white mb-5 leading-tight">
+                    {t("home.assistant.title")}
+                  </h2>
+                  <p className="text-blue-200/80 text-base md:text-lg leading-relaxed mb-8 max-w-lg">
+                    {t("home.assistant.desc")}
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+                    {[
+                      { icon: Zap, text: t("home.assistant.feature1") },
+                      { icon: Plane, text: t("home.assistant.feature2") },
+                      { icon: Languages, text: t("home.assistant.feature3") },
+                      { icon: UserCheck, text: t("home.assistant.feature4") },
+                    ].map((feat, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                          <feat.icon className="h-4 w-4 text-blue-300" />
+                        </div>
+                        <span className="text-sm text-blue-100/90 font-medium">{feat.text}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Button
+                    onClick={() => {
+                      const chatBtn = document.querySelector('[data-testid="button-chatbot-toggle"]') as HTMLButtonElement;
+                      if (chatBtn) chatBtn.click();
+                    }}
+                    className="rounded-full px-8 py-6 text-base font-bold bg-white text-[#0f2240] border-0 shadow-lg shadow-black/20 transition-all"
+                    data-testid="button-open-assistant"
+                  >
+                    <MessageCircle className="mr-2 h-5 w-5" />
+                    {t("home.assistant.cta")}
+                  </Button>
+                </div>
+
+                <div className="flex-shrink-0 w-full max-w-xs lg:max-w-sm">
+                  <div className="relative">
+                    <div className="bg-white rounded-2xl shadow-2xl p-5 space-y-3">
+                      <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
+                        <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
+                          <MessageCircle className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <span className="text-sm font-bold text-gray-900 block">Mia</span>
+                          <span className="text-[10px] text-emerald-500 font-medium flex items-center gap-1">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" /> Online
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        <div className="flex justify-start">
+                          <div className="bg-gray-100 rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[85%]">
+                            <p className="text-sm text-gray-700">Oi! Sou a Mia, sua assistente de viagens. Como posso ajudar?</p>
+                          </div>
+                        </div>
+                        <div className="flex justify-end">
+                          <div className="bg-blue-500 rounded-2xl rounded-tr-md px-4 py-2.5 max-w-[85%]">
+                            <p className="text-sm text-white">Quero viajar para Miami</p>
+                          </div>
+                        </div>
+                        <div className="flex justify-start">
+                          <div className="bg-gray-100 rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[85%]">
+                            <p className="text-sm text-gray-700">Encontrei voos a partir de $680! Quer que eu busque as melhores ofertas?</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-2">
+                        <div className="flex-1 bg-gray-50 rounded-full px-4 py-2.5 border border-gray-200">
+                          <span className="text-xs text-gray-400">Digite sua mensagem...</span>
+                        </div>
+                        <div className="h-9 w-9 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                          <ArrowRight className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="absolute -bottom-3 -right-3 h-20 w-20 bg-blue-500/10 rounded-full blur-xl" />
+                    <div className="absolute -top-3 -left-3 h-16 w-16 bg-blue-400/10 rounded-full blur-xl" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>

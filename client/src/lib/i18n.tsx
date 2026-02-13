@@ -593,6 +593,15 @@ const translations: Record<Language, Record<string, string>> = {
     "search_loading.step5": "Quase lá! Organizando resultados...",
     "search_loading.tip": "Dica: Voos com conexão costumam ser mais baratos",
 
+    "home.assistant.label": "ASSISTENTE VIRTUAL",
+    "home.assistant.title": "Precisa de ajuda? Fale com a Mia",
+    "home.assistant.desc": "Nossa assistente virtual com inteligncia artificial est disponvel 24 horas por dia, 7 dias por semana. Tire dvidas sobre voos, reservas, bagagens, documentos e muito mais.",
+    "home.assistant.feature1": "Respostas instantneas sobre voos e reservas",
+    "home.assistant.feature2": "Ajuda com bagagens, documentos e vistos",
+    "home.assistant.feature3": "Suporte em Portugus, Ingls e Espanhol",
+    "home.assistant.feature4": "Transferncia para atendente humano quando necessrio",
+    "home.assistant.cta": "Iniciar Conversa",
+
     "chatbot.subtitle": "Assistente Michels Travel",
     "chatbot.placeholder": "Digite sua mensagem...",
     "chatbot.powered_by": "Assistente IA da Michels Travel",
@@ -1186,6 +1195,15 @@ const translations: Record<Language, Record<string, string>> = {
     "search_loading.step5": "Almost there! Organizing results...",
     "search_loading.tip": "Tip: Connecting flights are often cheaper",
 
+    "home.assistant.label": "VIRTUAL ASSISTANT",
+    "home.assistant.title": "Need help? Talk to Mia",
+    "home.assistant.desc": "Our AI-powered virtual assistant is available 24/7. Get answers about flights, bookings, baggage, travel documents, and much more.",
+    "home.assistant.feature1": "Instant answers about flights and bookings",
+    "home.assistant.feature2": "Help with baggage, documents, and visas",
+    "home.assistant.feature3": "Support in Portuguese, English, and Spanish",
+    "home.assistant.feature4": "Transfer to a human agent when needed",
+    "home.assistant.cta": "Start a Conversation",
+
     "chatbot.subtitle": "Michels Travel Assistant",
     "chatbot.placeholder": "Type your message...",
     "chatbot.powered_by": "Michels Travel AI Assistant",
@@ -1778,6 +1796,15 @@ const translations: Record<Language, Record<string, string>> = {
     "search_loading.step4": "Encontrando las mejores ofertas para ti...",
     "search_loading.step5": "¡Ya casi! Organizando resultados...",
     "search_loading.tip": "Dato: Los vuelos con escala suelen ser más baratos",
+
+    "home.assistant.label": "ASISTENTE VIRTUAL",
+    "home.assistant.title": "Necesitas ayuda? Habla con Mia",
+    "home.assistant.desc": "Nuestra asistente virtual con inteligencia artificial est disponible las 24 horas del da, los 7 das de la semana. Resuelve dudas sobre vuelos, reservas, equipaje, documentos y mucho ms.",
+    "home.assistant.feature1": "Respuestas instantneas sobre vuelos y reservas",
+    "home.assistant.feature2": "Ayuda con equipaje, documentos y visas",
+    "home.assistant.feature3": "Soporte en Portugus, Ingls y Espaol",
+    "home.assistant.feature4": "Transferencia a un agente humano cuando sea necesario",
+    "home.assistant.cta": "Iniciar Conversacin",
 
     "chatbot.subtitle": "Asistente Michels Travel",
     "chatbot.placeholder": "Escribe tu mensaje...",
