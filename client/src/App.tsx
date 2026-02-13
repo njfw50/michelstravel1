@@ -1,4 +1,5 @@
 import { Switch, Route } from "wouter";
+import { Component, type ReactNode } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -12,6 +13,13 @@ import { ShieldCheck } from "lucide-react";
 import { HelmetProvider } from "react-helmet-async";
 import NotFound from "@/pages/not-found";
 import { Chatbot } from "@/components/Chatbot";
+
+class SafeWrapper extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error: Error) { console.error("Component error (isolated):", error.message); }
+  render() { return this.state.hasError ? null : this.props.children; }
+}
 
 import Home from "@/pages/Home";
 import SearchResults from "@/pages/SearchResults";
@@ -88,8 +96,8 @@ function App() {
             <LanguageSelector />
             <TestModeBanner />
             <Router />
-            <Chatbot />
-            <CookieConsent />
+            <SafeWrapper><Chatbot /></SafeWrapper>
+            <SafeWrapper><CookieConsent /></SafeWrapper>
           </TooltipProvider>
         </QueryClientProvider>
       </HelmetProvider>

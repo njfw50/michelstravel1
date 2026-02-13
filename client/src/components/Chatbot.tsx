@@ -63,7 +63,7 @@ export function Chatbot() {
     try {
       let visitorId = localStorage.getItem("michels-chatbot-visitor");
       if (!visitorId) {
-        visitorId = crypto.randomUUID().slice(0, 10);
+        visitorId = Math.random().toString(36).substring(2, 12);
         localStorage.setItem("michels-chatbot-visitor", visitorId);
       }
 
