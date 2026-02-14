@@ -1,6 +1,13 @@
-import express, { type Express } from "express";
+import express, { type Express, type Request } from "express";
 import fs from "fs";
 import path from "path";
+
+function injectDynamicOrigin(html: string, req: Request): string {
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+  const host = req.headers['x-forwarded-host'] || req.headers['host'] || req.hostname;
+  const origin = `${protocol}://${host}`;
+  return html.replace(/https:\/\/michelstravel\.com/g, origin);
+}
 
 export function serveStatic(app: Express) {
   const distPath = path.resolve(__dirname, "public");
@@ -22,10 +29,13 @@ export function serveStatic(app: Express) {
     },
   }));
 
-  app.use("/{*path}", (_req, res) => {
+  app.use("/{*path}", (req, res) => {
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
-    res.sendFile(path.resolve(distPath, "index.html"));
+    const htmlPath = path.resolve(distPath, "index.html");
+    let html = fs.readFileSync(htmlPath, "utf-8");
+    html = injectDynamicOrigin(html, req);
+    res.status(200).set({ "Content-Type": "text/html" }).end(html);
   });
 }
