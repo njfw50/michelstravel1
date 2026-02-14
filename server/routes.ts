@@ -1055,37 +1055,35 @@ export function registerRoutes(app: Express) {
       });
     }
 
-    if (!testMode) {
-      const liveStripeSecret = process.env.STRIPE_LIVE_SECRET_KEY;
-      const liveStripePub = process.env.STRIPE_LIVE_PUBLISHABLE_KEY;
-      if (!liveStripeSecret || !liveStripePub || !liveStripeSecret.startsWith('sk_live_') || !liveStripePub.startsWith('pk_live_')) {
+    try {
+      const { getStripePublishableKey, getStripeSecretKey } = await import('./stripeClient');
+      const origTestMode = (await storage.getSiteSettings())?.testMode ?? true;
+      await storage.upsertSiteSettings({ testMode });
+      setTestModeCache(testMode);
+      try {
+        const pubKey = await getStripePublishableKey();
+        const secKey = await getStripeSecretKey();
+        const expectedPrefix = testMode ? 'test' : 'live';
+        if (!pubKey.includes(`_${expectedPrefix}_`) || !secKey.includes(`_${expectedPrefix}_`)) {
+          await storage.upsertSiteSettings({ testMode: origTestMode });
+          setTestModeCache(origTestMode);
+          return res.status(400).json({
+            error: `Cannot switch to ${testMode ? 'test' : 'live'} mode: Stripe keys available don't match the target mode. Ensure your Stripe connector is configured for ${testMode ? 'test' : 'live'} mode.`
+          });
+        }
+      } catch (stripeKeyErr: any) {
+        await storage.upsertSiteSettings({ testMode: origTestMode });
+        setTestModeCache(origTestMode);
         return res.status(400).json({
-          error: "Cannot disable test mode: Stripe live keys (STRIPE_LIVE_SECRET_KEY / STRIPE_LIVE_PUBLISHABLE_KEY) are missing or invalid."
+          error: `Cannot switch to ${testMode ? 'test' : 'live'} mode: Could not retrieve Stripe keys. ${stripeKeyErr?.message || ''}`
         });
       }
-    } else {
-      const testStripeSecret = process.env.STRIPE_TEST_SECRET_KEY;
-      const testStripePub = process.env.STRIPE_TEST_PUBLISHABLE_KEY;
-      if (!testStripeSecret || !testStripePub || !testStripeSecret.startsWith('sk_test_') || !testStripePub.startsWith('pk_test_')) {
-        return res.status(400).json({
-          error: "Cannot enable test mode: Stripe test keys (STRIPE_TEST_SECRET_KEY / STRIPE_TEST_PUBLISHABLE_KEY) are missing or invalid."
-        });
-      }
+    } catch (validationErr: any) {
+      return res.status(500).json({ error: `Mode switch validation failed: ${validationErr?.message || 'Unknown error'}` });
     }
 
-    const settings = await storage.getSiteSettings();
-    const updated = await storage.upsertSiteSettings({
-      ...(settings ? {
-        siteName: settings.siteName || undefined,
-        commissionPercentage: settings.commissionPercentage || undefined,
-        heroTitle: settings.heroTitle || undefined,
-        heroSubtitle: settings.heroSubtitle || undefined,
-      } : {}),
-      testMode,
-    });
-
-    setTestModeCache(testMode);
     clearReferenceDataCache();
+    const updated = await storage.getSiteSettings();
 
     try {
       const { getStripeSync } = await import('./stripeClient');
@@ -1099,7 +1097,7 @@ export function registerRoutes(app: Express) {
     console.log(`[MODE SWITCH] Switched to ${modeLabel} mode. Duffel token: ${activeTokenIsTest() ? 'test' : 'live'}, Stripe keys: ${testMode ? 'test' : 'live'}`);
 
     res.json({ 
-      testMode: updated.testMode, 
+      testMode: updated?.testMode ?? testMode, 
       activeTokenIsTest: activeTokenIsTest(),
       message: testMode ? "Test mode enabled - using test tokens for Duffel & Stripe" : "Production mode enabled - using live tokens for Duffel & Stripe" 
     });
