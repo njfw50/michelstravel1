@@ -1055,35 +1055,19 @@ export function registerRoutes(app: Express) {
       });
     }
 
-    try {
-      const { getStripePublishableKey, getStripeSecretKey } = await import('./stripeClient');
-      const origTestMode = (await storage.getSiteSettings())?.testMode ?? true;
-      await storage.upsertSiteSettings({ testMode });
-      setTestModeCache(testMode);
-      try {
-        const pubKey = await getStripePublishableKey();
-        const secKey = await getStripeSecretKey();
-        const expectedPrefix = testMode ? 'test' : 'live';
-        if (!pubKey.includes(`_${expectedPrefix}_`) || !secKey.includes(`_${expectedPrefix}_`)) {
-          await storage.upsertSiteSettings({ testMode: origTestMode });
-          setTestModeCache(origTestMode);
-          return res.status(400).json({
-            error: `Cannot switch to ${testMode ? 'test' : 'live'} mode: Stripe keys available don't match the target mode. Ensure your Stripe connector is configured for ${testMode ? 'test' : 'live'} mode.`
-          });
-        }
-      } catch (stripeKeyErr: any) {
-        await storage.upsertSiteSettings({ testMode: origTestMode });
-        setTestModeCache(origTestMode);
-        return res.status(400).json({
-          error: `Cannot switch to ${testMode ? 'test' : 'live'} mode: Could not retrieve Stripe keys. ${stripeKeyErr?.message || ''}`
-        });
-      }
-    } catch (validationErr: any) {
-      return res.status(500).json({ error: `Mode switch validation failed: ${validationErr?.message || 'Unknown error'}` });
-    }
+    const settings = await storage.getSiteSettings();
+    const updated = await storage.upsertSiteSettings({
+      ...(settings ? {
+        siteName: settings.siteName || undefined,
+        commissionPercentage: settings.commissionPercentage || undefined,
+        heroTitle: settings.heroTitle || undefined,
+        heroSubtitle: settings.heroSubtitle || undefined,
+      } : {}),
+      testMode,
+    });
 
+    setTestModeCache(testMode);
     clearReferenceDataCache();
-    const updated = await storage.getSiteSettings();
 
     try {
       const { getStripeSync } = await import('./stripeClient');
