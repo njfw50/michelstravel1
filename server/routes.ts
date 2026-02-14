@@ -1192,7 +1192,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  const SITE_URL = "https://michelstravel.com";
+  const SITE_URL = "https://buyflights.net";
 
   app.get('/robots.txt', (_req, res) => {
     res.type('text/plain');

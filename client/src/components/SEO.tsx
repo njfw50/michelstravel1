@@ -9,7 +9,7 @@ interface SEOProps {
   noindex?: boolean;
 }
 
-const BASE_URL = "https://michelstravel.com";
+const BASE_URL = "https://buyflights.net";
 const SITE_NAME = "Michels Travel";
 const DEFAULT_IMAGE = `${BASE_URL}/images/og-cover.png`;
 

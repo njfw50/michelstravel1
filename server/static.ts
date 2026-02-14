@@ -6,7 +6,7 @@ function injectDynamicOrigin(html: string, req: Request): string {
   const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
   const host = req.headers['x-forwarded-host'] || req.headers['host'] || req.hostname;
   const origin = `${protocol}://${host}`;
-  return html.replace(/https:\/\/michelstravel\.com/g, origin);
+  return html.replace(/https:\/\/buyflights\.net/g, origin);
 }
 
 export function serveStatic(app: Express) {

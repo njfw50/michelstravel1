@@ -126,7 +126,7 @@ Preferred communication style: Simple, everyday language.
 - **Robots**: `GET /robots.txt` blocks /admin, /checkout/, /profile, /my-trips, /search, /book/, /api/
 - **Structured Data**: JSON-LD for TravelAgency and WebSite schemas in index.html
 - **Dynamic lang**: HTML `lang` attribute updates based on selected language (pt-BR, en, es)
-- **Domain**: https://michelstravel.com
+- **Domain**: https://buyflights.net
 - **Contact**: reservastrens@gmail.com, +1 (862) 350-1161, New Jersey, USA
 
 ### Required Environment Variables
