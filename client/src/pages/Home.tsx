@@ -78,62 +78,62 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       <SEO />
-      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 select-none">
           <img 
             src={airplaneLightHero}
             alt="Airplane flying through bright sky"
             className="w-full h-full object-cover scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-blue-50/20 to-white/80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/60 via-blue-900/30 to-white/90" />
         </div>
 
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div 
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             className="text-center mb-12 md:mb-16 max-w-4xl mx-auto"
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="inline-flex items-center gap-2 bg-white/70 backdrop-blur-md border border-gray-200/50 rounded-full px-5 py-2 mb-8 shadow-sm"
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/20 rounded-full px-5 py-2 mb-8 shadow-sm"
             >
-              <Sparkles className="h-3.5 w-3.5 text-blue-500" />
-              <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">{t("home.stats.secure")} &middot; {t("home.stats.support")}</span>
+              <Sparkles className="h-3.5 w-3.5 text-blue-300" />
+              <span className="text-xs font-semibold text-white/90 uppercase tracking-wider">{t("home.stats.secure")} &middot; {t("home.stats.support")}</span>
             </motion.div>
 
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-extrabold text-gray-900 mb-6 leading-[0.95] tracking-tight drop-shadow-[0_2px_10px_rgba(255,255,255,0.8)]" data-testid="text-hero-title">
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-extrabold text-white mb-6 leading-[0.95] tracking-tight drop-shadow-[0_4px_20px_rgba(0,0,0,0.3)]" data-testid="text-hero-title">
               {t("home.title.1")} <br/>
-              <span className="text-blue-600">{t("home.title.2")}</span>
+              <span className="text-blue-300">{t("home.title.2")}</span>
             </h1>
-            <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto font-medium leading-relaxed" data-testid="text-hero-subtitle">
+            <p className="text-lg md:text-xl text-white/75 max-w-2xl mx-auto font-medium leading-relaxed" data-testid="text-hero-subtitle">
               {t("home.subtitle")}
             </p>
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className="max-w-6xl mx-auto"
           >
             <FlightSearchForm />
           </motion.div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none" />
       </section>
 
-      <section className="relative mt-8 z-20 pb-8">
+      <section className="relative -mt-6 z-20 pb-8">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-white rounded-2xl p-6 md:p-8 shadow-lg border border-gray-100"
+            className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 md:p-8 shadow-lg shadow-gray-200/50 border border-white/60"
           >
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
               {[
@@ -150,7 +150,7 @@ export default function Home() {
                   transition={{ delay: i * 0.08 }}
                   className="flex items-center gap-4"
                 >
-                  <div className={`h-12 w-12 rounded-xl ${stat.bg} border border-gray-100 flex items-center justify-center ${stat.color} flex-shrink-0`}>
+                  <div className={`h-12 w-12 rounded-xl ${stat.bg} border border-gray-100/50 flex items-center justify-center ${stat.color} flex-shrink-0`}>
                     <stat.icon className="h-5 w-5" />
                   </div>
                   <div>

@@ -145,18 +145,18 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
       className={cn(
-        "bg-white rounded-2xl shadow-2xl border border-gray-100 relative z-10 max-w-5xl mx-auto",
+        "bg-white/95 backdrop-blur-lg rounded-2xl shadow-xl shadow-black/5 border border-white/80 relative z-10 max-w-5xl mx-auto",
         className
       )}
     >
       <div className="px-6 md:px-8 pt-6 pb-3 flex items-center justify-between flex-wrap gap-3">
         <Tabs defaultValue="round-trip" value={tripType} onValueChange={setTripType}>
-          <TabsList className="bg-gray-100 p-1 rounded-xl">
+          <TabsList className="bg-gray-50 p-1 rounded-xl border border-gray-100">
             {["round-trip", "one-way", "multi-city"].map((type) => (
               <TabsTrigger
                 key={type}
                 value={type}
-                className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm text-gray-500 rounded-lg px-4 py-2 transition-all text-sm font-semibold"
+                className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm text-gray-400 rounded-lg px-4 py-2 transition-all text-sm font-semibold"
                 data-testid={`tab-${type}`}
               >
                 {t(`search.${type.replace("-", "_")}`)}
@@ -204,7 +204,7 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                       <PopoverTrigger asChild>
                         <button
                           type="button"
-                          className="w-full bg-white border-2 border-gray-200 rounded-xl px-4 h-14 flex items-center text-left hover:border-blue-400 transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 group"
+                          className="w-full bg-gray-50/80 border border-gray-200 rounded-xl px-4 h-14 flex items-center text-left hover:border-blue-300 hover:bg-white transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 group"
                           data-testid={`button-leg-date-${i}`}
                         >
                           <CalendarIcon className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0" />
@@ -250,7 +250,7 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                   <PopoverTrigger asChild>
                     <button
                       type="button"
-                      className="w-full bg-white border-2 border-gray-200 rounded-xl px-4 h-14 flex items-center text-left hover:border-blue-400 transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 group"
+                      className="w-full bg-gray-50/80 border border-gray-200 rounded-xl px-4 h-14 flex items-center text-left hover:border-blue-300 hover:bg-white transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 group"
                       data-testid="button-passengers-multi"
                     >
                       <Users className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0" />
@@ -335,7 +335,7 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                   type="submit" 
                   size="lg" 
                   data-testid="button-search-flights-multi"
-                  className="h-14 w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-600/25 transition-all text-base gap-2"
+                  className="h-14 w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold shadow-lg shadow-blue-500/20 transition-all text-base gap-2"
                 >
                   <Search className="h-5 w-5" />
                   {t("search.button")}
@@ -356,7 +356,7 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
               <div className="hidden md:flex justify-center items-end pb-1">
                 <button 
                   type="button"
-                  className="bg-white rounded-full p-2.5 border-2 border-gray-200 text-gray-400 hover:text-blue-600 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 shadow-sm"
+                  className="bg-white rounded-full p-2.5 border border-gray-200 text-gray-300 hover:text-blue-500 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-300 shadow-sm"
                   onClick={() => {
                     const temp = origin;
                     setOrigin(destination);
@@ -383,7 +383,7 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                   <PopoverTrigger asChild>
                     <button
                       type="button"
-                      className="w-full bg-white border-2 border-gray-200 rounded-xl px-4 h-14 flex items-center text-left hover:border-blue-400 transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 group"
+                      className="w-full bg-gray-50/80 border border-gray-200 rounded-xl px-4 h-14 flex items-center text-left hover:border-blue-300 hover:bg-white transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 group"
                       data-testid="button-departure-date"
                     >
                       <CalendarIcon className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0" />
@@ -412,8 +412,8 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                     <button 
                       type="button" 
                       className={cn(
-                        "w-full bg-white border-2 border-gray-200 rounded-xl px-4 h-14 flex items-center text-left hover:border-blue-400 transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 group",
-                        tripType === "one-way" && "bg-gray-50 text-gray-300 cursor-not-allowed border-gray-100 hover:border-gray-100"
+                        "w-full bg-gray-50/80 border border-gray-200 rounded-xl px-4 h-14 flex items-center text-left hover:border-blue-300 hover:bg-white transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 group",
+                        tripType === "one-way" && "bg-gray-50/50 text-gray-300 cursor-not-allowed border-gray-100 hover:border-gray-100 hover:bg-gray-50/50"
                       )}
                       disabled={tripType === "one-way"}
                       data-testid="button-return-date"
@@ -447,7 +447,7 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                   <PopoverTrigger asChild>
                     <button
                       type="button"
-                      className="w-full bg-white border-2 border-gray-200 rounded-xl px-4 h-14 flex items-center text-left hover:border-blue-400 transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 group"
+                      className="w-full bg-gray-50/80 border border-gray-200 rounded-xl px-4 h-14 flex items-center text-left hover:border-blue-300 hover:bg-white transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 group"
                       data-testid="button-passengers"
                     >
                       <Users className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0" />
@@ -534,7 +534,7 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
                   type="submit" 
                   size="lg" 
                   data-testid="button-search-flights"
-                  className="h-14 w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-600/25 transition-all text-base gap-2"
+                  className="h-14 w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold shadow-lg shadow-blue-500/20 transition-all text-base gap-2"
                 >
                   <Search className="h-5 w-5" />
                   {t("search.button")}

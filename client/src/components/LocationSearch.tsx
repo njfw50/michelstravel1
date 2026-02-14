@@ -83,7 +83,7 @@ export function LocationSearch({ label, placeholder, value, onChange, className 
   return (
     <div className={cn("relative", className)} ref={wrapperRef}>
       <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2 pl-1">{label}</label>
-      <div className="flex items-center bg-white border-2 border-gray-200 rounded-xl px-4 h-14 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all duration-200 hover:border-blue-400 relative">
+      <div className="flex items-center bg-gray-50/80 border border-gray-200 rounded-xl px-4 h-14 focus-within:border-blue-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-500/10 transition-all duration-300 hover:border-blue-300 hover:bg-white relative">
         <MapPin className="h-5 w-5 text-blue-500 mr-3 shrink-0" />
         <Input 
           placeholder={placeholder || "City or Airport"} 
