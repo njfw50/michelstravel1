@@ -1091,6 +1091,7 @@ export function registerRoutes(app: Express) {
   app.get('/api/test-mode', async (_req, res) => {
     const settings = await storage.getSiteSettings();
     const testModeActive = settings?.testMode ?? true;
+    setTestModeCache(testModeActive);
     res.json({ 
       testMode: testModeActive, 
       activeTokenIsTest: activeTokenIsTest(),

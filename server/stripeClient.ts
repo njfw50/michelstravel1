@@ -6,7 +6,7 @@ let connectionSettings: any;
 function isValidStripeKey(key: string | undefined | null, type: 'secret' | 'publishable'): boolean {
   if (!key || typeof key !== 'string') return false;
   if (type === 'secret') {
-    return key.startsWith('sk_live_') || key.startsWith('sk_test_');
+    return key.startsWith('sk_live_') || key.startsWith('sk_test_') || key.startsWith('rk_live_') || key.startsWith('rk_test_');
   }
   return key.startsWith('pk_live_') || key.startsWith('pk_test_');
 }
