@@ -1047,7 +1047,8 @@ export function registerRoutes(app: Express) {
 
   app.get('/api/blog/:slug', async (req, res) => {
     try {
-      const post = await storage.getBlogPost(req.params.slug);
+      const lang = req.query.lang as string | undefined;
+      const post = await storage.getBlogPost(req.params.slug, lang);
       if (!post) {
         return res.status(404).json({ error: 'Post not found' });
       }

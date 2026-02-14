@@ -31,7 +31,7 @@ export interface IStorage extends IAuthStorage {
 
   // Blog
   getBlogPosts(language?: string): Promise<BlogPost[]>;
-  getBlogPost(slug: string): Promise<BlogPost | undefined>;
+  getBlogPost(slug: string, preferredLanguage?: string): Promise<BlogPost | undefined>;
   createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
 
   // Profile
@@ -124,8 +124,19 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(blogPosts).where(eq(blogPosts.isPublished, true)).orderBy(desc(blogPosts.createdAt));
   }
 
-  async getBlogPost(slug: string): Promise<BlogPost | undefined> {
+  async getBlogPost(slug: string, preferredLanguage?: string): Promise<BlogPost | undefined> {
     const [post] = await db.select().from(blogPosts).where(eq(blogPosts.slug, slug));
+    if (!post) return undefined;
+    if (preferredLanguage && post.language !== preferredLanguage && post.coverImage) {
+      const [translated] = await db.select().from(blogPosts).where(
+        and(
+          eq(blogPosts.coverImage, post.coverImage),
+          eq(blogPosts.language, preferredLanguage),
+          eq(blogPosts.isPublished, true)
+        )
+      );
+      if (translated) return translated;
+    }
     return post;
   }
 

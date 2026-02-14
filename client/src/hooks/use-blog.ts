@@ -53,10 +53,12 @@ export function useBlogPosts() {
 }
 
 export function useBlogPost(slug: string) {
+  const { language } = useI18n();
+  const lang = language || "pt";
   return useQuery({
-    queryKey: [api.blog.get.path, slug],
+    queryKey: [api.blog.get.path, slug, lang],
     queryFn: async () => {
-      const url = buildUrl(api.blog.get.path, { slug });
+      const url = buildUrl(api.blog.get.path, { slug }) + `?lang=${lang}`;
       const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch blog post");
       return api.blog.get.responses[200].parse(await res.json());
