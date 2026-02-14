@@ -40,6 +40,7 @@ export const bookings = pgTable("bookings", {
   status: text("status").default("pending"),
   stripePaymentIntentId: text("stripe_payment_intent_id"),
   stripePaymentStatus: text("stripe_payment_status").default("pending"),
+  stripeReceiptUrl: text("stripe_receipt_url"),
   confirmationEmailSent: boolean("confirmation_email_sent").default(false),
   contactEmail: text("contact_email").notNull(),
   contactPhone: text("contact_phone"),
