@@ -15,12 +15,20 @@ import { useI18n } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 
 let stripePromise: ReturnType<typeof loadStripe> | null = null;
+let cachedPublishableKey: string | null = null;
 
-function getStripePromise() {
+function getStripePromise(publishableKey?: string) {
+  if (publishableKey && publishableKey !== cachedPublishableKey) {
+    stripePromise = loadStripe(publishableKey);
+    cachedPublishableKey = publishableKey;
+  }
   if (!stripePromise) {
     stripePromise = fetch("/api/stripe-key")
       .then((r) => r.json())
-      .then((data) => loadStripe(data.publishableKey));
+      .then((data) => {
+        cachedPublishableKey = data.publishableKey;
+        return loadStripe(data.publishableKey);
+      });
   }
   return stripePromise;
 }
@@ -195,12 +203,24 @@ export default function PaymentForm({
   onError,
 }: PaymentFormProps) {
   const [stripeReady, setStripeReady] = useState(false);
+  const [currentStripePromise, setCurrentStripePromise] = useState<ReturnType<typeof loadStripe> | null>(null);
 
   useEffect(() => {
-    getStripePromise().then(() => setStripeReady(true));
+    fetch("/api/stripe-key")
+      .then((r) => r.json())
+      .then((data) => {
+        const promise = getStripePromise(data.publishableKey);
+        setCurrentStripePromise(promise);
+        return promise;
+      })
+      .then(() => setStripeReady(true))
+      .catch((err) => {
+        console.error("Failed to load Stripe:", err);
+        onError("Failed to load payment system");
+      });
   }, []);
 
-  if (!stripeReady || !clientSecret) {
+  if (!stripeReady || !clientSecret || !currentStripePromise) {
     return (
       <div className="flex items-center justify-center p-8" data-testid="loading-payment">
         <div className="h-8 w-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
@@ -210,7 +230,7 @@ export default function PaymentForm({
 
   return (
     <Elements
-      stripe={getStripePromise()}
+      stripe={currentStripePromise}
       options={{
         clientSecret,
         appearance: {

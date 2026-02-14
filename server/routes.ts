@@ -449,18 +449,28 @@ export function registerRoutes(app: Express) {
         });
 
     } catch (error: any) {
-        console.error("Booking creation error:", error?.message || error);
+        const isTestModeForLog = (await storage.getSiteSettings())?.testMode ?? true;
+        console.error(`Booking creation error [${isTestModeForLog ? 'TEST' : 'LIVE'} mode]:`, error?.message || error);
         console.error("Booking creation error details:", JSON.stringify({
           type: error?.type,
           code: error?.code,
           statusCode: error?.statusCode,
           raw: error?.raw?.message,
+          decline_code: error?.decline_code,
+          param: error?.param,
         }));
-        const userMessage = error?.type === 'StripeInvalidRequestError' 
-          ? "Payment service configuration error. Please contact support."
-          : error?.message?.includes('Stripe') 
-            ? "Payment processing is temporarily unavailable. Please try again."
-            : "Failed to create booking. Please try again.";
+        let userMessage: string;
+        if (error?.type === 'StripeInvalidRequestError') {
+          userMessage = "Payment service configuration error. Please contact support.";
+        } else if (error?.type === 'StripeAuthenticationError') {
+          userMessage = "Payment service authentication failed. Please contact support.";
+        } else if (error?.message?.includes('No Stripe')) {
+          userMessage = `Payment keys not configured for ${isTestModeForLog ? 'test' : 'live'} mode. Please contact support.`;
+        } else if (error?.message?.includes('Stripe')) {
+          userMessage = "Payment processing is temporarily unavailable. Please try again.";
+        } else {
+          userMessage = "Failed to create booking. Please try again.";
+        }
         res.status(500).json({ error: userMessage });
     }
   });
@@ -1045,6 +1055,24 @@ export function registerRoutes(app: Express) {
       });
     }
 
+    if (!testMode) {
+      const liveStripeSecret = process.env.STRIPE_LIVE_SECRET_KEY;
+      const liveStripePub = process.env.STRIPE_LIVE_PUBLISHABLE_KEY;
+      if (!liveStripeSecret || !liveStripePub || !liveStripeSecret.startsWith('sk_live_') || !liveStripePub.startsWith('pk_live_')) {
+        return res.status(400).json({
+          error: "Cannot disable test mode: Stripe live keys (STRIPE_LIVE_SECRET_KEY / STRIPE_LIVE_PUBLISHABLE_KEY) are missing or invalid."
+        });
+      }
+    } else {
+      const testStripeSecret = process.env.STRIPE_TEST_SECRET_KEY;
+      const testStripePub = process.env.STRIPE_TEST_PUBLISHABLE_KEY;
+      if (!testStripeSecret || !testStripePub || !testStripeSecret.startsWith('sk_test_') || !testStripePub.startsWith('pk_test_')) {
+        return res.status(400).json({
+          error: "Cannot enable test mode: Stripe test keys (STRIPE_TEST_SECRET_KEY / STRIPE_TEST_PUBLISHABLE_KEY) are missing or invalid."
+        });
+      }
+    }
+
     const settings = await storage.getSiteSettings();
     const updated = await storage.upsertSiteSettings({
       ...(settings ? {
@@ -1059,13 +1087,21 @@ export function registerRoutes(app: Express) {
     setTestModeCache(testMode);
     clearReferenceDataCache();
 
+    try {
+      const { getStripeSync } = await import('./stripeClient');
+      await getStripeSync();
+      console.log(`[MODE SWITCH] Stripe client re-initialized for ${testMode ? 'TEST' : 'LIVE'} mode`);
+    } catch (stripeErr: any) {
+      console.error(`[MODE SWITCH] Stripe re-initialization warning:`, stripeErr?.message);
+    }
+
     const modeLabel = testMode ? 'TEST' : 'PRODUCTION';
-    console.log(`[MODE SWITCH] Switched to ${modeLabel} mode. Active token: ${activeTokenIsTest() ? 'test' : 'live'}`);
+    console.log(`[MODE SWITCH] Switched to ${modeLabel} mode. Duffel token: ${activeTokenIsTest() ? 'test' : 'live'}, Stripe keys: ${testMode ? 'test' : 'live'}`);
 
     res.json({ 
       testMode: updated.testMode, 
       activeTokenIsTest: activeTokenIsTest(),
-      message: testMode ? "Test mode enabled - using test token" : "Production mode enabled - using live token" 
+      message: testMode ? "Test mode enabled - using test tokens for Duffel & Stripe" : "Production mode enabled - using live tokens for Duffel & Stripe" 
     });
   });
 
