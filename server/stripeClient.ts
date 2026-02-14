@@ -22,7 +22,37 @@ async function getAppTestMode(): Promise<boolean> {
   }
 }
 
-async function getConnectorCredentials(): Promise<{ publishableKey: string; secretKey: string } | null> {
+async function getCredentials() {
+  const appTestMode = await getAppTestMode();
+
+  if (appTestMode) {
+    const testSecret = process.env.STRIPE_TEST_SECRET_KEY;
+    const testPub = process.env.STRIPE_TEST_PUBLISHABLE_KEY;
+
+    if (testSecret && testPub && isValidStripeKey(testSecret, 'secret') && isValidStripeKey(testPub, 'publishable')) {
+      console.log(`[Stripe] TEST MODE - Using test keys (sk_test_/pk_test_)`);
+      return {
+        publishableKey: testPub,
+        secretKey: testSecret,
+      };
+    }
+
+    console.warn('[Stripe] TEST MODE - No valid test keys found (STRIPE_TEST_SECRET_KEY / STRIPE_TEST_PUBLISHABLE_KEY)');
+  } else {
+    const liveSecret = process.env.STRIPE_LIVE_SECRET_KEY;
+    const livePub = process.env.STRIPE_LIVE_PUBLISHABLE_KEY;
+
+    if (liveSecret && livePub && isValidStripeKey(liveSecret, 'secret') && isValidStripeKey(livePub, 'publishable')) {
+      console.log(`[Stripe] LIVE MODE - Using live keys (sk_live_/pk_live_)`);
+      return {
+        publishableKey: livePub,
+        secretKey: liveSecret,
+      };
+    }
+
+    console.warn('[Stripe] LIVE MODE - No valid live keys found (STRIPE_LIVE_SECRET_KEY / STRIPE_LIVE_PUBLISHABLE_KEY)');
+  }
+
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
     ? 'repl ' + process.env.REPL_IDENTITY
@@ -30,79 +60,44 @@ async function getConnectorCredentials(): Promise<{ publishableKey: string; secr
       ? 'depl ' + process.env.WEB_REPL_RENEWAL
       : null;
 
-  if (!xReplitToken || !hostname) return null;
+  if (xReplitToken && hostname) {
+    try {
+      const isDeployment = process.env.REPLIT_DEPLOYMENT === '1';
+      const connectorName = 'stripe';
+      const targetEnvironment = isDeployment ? 'production' : 'development';
 
-  try {
-    const isDeployment = process.env.REPLIT_DEPLOYMENT === '1';
-    const connectorName = 'stripe';
-    const targetEnvironment = isDeployment ? 'production' : 'development';
+      const url = new URL(`https://${hostname}/api/v2/connection`);
+      url.searchParams.set('include_secrets', 'true');
+      url.searchParams.set('connector_names', connectorName);
+      url.searchParams.set('environment', targetEnvironment);
 
-    const url = new URL(`https://${hostname}/api/v2/connection`);
-    url.searchParams.set('include_secrets', 'true');
-    url.searchParams.set('connector_names', connectorName);
-    url.searchParams.set('environment', targetEnvironment);
+      const response = await fetch(url.toString(), {
+        headers: {
+          'Accept': 'application/json',
+          'X_REPLIT_TOKEN': xReplitToken
+        }
+      });
 
-    const response = await fetch(url.toString(), {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
+      const data = await response.json();
+      connectionSettings = data.items?.[0];
+
+      if (connectionSettings?.settings?.publishable && connectionSettings?.settings?.secret) {
+        console.log(`[Stripe] Falling back to connector keys (testMode=${appTestMode})`);
+        return {
+          publishableKey: connectionSettings.settings.publishable,
+          secretKey: connectionSettings.settings.secret,
+        };
       }
-    });
-
-    const data = await response.json();
-    connectionSettings = data.items?.[0];
-
-    if (connectionSettings?.settings?.publishable && connectionSettings?.settings?.secret) {
-      return {
-        publishableKey: connectionSettings.settings.publishable,
-        secretKey: connectionSettings.settings.secret,
-      };
+    } catch (err) {
+      console.warn('[Stripe] Failed to fetch connector credentials:', (err as Error).message);
     }
-  } catch (err) {
-    console.warn('[Stripe] Failed to fetch connector credentials:', (err as Error).message);
   }
 
-  return null;
-}
-
-async function getCredentials() {
-  const isDeployment = process.env.REPLIT_DEPLOYMENT === '1';
-  const appTestMode = await getAppTestMode();
-  const useLiveKeys = isDeployment || !appTestMode;
-
-  const liveSecretKey = process.env.STRIPE_LIVE_SECRET_KEY;
-  const livePubKey = process.env.STRIPE_LIVE_PUBLISHABLE_KEY;
-  const hasValidLiveKeys = liveSecretKey && livePubKey 
-    && isValidStripeKey(liveSecretKey, 'secret') 
-    && isValidStripeKey(livePubKey, 'publishable');
-
-  if (useLiveKeys && hasValidLiveKeys) {
-    console.log(`[Stripe] Using live keys (deployment=${isDeployment}, testMode=${appTestMode})`);
-    return {
-      publishableKey: livePubKey!,
-      secretKey: liveSecretKey!,
-    };
-  }
-
-  if (useLiveKeys && liveSecretKey && !hasValidLiveKeys) {
-    console.warn(`[Stripe] Live keys found but invalid format (key starts with '${liveSecretKey.substring(0, 3)}...'). Falling back to connector.`);
-  }
-
-  const connectorCreds = await getConnectorCredentials();
-  if (connectorCreds) {
-    console.log(`[Stripe] Using connector keys (deployment=${isDeployment}, testMode=${appTestMode})`);
-    return connectorCreds;
-  }
-
-  if (liveSecretKey && livePubKey) {
-    console.warn(`[Stripe] Using env var keys as last resort (format may be non-standard)`);
-    return {
-      publishableKey: livePubKey,
-      secretKey: liveSecretKey,
-    };
-  }
-
-  throw new Error('No valid Stripe credentials found. Set STRIPE_LIVE_SECRET_KEY/STRIPE_LIVE_PUBLISHABLE_KEY with valid sk_live_/pk_live_ keys, or configure the Stripe connector.');
+  throw new Error(
+    appTestMode
+      ? 'No Stripe test credentials found. Set STRIPE_TEST_SECRET_KEY and STRIPE_TEST_PUBLISHABLE_KEY.'
+      : 'No Stripe live credentials found. Set STRIPE_LIVE_SECRET_KEY and STRIPE_LIVE_PUBLISHABLE_KEY.'
+  );
 }
 
 export async function getUncachableStripeClient() {
@@ -125,19 +120,26 @@ export async function getStripeSecretKey() {
 }
 
 let stripeSync: any = null;
+let stripeSyncTestMode: boolean | null = null;
 
 export async function getStripeSync() {
-  if (!stripeSync) {
-    const { StripeSync } = await import('stripe-replit-sync');
-    const secretKey = await getStripeSecretKey();
+  const currentTestMode = await getAppTestMode();
 
-    stripeSync = new StripeSync({
-      poolConfig: {
-        connectionString: process.env.DATABASE_URL!,
-        max: 2,
-      },
-      stripeSecretKey: secretKey,
-    });
+  if (stripeSync && stripeSyncTestMode === currentTestMode) {
+    return stripeSync;
   }
+
+  const { StripeSync } = await import('stripe-replit-sync');
+  const secretKey = await getStripeSecretKey();
+
+  stripeSync = new StripeSync({
+    poolConfig: {
+      connectionString: process.env.DATABASE_URL!,
+      max: 2,
+    },
+    stripeSecretKey: secretKey,
+  });
+  stripeSyncTestMode = currentTestMode;
+
   return stripeSync;
 }
