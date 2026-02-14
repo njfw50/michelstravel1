@@ -760,17 +760,33 @@ export function registerRoutes(app: Express) {
           if (paymentId.startsWith('cs_')) {
             const session = await stripe.checkout.sessions.retrieve(paymentId);
             if (session.payment_status === 'paid') {
+              let receiptUrl = booking.stripeReceiptUrl;
+              if (!receiptUrl && session.payment_intent) {
+                try {
+                  const pi = await stripe.paymentIntents.retrieve(session.payment_intent as string, { expand: ['latest_charge'] });
+                  receiptUrl = (pi.latest_charge as any)?.receipt_url || null;
+                } catch {}
+              }
               const [updated] = await db.update(bookings)
-                .set({ status: 'confirmed', stripePaymentStatus: 'paid' })
+                .set({ 
+                  status: 'confirmed', 
+                  stripePaymentStatus: 'paid',
+                  ...(receiptUrl ? { stripeReceiptUrl: receiptUrl } : {}),
+                })
                 .where(eq(bookings.id, id))
                 .returning();
               return res.json({ verified: true, status: 'confirmed', booking: updated });
             }
           } else if (paymentId.startsWith('pi_')) {
-            const pi = await stripe.paymentIntents.retrieve(paymentId);
+            const pi = await stripe.paymentIntents.retrieve(paymentId, { expand: ['latest_charge'] });
             if (pi.status === 'succeeded') {
+              const receiptUrl = booking.stripeReceiptUrl || (pi.latest_charge as any)?.receipt_url || null;
               const [updated] = await db.update(bookings)
-                .set({ status: 'confirmed', stripePaymentStatus: 'paid' })
+                .set({ 
+                  status: 'confirmed', 
+                  stripePaymentStatus: 'paid',
+                  ...(receiptUrl ? { stripeReceiptUrl: receiptUrl } : {}),
+                })
                 .where(eq(bookings.id, id))
                 .returning();
               return res.json({ verified: true, status: 'confirmed', booking: updated });
@@ -785,6 +801,50 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Payment verification error:", error);
       res.status(500).json({ error: "Failed to verify payment" });
+    }
+  });
+
+  app.get('/api/bookings/:id/receipt', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+
+      const booking = await storage.getBooking(id);
+      if (!booking) return res.status(404).json({ error: "Booking not found" });
+
+      const user = (req as any).user;
+      if (booking.userId && (!user || user.id !== booking.userId)) {
+        const { reference, email } = req.query;
+        if (!reference || !email || reference !== booking.referenceCode || email !== booking.contactEmail) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+
+      if (booking.stripeReceiptUrl) {
+        return res.json({ receiptUrl: booking.stripeReceiptUrl });
+      }
+
+      if (booking.stripePaymentIntentId && booking.stripePaymentIntentId.startsWith('pi_')) {
+        try {
+          const { getUncachableStripeClient } = await import('./stripeClient');
+          const stripe = await getUncachableStripeClient();
+          const pi = await stripe.paymentIntents.retrieve(booking.stripePaymentIntentId, { expand: ['latest_charge'] });
+          const receiptUrl = (pi.latest_charge as any)?.receipt_url || null;
+          if (receiptUrl) {
+            await db.update(bookings)
+              .set({ stripeReceiptUrl: receiptUrl })
+              .where(eq(bookings.id, id));
+            return res.json({ receiptUrl });
+          }
+        } catch (err: any) {
+          console.error('Receipt URL fetch error:', err?.message);
+        }
+      }
+
+      res.json({ receiptUrl: null });
+    } catch (error) {
+      console.error("Receipt URL error:", error);
+      res.status(500).json({ error: "Failed to get receipt" });
     }
   });
 

@@ -31,6 +31,7 @@ import {
   User,
   Globe,
   Shield,
+  Receipt,
 } from "lucide-react";
 import { SEO } from "@/components/SEO";
 
@@ -663,6 +664,37 @@ export default function CheckoutSuccess() {
           </Card>
 
           <div className="flex flex-col sm:flex-row items-center gap-3 no-print" data-testid="card-actions">
+            {booking.status === "confirmed" && (
+              <Button
+                onClick={() => {
+                  fetch(`/api/bookings/${booking.id}/receipt`)
+                    .then(r => r.json())
+                    .then(data => {
+                      if (data.receiptUrl) {
+                        window.open(data.receiptUrl, '_blank');
+                      } else {
+                        toast({
+                          title: t("confirm.receipt_unavailable") || "Receipt not available yet",
+                          description: t("confirm.receipt_unavailable_desc") || "The payment receipt will be available shortly. Please try again in a few minutes.",
+                        });
+                      }
+                    })
+                    .catch(() => {
+                      toast({
+                        title: t("confirm.receipt_error") || "Error",
+                        description: t("confirm.receipt_error_desc") || "Could not load receipt. Please try again.",
+                        variant: "destructive",
+                      });
+                    });
+                }}
+                variant="outline"
+                className="w-full sm:w-auto gap-2"
+                data-testid="button-view-receipt"
+              >
+                <Receipt className="h-4 w-4" />
+                {t("confirm.view_receipt") || "View Receipt"}
+              </Button>
+            )}
             <Button
               onClick={handlePrint}
               variant="outline"

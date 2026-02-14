@@ -1,10 +1,24 @@
 
-import { getStripeSync } from './stripeClient';
+import { getStripeSync, getUncachableStripeClient } from './stripeClient';
 import { db } from './db';
 import { bookings } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { sendBookingConfirmationEmail } from './services/emailService';
 import { createDuffelOrder, type DuffelPassenger } from './services/duffel';
+
+async function fetchReceiptUrl(paymentIntentId: string): Promise<string | null> {
+  try {
+    const stripe = await getUncachableStripeClient();
+    const pi = await stripe.paymentIntents.retrieve(paymentIntentId, {
+      expand: ['latest_charge'],
+    });
+    const charge = pi.latest_charge as any;
+    return charge?.receipt_url || null;
+  } catch (err: any) {
+    console.warn(`[WEBHOOK] Could not fetch receipt URL for ${paymentIntentId}:`, err?.message);
+    return null;
+  }
+}
 
 function mapPassengersToDuffelFormat(passengerDetails: any[], contactEmail: string, contactPhone: string): DuffelPassenger[] {
   return passengerDetails.map((p: any) => ({
@@ -55,17 +69,21 @@ export class WebhookHandlers {
         if (bookingId) {
           const id = parseInt(bookingId, 10);
           if (!isNaN(id)) {
+            const piId = session.payment_intent || session.id;
+            const receiptUrl = (piId && piId.startsWith('pi_')) ? await fetchReceiptUrl(piId) : null;
+
             const [updated] = await db.update(bookings)
               .set({
                 status: 'confirmed',
                 stripePaymentStatus: 'paid',
-                stripePaymentIntentId: session.payment_intent || session.id,
+                stripePaymentIntentId: piId,
+                ...(receiptUrl ? { stripeReceiptUrl: receiptUrl } : {}),
               })
               .where(eq(bookings.id, id))
               .returning();
 
             if (updated) {
-              console.log(`[WEBHOOK] Booking #${id} confirmed (payment successful)`);
+              console.log(`[WEBHOOK] Booking #${id} confirmed (payment successful)${receiptUrl ? ' - receipt URL saved' : ''}`);
 
               const flightData = updated.flightData as any;
               const offerId = flightData?.id;
@@ -159,17 +177,26 @@ export class WebhookHandlers {
           if (!isNaN(id)) {
             const [existing] = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
             if (existing && existing.status !== 'confirmed') {
+              const latestCharge = paymentIntent.latest_charge;
+              let receiptUrl: string | null = null;
+              if (typeof latestCharge === 'object' && latestCharge?.receipt_url) {
+                receiptUrl = latestCharge.receipt_url;
+              } else if (typeof latestCharge === 'string') {
+                receiptUrl = await fetchReceiptUrl(paymentIntent.id);
+              }
+
               const [updated] = await db.update(bookings)
                 .set({
                   status: 'confirmed',
                   stripePaymentStatus: 'paid',
                   stripePaymentIntentId: paymentIntent.id,
+                  ...(receiptUrl ? { stripeReceiptUrl: receiptUrl } : {}),
                 })
                 .where(eq(bookings.id, id))
                 .returning();
 
               if (updated) {
-                console.log(`[WEBHOOK] Booking #${id} confirmed via payment_intent.succeeded`);
+                console.log(`[WEBHOOK] Booking #${id} confirmed via payment_intent.succeeded${receiptUrl ? ' - receipt URL saved' : ''}`);
 
                 const flightData = updated.flightData as any;
                 const offerId = flightData?.id;
@@ -273,6 +300,26 @@ export class WebhookHandlers {
             .set({ stripePaymentStatus: 'failed' })
             .where(eq(bookings.id, booking.id));
           console.log(`[WEBHOOK] Booking #${booking.id} payment failed`);
+        }
+        break;
+      }
+
+      case 'charge.succeeded': {
+        const charge = event.data.object;
+        const paymentIntentId = charge.payment_intent;
+        const chargeReceiptUrl = charge.receipt_url;
+
+        if (paymentIntentId && chargeReceiptUrl) {
+          const [booking] = await db.select().from(bookings)
+            .where(eq(bookings.stripePaymentIntentId, paymentIntentId))
+            .limit(1);
+
+          if (booking && !booking.stripeReceiptUrl) {
+            await db.update(bookings)
+              .set({ stripeReceiptUrl: chargeReceiptUrl })
+              .where(eq(bookings.id, booking.id));
+            console.log(`[WEBHOOK] Receipt URL saved for booking #${booking.id}`);
+          }
         }
         break;
       }

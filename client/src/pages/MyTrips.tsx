@@ -32,8 +32,10 @@ import {
   CheckCircle,
   XCircle,
   HelpCircle,
+  Receipt,
 } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import type { Booking } from "@shared/schema";
 import { SEO } from "@/components/SEO";
 
@@ -66,6 +68,7 @@ function StatusBadge({ status }: { status: string }) {
 
 function BookingCard({ booking, defaultExpanded = false }: { booking: Booking; defaultExpanded?: boolean }) {
   const { t } = useI18n();
+  const { toast } = useToast();
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [copied, setCopied] = useState(false);
   const [, setLocation] = useLocation();
@@ -156,16 +159,51 @@ function BookingCard({ booking, defaultExpanded = false }: { booking: Booking; d
                     {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-gray-400" />}
                   </Button>
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="gap-2 border-gray-200 text-gray-600"
-                  onClick={(e) => { e.stopPropagation(); setLocation(`/checkout/success?bookingId=${booking.id}`); }}
-                  data-testid={`button-view-confirmation-${booking.id}`}
-                >
-                  <Printer className="h-3.5 w-3.5" />
-                  {t("confirm.print") || "View / Print"}
-                </Button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {booking.status === "confirmed" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-2 border-gray-200 text-gray-600"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        fetch(`/api/bookings/${booking.id}/receipt`)
+                          .then(r => r.json())
+                          .then(data => {
+                            if (data.receiptUrl) {
+                              window.open(data.receiptUrl, '_blank');
+                            } else {
+                              toast({
+                                title: t("confirm.receipt_unavailable") || "Receipt not available yet",
+                                description: t("confirm.receipt_unavailable_desc") || "The payment receipt will be available shortly. Please try again in a few minutes.",
+                              });
+                            }
+                          })
+                          .catch(() => {
+                            toast({
+                              title: t("confirm.receipt_error") || "Error",
+                              description: t("confirm.receipt_error_desc") || "Could not load receipt. Please try again.",
+                              variant: "destructive",
+                            });
+                          });
+                      }}
+                      data-testid={`button-view-receipt-${booking.id}`}
+                    >
+                      <Receipt className="h-3.5 w-3.5" />
+                      {t("confirm.view_receipt") || "View Receipt"}
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-2 border-gray-200 text-gray-600"
+                    onClick={(e) => { e.stopPropagation(); setLocation(`/checkout/success?bookingId=${booking.id}`); }}
+                    data-testid={`button-view-confirmation-${booking.id}`}
+                  >
+                    <Printer className="h-3.5 w-3.5" />
+                    {t("confirm.print") || "View / Print"}
+                  </Button>
+                </div>
               </div>
 
               <Separator className="bg-gray-100" />
