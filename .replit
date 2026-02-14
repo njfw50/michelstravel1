@@ -45,4 +45,3 @@ integrations = ["javascript_log_in_with_replit:2.0.0", "stripe:2.0.0", "javascri
 [userenv]
 
 [userenv.shared]
-DUFFEL_API_TOKEN = "duffel_test_qRnx5kQwxqroaJMoqtTEY72OyzAcxFG39p0U9zO-hp2"
