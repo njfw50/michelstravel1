@@ -27,6 +27,7 @@ export function getSession() {
     ttl: sessionTtl,
     tableName: "sessions",
   });
+  const isProduction = process.env.REPLIT_DEPLOYMENT === '1' || process.env.NODE_ENV === 'production';
   return session({
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
@@ -34,7 +35,8 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' as const : 'lax' as const,
       maxAge: sessionTtl,
     },
   });
@@ -60,11 +62,53 @@ async function upsertUser(claims: any) {
   });
 }
 
+const STATELESS_PATHS = [
+  '/api/bookings',
+  '/api/stripe-key',
+  '/api/stripe/webhook',
+  '/api/flights',
+  '/api/places',
+  '/api/chatbot',
+  '/api/blog',
+  '/api/settings',
+  '/api/test-mode',
+  '/api/flight-board',
+  '/api/airlines',
+  '/api/airports',
+  '/api/aircraft',
+  '/sitemap.xml',
+  '/robots.txt',
+];
+
+function isStatelessPath(path: string): boolean {
+  return STATELESS_PATHS.some(sp => path === sp || path.startsWith(sp + '/') || path.startsWith(sp + '?'));
+}
+
 export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
-  app.use(getSession());
-  app.use(passport.initialize());
-  app.use(passport.session());
+
+  const sessionMiddleware = getSession();
+  const passportInit = passport.initialize();
+  const passportSession = passport.session();
+
+  app.use((req, res, next) => {
+    if (isStatelessPath(req.path)) {
+      return next();
+    }
+    sessionMiddleware(req, res, next);
+  });
+  app.use((req, res, next) => {
+    if (isStatelessPath(req.path)) {
+      return next();
+    }
+    passportInit(req, res, next);
+  });
+  app.use((req, res, next) => {
+    if (isStatelessPath(req.path)) {
+      return next();
+    }
+    passportSession(req, res, next);
+  });
 
   const config = await getOidcConfig();
 

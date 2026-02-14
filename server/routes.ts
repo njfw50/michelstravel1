@@ -512,7 +512,10 @@ export function registerRoutes(app: Express) {
       if (!booking) return res.status(404).json({ error: "Booking not found" });
 
       const user = (req as any).user;
-      if (booking.userId && (!user || user.id !== booking.userId)) {
+      const { referenceCode, contactEmail } = req.body || {};
+      const hasValidRef = referenceCode && contactEmail && booking.referenceCode === referenceCode && booking.contactEmail === contactEmail;
+      const hasValidUser = user && booking.userId && user.id === booking.userId;
+      if (booking.userId && !hasValidUser && !hasValidRef) {
         return res.status(403).json({ error: "Access denied" });
       }
 
@@ -636,7 +639,10 @@ export function registerRoutes(app: Express) {
       if (!booking) return res.status(404).json({ error: "Booking not found" });
 
       const user = (req as any).user;
-      if (booking.userId && (!user || user.id !== booking.userId)) {
+      const { referenceCode, contactEmail } = req.body || {};
+      const hasValidRef = referenceCode && contactEmail && booking.referenceCode === referenceCode && booking.contactEmail === contactEmail;
+      const hasValidUser = user && booking.userId && user.id === booking.userId;
+      if (booking.userId && !hasValidUser && !hasValidRef) {
         return res.status(403).json({ error: "Access denied" });
       }
 
@@ -677,7 +683,10 @@ export function registerRoutes(app: Express) {
       if (!booking) return res.status(404).json({ error: "Booking not found" });
 
       const user = (req as any).user;
-      if (booking.userId && (!user || user.id !== booking.userId)) {
+      const { reference, email } = req.query;
+      const hasValidRef = reference && email && booking.referenceCode === reference && booking.contactEmail === email;
+      const hasValidUser = user && booking.userId && user.id === booking.userId;
+      if (booking.userId && !hasValidUser && !hasValidRef) {
         return res.status(403).json({ error: "Access denied" });
       }
 
@@ -784,7 +793,10 @@ export function registerRoutes(app: Express) {
       if (!booking) return res.status(404).json({ error: "Booking not found" });
 
       const user = (req as any).user;
-      if (booking.userId && (!user || user.id !== booking.userId)) {
+      const { referenceCode, contactEmail } = req.body || {};
+      const hasValidRef = referenceCode && contactEmail && booking.referenceCode === referenceCode && booking.contactEmail === contactEmail;
+      const hasValidUser = user && booking.userId && user.id === booking.userId;
+      if (booking.userId && !hasValidUser && !hasValidRef) {
         return res.status(403).json({ error: "Access denied" });
       }
 
