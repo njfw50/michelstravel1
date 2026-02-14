@@ -35,7 +35,7 @@ export const bookings = pgTable("bookings", {
   passengerDetails: jsonb("passenger_details").notNull(),
   totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
   currency: text("currency").default("USD"),
-  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).default("0.05"),
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).default("0.085"),
   commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }),
   status: text("status").default("pending"),
   stripePaymentIntentId: text("stripe_payment_intent_id"),
@@ -51,7 +51,7 @@ export const bookings = pgTable("bookings", {
 export const siteSettings = pgTable("site_settings", {
   id: serial("id").primaryKey(),
   siteName: text("site_name").default("SkyScanner Clone"),
-  commissionPercentage: decimal("commission_percentage", { precision: 5, scale: 2 }).default("5.00"),
+  commissionPercentage: decimal("commission_percentage", { precision: 5, scale: 2 }).default("8.50"),
   heroTitle: text("hero_title").default("Find Your Next Adventure"),
   heroSubtitle: text("hero_subtitle").default("Best prices on flights worldwide."),
   testMode: boolean("test_mode").default(true).notNull(),

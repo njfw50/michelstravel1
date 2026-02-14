@@ -136,3 +136,10 @@ Preferred communication style: Simple, everyday language.
 - `REPL_ID` — Replit environment identifier (auto-set by Replit)
 - Stripe credentials are fetched dynamically via Replit connectors (not env vars)
 - `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_PORT` — Optional, for sending booking confirmation emails
+
+### Commission/Markup System (Updated Feb 2026)
+- Default commission rate: **8.5%** (configurable in Admin Dashboard)
+- Markup is applied **server-side** to all flight prices before returning to the client (search, details, refresh, flight board, chatbot, seat map, baggage services)
+- Customers see and pay the marked-up price; Duffel base prices are never exposed
+- Commission tracking in bookings uses reverse calculation: `commissionAmount = totalPrice * (rate / (1 + rate))` since totalPrice already includes markup
+- Helper functions in `server/routes.ts`: `getCommissionRate()`, `applyMarkupToFlight()`, `applyMarkupToFlights()`

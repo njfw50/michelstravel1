@@ -21,6 +21,21 @@ function generateReferenceCode(): string {
 import { searchFlights, getFlight, searchPlaces, getAirlines, getAirports, getAircraft, initializeReferenceData, isTestMode, activeTokenIsTest, hasLiveToken, hasTestToken, setTestModeCache, clearReferenceDataCache, loadTestModeSetting, ensureTestModeLoaded, refreshOffer } from "./services/duffel";
 import { sendBookingConfirmationEmail, sendChatEscalationEmail } from "./services/emailService";
 
+async function getCommissionRate(): Promise<number> {
+  const settings = await storage.getSiteSettings();
+  return settings?.commissionPercentage ? parseFloat(settings.commissionPercentage) / 100 : 0.085;
+}
+
+function applyMarkupToFlight(flight: any, rate: number): any {
+  const markedUpPrice = parseFloat((flight.price * (1 + rate)).toFixed(2));
+  const { baseAmount, taxAmount, ...rest } = flight;
+  return { ...rest, price: markedUpPrice };
+}
+
+function applyMarkupToFlights(flights: any[], rate: number): any[] {
+  return flights.map(f => applyMarkupToFlight(f, rate));
+}
+
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
   if (!(req.session as any)?.isAdmin) {
     return res.status(401).json({ error: "Admin authentication required" });
@@ -95,7 +110,8 @@ export function registerRoutes(app: Express) {
         });
       }
 
-      res.json(flights);
+      const rate = await getCommissionRate();
+      res.json(applyMarkupToFlights(flights, rate));
     } catch (error) {
       console.error('Flight search error:', error);
       res.status(500).json({ error: 'Failed to search flights' });
@@ -130,7 +146,8 @@ export function registerRoutes(app: Express) {
         if (!flight) {
             return res.status(404).json({ error: "Flight not found" });
         }
-        res.json(flight);
+        const rate = await getCommissionRate();
+        res.json(applyMarkupToFlight(flight, rate));
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch flight details" });
     }
@@ -140,6 +157,10 @@ export function registerRoutes(app: Express) {
     try {
       await ensureTestModeLoaded();
       const result = await refreshOffer(req.params.id);
+      if (result.valid && result.price) {
+        const rate = await getCommissionRate();
+        result.price = parseFloat((result.price * (1 + rate)).toFixed(2));
+      }
       res.json(result);
     } catch (error) {
       console.error("Offer refresh error:", error);
@@ -236,6 +257,7 @@ export function registerRoutes(app: Express) {
       ];
 
       const results: any[] = [];
+      const markupRate = await getCommissionRate();
 
       const searchPromises = routes.map(async (route) => {
         try {
@@ -265,7 +287,7 @@ export function registerRoutes(app: Express) {
               departureTime: cheapest.departureTime,
               arrivalTime: cheapest.arrivalTime,
               duration: cheapest.duration,
-              price: cheapest.price,
+              price: parseFloat((cheapest.price * (1 + markupRate)).toFixed(2)),
               currency: cheapest.currency,
               stops: cheapest.stops,
               cabinClass: cheapest.cabinClass || "economy",
@@ -285,7 +307,7 @@ export function registerRoutes(app: Express) {
                 departureTime: alt.departureTime,
                 arrivalTime: alt.arrivalTime,
                 duration: alt.duration,
-                price: alt.price,
+                price: parseFloat((alt.price * (1 + markupRate)).toFixed(2)),
                 currency: alt.currency,
                 stops: alt.stops,
                 cabinClass: alt.cabinClass || "economy",
@@ -358,9 +380,9 @@ export function registerRoutes(app: Express) {
 
         const bookingData = req.body;
         
-        const commissionRate = settings?.commissionPercentage ? parseFloat(settings.commissionPercentage) / 100 : 0.05;
+        const commissionRate = settings?.commissionPercentage ? parseFloat(settings.commissionPercentage) / 100 : 0.085;
         const price = parseFloat(bookingData.totalPrice);
-        const commissionAmount = (price * commissionRate).toFixed(2);
+        const commissionAmount = (price * (commissionRate / (1 + commissionRate))).toFixed(2);
 
         const flightDataWithMode = {
             ...bookingData.flightData,
@@ -533,6 +555,7 @@ export function registerRoutes(app: Express) {
         return res.json({ available: false, cabins: [] });
       }
 
+      const seatMarkupRate = await getCommissionRate();
       const processed = seatMap.map((sm: any) => ({
         sliceId: sm.slice_id,
         segmentId: sm.segment_id,
@@ -542,16 +565,19 @@ export function registerRoutes(app: Express) {
           rows: (cabin.rows || []).map((row: any) => ({
             sectionNumber: row.sections?.[0]?.number || null,
             seats: (row.sections || []).flatMap((section: any) =>
-              (section.elements || []).filter((el: any) => el.type === 'seat').map((seat: any) => ({
-                id: seat.designator,
-                designator: seat.designator,
-                available: seat.available_services?.length > 0,
-                type: seat.type || 'standard',
-                disclosures: seat.disclosures || [],
-                price: seat.available_services?.[0]?.total_amount || null,
-                currency: seat.available_services?.[0]?.total_currency || null,
-                serviceId: seat.available_services?.[0]?.id || null,
-              }))
+              (section.elements || []).filter((el: any) => el.type === 'seat').map((seat: any) => {
+                const rawPrice = seat.available_services?.[0]?.total_amount || null;
+                return {
+                  id: seat.designator,
+                  designator: seat.designator,
+                  available: seat.available_services?.length > 0,
+                  type: seat.type || 'standard',
+                  disclosures: seat.disclosures || [],
+                  price: rawPrice ? parseFloat((parseFloat(rawPrice) * (1 + seatMarkupRate)).toFixed(2)).toString() : null,
+                  currency: seat.available_services?.[0]?.total_currency || null,
+                  serviceId: seat.available_services?.[0]?.id || null,
+                };
+              })
             ),
           })),
         })),
@@ -569,15 +595,21 @@ export function registerRoutes(app: Express) {
       const { getOfferServices } = await import('./services/duffel');
       const services = await getOfferServices(req.params.offerId);
 
-      const baggageServices = services.filter(s => s.type === 'baggage');
-      const seatServices = services.filter(s => s.type === 'seat');
-      const otherServices = services.filter(s => s.type !== 'baggage' && s.type !== 'seat');
+      const serviceMarkupRate = await getCommissionRate();
+      const markedUpServices = services.map((s: any) => ({
+        ...s,
+        totalAmount: s.totalAmount ? parseFloat((parseFloat(s.totalAmount) * (1 + serviceMarkupRate)).toFixed(2)).toString() : s.totalAmount,
+      }));
+
+      const baggageServices = markedUpServices.filter((s: any) => s.type === 'baggage');
+      const seatServices = markedUpServices.filter((s: any) => s.type === 'seat');
+      const otherServices = markedUpServices.filter((s: any) => s.type !== 'baggage' && s.type !== 'seat');
 
       res.json({
         baggage: baggageServices,
         seats: seatServices,
         other: otherServices,
-        all: services,
+        all: markedUpServices,
       });
     } catch (error) {
       console.error("Services error:", error);
@@ -978,7 +1010,7 @@ export function registerRoutes(app: Express) {
       return res.json({
         id: 0,
         siteName: "Michels Travel",
-        commissionPercentage: "5.00",
+        commissionPercentage: "8.50",
         heroTitle: "Find Your Next Adventure",
         heroSubtitle: "Best prices on flights worldwide.",
         testMode: true,
@@ -1513,6 +1545,7 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
               passengers: args.adults || "1",
             });
 
+            const chatMarkupRate = await getCommissionRate();
             const topFlights = flights.slice(0, 5).map(f => ({
               id: f.id,
               airline: f.airline,
@@ -1520,7 +1553,7 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
               departureTime: f.departureTime,
               arrivalTime: f.arrivalTime,
               duration: f.duration,
-              price: f.price,
+              price: parseFloat((f.price * (1 + chatMarkupRate)).toFixed(2)),
               currency: f.currency,
               stops: f.stops,
               logoUrl: f.logoUrl,
