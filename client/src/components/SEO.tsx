@@ -11,7 +11,7 @@ interface SEOProps {
 
 const BASE_URL = "https://michelstravel.com";
 const SITE_NAME = "Michels Travel";
-const DEFAULT_IMAGE = `${BASE_URL}/favicon.png`;
+const DEFAULT_IMAGE = `${BASE_URL}/images/og-cover.png`;
 
 export function SEO({
   title,
