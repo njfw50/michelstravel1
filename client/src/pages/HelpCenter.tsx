@@ -29,6 +29,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
   return (
     <button
       onClick={() => setOpen(!open)}
+      aria-expanded={open}
       className="w-full text-left border-b border-border last:border-0"
       data-testid={`faq-item-${question.substring(0, 20).replace(/\s/g, "-").toLowerCase()}`}
     >
@@ -186,7 +187,7 @@ export default function HelpCenter() {
                   <p className="text-sm font-medium mb-1">{t("help.no_results")}</p>
                   <p className="text-xs text-muted-foreground mb-4">{t("help.no_results_desc")}</p>
                   <Link href="/messages">
-                    <Button className="bg-blue-600 text-white" data-testid="button-contact-from-search">
+                    <Button data-testid="button-contact-from-search">
                       <MessageSquare className="h-4 w-4 mr-2" />
                       {t("help.contact_team")}
                     </Button>
@@ -196,7 +197,7 @@ export default function HelpCenter() {
                 <Card className="divide-y divide-border px-4">
                   {filteredFaqs.map((faq, i) => (
                     <div key={i}>
-                      <Badge variant="secondary" className="mt-3 text-[10px]">{faq.categoryTitle}</Badge>
+                      <Badge variant="secondary" className="mt-3 text-[10px]" data-testid={`badge-category-${faq.category}`}>{faq.categoryTitle}</Badge>
                       <FAQItem question={faq.q} answer={faq.a} />
                     </div>
                   ))}
