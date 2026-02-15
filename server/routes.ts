@@ -66,7 +66,11 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
  * This function registers the other Stripe routes and API routes that need parsed JSON
  */
 export function registerRoutes(app: Express) {
-  
+
+  app.get('/atendimento', (_req, res) => {
+    res.redirect(301, '/admin/live-chat');
+  });
+
   // === FLIGHT ROUTES ===
 
   // Search Places (Autocomplete)
