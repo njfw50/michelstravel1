@@ -4,13 +4,16 @@ import { eq, desc, sql, and } from "drizzle-orm";
 import {
   flightSearches, bookings, siteSettings, blogPosts, users,
   liveSessions, liveSessionBlocks, liveSessionMessages,
+  internalThreads, internalMessages,
   type FlightSearch, type InsertFlightSearch,
   type Booking, type InsertBooking,
   type SiteSetting, type InsertSiteSetting,
   type BlogPost, type InsertBlogPost,
   type LiveSession, type InsertLiveSession,
   type LiveSessionBlock, type InsertLiveSessionBlock,
-  type LiveSessionMessage, type InsertLiveSessionMessage
+  type LiveSessionMessage, type InsertLiveSessionMessage,
+  type InternalThread, type InsertInternalThread,
+  type InternalMessage, type InsertInternalMessage,
 } from "@shared/schema";
 
 // Import Auth Storage
@@ -54,6 +57,17 @@ export interface IStorage extends IAuthStorage {
   deleteLiveSessionBlock(id: number): Promise<void>;
   createLiveSessionMessage(msg: InsertLiveSessionMessage): Promise<LiveSessionMessage>;
   getLiveSessionMessages(sessionId: number): Promise<LiveSessionMessage[]>;
+
+  // Internal Messenger
+  createInternalThread(thread: InsertInternalThread): Promise<InternalThread>;
+  getInternalThreadsByUser(userId: string): Promise<InternalThread[]>;
+  getAllInternalThreads(): Promise<(InternalThread & { userName?: string; userEmail?: string; unreadCount?: number })[]>;
+  getInternalThread(id: number): Promise<InternalThread | undefined>;
+  createInternalMessage(msg: InsertInternalMessage): Promise<InternalMessage>;
+  getInternalMessages(threadId: number): Promise<InternalMessage[]>;
+  markMessagesRead(threadId: number, role: "admin" | "user"): Promise<void>;
+  getUnreadCountForUser(userId: string): Promise<number>;
+  getUnreadCountForAdmin(): Promise<number>;
 
   // Stripe
   getProduct(productId: string): Promise<any>;
@@ -317,6 +331,67 @@ export class DatabaseStorage implements IStorage {
 
   async getLiveSessionMessages(sessionId: number): Promise<LiveSessionMessage[]> {
     return await db.select().from(liveSessionMessages).where(eq(liveSessionMessages.sessionId, sessionId)).orderBy(liveSessionMessages.createdAt);
+  }
+
+  // --- Internal Messenger ---
+  async createInternalThread(thread: InsertInternalThread): Promise<InternalThread> {
+    const [t] = await db.insert(internalThreads).values(thread).returning();
+    return t;
+  }
+
+  async getInternalThreadsByUser(userId: string): Promise<InternalThread[]> {
+    return await db.select().from(internalThreads).where(eq(internalThreads.userId, userId)).orderBy(desc(internalThreads.lastMessageAt));
+  }
+
+  async getAllInternalThreads(): Promise<(InternalThread & { userName?: string; userEmail?: string; unreadCount?: number })[]> {
+    const result = await db.execute(sql`
+      SELECT t.*, u.first_name || ' ' || u.last_name AS user_name, u.email AS user_email,
+        (SELECT COUNT(*) FROM internal_messages m WHERE m.thread_id = t.id AND m.read_by_admin = false) AS unread_count
+      FROM internal_threads t
+      LEFT JOIN users u ON t.user_id = u.id
+      ORDER BY t.last_message_at DESC
+    `);
+    return result.rows as any;
+  }
+
+  async getInternalThread(id: number): Promise<InternalThread | undefined> {
+    const [t] = await db.select().from(internalThreads).where(eq(internalThreads.id, id));
+    return t;
+  }
+
+  async createInternalMessage(msg: InsertInternalMessage): Promise<InternalMessage> {
+    const [m] = await db.insert(internalMessages).values(msg).returning();
+    await db.update(internalThreads).set({ lastMessageAt: new Date() }).where(eq(internalThreads.id, msg.threadId));
+    return m;
+  }
+
+  async getInternalMessages(threadId: number): Promise<InternalMessage[]> {
+    return await db.select().from(internalMessages).where(eq(internalMessages.threadId, threadId)).orderBy(internalMessages.createdAt);
+  }
+
+  async markMessagesRead(threadId: number, role: "admin" | "user"): Promise<void> {
+    if (role === "admin") {
+      await db.update(internalMessages).set({ readByAdmin: true }).where(eq(internalMessages.threadId, threadId));
+    } else {
+      await db.update(internalMessages).set({ readByUser: true }).where(eq(internalMessages.threadId, threadId));
+    }
+  }
+
+  async getUnreadCountForUser(userId: string): Promise<number> {
+    const result = await db.execute(sql`
+      SELECT COUNT(*) as count FROM internal_messages m
+      JOIN internal_threads t ON m.thread_id = t.id
+      WHERE t.user_id = ${userId} AND m.read_by_user = false AND m.sender_role = 'admin'
+    `);
+    return Number(result.rows[0]?.count || 0);
+  }
+
+  async getUnreadCountForAdmin(): Promise<number> {
+    const result = await db.execute(sql`
+      SELECT COUNT(*) as count FROM internal_messages
+      WHERE read_by_admin = false AND sender_role = 'user'
+    `);
+    return Number(result.rows[0]?.count || 0);
   }
 }
 

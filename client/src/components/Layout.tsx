@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { User, LogOut, Menu, X, Shield, ShieldCheck, Lock, Award, Building2, Plane, Briefcase } from "lucide-react";
+import { User, LogOut, Menu, X, Shield, ShieldCheck, Lock, Award, Building2, Plane, Briefcase, MessageSquare } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n";
 import { LoginDialog } from "@/components/LoginDialog";
 import logo from "@assets/LOGO_1770751298475.png";
+
+function UnreadBadge() {
+  const { data } = useQuery<{ count: number }>({
+    queryKey: ["/api/messenger/unread"],
+    refetchInterval: 15000,
+  });
+  if (!data?.count) return null;
+  return (
+    <span className="absolute -top-1 -right-1 h-4 min-w-4 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center px-1" data-testid="badge-unread">
+      {data.count > 9 ? "9+" : data.count}
+    </span>
+  );
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
@@ -87,6 +100,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3">
             <div className="hidden md:flex items-center gap-3">
               {user ? (
+                <>
+                <Link href="/messages" data-testid="button-messages-nav">
+                  <Button variant="ghost" size="icon" className="relative">
+                    <MessageSquare className="h-4 w-4" />
+                    <UnreadBadge />
+                  </Button>
+                </Link>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="gap-2 rounded-full pl-2 pr-4 border border-gray-200 text-gray-700" data-testid="button-user-menu">
@@ -111,6 +131,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     >
                       <Briefcase className="mr-2 h-4 w-4" /> {t("nav.my_trips") || "My Trips"}
                     </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="rounded-lg cursor-pointer"
+                      onClick={() => setLocation("/messages")}
+                      data-testid="button-messages-dropdown"
+                    >
+                      <MessageSquare className="mr-2 h-4 w-4" /> {t("nav.messages") || "Messages"}
+                    </DropdownMenuItem>
                     {adminCheck?.isAdmin && (
                       <DropdownMenuItem 
                         className="rounded-lg cursor-pointer text-blue-600"
@@ -129,6 +156,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                </>
               ) : (
                 <Button 
                   onClick={() => setLoginDialogOpen(true)}
@@ -178,6 +206,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="pt-4 border-t border-gray-200">
                 {user ? (
                   <>
+                    <button
+                      onClick={() => { setIsMobileMenuOpen(false); setLocation("/messages"); }}
+                      className="block w-full text-left py-3 text-base font-medium text-gray-600 rounded-lg px-4 hover:bg-gray-50 flex items-center gap-2"
+                      data-testid="button-mobile-messages"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      {t("nav.messages") || "Messages"}
+                    </button>
                     <button
                       onClick={() => { setIsMobileMenuOpen(false); setLocation("/profile"); }}
                       className="block w-full text-left py-3 text-base font-medium text-gray-600 rounded-lg px-4 hover:bg-gray-50"

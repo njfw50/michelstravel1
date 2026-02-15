@@ -103,6 +103,27 @@ export const liveSessionMessages = pgTable("live_session_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// === INTERNAL MESSENGER ===
+export const internalThreads = pgTable("internal_threads", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  subject: text("subject").notNull(),
+  status: text("status").default("open").notNull(),
+  lastMessageAt: timestamp("last_message_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const internalMessages = pgTable("internal_messages", {
+  id: serial("id").primaryKey(),
+  threadId: integer("thread_id").notNull().references(() => internalThreads.id, { onDelete: "cascade" }),
+  senderRole: text("sender_role").notNull(),
+  senderName: text("sender_name"),
+  content: text("content").notNull(),
+  readByAdmin: boolean("read_by_admin").default(false),
+  readByUser: boolean("read_by_user").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // === RELATIONS ===
 export const bookingsRelations = relations(bookings, ({ one }) => ({
   user: one(users, {
@@ -119,6 +140,8 @@ export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({ id: tru
 export const insertLiveSessionSchema = createInsertSchema(liveSessions).omit({ id: true, createdAt: true, closedAt: true });
 export const insertLiveSessionBlockSchema = createInsertSchema(liveSessionBlocks).omit({ id: true, updatedAt: true });
 export const insertLiveSessionMessageSchema = createInsertSchema(liveSessionMessages).omit({ id: true, createdAt: true });
+export const insertInternalThreadSchema = createInsertSchema(internalThreads).omit({ id: true, createdAt: true, lastMessageAt: true });
+export const insertInternalMessageSchema = createInsertSchema(internalMessages).omit({ id: true, createdAt: true });
 
 // === TYPES ===
 export type FlightSearch = typeof flightSearches.$inferSelect;
@@ -139,6 +162,11 @@ export type LiveSessionBlock = typeof liveSessionBlocks.$inferSelect;
 export type InsertLiveSessionBlock = z.infer<typeof insertLiveSessionBlockSchema>;
 export type LiveSessionMessage = typeof liveSessionMessages.$inferSelect;
 export type InsertLiveSessionMessage = z.infer<typeof insertLiveSessionMessageSchema>;
+
+export type InternalThread = typeof internalThreads.$inferSelect;
+export type InsertInternalThread = z.infer<typeof insertInternalThreadSchema>;
+export type InternalMessage = typeof internalMessages.$inferSelect;
+export type InsertInternalMessage = z.infer<typeof insertInternalMessageSchema>;
 
 // === API TYPES ===
 // Search Query Params

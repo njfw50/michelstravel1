@@ -45,6 +45,8 @@ import {
   DollarSign,
   Receipt,
   Share2,
+  Mail,
+  ArrowLeft,
 } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 
@@ -1207,8 +1209,161 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
   );
 }
 
+function AdminMessengerPanel({ onLogout }: { onLogout: () => void }) {
+  const [threads, setThreads] = useState<any[]>([]);
+  const [selectedThreadId, setSelectedThreadId] = useState<number | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [replyText, setReplyText] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const fetchThreads = useCallback(async () => {
+    try {
+      const res = await authFetch("/api/admin/messenger/threads");
+      if (res.status === 401) { clearToken(); onLogout(); return; }
+      if (res.ok) setThreads(await res.json());
+    } catch {} finally { setLoading(false); }
+  }, [onLogout]);
+
+  const fetchMessages = useCallback(async () => {
+    if (!selectedThreadId) return;
+    try {
+      const res = await authFetch(`/api/admin/messenger/threads/${selectedThreadId}/messages`);
+      if (res.ok) setMessages(await res.json());
+    } catch {}
+  }, [selectedThreadId]);
+
+  useEffect(() => {
+    fetchThreads();
+    const interval = setInterval(fetchThreads, 8000);
+    return () => clearInterval(interval);
+  }, [fetchThreads]);
+
+  useEffect(() => {
+    if (selectedThreadId) {
+      fetchMessages();
+      const interval = setInterval(fetchMessages, 4000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedThreadId, fetchMessages]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSendReply = async () => {
+    if (!replyText.trim() || !selectedThreadId || sending) return;
+    setSending(true);
+    try {
+      await authFetch(`/api/admin/messenger/threads/${selectedThreadId}/messages`, {
+        method: "POST",
+        body: JSON.stringify({ content: replyText.trim() }),
+      });
+      setReplyText("");
+      await fetchMessages();
+      await fetchThreads();
+    } catch {} finally { setSending(false); }
+  };
+
+  const selectedThread = threads.find(t => t.id === selectedThreadId);
+
+  if (selectedThreadId && selectedThread) {
+    return (
+      <div className="flex flex-col h-full min-h-0">
+        <div className="flex items-center gap-2 p-3 border-b bg-muted/30">
+          <Button variant="ghost" size="icon" onClick={() => { setSelectedThreadId(null); setMessages([]); }} data-testid="button-back-threads">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold truncate">{selectedThread.subject}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {selectedThread.userName || `User ${selectedThread.userId}`}
+            </p>
+          </div>
+          <Badge variant={selectedThread.status === "open" ? "default" : "secondary"} className="text-[10px]">
+            {selectedThread.status}
+          </Badge>
+        </div>
+        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          {messages.map((msg: any) => {
+            const isAdmin = msg.senderRole === "admin";
+            return (
+              <div key={msg.id} className={`flex ${isAdmin ? "justify-end" : "justify-start"}`} data-testid={`admin-message-${msg.id}`}>
+                <div className={`max-w-[80%] rounded-2xl px-3 py-2 ${
+                  isAdmin
+                    ? "bg-blue-600 text-white rounded-br-md"
+                    : "bg-muted text-foreground rounded-bl-md"
+                }`}>
+                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  <p className={`text-[10px] mt-0.5 ${isAdmin ? "text-blue-200" : "text-muted-foreground"}`}>
+                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+          <div ref={messagesEndRef} />
+        </div>
+        <div className="p-2 border-t flex gap-2">
+          <Input
+            value={replyText}
+            onChange={(e) => setReplyText(e.target.value)}
+            placeholder="Responder..."
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && replyText.trim()) {
+                e.preventDefault();
+                handleSendReply();
+              }
+            }}
+            data-testid="input-admin-reply"
+          />
+          <Button size="icon" onClick={handleSendReply} disabled={!replyText.trim() || sending} className="bg-blue-600 text-white" data-testid="button-admin-send">
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto p-2 space-y-1">
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : threads.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <Mail className="h-10 w-10 mb-3 opacity-20" />
+          <p className="text-sm">Nenhuma mensagem</p>
+          <p className="text-xs mt-1">As mensagens dos clientes aparecem aqui</p>
+        </div>
+      ) : (
+        threads.map((thread: any) => (
+          <button
+            key={thread.id}
+            onClick={() => setSelectedThreadId(thread.id)}
+            className="w-full text-left p-3 rounded-lg hover-elevate transition-colors border border-border"
+            data-testid={`admin-thread-${thread.id}`}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold truncate flex-1">{thread.subject}</p>
+              <Badge variant={thread.status === "open" ? "default" : "secondary"} className="text-[10px] flex-shrink-0">
+                {thread.status}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {thread.userName || `User ${thread.userId}`} — {thread.lastMessageAt ? new Date(thread.lastMessageAt).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : ""}
+            </p>
+          </button>
+        ))
+      )}
+    </div>
+  );
+}
+
 function ChatApp({ onLogout }: { onLogout: () => void }) {
-  const [activeTab, setActiveTab] = useState<"chat" | "vendas">("chat");
+  const [activeTab, setActiveTab] = useState<"chat" | "vendas" | "mensagens">("chat");
   const [selectedConvId, setSelectedConvId] = useState<number | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedMessages, setSelectedMessages] = useState<Message[]>([]);
@@ -1534,11 +1689,25 @@ function ChatApp({ onLogout }: { onLogout: () => void }) {
             <Plane className="h-3.5 w-3.5 inline mr-1" />
             Vendas
           </button>
+          <button
+            onClick={() => setActiveTab("mensagens")}
+            className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-colors ${
+              activeTab === "mensagens"
+                ? "bg-white/20 text-white"
+                : "text-white/60 hover:text-white/80"
+            }`}
+            data-testid="tab-mensagens"
+          >
+            <Mail className="h-3.5 w-3.5 inline mr-1" />
+            Mensagens
+          </button>
         </div>
       </div>
 
       {activeTab === "vendas" ? (
         <LiveSalesPanel onLogout={onLogout} />
+      ) : activeTab === "mensagens" ? (
+        <AdminMessengerPanel onLogout={onLogout} />
       ) : (
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {loading ? (

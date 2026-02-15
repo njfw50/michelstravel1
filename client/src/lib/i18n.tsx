@@ -461,6 +461,26 @@ const translations: Record<Language, Record<string, string>> = {
     // Navigation
     "nav.my_trips": "Minhas Viagens",
     "nav.profile": "Meu Perfil",
+    "nav.messages": "Mensagens",
+
+    // Messenger
+    "messenger.title": "Mensagens",
+    "messenger.subtitle": "Converse diretamente com nossa equipe.",
+    "messenger.new_thread": "Nova Mensagem",
+    "messenger.subject": "Assunto",
+    "messenger.subject_placeholder": "Ex: Dúvida sobre reserva",
+    "messenger.message": "Mensagem",
+    "messenger.message_placeholder": "Escreva sua mensagem...",
+    "messenger.send": "Enviar",
+    "messenger.reply_placeholder": "Digite sua resposta...",
+    "messenger.no_threads": "Nenhuma conversa ainda",
+    "messenger.no_threads_desc": "Envie sua primeira mensagem para nossa equipe!",
+    "messenger.login_required": "Faça login para enviar mensagens",
+    "messenger.back": "Voltar",
+    "messenger.you": "Você",
+    "messenger.admin": "Michels Travel",
+    "messenger.open": "Aberto",
+    "messenger.closed": "Fechado",
 
     // Profile Page
     "profile.title": "Meu Perfil",
@@ -1080,6 +1100,26 @@ const translations: Record<Language, Record<string, string>> = {
     // Navigation
     "nav.my_trips": "My Trips",
     "nav.profile": "My Profile",
+    "nav.messages": "Messages",
+
+    // Messenger
+    "messenger.title": "Messages",
+    "messenger.subtitle": "Chat directly with our team.",
+    "messenger.new_thread": "New Message",
+    "messenger.subject": "Subject",
+    "messenger.subject_placeholder": "E.g.: Question about a booking",
+    "messenger.message": "Message",
+    "messenger.message_placeholder": "Write your message...",
+    "messenger.send": "Send",
+    "messenger.reply_placeholder": "Type your reply...",
+    "messenger.no_threads": "No conversations yet",
+    "messenger.no_threads_desc": "Send your first message to our team!",
+    "messenger.login_required": "Log in to send messages",
+    "messenger.back": "Back",
+    "messenger.you": "You",
+    "messenger.admin": "Michels Travel",
+    "messenger.open": "Open",
+    "messenger.closed": "Closed",
 
     // Profile Page
     "profile.title": "My Profile",
@@ -1699,6 +1739,26 @@ const translations: Record<Language, Record<string, string>> = {
     // Navigation
     "nav.my_trips": "Mis Viajes",
     "nav.profile": "Mi Perfil",
+    "nav.messages": "Mensajes",
+
+    // Messenger
+    "messenger.title": "Mensajes",
+    "messenger.subtitle": "Chatea directamente con nuestro equipo.",
+    "messenger.new_thread": "Nuevo Mensaje",
+    "messenger.subject": "Asunto",
+    "messenger.subject_placeholder": "Ej: Duda sobre reserva",
+    "messenger.message": "Mensaje",
+    "messenger.message_placeholder": "Escribe tu mensaje...",
+    "messenger.send": "Enviar",
+    "messenger.reply_placeholder": "Escribe tu respuesta...",
+    "messenger.no_threads": "Sin conversaciones aún",
+    "messenger.no_threads_desc": "¡Envía tu primer mensaje a nuestro equipo!",
+    "messenger.login_required": "Inicia sesión para enviar mensajes",
+    "messenger.back": "Volver",
+    "messenger.you": "Tú",
+    "messenger.admin": "Michels Travel",
+    "messenger.open": "Abierto",
+    "messenger.closed": "Cerrado",
 
     // Profile Page
     "profile.title": "Mi Perfil",

@@ -1941,6 +1941,151 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
     }
   });
 
+  // ============ INTERNAL MESSENGER ROUTES ============
+
+  app.get('/api/messenger/threads', async (req, res) => {
+    const user = req.user as any;
+    if (!user?.claims?.sub) return res.status(401).json({ error: "Login required" });
+    try {
+      const threads = await storage.getInternalThreadsByUser(user.claims.sub);
+      res.json(threads);
+    } catch (error) {
+      console.error('Messenger threads error:', error);
+      res.status(500).json({ error: "Failed to fetch threads" });
+    }
+  });
+
+  app.post('/api/messenger/threads', async (req, res) => {
+    const user = req.user as any;
+    if (!user?.claims?.sub) return res.status(401).json({ error: "Login required" });
+    try {
+      const { subject, message } = req.body;
+      if (!subject?.trim() || !message?.trim()) return res.status(400).json({ error: "Subject and message required" });
+      const thread = await storage.createInternalThread({ userId: user.claims.sub, subject: subject.trim(), status: "open" });
+      const firstName = user.claims.first_name || "";
+      const lastName = user.claims.last_name || "";
+      const senderName = `${firstName} ${lastName}`.trim() || user.claims.email || "User";
+      await storage.createInternalMessage({
+        threadId: thread.id,
+        senderRole: "user",
+        senderName,
+        content: message.trim(),
+        readByAdmin: false,
+        readByUser: true,
+      });
+      res.json(thread);
+    } catch (error) {
+      console.error('Messenger create thread error:', error);
+      res.status(500).json({ error: "Failed to create thread" });
+    }
+  });
+
+  app.get('/api/messenger/threads/:id/messages', async (req, res) => {
+    const user = req.user as any;
+    if (!user?.claims?.sub) return res.status(401).json({ error: "Login required" });
+    try {
+      const threadId = parseInt(req.params.id);
+      const thread = await storage.getInternalThread(threadId);
+      if (!thread || thread.userId !== user.claims.sub) return res.status(404).json({ error: "Thread not found" });
+      await storage.markMessagesRead(threadId, "user");
+      const msgs = await storage.getInternalMessages(threadId);
+      res.json(msgs);
+    } catch (error) {
+      console.error('Messenger messages error:', error);
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  app.post('/api/messenger/threads/:id/messages', async (req, res) => {
+    const user = req.user as any;
+    if (!user?.claims?.sub) return res.status(401).json({ error: "Login required" });
+    try {
+      const threadId = parseInt(req.params.id);
+      const thread = await storage.getInternalThread(threadId);
+      if (!thread || thread.userId !== user.claims.sub) return res.status(404).json({ error: "Thread not found" });
+      const { content } = req.body;
+      if (!content?.trim()) return res.status(400).json({ error: "Message content required" });
+      const firstName = user.claims.first_name || "";
+      const lastName = user.claims.last_name || "";
+      const senderName = `${firstName} ${lastName}`.trim() || "User";
+      const msg = await storage.createInternalMessage({
+        threadId,
+        senderRole: "user",
+        senderName,
+        content: content.trim(),
+        readByAdmin: false,
+        readByUser: true,
+      });
+      res.json(msg);
+    } catch (error) {
+      console.error('Messenger send message error:', error);
+      res.status(500).json({ error: "Failed to send message" });
+    }
+  });
+
+  app.get('/api/messenger/unread', async (req, res) => {
+    const user = req.user as any;
+    if (!user?.claims?.sub) return res.json({ count: 0 });
+    try {
+      const count = await storage.getUnreadCountForUser(user.claims.sub);
+      res.json({ count });
+    } catch {
+      res.json({ count: 0 });
+    }
+  });
+
+  // Admin messenger routes
+  app.get('/api/admin/messenger/threads', requireAdmin, async (req, res) => {
+    try {
+      const threads = await storage.getAllInternalThreads();
+      res.json(threads);
+    } catch (error) {
+      console.error('Admin messenger threads error:', error);
+      res.status(500).json({ error: "Failed to fetch threads" });
+    }
+  });
+
+  app.get('/api/admin/messenger/threads/:id/messages', requireAdmin, async (req, res) => {
+    try {
+      const threadId = parseInt(req.params.id);
+      await storage.markMessagesRead(threadId, "admin");
+      const msgs = await storage.getInternalMessages(threadId);
+      res.json(msgs);
+    } catch (error) {
+      console.error('Admin messenger messages error:', error);
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  app.post('/api/admin/messenger/threads/:id/messages', requireAdmin, async (req, res) => {
+    try {
+      const threadId = parseInt(req.params.id);
+      const { content } = req.body;
+      if (!content?.trim()) return res.status(400).json({ error: "Message content required" });
+      const msg = await storage.createInternalMessage({
+        threadId,
+        senderRole: "admin",
+        senderName: "Michels Travel",
+        content: content.trim(),
+        readByAdmin: true,
+        readByUser: false,
+      });
+      res.json(msg);
+    } catch (error) {
+      console.error('Admin messenger send error:', error);
+      res.status(500).json({ error: "Failed to send message" });
+    }
+  });
+
+  app.get('/api/admin/messenger/unread', requireAdmin, async (req, res) => {
+    try {
+      const count = await storage.getUnreadCountForAdmin();
+      res.json({ count });
+    } catch {
+      res.json({ count: 0 });
+    }
+  });
+
   // ============ LIVE SESSION ROUTES ============
 
   // SSE connections map for real-time updates
