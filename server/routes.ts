@@ -1182,17 +1182,29 @@ export function registerRoutes(app: Express) {
 
   // === ADMIN AUTH (Password-based, separate from Replit Auth) ===
 
+  const adminWebLoginAttempts = new Map<string, { count: number; lastAttempt: number }>();
+
   app.post('/api/admin/login', (req, res) => {
     const { password } = req.body;
     const adminPassword = process.env.ADMIN_PASSWORD;
+    const clientIp = req.ip || req.socket.remoteAddress || "unknown";
+
+    const attempts = adminWebLoginAttempts.get(clientIp);
+    if (attempts && attempts.count >= 5 && Date.now() - attempts.lastAttempt < 15 * 60 * 1000) {
+      return res.status(429).json({ error: "Too many login attempts. Try again in 15 minutes." });
+    }
 
     if (!adminPassword) {
       return res.status(500).json({ error: "Admin password not configured on server" });
     }
 
     if (!password || password !== adminPassword) {
+      const current = adminWebLoginAttempts.get(clientIp) || { count: 0, lastAttempt: 0 };
+      adminWebLoginAttempts.set(clientIp, { count: current.count + 1, lastAttempt: Date.now() });
       return res.status(401).json({ error: "Invalid admin password" });
     }
+
+    adminWebLoginAttempts.delete(clientIp);
 
     (req.session as any).isAdmin = true;
     req.session.save((err) => {

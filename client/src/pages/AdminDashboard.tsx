@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare, AlertTriangle, CheckCircle2, XCircle, Lock } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -430,6 +430,82 @@ function CommissionControl() {
   );
 }
 
+function AdminLoginForm() {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Login failed");
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/check"] });
+      }
+    } catch {
+      setError("Connection error. Try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-sm border border-gray-200 shadow-sm">
+        <CardHeader className="text-center space-y-2">
+          <div className="mx-auto h-14 w-14 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center">
+            <Lock className="h-7 w-7 text-blue-600" />
+          </div>
+          <CardTitle className="text-xl text-gray-900">Admin Access</CardTitle>
+          <p className="text-sm text-gray-500">Enter your admin password to continue</p>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="admin-password" className="text-sm text-gray-700">Password</Label>
+              <Input
+                id="admin-password"
+                data-testid="input-admin-password"
+                type="password"
+                placeholder="Enter admin password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoFocus
+              />
+            </div>
+            {error && (
+              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm" data-testid="text-login-error">
+                {error}
+              </div>
+            )}
+            <Button
+              data-testid="button-admin-login"
+              type="submit"
+              className="w-full gap-2"
+              disabled={isLoading || !password}
+            >
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+              Login
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const { data: stats, isLoading: statsLoading } = useAdminStats();
   const { data: bookings } = useAllBookings();
@@ -447,21 +523,18 @@ export default function AdminDashboard() {
       credentials: "include",
     });
     queryClient.invalidateQueries({ queryKey: ["/api/admin/check"] });
-    setLocation("/");
   };
 
-  useEffect(() => {
-    if (!adminCheckLoading && !adminCheck?.isAdmin) {
-      setLocation("/");
-    }
-  }, [adminCheck, adminCheckLoading, setLocation]);
-
-  if (adminCheckLoading || statsLoading) {
+  if (adminCheckLoading) {
     return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>;
   }
 
   if (!adminCheck?.isAdmin) {
-    return null;
+    return <AdminLoginForm />;
+  }
+
+  if (statsLoading) {
+    return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>;
   }
 
   const statCards = [
