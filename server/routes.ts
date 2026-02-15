@@ -2160,7 +2160,7 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
       const block = await storage.updateLiveSessionBlock(blockId, updates);
       if (!block) return res.status(404).json({ error: "Block not found" });
 
-      notifyLiveSessionClients(block.sessionId, shared ? "block_update" : "block_removed", block);
+      notifyLiveSessionClients(block.sessionId, (shared === false) ? "block_removed" : "block_update", block);
       res.json(block);
     } catch (error) {
       res.status(500).json({ error: "Failed to update block" });

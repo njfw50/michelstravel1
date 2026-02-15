@@ -40,6 +40,11 @@ import {
   Calendar,
   ArrowRight,
   MapPin,
+  Pencil,
+  StickyNote,
+  DollarSign,
+  Receipt,
+  Share2,
 } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 
@@ -361,6 +366,14 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
   const [sharedBlockMap, setSharedBlockMap] = useState<Record<string, number>>({});
   const [togglingFlight, setTogglingFlight] = useState<string | null>(null);
 
+  const [customPrices, setCustomPrices] = useState<Record<string, string>>({});
+  const [editingPrice, setEditingPrice] = useState<string | null>(null);
+
+  const [noteText, setNoteText] = useState("");
+  const [sendingNote, setSendingNote] = useState(false);
+
+  const [sendingPricingSummary, setSendingPricingSummary] = useState(false);
+
   const [liveMessage, setLiveMessage] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -464,6 +477,12 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
     }
   };
 
+  const getFlightPrice = (flight: FlightResult): number => {
+    const custom = customPrices[flight.id];
+    if (custom && !isNaN(parseFloat(custom))) return parseFloat(custom);
+    return flight.price;
+  };
+
   const handleToggleShare = async (flight: FlightResult) => {
     if (!selectedSessionId || togglingFlight) return;
     setTogglingFlight(flight.id);
@@ -481,14 +500,17 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
             delete next[flight.id];
             return next;
           });
+          await fetchSessionDetail();
         }
       } else {
+        const clientPrice = getFlightPrice(flight);
+        const flightForClient = { ...flight, price: clientPrice };
         const res = await authFetch(`/api/live-sessions/admin/${selectedSessionId}/blocks`, {
           method: "POST",
           body: JSON.stringify({
             blockType: "search_results",
             payload: {
-              flights: [flight],
+              flights: [flightForClient],
               searchParams: {
                 origin: searchOrigin,
                 destination: searchDestination,
@@ -501,10 +523,83 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
         if (res.ok) {
           const block = await res.json();
           setSharedBlockMap((prev) => ({ ...prev, [flight.id]: block.id }));
+          await fetchSessionDetail();
         }
       }
     } catch {} finally {
       setTogglingFlight(null);
+    }
+  };
+
+  const handleUpdateSharedPrice = async (flight: FlightResult) => {
+    const blockId = sharedBlockMap[flight.id];
+    if (!blockId) return;
+    const clientPrice = getFlightPrice(flight);
+    const flightForClient = { ...flight, price: clientPrice };
+    try {
+      await authFetch(`/api/live-sessions/admin/blocks/${blockId}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          payload: {
+            flights: [flightForClient],
+            searchParams: { origin: searchOrigin, destination: searchDestination, date: searchDate },
+          },
+        }),
+      });
+      await fetchSessionDetail();
+    } catch {}
+  };
+
+  const handleSendNote = async () => {
+    if (!noteText.trim() || !selectedSessionId || sendingNote) return;
+    setSendingNote(true);
+    try {
+      await authFetch(`/api/live-sessions/admin/${selectedSessionId}/blocks`, {
+        method: "POST",
+        body: JSON.stringify({
+          blockType: "custom_note",
+          payload: { text: noteText.trim() },
+          shared: true,
+        }),
+      });
+      setNoteText("");
+      await fetchSessionDetail();
+    } catch {} finally {
+      setSendingNote(false);
+    }
+  };
+
+  const handleSendPricingSummary = async () => {
+    if (!selectedSessionId || sendingPricingSummary) return;
+    setSendingPricingSummary(true);
+    const sharedFlightIds = Object.keys(sharedBlockMap);
+    const sharedFlightsList = flightResults.filter((f) => sharedFlightIds.includes(f.id));
+    const items = sharedFlightsList.map((f) => ({
+      label: `${f.airline} ${f.flightNumber} (${f.originCode || searchOrigin} → ${f.destinationCode || searchDestination})`,
+      value: getFlightPrice(f),
+      currency: f.currency,
+    }));
+    const total = items.reduce((sum, i) => sum + i.value, 0);
+    const currency = sharedFlightsList[0]?.currency || "USD";
+    try {
+      await authFetch(`/api/live-sessions/admin/${selectedSessionId}/blocks`, {
+        method: "POST",
+        body: JSON.stringify({
+          blockType: "pricing",
+          payload: {
+            items: items.map((i) => ({
+              label: i.label,
+              value: `${i.currency} ${i.value.toFixed(2)}`,
+            })),
+            totalAmount: total.toFixed(2),
+            currency,
+          },
+          shared: true,
+        }),
+      });
+      await fetchSessionDetail();
+    } catch {} finally {
+      setSendingPricingSummary(false);
     }
   };
 
@@ -534,6 +629,7 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
       setSessionDetail(null);
       setFlightResults([]);
       setSharedBlockMap({});
+      setCustomPrices({});
       await fetchLists();
     } catch {}
   };
@@ -554,6 +650,12 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
     }
   };
 
+  const sharedCount = Object.keys(sharedBlockMap).length;
+  const sharedTotal = flightResults
+    .filter((f) => sharedBlockMap[f.id])
+    .reduce((sum, f) => sum + getFlightPrice(f), 0);
+  const sharedCurrency = flightResults.find((f) => sharedBlockMap[f.id])?.currency || "USD";
+
   const unreadCount = chatOpen ? 0 : (sessionDetail?.messages?.length || 0);
 
   if (selectedSessionId) {
@@ -569,6 +671,7 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
               setFlightResults([]);
               setSharedBlockMap({});
               setChatOpen(false);
+              setCustomPrices({});
             }}
             className="text-white no-default-hover-elevate flex-shrink-0"
             data-testid="button-back-sales-list"
@@ -583,6 +686,11 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
               {sessionDetail?.visitorId || "Visitante"}
             </p>
           </div>
+          <a href="https://wa.me/18623501161" target="_blank" rel="noopener noreferrer">
+            <Button size="icon" variant="ghost" className="text-white no-default-hover-elevate flex-shrink-0" data-testid="button-whatsapp-sales">
+              <Video className="h-4 w-4" />
+            </Button>
+          </a>
           <Button
             size="icon"
             variant="ghost"
@@ -719,13 +827,19 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
                 <p className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1">
                   <Plane className="h-3 w-3" /> {flightResults.length} voo(s) encontrado(s)
                 </p>
-                <Badge variant="secondary" className="text-[10px]">
-                  {Object.keys(sharedBlockMap).length} compartilhado(s)
-                </Badge>
+                {sharedCount > 0 && (
+                  <Badge variant="secondary" className="text-[10px]">
+                    {sharedCount} compartilhado(s)
+                  </Badge>
+                )}
               </div>
               {flightResults.map((flight) => {
                 const isShared = !!sharedBlockMap[flight.id];
                 const isToggling = togglingFlight === flight.id;
+                const isEditing = editingPrice === flight.id;
+                const customPrice = customPrices[flight.id];
+                const displayPrice = getFlightPrice(flight);
+                const hasCustomPrice = customPrice && !isNaN(parseFloat(customPrice)) && parseFloat(customPrice) !== flight.price;
                 return (
                   <Card key={flight.id} className={`p-3 ${isShared ? "border-[#0074DE] border-2" : ""}`} data-testid={`card-flight-${flight.id}`}>
                     <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -739,9 +853,6 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
                           {flight.stops} parada{flight.stops > 1 ? "s" : ""}
                         </Badge>
                       )}
-                      <span className="ml-auto text-base font-bold text-[#0074DE]">
-                        {flight.currency} {flight.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                      </span>
                     </div>
 
                     <div className="flex items-center gap-2 text-sm mb-1.5">
@@ -766,31 +877,119 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-border">
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        {flight.cabinClass && <span>{flight.cabinClass}</span>}
+                    <div className="mt-2 pt-2 border-t border-border space-y-2">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-muted-foreground line-through">
+                            {flight.currency} {flight.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </span>
+                          {hasCustomPrice && (
+                            <span className="text-xs font-bold text-emerald-600">
+                              {flight.currency} {displayPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </span>
+                          )}
+                          {!hasCustomPrice && (
+                            <span className="text-sm font-bold text-[#0074DE]">
+                              {flight.currency} {flight.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                            </span>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditingPrice(isEditing ? null : flight.id)}
+                          className="text-[11px] h-7"
+                          data-testid={`button-edit-price-${flight.id}`}
+                        >
+                          <Pencil className="h-3 w-3 mr-1" />
+                          {isEditing ? "Fechar" : "Ajustar preço"}
+                        </Button>
                       </div>
-                      <Button
-                        size="sm"
-                        variant={isShared ? "default" : "outline"}
-                        onClick={() => handleToggleShare(flight)}
-                        disabled={isToggling}
-                        className={isShared ? "bg-[#0074DE]" : ""}
-                        data-testid={`button-toggle-share-${flight.id}`}
-                      >
-                        {isToggling ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
-                        ) : isShared ? (
-                          <Eye className="h-3.5 w-3.5 mr-1" />
-                        ) : (
-                          <EyeOff className="h-3.5 w-3.5 mr-1" />
-                        )}
-                        {isShared ? "Visível pro cliente" : "Mostrar pro cliente"}
-                      </Button>
+
+                      {isEditing && (
+                        <div className="flex items-center gap-2 bg-muted/50 rounded-md p-2">
+                          <DollarSign className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={customPrices[flight.id] || ""}
+                            onChange={(e) => setCustomPrices((prev) => ({ ...prev, [flight.id]: e.target.value }))}
+                            placeholder={flight.price.toFixed(2)}
+                            className="h-8 text-sm flex-1"
+                            data-testid={`input-custom-price-${flight.id}`}
+                          />
+                          <span className="text-[10px] text-muted-foreground flex-shrink-0">{flight.currency}</span>
+                          {isShared && hasCustomPrice && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleUpdateSharedPrice(flight)}
+                              className="text-[10px] h-7 flex-shrink-0"
+                              data-testid={`button-update-price-${flight.id}`}
+                            >
+                              <RefreshCw className="h-3 w-3 mr-1" />
+                              Atualizar
+                            </Button>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          {flight.cabinClass && <span>{flight.cabinClass}</span>}
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={isShared ? "default" : "outline"}
+                          onClick={() => handleToggleShare(flight)}
+                          disabled={isToggling}
+                          className={isShared ? "bg-[#0074DE]" : ""}
+                          data-testid={`button-toggle-share-${flight.id}`}
+                        >
+                          {isToggling ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                          ) : isShared ? (
+                            <Eye className="h-3.5 w-3.5 mr-1" />
+                          ) : (
+                            <Share2 className="h-3.5 w-3.5 mr-1" />
+                          )}
+                          {isShared ? "Visível" : "Compartilhar"}
+                        </Button>
+                      </div>
                     </div>
                   </Card>
                 );
               })}
+
+              {sharedCount > 0 && (
+                <Card className="p-3 border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20" data-testid="card-shared-summary">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <Receipt className="h-4 w-4 text-emerald-600" />
+                    <span className="text-xs font-semibold uppercase text-emerald-700 dark:text-emerald-400">
+                      Resumo ({sharedCount} voo{sharedCount > 1 ? "s" : ""})
+                    </span>
+                    <span className="ml-auto text-base font-bold text-emerald-600">
+                      {sharedCurrency} {sharedTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleSendPricingSummary}
+                    disabled={sendingPricingSummary}
+                    className="w-full text-[11px]"
+                    data-testid="button-send-pricing-summary"
+                  >
+                    {sendingPricingSummary ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                    ) : (
+                      <Share2 className="h-3.5 w-3.5 mr-1" />
+                    )}
+                    Enviar resumo de preços pro cliente
+                  </Button>
+                </Card>
+              )}
             </div>
           )}
 
@@ -800,6 +999,36 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
               <p className="text-xs">Busque voos para compartilhar com o cliente</p>
             </div>
           )}
+
+          <div className="p-3 border-t border-border space-y-2">
+            <p className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1">
+              <StickyNote className="h-3 w-3" /> Nota para o cliente
+            </p>
+            <div className="flex items-center gap-2">
+              <Input
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendNote();
+                  }
+                }}
+                placeholder="Ex: Inclui 1 mala de 23kg..."
+                disabled={sendingNote || !selectedSessionId}
+                className="flex-1 h-8 text-sm"
+                data-testid="input-admin-note"
+              />
+              <Button
+                size="icon"
+                onClick={handleSendNote}
+                disabled={!noteText.trim() || sendingNote || !selectedSessionId}
+                data-testid="button-send-note"
+              >
+                {sendingNote ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
         </div>
 
         <div className="flex-shrink-0 border-t border-border bg-background">

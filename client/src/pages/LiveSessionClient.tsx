@@ -163,16 +163,34 @@ function OfferDetailBlock({ payload }: { payload: any }) {
 }
 
 function PricingBlock({ payload }: { payload: any }) {
-  const items: { label: string; value: string | number }[] = Array.isArray(payload) ? payload : [];
+  const items: { label: string; value: string | number }[] = Array.isArray(payload)
+    ? payload
+    : (payload?.items || []);
   const single = !Array.isArray(payload) && typeof payload === "object" ? payload : null;
 
   return (
     <Card className="p-4" data-testid="block-pricing">
       <div className="flex items-center gap-2 mb-3 flex-wrap">
         <DollarSign className="h-4 w-4 text-[#0074DE]" />
-        <span className="text-sm font-semibold text-foreground">Preço</span>
+        <span className="text-sm font-semibold text-foreground">Resumo de Preços</span>
       </div>
-      {single && (
+      {items.length > 0 && (
+        <div className="space-y-1 text-sm">
+          {items.map((item, i) => (
+            <div key={i} className="flex justify-between gap-2">
+              <span className="text-muted-foreground truncate flex-1">{item.label}</span>
+              <span className="text-foreground font-medium flex-shrink-0">{item.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {single && single.totalAmount && (
+        <div className="flex justify-between gap-2 font-bold border-t border-border pt-2 mt-2">
+          <span className="text-foreground">Total</span>
+          <span className="text-[#0074DE]">{single.currency || ""} {single.totalAmount}</span>
+        </div>
+      )}
+      {single && !single.totalAmount && single.baseAmount && (
         <div className="space-y-1 text-sm">
           {single.baseAmount && (
             <div className="flex justify-between gap-2">
@@ -186,22 +204,6 @@ function PricingBlock({ payload }: { payload: any }) {
               <span className="text-foreground">{single.currency || ""} {single.taxAmount}</span>
             </div>
           )}
-          {single.totalAmount && (
-            <div className="flex justify-between gap-2 font-bold border-t border-border pt-1 mt-1">
-              <span>Total</span>
-              <span className="text-[#0074DE]">{single.currency || ""} {single.totalAmount}</span>
-            </div>
-          )}
-        </div>
-      )}
-      {items.length > 0 && (
-        <div className="space-y-1 text-sm">
-          {items.map((item, i) => (
-            <div key={i} className="flex justify-between gap-2">
-              <span className="text-muted-foreground">{item.label}</span>
-              <span className="text-foreground font-medium">{item.value}</span>
-            </div>
-          ))}
         </div>
       )}
     </Card>
@@ -267,20 +269,22 @@ function SharedBlockRenderer({ block, index }: { block: LiveSessionBlock; index:
       transition={{ delay: index * 0.08 }}
       className="mb-3"
     >
-      {block.blockType === "search_results" && (
-        <div>
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <Plane className="h-4 w-4 text-[#0074DE]" />
-            <span className="text-sm font-semibold text-foreground">Resultados de Voos</span>
-            <Badge variant="secondary" className="text-[10px]">
-              {Array.isArray(payload) ? payload.length : 0} voos
-            </Badge>
+      {block.blockType === "search_results" && (() => {
+        const flights: FlightOffer[] = Array.isArray(payload)
+          ? payload
+          : (payload?.flights || []);
+        return (
+          <div>
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <Plane className="h-4 w-4 text-[#0074DE]" />
+              <span className="text-sm font-semibold text-foreground">Opção de Voo</span>
+            </div>
+            {flights.map((flight: FlightOffer, fi: number) => (
+              <FlightResultCard key={flight.id || fi} flight={flight} index={fi} />
+            ))}
           </div>
-          {Array.isArray(payload) && payload.map((flight: FlightOffer, fi: number) => (
-            <FlightResultCard key={flight.id || fi} flight={flight} index={fi} />
-          ))}
-        </div>
-      )}
+        );
+      })()}
       {block.blockType === "offer_detail" && <OfferDetailBlock payload={payload} />}
       {block.blockType === "pricing" && <PricingBlock payload={payload} />}
       {block.blockType === "baggage" && <BaggageBlock payload={payload} />}

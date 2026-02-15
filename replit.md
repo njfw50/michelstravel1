@@ -126,19 +126,24 @@ Preferred communication style: Simple, everyday language.
 - Key files: `client/src/pages/AdminApp.tsx`, API routes `/api/admin-app/*`
 - Admin API routes added to stateless paths (no cookie requirement)
 
-### Live Sales Sessions (Real-time Customer Service)
+### Live Sales Sessions (Full Selling Platform)
 - Customers request live help from the chatbot ("Atendimento ao Vivo" button)
 - Admin sees requests in /atendimento PWA (Vendas tab) and accepts them
-- Admin searches flights and selectively shares results with "Mostrar pro Cliente" toggles
+- **Full selling workspace**: Admin searches flights (same Duffel API as main site) and has full control
+- **Secret price editing**: Admin can customize flight prices per-flight (original shown as strikethrough, custom price in green). Customer only sees the price the admin decides to share — never the original markup price
+- **Selective sharing**: Each flight has a "Compartilhar" button to share with customer. Only shared flights appear on customer's screen
+- **Price update**: If a flight is already shared and admin changes the custom price, they can click "Atualizar" to push the new price to the customer's view
+- **Custom notes**: Admin can type and send notes to customer (e.g., "Inclui 1 mala de 23kg")
+- **Pricing summary**: Auto-calculated total of all shared flights. Admin can send a pricing breakdown to customer showing each flight + total
 - Customer views shared content in real-time at `/live/:sessionId?token=xxx`
-- Both sides can chat via live session messages
+- Both sides can chat via live session messages (collapsible chat at bottom)
 - Security: Per-session access tokens (nanoid 32-char) required for all client endpoints; prevents session enumeration
 - SSE (Server-Sent Events) for real-time updates to client page
 - Database tables: `live_sessions` (with accessToken), `live_session_blocks` (shared flag), `live_session_messages`
 - Block types: search_results, offer_detail, pricing, baggage, custom_note
 - Key files: `client/src/pages/AdminApp.tsx` (Vendas tab), `client/src/pages/LiveSessionClient.tsx`, live session routes in `server/routes.ts`
 - API endpoints: `POST /api/live-sessions/request`, `GET /api/live-sessions/:id?token=`, `GET /api/live-sessions/:id/stream?token=`, `POST /api/live-sessions/:id/messages`
-- Admin endpoints (JWT protected): `/api/live-sessions/admin/requests`, `/api/live-sessions/admin/active`, `/api/live-sessions/admin/:id`, `/api/live-sessions/admin/:id/accept`, `/api/live-sessions/admin/:id/blocks`, `/api/live-sessions/admin/:id/blocks/:blockId/toggle`, `/api/live-sessions/admin/:id/messages`, `/api/live-sessions/admin/:id/close`
+- Admin endpoints (JWT protected): `/api/live-sessions/admin/requests`, `/api/live-sessions/admin/active`, `/api/live-sessions/admin/:id`, `/api/live-sessions/admin/:id/accept`, `/api/live-sessions/admin/:id/blocks`, `/api/live-sessions/admin/blocks/:blockId` (PATCH/DELETE), `/api/live-sessions/admin/:id/messages`, `/api/live-sessions/admin/:id/close`, `/api/live-sessions/admin/search-flights`
 
 ### Post-Sale System
 - **Reference Codes**: MT-XXXXXX format generated for every booking
