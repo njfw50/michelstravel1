@@ -2092,6 +2092,28 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
   app.get('/api/live-sessions/admin/search-flights', requireAdmin, async (req, res) => {
     try {
       const params = req.query as any;
+      if (params.tripType === 'multi-city' && params.legs) {
+        try {
+          const legs = JSON.parse(params.legs);
+          if (!Array.isArray(legs) || legs.length < 2) {
+            return res.status(400).json({ error: "Multi-city requires at least 2 legs" });
+          }
+          const searchParams = {
+            ...params,
+            legs,
+            origin: legs[0].origin,
+            destination: legs[0].destination,
+            date: legs[0].date,
+          };
+          const flights = await searchFlights(searchParams);
+          const rate = await getCommissionRate();
+          const markedUpFlights = applyMarkupToFlights(flights, rate);
+          return res.json(markedUpFlights);
+        } catch (parseErr) {
+          return res.status(400).json({ error: "Invalid legs format" });
+        }
+      }
+
       if (!params.origin || !params.destination || !params.date) {
         return res.status(400).json({ error: "origin, destination, date required" });
       }
