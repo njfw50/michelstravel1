@@ -29,7 +29,6 @@ interface SessionData {
     status: string;
     visitorId: string | null;
     language: string | null;
-    whatsappLink: string | null;
     createdAt: string;
     closedAt: string | null;
   };
@@ -374,16 +373,6 @@ export default function LiveSessionClient() {
           <p className="text-[11px] leading-tight opacity-80">Atendimento ao vivo</p>
         </div>
       </div>
-      <a
-        href="https://wa.me/18623501161"
-        target="_blank"
-        rel="noopener noreferrer"
-        data-testid="button-whatsapp-video"
-      >
-        <Button size="icon" variant="ghost" className="text-white no-default-hover-elevate">
-          <Video className="h-4 w-4" />
-        </Button>
-      </a>
     </div>
   );
 

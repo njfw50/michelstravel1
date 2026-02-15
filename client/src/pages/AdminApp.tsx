@@ -693,11 +693,6 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
               {sessionDetail?.visitorId || "Visitante"}
             </p>
           </div>
-          <a href="https://wa.me/18623501161" target="_blank" rel="noopener noreferrer">
-            <Button size="icon" variant="ghost" className="text-white no-default-hover-elevate flex-shrink-0" data-testid="button-whatsapp-sales">
-              <Video className="h-4 w-4" />
-            </Button>
-          </a>
           <Button
             size="icon"
             variant="ghost"
@@ -1530,16 +1525,6 @@ function ChatApp({ onLogout }: { onLogout: () => void }) {
           </p>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
-          <a
-            href="https://wa.me/18623501161"
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid="button-whatsapp-call"
-          >
-            <Button size="icon" variant="ghost" className="text-white no-default-hover-elevate">
-              <Video className="h-4 w-4" />
-            </Button>
-          </a>
           {selectedConv?.escalated && !selectedConv?.resolved && (
             <Button
               size="icon"

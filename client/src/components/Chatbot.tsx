@@ -546,16 +546,6 @@ export function Chatbot() {
                         <span>{t("chatbot.talk_to_human")}</span>
                       </button>
                     )}
-                    <a
-                      href="https://wa.me/18623501161?text=Ol%C3%A1%2C%20gostaria%20de%20uma%20videochamada"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
-                      data-testid="button-chatbot-video-call"
-                    >
-                      <Video className="h-3.5 w-3.5" />
-                      <span>{language === "pt" ? "Videochamada" : language === "es" ? "Videollamada" : "Video Call"}</span>
-                    </a>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

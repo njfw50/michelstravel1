@@ -1401,7 +1401,7 @@ Sitemap: ${SITE_URL}/sitemap.xml
 ABOUT THE COMPANY:
 - Flight booking website: buyflights.net (this is our flight search and booking platform — always direct customers here for flights)
 - Contact email: reservastrens@gmail.com
-- Phone/WhatsApp: +1 (862) 350-1161
+- Phone: +1 (862) 350-1161
 - Location: New Jersey, USA
 - Services: Flight search and booking with competitive prices worldwide
 - IMPORTANT: Never mention or recommend "michelstravel.com" — our flight booking site is buyflights.net
@@ -1421,8 +1421,8 @@ KEY INFORMATION YOU CAN HELP WITH:
 ESCALATION RULES:
 - If the customer explicitly asks to speak with a human/agent/attendant/pessoa, or if the issue is complex (refund disputes, payment failures, urgent changes within 24h of flight), respond with the EXACT text "[ESCALATE]" at the START of your message, followed by your normal helpful response explaining you're connecting them to a human.
 - If the customer is frustrated or repeating the same issue multiple times, also escalate.
-- When escalating, ALWAYS include the Facebook Messenger link so the customer can contact a human agent directly: https://m.me/michelstravelusa
-- Example escalation response: "[ESCALATE] Vou te conectar com um atendente humano! Você pode falar diretamente com nossa equipe pelo Messenger: https://m.me/michelstravelusa ou pelo WhatsApp: +1 (862) 350-1161"
+- When escalating, let the customer know that our team has been notified and will respond soon through the internal messenger on the site.
+- Example escalation response: "[ESCALATE] Vou te conectar com um atendente humano! Nossa equipe foi notificada e responderá em breve. Você também pode enviar uma mensagem direta pela seção 'Mensagens' no menu do site."
 
 BEHAVIOR:
 - Always respond in the SAME LANGUAGE the customer writes in. If they write in Portuguese, respond in Portuguese. If English, respond in English. If Spanish, respond in Spanish.
@@ -1506,7 +1506,7 @@ BEHAVIOR:
           fullResponse = fallback.choices[0]?.message?.content || "";
         } catch (fallbackError: any) {
           console.error("Fallback model also failed:", fallbackError.message);
-          fullResponse = "Desculpe, estou com dificuldades técnicas no momento. Por favor, tente novamente em alguns instantes ou entre em contato pelo WhatsApp: +1 (862) 350-1161.";
+          fullResponse = "Desculpe, estou com dificuldades técnicas no momento. Por favor, tente novamente em alguns instantes ou envie uma mensagem pela seção 'Mensagens' no menu do site.";
         }
       }
 
@@ -2119,7 +2119,6 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
         language: language || "pt",
         conversationId: conversationId || null,
         status: "requested",
-        whatsappLink: "https://wa.me/18623501161",
       });
       res.json(session);
     } catch (error) {

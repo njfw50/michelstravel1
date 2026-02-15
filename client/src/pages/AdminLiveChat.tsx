@@ -759,11 +759,6 @@ function LiveSalesPanel() {
                   <X className="h-3 w-3 mr-0.5" /> Encerrar
                 </Button>
               </div>
-              <a href="https://wa.me/18623501161" target="_blank" rel="noopener noreferrer" className="block">
-                <Button size="sm" variant="outline" className="w-full h-6 text-[10px]" data-testid="button-whatsapp-sales">
-                  <Video className="h-3 w-3 mr-1" /> WhatsApp Video
-                </Button>
-              </a>
             </div>
           )}
         </div>

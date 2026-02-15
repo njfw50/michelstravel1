@@ -228,7 +228,7 @@ export async function sendChatEscalationEmail(sessionId: number, chatLog: string
           Acesse o painel admin em buyflights.net/admin para ver e resolver esta solicitação.
         </p>
         <p style="margin-top: 8px; color: #6b7280; font-size: 13px;">
-          O cliente foi direcionado para entrar em contato pelo <a href="https://m.me/michelstravelusa" style="color: #0074DE;">Facebook Messenger</a> ou WhatsApp.
+          O cliente foi direcionado para usar a seção de Mensagens internas no site.
         </p>
       </div>
     </div>
