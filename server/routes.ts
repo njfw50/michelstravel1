@@ -2084,6 +2084,24 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
     }
   });
 
+  // Admin searches flights for live session (uses existing Duffel search with markup)
+  app.get('/api/live-sessions/admin/search-flights', requireAdmin, async (req, res) => {
+    try {
+      const params = req.query as any;
+      if (!params.origin || !params.destination || !params.date) {
+        return res.status(400).json({ error: "origin, destination, date required" });
+      }
+
+      const flights = await searchFlights(params);
+      const rate = await getCommissionRate();
+      const markedUpFlights = applyMarkupToFlights(flights, rate);
+      res.json(markedUpFlights);
+    } catch (error) {
+      console.error("Live session flight search error:", error);
+      res.status(500).json({ error: "Flight search failed" });
+    }
+  });
+
   // Admin gets full session detail (all blocks, not just shared)
   app.get('/api/live-sessions/admin/:id', requireAdmin, async (req, res) => {
     try {
@@ -2197,21 +2215,4 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
     }
   });
 
-  // Admin searches flights for live session (uses existing Duffel search with markup)
-  app.get('/api/live-sessions/admin/search-flights', requireAdmin, async (req, res) => {
-    try {
-      const params = req.query as any;
-      if (!params.origin || !params.destination || !params.date) {
-        return res.status(400).json({ error: "origin, destination, date required" });
-      }
-
-      const flights = await searchFlights(params);
-      const rate = await getCommissionRate();
-      const markedUpFlights = applyMarkupToFlights(flights, rate);
-      res.json(markedUpFlights);
-    } catch (error) {
-      console.error("Live session flight search error:", error);
-      res.status(500).json({ error: "Flight search failed" });
-    }
-  });
 }
