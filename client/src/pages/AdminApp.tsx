@@ -21,6 +21,8 @@ import {
   AlertTriangle,
   RefreshCw,
   ChevronLeft,
+  ChevronUp,
+  ChevronDown,
   LogOut,
   Lock,
   Headphones,
@@ -39,6 +41,128 @@ import {
   ArrowRight,
   MapPin,
 } from "lucide-react";
+import { useDebounce } from "@/hooks/use-debounce";
+
+interface PlaceResult {
+  id: string;
+  name: string;
+  iataCode: string;
+  cityName: string;
+  countryName: string;
+  type: string;
+}
+
+function AdminLocationInput({
+  value,
+  onChange,
+  placeholder,
+  testId,
+}: {
+  value: string;
+  onChange: (iata: string) => void;
+  placeholder: string;
+  testId: string;
+}) {
+  const [query, setQuery] = useState("");
+  const [displayText, setDisplayText] = useState(value);
+  const debouncedQuery = useDebounce(query, 400);
+  const [results, setResults] = useState<PlaceResult[]>([]);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const selectedRef = useRef(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (debouncedQuery && debouncedQuery.length >= 2 && !selectedRef.current) {
+      setLoading(true);
+      fetch(`/api/places/search?query=${encodeURIComponent(debouncedQuery)}`)
+        .then((r) => r.json())
+        .then((data) => {
+          setResults(data);
+          setOpen(true);
+        })
+        .catch(() => setResults([]))
+        .finally(() => setLoading(false));
+    }
+    selectedRef.current = false;
+  }, [debouncedQuery]);
+
+  useEffect(() => {
+    if (value === "" && displayText !== "") {
+      setDisplayText("");
+      setQuery("");
+    }
+  }, [value]);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const handleSelect = (place: PlaceResult) => {
+    const text = `${place.cityName || place.name} (${place.iataCode})`;
+    selectedRef.current = true;
+    setQuery(text);
+    setDisplayText(text);
+    onChange(place.iataCode);
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative" ref={wrapperRef}>
+      <div className="relative">
+        <MapPin className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <Input
+          value={displayText || query}
+          onChange={(e) => {
+            setDisplayText("");
+            setQuery(e.target.value);
+            if (e.target.value === "") {
+              onChange("");
+              setOpen(false);
+            }
+          }}
+          onFocus={() => { if (results.length > 0) setOpen(true); }}
+          placeholder={placeholder}
+          className="pl-7 text-sm h-9"
+          data-testid={testId}
+        />
+        {loading && <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+      </div>
+      {open && results.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+          {results.map((place) => (
+            <button
+              type="button"
+              key={place.id}
+              onClick={() => handleSelect(place)}
+              data-testid={`place-option-${place.iataCode}`}
+              className="w-full text-left px-3 py-2 hover-elevate flex items-center gap-2 text-sm"
+            >
+              <div className="flex-shrink-0">
+                {place.type === "airport" ? (
+                  <Plane className="h-3.5 w-3.5 text-[#0074DE]" />
+                ) : (
+                  <MapPin className="h-3.5 w-3.5 text-[#0074DE]" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="font-medium text-foreground">{place.name}</span>
+                <span className="text-[#0074DE] font-bold ml-1">({place.iataCode})</span>
+                <span className="text-xs text-muted-foreground ml-1">
+                  {place.cityName ? `${place.cityName}, ` : ""}{place.countryName}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const STORAGE_KEY = "michels-admin-token";
 
@@ -227,8 +351,10 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
   const [searchOrigin, setSearchOrigin] = useState("");
   const [searchDestination, setSearchDestination] = useState("");
   const [searchDate, setSearchDate] = useState("");
+  const [searchReturnDate, setSearchReturnDate] = useState("");
   const [searchPassengers, setSearchPassengers] = useState("1");
   const [searchCabinClass, setSearchCabinClass] = useState("economy");
+  const [tripType, setTripType] = useState<"round_trip" | "one_way">("round_trip");
   const [searchingFlights, setSearchingFlights] = useState(false);
   const [flightResults, setFlightResults] = useState<FlightResult[]>([]);
 
@@ -237,6 +363,7 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
 
   const [liveMessage, setLiveMessage] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const liveMsgEndRef = useRef<HTMLDivElement>(null);
 
   const fetchLists = useCallback(async () => {
@@ -322,7 +449,11 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
         date: searchDate,
         passengers: searchPassengers,
         cabinClass: searchCabinClass,
+        tripType: tripType === "round_trip" ? "round-trip" : "one-way",
       });
+      if (tripType === "round_trip" && searchReturnDate) {
+        params.set("returnDate", searchReturnDate);
+      }
       const res = await authFetch(`/api/live-sessions/admin/search-flights?${params}`);
       if (res.ok) {
         const data = await res.json();
@@ -423,10 +554,12 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
     }
   };
 
+  const unreadCount = chatOpen ? 0 : (sessionDetail?.messages?.length || 0);
+
   if (selectedSessionId) {
     return (
       <div className="flex flex-col h-full min-h-0">
-        <div className="flex items-center gap-2 p-3 border-b bg-[#0074DE] text-white flex-shrink-0">
+        <div className="flex items-center gap-2 px-3 py-2 border-b bg-[#0074DE] text-white flex-shrink-0">
           <Button
             size="icon"
             variant="ghost"
@@ -435,6 +568,7 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
               setSessionDetail(null);
               setFlightResults([]);
               setSharedBlockMap({});
+              setChatOpen(false);
             }}
             className="text-white no-default-hover-elevate flex-shrink-0"
             data-testid="button-back-sales-list"
@@ -443,11 +577,10 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
           </Button>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">
-              <Plane className="h-3.5 w-3.5 inline mr-1" />
               Sessão #{selectedSessionId}
             </p>
             <p className="text-[10px] opacity-80">
-              {sessionDetail?.visitorId || "Visitante"} | {sessionDetail?.status || ""}
+              {sessionDetail?.visitorId || "Visitante"}
             </p>
           </div>
           <Button
@@ -461,68 +594,101 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
           </Button>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-3 border-b space-y-3">
-            <p className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1">
-              <Search className="h-3 w-3" /> Buscar Voos
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="relative">
-                <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  value={searchOrigin}
-                  onChange={(e) => setSearchOrigin(e.target.value)}
-                  placeholder="Origem (ex: GRU)"
-                  className="pl-8 text-sm"
-                  data-testid="input-search-origin"
-                />
-              </div>
-              <div className="relative">
-                <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  value={searchDestination}
-                  onChange={(e) => setSearchDestination(e.target.value)}
-                  placeholder="Destino (ex: MIA)"
-                  className="pl-8 text-sm"
-                  data-testid="input-search-destination"
-                />
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="p-3 border-b space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1">
+                <Search className="h-3 w-3" /> Buscar Voos
+              </p>
+              <div className="flex gap-1 ml-auto">
+                <Button
+                  size="sm"
+                  variant={tripType === "round_trip" ? "default" : "outline"}
+                  onClick={() => setTripType("round_trip")}
+                  className={tripType === "round_trip" ? "bg-[#0074DE] text-[11px] h-7" : "text-[11px] h-7"}
+                  data-testid="button-trip-roundtrip"
+                >
+                  Ida e Volta
+                </Button>
+                <Button
+                  size="sm"
+                  variant={tripType === "one_way" ? "default" : "outline"}
+                  onClick={() => setTripType("one_way")}
+                  className={tripType === "one_way" ? "bg-[#0074DE] text-[11px] h-7" : "text-[11px] h-7"}
+                  data-testid="button-trip-oneway"
+                >
+                  Só Ida
+                </Button>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+
+            <div className="grid grid-cols-2 gap-2">
+              <AdminLocationInput
+                value={searchOrigin}
+                onChange={setSearchOrigin}
+                placeholder="De onde? (cidade ou aeroporto)"
+                testId="input-search-origin"
+              />
+              <AdminLocationInput
+                value={searchDestination}
+                onChange={setSearchDestination}
+                placeholder="Para onde? (cidade ou aeroporto)"
+                testId="input-search-destination"
+              />
+            </div>
+
+            <div className={`grid gap-2 ${tripType === "round_trip" ? "grid-cols-2" : "grid-cols-1"}`}>
               <div className="relative">
-                <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   type="date"
                   value={searchDate}
                   onChange={(e) => setSearchDate(e.target.value)}
-                  className="pl-8 text-sm"
+                  className="pl-7 text-sm h-9"
                   data-testid="input-search-date"
                 />
               </div>
+              {tripType === "round_trip" && (
+                <div className="relative">
+                  <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    type="date"
+                    value={searchReturnDate}
+                    onChange={(e) => setSearchReturnDate(e.target.value)}
+                    className="pl-7 text-sm h-9"
+                    placeholder="Volta"
+                    data-testid="input-search-return-date"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
               <div className="relative">
-                <Users className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Users className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   type="number"
                   min="1"
                   max="9"
                   value={searchPassengers}
                   onChange={(e) => setSearchPassengers(e.target.value)}
-                  className="pl-8 text-sm"
+                  className="pl-7 text-sm h-9"
                   data-testid="input-search-passengers"
                 />
               </div>
               <Select value={searchCabinClass} onValueChange={setSearchCabinClass}>
-                <SelectTrigger data-testid="select-cabin-class">
+                <SelectTrigger data-testid="select-cabin-class" className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="economy">Econômica</SelectItem>
+                  <SelectItem value="economy">Econ.</SelectItem>
                   <SelectItem value="premium_economy">Premium</SelectItem>
                   <SelectItem value="business">Business</SelectItem>
                   <SelectItem value="first">Primeira</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
             <Button
               className="w-full"
               onClick={handleSearchFlights}
@@ -538,63 +704,89 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
             </Button>
           </div>
 
-          {flightResults.length > 0 && (
-            <div className="p-3 border-b space-y-2">
-              <p className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1">
-                <Plane className="h-3 w-3" /> {flightResults.length} resultado(s)
-              </p>
+          {searchingFlights && (
+            <div className="flex items-center justify-center py-12">
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="h-8 w-8 animate-spin text-[#0074DE]" />
+                <p className="text-sm text-muted-foreground">Buscando voos...</p>
+              </div>
+            </div>
+          )}
+
+          {!searchingFlights && flightResults.length > 0 && (
+            <div className="p-3 space-y-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <p className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1">
+                  <Plane className="h-3 w-3" /> {flightResults.length} voo(s) encontrado(s)
+                </p>
+                <Badge variant="secondary" className="text-[10px]">
+                  {Object.keys(sharedBlockMap).length} compartilhado(s)
+                </Badge>
+              </div>
               {flightResults.map((flight) => {
                 const isShared = !!sharedBlockMap[flight.id];
                 const isToggling = togglingFlight === flight.id;
                 return (
-                  <Card key={flight.id} className="p-3" data-testid={`card-flight-${flight.id}`}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="text-sm font-semibold text-foreground">{flight.airline}</span>
-                          <Badge variant="secondary" className="text-[10px]">{flight.flightNumber}</Badge>
-                          {flight.stops > 0 && (
-                            <Badge variant="outline" className="text-[10px]">
-                              {flight.stops} parada{flight.stops > 1 ? "s" : ""}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1 text-sm text-foreground">
-                          <span className="font-medium">{formatTime(flight.departureTime)}</span>
-                          <span className="text-muted-foreground text-xs">{flight.originCode}</span>
-                          <ArrowRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                          <span className="font-medium">{formatTime(flight.arrivalTime)}</span>
-                          <span className="text-muted-foreground text-xs">{flight.destinationCode}</span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
-                          <span className="flex items-center gap-0.5">
-                            <Clock className="h-3 w-3" /> {flight.duration}
-                          </span>
-                          {flight.cabinClass && <span>{flight.cabinClass}</span>}
-                        </div>
+                  <Card key={flight.id} className={`p-3 ${isShared ? "border-[#0074DE] border-2" : ""}`} data-testid={`card-flight-${flight.id}`}>
+                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                      {flight.logoUrl && (
+                        <img src={flight.logoUrl} alt={flight.airline} className="h-5 w-5 rounded" />
+                      )}
+                      <span className="text-sm font-semibold text-foreground">{flight.airline}</span>
+                      <Badge variant="secondary" className="text-[10px]">{flight.flightNumber}</Badge>
+                      {flight.stops > 0 && (
+                        <Badge variant="outline" className="text-[10px]">
+                          {flight.stops} parada{flight.stops > 1 ? "s" : ""}
+                        </Badge>
+                      )}
+                      <span className="ml-auto text-base font-bold text-[#0074DE]">
+                        {flight.currency} {flight.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm mb-1.5">
+                      <div className="flex flex-col items-center">
+                        <span className="font-semibold text-foreground">{formatTime(flight.departureTime)}</span>
+                        <span className="text-[10px] text-muted-foreground">{flight.originCode}</span>
                       </div>
-                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                        <span className="text-base font-bold text-foreground">
-                          {flight.currency} {flight.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      <div className="flex-1 flex flex-col items-center gap-0.5">
+                        <span className="text-[10px] text-muted-foreground">{flight.duration}</span>
+                        <div className="w-full flex items-center gap-1">
+                          <div className="flex-1 border-t border-dashed border-muted-foreground/40" />
+                          <Plane className="h-3 w-3 text-[#0074DE]" />
+                          <div className="flex-1 border-t border-dashed border-muted-foreground/40" />
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">
+                          {flight.stops === 0 ? "Direto" : `${flight.stops} parada${flight.stops > 1 ? "s" : ""}`}
                         </span>
-                        <Button
-                          size="sm"
-                          variant={isShared ? "default" : "outline"}
-                          onClick={() => handleToggleShare(flight)}
-                          disabled={isToggling}
-                          className={isShared ? "bg-[#0074DE]" : ""}
-                          data-testid={`button-toggle-share-${flight.id}`}
-                        >
-                          {isToggling ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
-                          ) : isShared ? (
-                            <Eye className="h-3.5 w-3.5 mr-1" />
-                          ) : (
-                            <EyeOff className="h-3.5 w-3.5 mr-1" />
-                          )}
-                          {isShared ? "Visível" : "Mostrar"}
-                        </Button>
                       </div>
+                      <div className="flex flex-col items-center">
+                        <span className="font-semibold text-foreground">{formatTime(flight.arrivalTime)}</span>
+                        <span className="text-[10px] text-muted-foreground">{flight.destinationCode}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-border">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        {flight.cabinClass && <span>{flight.cabinClass}</span>}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant={isShared ? "default" : "outline"}
+                        onClick={() => handleToggleShare(flight)}
+                        disabled={isToggling}
+                        className={isShared ? "bg-[#0074DE]" : ""}
+                        data-testid={`button-toggle-share-${flight.id}`}
+                      >
+                        {isToggling ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                        ) : isShared ? (
+                          <Eye className="h-3.5 w-3.5 mr-1" />
+                        ) : (
+                          <EyeOff className="h-3.5 w-3.5 mr-1" />
+                        )}
+                        {isShared ? "Visível pro cliente" : "Mostrar pro cliente"}
+                      </Button>
                     </div>
                   </Card>
                 );
@@ -602,75 +794,100 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
             </div>
           )}
 
-          <div className="p-3 space-y-2">
-            <p className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1">
-              <MessageSquare className="h-3 w-3" /> Chat da Sessão
-            </p>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {sessionDetail?.messages?.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex gap-2 ${msg.role === "client" ? "flex-row" : "flex-row-reverse"}`}
-                >
-                  <div
-                    className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${
-                      msg.role === "client"
-                        ? "bg-[#0074DE] text-white"
-                        : "bg-emerald-600 text-white"
-                    }`}
-                  >
-                    {msg.role === "client" ? (
-                      <User className="h-3 w-3" />
-                    ) : (
-                      <UserCheck className="h-3 w-3" />
-                    )}
-                  </div>
-                  <div className="max-w-[80%]">
-                    <div
-                      className={`rounded-2xl px-3 py-2 text-sm ${
-                        msg.role === "client"
-                          ? "bg-muted text-foreground rounded-bl-md"
-                          : "bg-emerald-50 dark:bg-emerald-950/40 text-foreground rounded-br-md border border-emerald-200 dark:border-emerald-800"
-                      }`}
-                    >
-                      {msg.content}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 px-1">
-                      {formatDate(msg.createdAt)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              <div ref={liveMsgEndRef} />
+          {!searchingFlights && flightResults.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+              <Plane className="h-8 w-8 mb-2 opacity-20" />
+              <p className="text-xs">Busque voos para compartilhar com o cliente</p>
             </div>
-          </div>
+          )}
         </div>
 
-        <div className="border-t p-3 pb-safe flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <Input
-              value={liveMessage}
-              onChange={(e) => setLiveMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendLiveMessage();
-                }
-              }}
-              placeholder="Mensagem..."
-              disabled={sendingMessage}
-              className="flex-1"
-              data-testid="input-live-message"
-            />
-            <Button
-              size="icon"
-              onClick={handleSendLiveMessage}
-              disabled={!liveMessage.trim() || sendingMessage}
-              data-testid="button-send-live-message"
-            >
-              {sendingMessage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            </Button>
-          </div>
+        <div className="flex-shrink-0 border-t border-border bg-background">
+          <button
+            onClick={() => setChatOpen(!chatOpen)}
+            className="w-full flex items-center justify-between gap-2 px-3 py-2 hover-elevate"
+            data-testid="button-toggle-chat"
+          >
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-semibold uppercase text-muted-foreground">Chat</span>
+              {!chatOpen && unreadCount > 0 && (
+                <Badge variant="secondary" className="text-[10px]">{unreadCount}</Badge>
+              )}
+            </div>
+            {chatOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronUp className="h-4 w-4 text-muted-foreground" />}
+          </button>
+
+          {chatOpen && (
+            <div className="border-t border-border">
+              <div className="max-h-40 overflow-y-auto p-2 space-y-1.5">
+                {(!sessionDetail?.messages || sessionDetail.messages.length === 0) && (
+                  <p className="text-xs text-muted-foreground text-center py-2">Sem mensagens</p>
+                )}
+                {sessionDetail?.messages?.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex gap-1.5 ${msg.role === "client" ? "flex-row" : "flex-row-reverse"}`}
+                  >
+                    <div
+                      className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full ${
+                        msg.role === "client"
+                          ? "bg-[#0074DE] text-white"
+                          : "bg-emerald-600 text-white"
+                      }`}
+                    >
+                      {msg.role === "client" ? (
+                        <User className="h-2.5 w-2.5" />
+                      ) : (
+                        <UserCheck className="h-2.5 w-2.5" />
+                      )}
+                    </div>
+                    <div className="max-w-[80%]">
+                      <div
+                        className={`rounded-xl px-2.5 py-1.5 text-xs ${
+                          msg.role === "client"
+                            ? "bg-muted text-foreground rounded-bl-sm"
+                            : "bg-emerald-50 dark:bg-emerald-950/40 text-foreground rounded-br-sm border border-emerald-200 dark:border-emerald-800"
+                        }`}
+                      >
+                        {msg.content}
+                      </div>
+                      <p className="text-[9px] text-muted-foreground mt-0.5 px-1">
+                        {formatDate(msg.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                <div ref={liveMsgEndRef} />
+              </div>
+              <div className="p-2 pt-0">
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={liveMessage}
+                    onChange={(e) => setLiveMessage(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendLiveMessage();
+                      }
+                    }}
+                    placeholder="Mensagem..."
+                    disabled={sendingMessage}
+                    className="flex-1 h-8 text-sm"
+                    data-testid="input-live-message"
+                  />
+                  <Button
+                    size="icon"
+                    onClick={handleSendLiveMessage}
+                    disabled={!liveMessage.trim() || sendingMessage}
+                    data-testid="button-send-live-message"
+                  >
+                    {sendingMessage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
