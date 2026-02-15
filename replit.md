@@ -126,6 +126,20 @@ Preferred communication style: Simple, everyday language.
 - Key files: `client/src/pages/AdminApp.tsx`, API routes `/api/admin-app/*`
 - Admin API routes added to stateless paths (no cookie requirement)
 
+### Live Sales Sessions (Real-time Customer Service)
+- Customers request live help from the chatbot ("Atendimento ao Vivo" button)
+- Admin sees requests in /atendimento PWA (Vendas tab) and accepts them
+- Admin searches flights and selectively shares results with "Mostrar pro Cliente" toggles
+- Customer views shared content in real-time at `/live/:sessionId?token=xxx`
+- Both sides can chat via live session messages
+- Security: Per-session access tokens (nanoid 32-char) required for all client endpoints; prevents session enumeration
+- SSE (Server-Sent Events) for real-time updates to client page
+- Database tables: `live_sessions` (with accessToken), `live_session_blocks` (shared flag), `live_session_messages`
+- Block types: search_results, offer_detail, pricing, baggage, custom_note
+- Key files: `client/src/pages/AdminApp.tsx` (Vendas tab), `client/src/pages/LiveSessionClient.tsx`, live session routes in `server/routes.ts`
+- API endpoints: `POST /api/live-sessions/request`, `GET /api/live-sessions/:id?token=`, `GET /api/live-sessions/:id/stream?token=`, `POST /api/live-sessions/:id/messages`
+- Admin endpoints (JWT protected): `/api/live-sessions/admin/requests`, `/api/live-sessions/admin/active`, `/api/live-sessions/admin/:id`, `/api/live-sessions/admin/:id/accept`, `/api/live-sessions/admin/:id/blocks`, `/api/live-sessions/admin/:id/blocks/:blockId/toggle`, `/api/live-sessions/admin/:id/messages`, `/api/live-sessions/admin/:id/close`
+
 ### Post-Sale System
 - **Reference Codes**: MT-XXXXXX format generated for every booking
 - **Confirmation Page**: `/checkout/success` — comprehensive booking confirmation with print support

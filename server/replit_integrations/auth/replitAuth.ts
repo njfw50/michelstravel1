@@ -78,6 +78,7 @@ const STATELESS_PATHS = [
   '/api/aircraft',
   '/api/admin-app',
   '/api/admin/chatbot',
+  '/api/live-sessions',
   '/sitemap.xml',
   '/robots.txt',
 ];

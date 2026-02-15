@@ -1936,4 +1936,282 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
       res.status(500).json({ error: "Failed to fetch messages" });
     }
   });
+
+  // ============ LIVE SESSION ROUTES ============
+
+  // SSE connections map for real-time updates
+  const liveSessionClients = new Map<number, Set<Response>>();
+
+  function notifyLiveSessionClients(sessionId: number, event: string, data: any) {
+    const clients = liveSessionClients.get(sessionId);
+    if (clients) {
+      const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+      clients.forEach(client => {
+        try { client.write(msg); } catch {}
+      });
+    }
+  }
+
+  // Client requests live help
+  app.post('/api/live-sessions/request', async (req, res) => {
+    try {
+      const { visitorId, language, conversationId } = req.body;
+      if (!visitorId) return res.status(400).json({ error: "visitorId required" });
+
+      const existing = await storage.getLiveSessionByVisitor(visitorId);
+      if (existing && (existing.status === "requested" || existing.status === "active")) {
+        return res.json(existing);
+      }
+
+      const accessToken = nanoid(32);
+      const session = await storage.createLiveSession({
+        accessToken,
+        visitorId,
+        language: language || "pt",
+        conversationId: conversationId || null,
+        status: "requested",
+        whatsappLink: "https://wa.me/18623501161",
+      });
+      res.json(session);
+    } catch (error) {
+      console.error("Live session request error:", error);
+      res.status(500).json({ error: "Failed to create session request" });
+    }
+  });
+
+  // Client gets their session status and shared blocks (requires access token)
+  app.get('/api/live-sessions/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const token = req.query.token as string;
+      if (!token) return res.status(401).json({ error: "Access token required" });
+
+      const session = await storage.getLiveSession(id);
+      if (!session) return res.status(404).json({ error: "Session not found" });
+      if (session.accessToken !== token) return res.status(403).json({ error: "Invalid access token" });
+
+      const blocks = await storage.getLiveSessionBlocks(id, true);
+      const messages = await storage.getLiveSessionMessages(id);
+      res.json({ session, blocks, messages });
+    } catch (error) {
+      console.error("Live session get error:", error);
+      res.status(500).json({ error: "Failed to get session" });
+    }
+  });
+
+  // Client SSE stream for real-time updates (requires access token)
+  app.get('/api/live-sessions/:id/stream', async (req, res) => {
+    const id = parseInt(req.params.id);
+    const token = req.query.token as string;
+    if (!token) { res.status(401).json({ error: "Access token required" }); return; }
+    const session = await storage.getLiveSession(id);
+    if (!session || session.accessToken !== token) { res.status(403).json({ error: "Invalid access token" }); return; }
+
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    });
+    res.write(`event: connected\ndata: {"sessionId":${id}}\n\n`);
+
+    if (!liveSessionClients.has(id)) {
+      liveSessionClients.set(id, new Set());
+    }
+    liveSessionClients.get(id)!.add(res);
+
+    req.on('close', () => {
+      liveSessionClients.get(id)?.delete(res);
+      if (liveSessionClients.get(id)?.size === 0) {
+        liveSessionClients.delete(id);
+      }
+    });
+  });
+
+  // Client sends chat message (requires access token)
+  app.post('/api/live-sessions/:id/messages', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { content, role, token } = req.body;
+      if (!content) return res.status(400).json({ error: "content required" });
+      if (!token) return res.status(401).json({ error: "Access token required" });
+      const session = await storage.getLiveSession(id);
+      if (!session || session.accessToken !== token) return res.status(403).json({ error: "Invalid access token" });
+
+      const msg = await storage.createLiveSessionMessage({
+        sessionId: id,
+        role: role || "client",
+        content,
+      });
+      notifyLiveSessionClients(id, "message", msg);
+      res.json(msg);
+    } catch (error) {
+      console.error("Live session message error:", error);
+      res.status(500).json({ error: "Failed to send message" });
+    }
+  });
+
+  // Client checks session by visitor ID
+  app.get('/api/live-sessions/by-visitor/:visitorId', async (req, res) => {
+    try {
+      const session = await storage.getLiveSessionByVisitor(req.params.visitorId);
+      if (!session) return res.json({ session: null });
+      res.json({ session });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check session" });
+    }
+  });
+
+  // ---- Admin live session routes (JWT auth) ----
+
+  // Admin gets pending requests
+  app.get('/api/live-sessions/admin/requests', requireAdmin, async (req, res) => {
+    try {
+      const requests = await storage.getLiveSessionRequests();
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get requests" });
+    }
+  });
+
+  // Admin gets active sessions
+  app.get('/api/live-sessions/admin/active', requireAdmin, async (req, res) => {
+    try {
+      const sessions = await storage.getActiveLiveSessions();
+      res.json(sessions);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get active sessions" });
+    }
+  });
+
+  // Admin gets full session detail (all blocks, not just shared)
+  app.get('/api/live-sessions/admin/:id', requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const session = await storage.getLiveSession(id);
+      if (!session) return res.status(404).json({ error: "Session not found" });
+
+      const blocks = await storage.getLiveSessionBlocks(id, false);
+      const messages = await storage.getLiveSessionMessages(id);
+      res.json({ session, blocks, messages });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get session" });
+    }
+  });
+
+  // Admin accepts a session request
+  app.post('/api/live-sessions/admin/:id/accept', requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const session = await storage.updateLiveSessionStatus(id, "active");
+      if (!session) return res.status(404).json({ error: "Session not found" });
+      notifyLiveSessionClients(id, "session_update", { status: "active" });
+      res.json(session);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to accept session" });
+    }
+  });
+
+  // Admin closes a session
+  app.post('/api/live-sessions/admin/:id/close', requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const session = await storage.updateLiveSessionStatus(id, "closed");
+      if (!session) return res.status(404).json({ error: "Session not found" });
+      notifyLiveSessionClients(id, "session_update", { status: "closed" });
+      res.json(session);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to close session" });
+    }
+  });
+
+  // Admin creates/updates a block
+  app.post('/api/live-sessions/admin/:id/blocks', requireAdmin, async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const { blockType, payload, shared, sortOrder } = req.body;
+      if (!blockType || !payload) return res.status(400).json({ error: "blockType and payload required" });
+
+      const block = await storage.createLiveSessionBlock({
+        sessionId,
+        blockType,
+        payload,
+        shared: shared || false,
+        sortOrder: sortOrder || 0,
+      });
+      if (block.shared) {
+        notifyLiveSessionClients(sessionId, "block_update", block);
+      }
+      res.json(block);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create block" });
+    }
+  });
+
+  // Admin toggles block visibility (share/unshare)
+  app.patch('/api/live-sessions/admin/blocks/:blockId', requireAdmin, async (req, res) => {
+    try {
+      const blockId = parseInt(req.params.blockId);
+      const { shared, payload } = req.body;
+      const updates: any = {};
+      if (shared !== undefined) updates.shared = shared;
+      if (payload !== undefined) updates.payload = payload;
+
+      const block = await storage.updateLiveSessionBlock(blockId, updates);
+      if (!block) return res.status(404).json({ error: "Block not found" });
+
+      notifyLiveSessionClients(block.sessionId, shared ? "block_update" : "block_removed", block);
+      res.json(block);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update block" });
+    }
+  });
+
+  // Admin deletes a block
+  app.delete('/api/live-sessions/admin/blocks/:blockId', requireAdmin, async (req, res) => {
+    try {
+      const blockId = parseInt(req.params.blockId);
+      await storage.deleteLiveSessionBlock(blockId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete block" });
+    }
+  });
+
+  // Admin sends a chat message
+  app.post('/api/live-sessions/admin/:id/messages', requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { content } = req.body;
+      if (!content) return res.status(400).json({ error: "content required" });
+
+      const msg = await storage.createLiveSessionMessage({
+        sessionId: id,
+        role: "admin",
+        content,
+      });
+      notifyLiveSessionClients(id, "message", msg);
+      res.json(msg);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to send message" });
+    }
+  });
+
+  // Admin searches flights for live session (uses existing Duffel search with markup)
+  app.get('/api/live-sessions/admin/search-flights', requireAdmin, async (req, res) => {
+    try {
+      const params = req.query as any;
+      if (!params.origin || !params.destination || !params.date) {
+        return res.status(400).json({ error: "origin, destination, date required" });
+      }
+
+      const flights = await searchFlights(params);
+      const rate = await getCommissionRate();
+      const markedUpFlights = applyMarkupToFlights(flights, rate);
+      res.json(markedUpFlights);
+    } catch (error) {
+      console.error("Live session flight search error:", error);
+      res.status(500).json({ error: "Flight search failed" });
+    }
+  });
 }

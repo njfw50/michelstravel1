@@ -3,10 +3,14 @@ import { db } from "./db";
 import { eq, desc, sql, and } from "drizzle-orm";
 import {
   flightSearches, bookings, siteSettings, blogPosts, users,
+  liveSessions, liveSessionBlocks, liveSessionMessages,
   type FlightSearch, type InsertFlightSearch,
   type Booking, type InsertBooking,
   type SiteSetting, type InsertSiteSetting,
-  type BlogPost, type InsertBlogPost
+  type BlogPost, type InsertBlogPost,
+  type LiveSession, type InsertLiveSession,
+  type LiveSessionBlock, type InsertLiveSessionBlock,
+  type LiveSessionMessage, type InsertLiveSessionMessage
 } from "@shared/schema";
 
 // Import Auth Storage
@@ -36,6 +40,20 @@ export interface IStorage extends IAuthStorage {
 
   // Profile
   updateUserProfile(userId: string, profile: { firstName?: string; lastName?: string; phone?: string }): Promise<any>;
+
+  // Live Sessions
+  createLiveSession(session: InsertLiveSession): Promise<LiveSession>;
+  getLiveSession(id: number): Promise<LiveSession | undefined>;
+  getLiveSessionByVisitor(visitorId: string): Promise<LiveSession | undefined>;
+  getLiveSessionRequests(): Promise<LiveSession[]>;
+  getActiveLiveSessions(): Promise<LiveSession[]>;
+  updateLiveSessionStatus(id: number, status: string): Promise<LiveSession | undefined>;
+  createLiveSessionBlock(block: InsertLiveSessionBlock): Promise<LiveSessionBlock>;
+  updateLiveSessionBlock(id: number, updates: Partial<InsertLiveSessionBlock>): Promise<LiveSessionBlock | undefined>;
+  getLiveSessionBlocks(sessionId: number, sharedOnly?: boolean): Promise<LiveSessionBlock[]>;
+  deleteLiveSessionBlock(id: number): Promise<void>;
+  createLiveSessionMessage(msg: InsertLiveSessionMessage): Promise<LiveSessionMessage>;
+  getLiveSessionMessages(sessionId: number): Promise<LiveSessionMessage[]>;
 
   // Stripe
   getProduct(productId: string): Promise<any>;
@@ -230,6 +248,75 @@ export class DatabaseStorage implements IStorage {
   }) {
     const [user] = await db.update(users).set(stripeInfo).where(eq(users.id, userId)).returning();
     return user;
+  }
+
+  // --- Live Sessions ---
+  async createLiveSession(session: InsertLiveSession): Promise<LiveSession> {
+    const [s] = await db.insert(liveSessions).values(session).returning();
+    return s;
+  }
+
+  async getLiveSession(id: number): Promise<LiveSession | undefined> {
+    const [s] = await db.select().from(liveSessions).where(eq(liveSessions.id, id));
+    return s;
+  }
+
+  async getLiveSessionByVisitor(visitorId: string): Promise<LiveSession | undefined> {
+    const [s] = await db.select().from(liveSessions).where(
+      and(eq(liveSessions.visitorId, visitorId), eq(liveSessions.status, "active"))
+    ).limit(1);
+    if (s) return s;
+    const [r] = await db.select().from(liveSessions).where(
+      and(eq(liveSessions.visitorId, visitorId), eq(liveSessions.status, "requested"))
+    ).orderBy(desc(liveSessions.createdAt)).limit(1);
+    return r;
+  }
+
+  async getLiveSessionRequests(): Promise<LiveSession[]> {
+    return await db.select().from(liveSessions).where(eq(liveSessions.status, "requested")).orderBy(desc(liveSessions.createdAt));
+  }
+
+  async getActiveLiveSessions(): Promise<LiveSession[]> {
+    return await db.select().from(liveSessions).where(eq(liveSessions.status, "active")).orderBy(desc(liveSessions.createdAt));
+  }
+
+  async updateLiveSessionStatus(id: number, status: string): Promise<LiveSession | undefined> {
+    const updates: any = { status };
+    if (status === "closed") updates.closedAt = new Date();
+    const [s] = await db.update(liveSessions).set(updates).where(eq(liveSessions.id, id)).returning();
+    return s;
+  }
+
+  async createLiveSessionBlock(block: InsertLiveSessionBlock): Promise<LiveSessionBlock> {
+    const [b] = await db.insert(liveSessionBlocks).values(block).returning();
+    return b;
+  }
+
+  async updateLiveSessionBlock(id: number, updates: Partial<InsertLiveSessionBlock>): Promise<LiveSessionBlock | undefined> {
+    const [b] = await db.update(liveSessionBlocks).set({ ...updates, updatedAt: new Date() }).where(eq(liveSessionBlocks.id, id)).returning();
+    return b;
+  }
+
+  async getLiveSessionBlocks(sessionId: number, sharedOnly?: boolean): Promise<LiveSessionBlock[]> {
+    if (sharedOnly) {
+      return await db.select().from(liveSessionBlocks).where(
+        and(eq(liveSessionBlocks.sessionId, sessionId), eq(liveSessionBlocks.shared, true))
+      ).orderBy(liveSessionBlocks.sortOrder);
+    }
+    return await db.select().from(liveSessionBlocks).where(eq(liveSessionBlocks.sessionId, sessionId)).orderBy(liveSessionBlocks.sortOrder);
+  }
+
+  async deleteLiveSessionBlock(id: number): Promise<void> {
+    await db.delete(liveSessionBlocks).where(eq(liveSessionBlocks.id, id));
+  }
+
+  async createLiveSessionMessage(msg: InsertLiveSessionMessage): Promise<LiveSessionMessage> {
+    const [m] = await db.insert(liveSessionMessages).values(msg).returning();
+    return m;
+  }
+
+  async getLiveSessionMessages(sessionId: number): Promise<LiveSessionMessage[]> {
+    return await db.select().from(liveSessionMessages).where(eq(liveSessionMessages.sessionId, sessionId)).orderBy(liveSessionMessages.createdAt);
   }
 }
 

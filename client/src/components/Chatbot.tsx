@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, X, Send, Loader2, User, Bot, AlertTriangle, Headphones, Plane, ToggleLeft, ToggleRight, Clock, ArrowRight, UserCheck, Video } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, User, Bot, AlertTriangle, Headphones, Plane, ToggleLeft, ToggleRight, Clock, ArrowRight, UserCheck, Video, MonitorPlay } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "wouter";
 
 interface FlightResult {
   id: string;
@@ -34,8 +35,10 @@ interface ChatMessage {
 
 export function Chatbot() {
   const { t, language } = useI18n();
+  const [, navigate] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [sessionId, setSessionId] = useState<number | null>(null);
+  const [requestingLive, setRequestingLive] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -114,6 +117,35 @@ export function Chatbot() {
     } catch (error) {
       console.error("Failed to create chat session:", error);
       return null;
+    }
+  };
+
+  const handleRequestLiveSession = async () => {
+    setRequestingLive(true);
+    try {
+      let visitorId = localStorage.getItem("michels-chatbot-visitor");
+      if (!visitorId) {
+        visitorId = Math.random().toString(36).substring(2, 12);
+        localStorage.setItem("michels-chatbot-visitor", visitorId);
+      }
+      const res = await fetch("/api/live-sessions/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          visitorId,
+          language: language || "pt",
+          conversationId: sessionId,
+        }),
+      });
+      const data = await res.json();
+      if (data.id) {
+        setIsOpen(false);
+        navigate(`/live/${data.id}?token=${encodeURIComponent(data.accessToken)}`);
+      }
+    } catch (error) {
+      console.error("Failed to request live session:", error);
+    } finally {
+      setRequestingLive(false);
     }
   };
 
@@ -493,7 +525,16 @@ export function Chatbot() {
                       {t("chatbot.agent_mode")}
                     </span>
                   </button>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <button
+                      onClick={handleRequestLiveSession}
+                      disabled={requestingLive}
+                      className="flex items-center gap-1 text-[11px] text-[#0074DE] hover:text-[#005bb5] font-medium transition-colors"
+                      data-testid="button-chatbot-live-session"
+                    >
+                      {requestingLive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MonitorPlay className="h-3.5 w-3.5" />}
+                      <span>{language === "pt" ? "Atendimento ao Vivo" : language === "es" ? "Atención en Vivo" : "Live Help"}</span>
+                    </button>
                     {!escalated && (
                       <button
                         onClick={handleAgentMode}

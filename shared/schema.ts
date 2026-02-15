@@ -9,6 +9,7 @@ import { users } from "./models/auth";
 
 // Import chat models for AI chatbot
 export * from "./models/chat";
+import { conversations } from "./models/chat";
 
 // === FLIGHT SEARCH CACHE (For SEO & History) ===
 export const flightSearches = pgTable("flight_searches", {
@@ -71,6 +72,37 @@ export const blogPosts = pgTable("blog_posts", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// === LIVE SESSIONS (Agent-Client Real-time Sales) ===
+export const liveSessions = pgTable("live_sessions", {
+  id: serial("id").primaryKey(),
+  accessToken: text("access_token").notNull(),
+  conversationId: integer("conversation_id").references(() => conversations.id),
+  visitorId: text("visitor_id"),
+  language: text("language").default("pt"),
+  status: text("status").default("requested").notNull(), // requested, active, closed
+  whatsappLink: text("whatsapp_link"),
+  createdAt: timestamp("created_at").defaultNow(),
+  closedAt: timestamp("closed_at"),
+});
+
+export const liveSessionBlocks = pgTable("live_session_blocks", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull().references(() => liveSessions.id, { onDelete: "cascade" }),
+  blockType: text("block_type").notNull(), // search_results, offer_detail, pricing, baggage, custom_note
+  payload: jsonb("payload").notNull(),
+  shared: boolean("shared").default(false).notNull(),
+  sortOrder: integer("sort_order").default(0),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const liveSessionMessages = pgTable("live_session_messages", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull().references(() => liveSessions.id, { onDelete: "cascade" }),
+  role: text("role").notNull(), // admin, client
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // === RELATIONS ===
 export const bookingsRelations = relations(bookings, ({ one }) => ({
   user: one(users, {
@@ -84,6 +116,9 @@ export const insertFlightSearchSchema = createInsertSchema(flightSearches).omit(
 export const insertBookingSchema = createInsertSchema(bookings).omit({ id: true, createdAt: true, commissionAmount: true });
 export const insertSiteSettingsSchema = createInsertSchema(siteSettings).omit({ id: true, updatedAt: true });
 export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({ id: true, createdAt: true });
+export const insertLiveSessionSchema = createInsertSchema(liveSessions).omit({ id: true, createdAt: true, closedAt: true });
+export const insertLiveSessionBlockSchema = createInsertSchema(liveSessionBlocks).omit({ id: true, updatedAt: true });
+export const insertLiveSessionMessageSchema = createInsertSchema(liveSessionMessages).omit({ id: true, createdAt: true });
 
 // === TYPES ===
 export type FlightSearch = typeof flightSearches.$inferSelect;
@@ -97,6 +132,13 @@ export type InsertSiteSetting = z.infer<typeof insertSiteSettingsSchema>;
 
 export type BlogPost = typeof blogPosts.$inferSelect;
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+
+export type LiveSession = typeof liveSessions.$inferSelect;
+export type InsertLiveSession = z.infer<typeof insertLiveSessionSchema>;
+export type LiveSessionBlock = typeof liveSessionBlocks.$inferSelect;
+export type InsertLiveSessionBlock = z.infer<typeof insertLiveSessionBlockSchema>;
+export type LiveSessionMessage = typeof liveSessionMessages.$inferSelect;
+export type InsertLiveSessionMessage = z.infer<typeof insertLiveSessionMessageSchema>;
 
 // === API TYPES ===
 // Search Query Params

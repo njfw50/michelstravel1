@@ -35,6 +35,7 @@ import MyTrips from "@/pages/MyTrips";
 import Profile from "@/pages/Profile";
 import AdminLiveChat from "@/pages/AdminLiveChat";
 import AdminApp from "@/pages/AdminApp";
+import LiveSessionClient from "@/pages/LiveSessionClient";
 
 function TestModeBanner() {
   const { t } = useI18n();
@@ -85,6 +86,7 @@ function Router() {
       <Route path="/my-trips" component={() => <Layout><MyTrips /></Layout>} />
       <Route path="/profile" component={() => <Layout><Profile /></Layout>} />
       
+      <Route path="/live/:sessionId" component={LiveSessionClient} />
       <Route path="/checkout/success" component={CheckoutSuccess} />
       <Route path="/checkout/cancel" component={CheckoutCancel} />
 
