@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,9 @@ import {
   AlertTriangle,
   RefreshCw,
   ChevronLeft,
+  Lock,
+  Loader2,
+  Headphones,
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -45,18 +48,53 @@ export default function AdminLiveChat() {
   const [selectedConvId, setSelectedConvId] = useState<number | null>(null);
   const [reply, setReply] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+  const qc = useQueryClient();
+
+  const { data: adminCheck, isLoading: adminCheckLoading } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/admin/check"],
+  });
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginPassword.trim()) return;
+    setLoginLoading(true);
+    setLoginError("");
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: loginPassword }),
+        credentials: "include",
+      });
+      if (res.ok) {
+        qc.invalidateQueries({ queryKey: ["/api/admin/check"] });
+      } else if (res.status === 429) {
+        setLoginError("Muitas tentativas. Aguarde 15 minutos.");
+      } else {
+        setLoginError("Senha incorreta");
+      }
+    } catch {
+      setLoginError("Erro de conexão");
+    } finally {
+      setLoginLoading(false);
+    }
+  };
 
   const { data: conversations = [], isLoading } = useQuery<Conversation[]>({
     queryKey: ["/api/admin/chatbot/conversations"],
     refetchInterval: 5000,
+    enabled: !!adminCheck?.isAdmin,
   });
 
   const { data: selectedMessages = [] } = useQuery<Message[]>({
     queryKey: ["/api/admin/chatbot/conversations", selectedConvId, "messages"],
-    enabled: !!selectedConvId,
+    enabled: !!selectedConvId && !!adminCheck?.isAdmin,
     refetchInterval: 3000,
     queryFn: async () => {
-      const res = await fetch(`/api/admin/chatbot/conversations/${selectedConvId}/messages`);
+      const res = await fetch(`/api/admin/chatbot/conversations/${selectedConvId}/messages`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch messages");
       return res.json();
     },
@@ -354,6 +392,52 @@ export default function AdminLiveChat() {
       </div>
     </div>
   );
+
+  if (adminCheckLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-[#0074DE]" />
+      </div>
+    );
+  }
+
+  if (!adminCheck?.isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0074DE] p-4">
+        <Card className="w-full max-w-sm p-6">
+          <div className="flex flex-col items-center mb-6">
+            <div className="h-16 w-16 rounded-2xl bg-[#0074DE] flex items-center justify-center mb-3">
+              <Headphones className="h-8 w-8 text-white" />
+            </div>
+            <h1 className="text-xl font-bold text-foreground">Atendimento ao Vivo</h1>
+            <p className="text-sm text-muted-foreground">Faça login para acessar</p>
+          </div>
+          <form onSubmit={handleAdminLogin} className="space-y-4">
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="Senha de administrador"
+                className="pl-10"
+                autoFocus
+                disabled={loginLoading}
+                data-testid="input-livechat-admin-password"
+              />
+            </div>
+            {loginError && (
+              <p className="text-sm text-destructive text-center" data-testid="text-livechat-login-error">{loginError}</p>
+            )}
+            <Button type="submit" className="w-full" disabled={!loginPassword.trim() || loginLoading} data-testid="button-livechat-admin-login">
+              {loginLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Entrar
+            </Button>
+          </form>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col" data-testid="admin-live-chat">
