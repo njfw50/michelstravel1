@@ -84,6 +84,8 @@ const STATELESS_PATHS = [
 ];
 
 function isStatelessPath(path: string): boolean {
+  if (path.startsWith('/api/live-sessions/admin')) return false;
+  if (path.startsWith('/api/admin/')) return false;
   return STATELESS_PATHS.some(sp => path === sp || path.startsWith(sp + '/') || path.startsWith(sp + '?'));
 }
 

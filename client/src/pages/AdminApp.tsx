@@ -467,12 +467,17 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
       if (tripType === "round_trip" && searchReturnDate) {
         params.set("returnDate", searchReturnDate);
       }
-      const res = await authFetch(`/api/live-sessions/admin/search-flights?${params}`);
+      let res = await authFetch(`/api/live-sessions/admin/search-flights?${params}`);
+      if (res.status === 401) {
+        res = await fetch(`/api/flights/search?${params}`, { credentials: "include" });
+      }
       if (res.ok) {
         const data = await res.json();
         setFlightResults(Array.isArray(data) ? data : data.flights || []);
+      } else {
+        console.error("Flight search failed:", res.status);
       }
-    } catch {} finally {
+    } catch (err) { console.error("Flight search error:", err); } finally {
       setSearchingFlights(false);
     }
   };

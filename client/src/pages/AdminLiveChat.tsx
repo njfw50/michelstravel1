@@ -406,12 +406,17 @@ function LiveSalesPanel() {
             date: l.date,
           }))),
         });
-        const res = await adminFetch(`/api/live-sessions/admin/search-flights?${params}`);
+        let res = await adminFetch(`/api/live-sessions/admin/search-flights?${params}`);
+        if (res.status === 401) {
+          res = await fetch(`/api/flights/search?${params}`, { credentials: "include" });
+        }
         if (res.ok) {
           const data = await res.json();
           setFlightResults(Array.isArray(data) ? data : data.flights || []);
+        } else {
+          console.error("Flight search failed:", res.status, await res.text().catch(() => ""));
         }
-      } catch {} finally {
+      } catch (err) { console.error("Flight search error:", err); } finally {
         setSearchingFlights(false);
       }
     } else {
@@ -430,12 +435,17 @@ function LiveSalesPanel() {
         if (tripType === "round_trip" && searchReturnDate) {
           params.set("returnDate", searchReturnDate);
         }
-        const res = await adminFetch(`/api/live-sessions/admin/search-flights?${params}`);
+        let res = await adminFetch(`/api/live-sessions/admin/search-flights?${params}`);
+        if (res.status === 401) {
+          res = await fetch(`/api/flights/search?${params}`, { credentials: "include" });
+        }
         if (res.ok) {
           const data = await res.json();
           setFlightResults(Array.isArray(data) ? data : data.flights || []);
+        } else {
+          console.error("Flight search failed:", res.status, await res.text().catch(() => ""));
         }
-      } catch {} finally {
+      } catch (err) { console.error("Flight search error:", err); } finally {
         setSearchingFlights(false);
       }
     }
