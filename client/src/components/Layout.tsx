@@ -52,6 +52,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/my-trips", label: t("nav.my_trips") || "My Trips" },
     { href: "/about", label: t("footer.about") },
     { href: "/blog", label: t("nav.blog") },
+    { href: "/help", label: t("nav.help") },
   ];
 
   return (

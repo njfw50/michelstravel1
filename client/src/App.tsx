@@ -36,6 +36,7 @@ import Profile from "@/pages/Profile";
 import AdminLiveChat from "@/pages/AdminLiveChat";
 import LiveSessionClient from "@/pages/LiveSessionClient";
 import Messenger from "@/pages/Messenger";
+import HelpCenter from "@/pages/HelpCenter";
 
 function TestModeBanner() {
   const { t } = useI18n();
@@ -84,6 +85,7 @@ function Router() {
       <Route path="/blog/:slug" component={() => <Layout><BlogPost /></Layout>} />
       
       <Route path="/my-trips" component={() => <Layout><MyTrips /></Layout>} />
+      <Route path="/help" component={() => <Layout><HelpCenter /></Layout>} />
       <Route path="/messages" component={() => <Layout><Messenger /></Layout>} />
       <Route path="/profile" component={() => <Layout><Profile /></Layout>} />
       
