@@ -1064,22 +1064,63 @@ export function registerRoutes(app: Express) {
     res.json(updated);
   });
 
-  // Toggle Test Mode
+  // Pre-flight check: validate both APIs are ready for target mode
+  app.get('/api/admin/test-mode/preflight', requireAdmin, async (req, res) => {
+    const targetTestMode = req.query.target === 'test';
+    const { validateStripeKeysForMode } = await import('./stripeClient');
+
+    const duffelReady = targetTestMode ? hasTestToken() : hasLiveToken();
+    const stripeCheck = await validateStripeKeysForMode(targetTestMode);
+
+    const issues: string[] = [];
+    if (!duffelReady) {
+      issues.push(targetTestMode 
+        ? "Duffel: DUFFEL_API_TOKEN (test) not configured"
+        : "Duffel: DUFFEL_LIVE_TOKEN (production) not configured");
+    }
+    if (!stripeCheck.valid) {
+      issues.push(targetTestMode
+        ? "Stripe: test keys not configured"
+        : "Stripe: live keys not configured");
+    }
+
+    res.json({
+      targetMode: targetTestMode ? 'test' : 'production',
+      ready: issues.length === 0,
+      duffelReady,
+      stripeReady: stripeCheck.valid,
+      issues,
+    });
+  });
+
+  // Toggle Test Mode (with synchronized Duffel + Stripe switch)
   app.post('/api/admin/test-mode', requireAdmin, async (req, res) => {
-    const { testMode } = req.body;
+    const { testMode, confirmed } = req.body;
     if (typeof testMode !== 'boolean') {
       return res.status(400).json({ error: "testMode must be a boolean" });
     }
 
+    if (!confirmed) {
+      return res.status(400).json({ error: "Confirmation required. Set confirmed: true to proceed." });
+    }
+
     if (!testMode && !hasLiveToken()) {
       return res.status(400).json({ 
-        error: "Cannot disable test mode: no production token (DUFFEL_LIVE_TOKEN) is configured. Add a duffel_live_* token to your secrets first." 
+        error: "Cannot switch to production: DUFFEL_LIVE_TOKEN is not configured." 
       });
     }
 
     if (testMode && !hasTestToken()) {
       return res.status(400).json({ 
-        error: "Cannot enable test mode: no test token (DUFFEL_API_TOKEN) is configured. Add a duffel_test_* token to your secrets first." 
+        error: "Cannot switch to test mode: DUFFEL_API_TOKEN is not configured." 
+      });
+    }
+
+    const { validateStripeKeysForMode } = await import('./stripeClient');
+    const stripeCheck = await validateStripeKeysForMode(testMode);
+    if (!stripeCheck.valid) {
+      return res.status(400).json({ 
+        error: `Cannot switch mode: ${stripeCheck.error}` 
       });
     }
 
@@ -1097,21 +1138,26 @@ export function registerRoutes(app: Express) {
     setTestModeCache(testMode);
     clearReferenceDataCache();
 
+    let stripeSynced = false;
     try {
       const { getStripeSync } = await import('./stripeClient');
       await getStripeSync();
+      stripeSynced = true;
       console.log(`[MODE SWITCH] Stripe client re-initialized for ${testMode ? 'TEST' : 'LIVE'} mode`);
     } catch (stripeErr: any) {
       console.error(`[MODE SWITCH] Stripe re-initialization warning:`, stripeErr?.message);
     }
 
     const modeLabel = testMode ? 'TEST' : 'PRODUCTION';
-    console.log(`[MODE SWITCH] Switched to ${modeLabel} mode. Duffel token: ${activeTokenIsTest() ? 'test' : 'live'}, Stripe keys: ${testMode ? 'test' : 'live'}`);
+    console.log(`[MODE SWITCH] Switched to ${modeLabel} mode. Duffel: ${activeTokenIsTest() ? 'test' : 'live'}, Stripe: ${stripeSynced ? (testMode ? 'test' : 'live') : 'error'}`);
 
     res.json({ 
       testMode: updated?.testMode ?? testMode, 
       activeTokenIsTest: activeTokenIsTest(),
-      message: testMode ? "Test mode enabled - using test tokens for Duffel & Stripe" : "Production mode enabled - using live tokens for Duffel & Stripe" 
+      stripeSynced,
+      message: testMode 
+        ? "Test mode enabled - Duffel and Stripe using test keys" 
+        : "Production mode enabled - Duffel and Stripe using live keys" 
     });
   });
 

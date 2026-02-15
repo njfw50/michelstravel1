@@ -175,13 +175,9 @@ export async function validateStripeKeysForMode(targetTestMode: boolean): Promis
 
   if (hasMatch) return { valid: true };
 
-  if (allSources.length > 0) {
-    return { valid: true };
-  }
-
   return {
     valid: false,
-    error: `No Stripe keys found for ${wantTest ? 'test' : 'live'} mode. Configure your Stripe keys in secrets.`
+    error: `No Stripe ${wantTest ? 'test' : 'live'} keys found. Configure your Stripe ${wantTest ? 'test' : 'live'} keys in secrets.`
   };
 }
 

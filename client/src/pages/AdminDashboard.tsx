@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare } from "lucide-react";
+import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +18,16 @@ function TestModeControl() {
   const { t } = useI18n();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isToggling, setIsToggling] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingMode, setPendingMode] = useState<boolean | null>(null);
+  const [preflightData, setPreflightData] = useState<{
+    ready: boolean;
+    duffelReady: boolean;
+    stripeReady: boolean;
+    issues: string[];
+    targetMode: string;
+  } | null>(null);
+  const [preflightLoading, setPreflightLoading] = useState(false);
 
   const { data: testModeData, isLoading } = useQuery<{ testMode: boolean; activeTokenIsTest: boolean; hasLiveToken: boolean; hasTestToken: boolean }>({
     queryKey: ['/api/test-mode'],
@@ -25,25 +35,27 @@ function TestModeControl() {
 
   const toggleMutation = useMutation({
     mutationFn: async (newTestMode: boolean) => {
-      setIsToggling(true);
       const res = await fetch('/api/admin/test-mode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ testMode: newTestMode }),
+        body: JSON.stringify({ testMode: newTestMode, confirmed: true }),
         credentials: 'include',
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to toggle test mode');
+      if (!res.ok) throw new Error(data.error || 'Failed to toggle mode');
       return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/test-mode'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/settings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/flight-board'] });
       toast({
         title: data.testMode ? t("admin.test_mode_enabled") : t("admin.test_mode_disabled"),
         description: data.testMode ? t("admin.test_mode_safe") : t("admin.test_mode_live"),
       });
-      setIsToggling(false);
+      setShowConfirmDialog(false);
+      setPendingMode(null);
+      setPreflightData(null);
     },
     onError: (error: Error) => {
       toast({
@@ -51,9 +63,43 @@ function TestModeControl() {
         description: error.message,
         variant: "destructive",
       });
-      setIsToggling(false);
+      setShowConfirmDialog(false);
+      setPendingMode(null);
+      setPreflightData(null);
     },
   });
+
+  const handleToggleClick = async (newTestMode: boolean) => {
+    setPendingMode(newTestMode);
+    setPreflightLoading(true);
+    setPreflightData(null);
+    setShowConfirmDialog(true);
+
+    try {
+      const target = newTestMode ? 'test' : 'production';
+      const res = await fetch(`/api/admin/test-mode/preflight?target=${target}`, {
+        credentials: 'include',
+      });
+      const data = await res.json();
+      setPreflightData(data);
+    } catch {
+      setPreflightData({
+        ready: false,
+        duffelReady: false,
+        stripeReady: false,
+        issues: ["Failed to check API status"],
+        targetMode: newTestMode ? 'test' : 'production',
+      });
+    } finally {
+      setPreflightLoading(false);
+    }
+  };
+
+  const handleConfirm = () => {
+    if (pendingMode !== null) {
+      toggleMutation.mutate(pendingMode);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -71,90 +117,200 @@ function TestModeControl() {
   const testTokenReady = testModeData?.hasTestToken ?? false;
 
   return (
-    <Card className={`border shadow-sm ${currentTestMode ? 'border-blue-200 bg-blue-50' : 'border-emerald-200 bg-emerald-50'}`}>
-      <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
-        <div className="flex items-center gap-3">
-          {currentTestMode ? (
-            <div className="h-12 w-12 rounded-xl border flex items-center justify-center shadow-inner text-blue-500 bg-blue-100 border-blue-200">
-              <ShieldCheck className="h-6 w-6" />
+    <>
+      <Card className={`border shadow-sm ${currentTestMode ? 'border-blue-200 bg-blue-50' : 'border-emerald-200 bg-emerald-50'}`}>
+        <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-2">
+          <div className="flex items-center gap-3">
+            {currentTestMode ? (
+              <div className="h-12 w-12 rounded-xl border flex items-center justify-center shadow-inner text-blue-500 bg-blue-100 border-blue-200">
+                <ShieldCheck className="h-6 w-6" />
+              </div>
+            ) : (
+              <div className="h-12 w-12 rounded-xl border flex items-center justify-center shadow-inner text-emerald-500 bg-emerald-100 border-emerald-200">
+                <ShieldAlert className="h-6 w-6" />
+              </div>
+            )}
+            <div>
+              <CardTitle className="text-lg text-gray-900">{t("admin.test_mode")}</CardTitle>
+              <p className="text-xs text-gray-500 mt-1">{t("admin.test_mode_desc")}</p>
             </div>
-          ) : (
-            <div className="h-12 w-12 rounded-xl border flex items-center justify-center shadow-inner text-emerald-500 bg-emerald-100 border-emerald-200">
-              <ShieldAlert className="h-6 w-6" />
+          </div>
+          <Badge
+            data-testid="badge-test-mode-status"
+            className={`text-xs font-bold px-3 py-1 ${
+              currentTestMode 
+                ? 'bg-blue-100 text-blue-700 border-blue-200' 
+                : 'bg-emerald-100 text-emerald-700 border-emerald-200'
+            }`}
+          >
+            {currentTestMode ? t("admin.test_mode_enabled") : t("admin.test_mode_disabled")}
+          </Badge>
+        </CardHeader>
+        <CardContent className="p-6 pt-2 space-y-4">
+          <div className="flex flex-col gap-3 p-4 rounded-xl bg-gray-50 border border-gray-200">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <span className="text-sm font-medium text-gray-700">Duffel (Flights)</span>
+              <Badge
+                data-testid="badge-duffel-status"
+                className={`text-xs ${
+                  tokenActive 
+                    ? 'bg-yellow-100 text-yellow-700 border-yellow-200' 
+                    : 'bg-green-100 text-green-700 border-green-200'
+                }`}
+              >
+                {tokenActive ? 'TEST' : 'PRODUCTION'}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <span className="text-sm font-medium text-gray-700">Stripe (Payments)</span>
+              <Badge
+                data-testid="badge-stripe-status"
+                className={`text-xs ${
+                  currentTestMode 
+                    ? 'bg-yellow-100 text-yellow-700 border-yellow-200' 
+                    : 'bg-green-100 text-green-700 border-green-200'
+                }`}
+              >
+                {currentTestMode ? 'TEST' : 'PRODUCTION'}
+              </Badge>
+            </div>
+            <div className="border-t border-gray-200 pt-3 mt-1">
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <div className={`h-2 w-2 rounded-full ${testTokenReady ? 'bg-yellow-400' : 'bg-red-400'}`} />
+                  <span className="text-xs text-gray-500">Duffel Test: {testTokenReady ? 'OK' : 'Missing'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={`h-2 w-2 rounded-full ${liveTokenReady ? 'bg-green-400' : 'bg-red-400'}`} />
+                  <span className="text-xs text-gray-500">Duffel Live: {liveTokenReady ? 'OK' : 'Missing'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {!liveTokenReady && !currentTestMode && (
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs">
+              {t("admin.test_mode_warning")}
             </div>
           )}
-          <div>
-            <CardTitle className="text-lg text-gray-900">{t("admin.test_mode")}</CardTitle>
-            <p className="text-xs text-gray-500 mt-1">{t("admin.test_mode_desc")}</p>
-          </div>
-        </div>
-        <Badge
-          data-testid="badge-test-mode-status"
-          className={`text-xs font-bold px-3 py-1 ${
-            currentTestMode 
-              ? 'bg-blue-100 text-blue-700 border-blue-200' 
-              : 'bg-emerald-100 text-emerald-700 border-emerald-200'
-          }`}
-        >
-          {currentTestMode ? t("admin.test_mode_enabled") : t("admin.test_mode_disabled")}
-        </Badge>
-      </CardHeader>
-      <CardContent className="p-6 pt-2 space-y-4">
-        <div className="flex flex-col gap-3 p-4 rounded-xl bg-gray-50 border border-gray-200">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <span className="text-sm text-gray-600">{t("admin.token_status")}:</span>
-            <Badge
-              data-testid="badge-active-token"
-              className={`text-xs ${
-                tokenActive 
-                  ? 'bg-yellow-100 text-yellow-700 border-yellow-200' 
-                  : 'bg-green-100 text-green-700 border-green-200'
-              }`}
+
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <p className={`text-sm font-medium ${currentTestMode ? 'text-blue-600' : 'text-emerald-600'}`}>
+              {currentTestMode ? t("admin.test_mode_safe") : t("admin.test_mode_live")}
+            </p>
+            <Button
+              data-testid="button-toggle-test-mode"
+              variant={currentTestMode ? "default" : "destructive"}
+              onClick={() => handleToggleClick(!currentTestMode)}
+              disabled={toggleMutation.isPending}
+              className="gap-2"
             >
-              {tokenActive ? t("admin.token_test") : t("admin.token_production")}
-            </Badge>
+              {toggleMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : currentTestMode ? (
+                <ToggleRight className="h-4 w-4" />
+              ) : (
+                <ToggleLeft className="h-4 w-4" />
+              )}
+              {currentTestMode ? t("admin.test_mode_toggle_off") : t("admin.test_mode_toggle_on")}
+            </Button>
           </div>
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex items-center gap-2">
-              <div className={`h-2 w-2 rounded-full ${testTokenReady ? 'bg-yellow-400' : 'bg-red-400'}`} />
-              <span className="text-xs text-gray-500">DUFFEL_API_TOKEN: {testTokenReady ? 'OK' : 'Missing'}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className={`h-2 w-2 rounded-full ${liveTokenReady ? 'bg-green-400' : 'bg-red-400'}`} />
-              <span className="text-xs text-gray-500">DUFFEL_LIVE_TOKEN: {liveTokenReady ? 'OK' : 'Missing'}</span>
-            </div>
-          </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {!liveTokenReady && !currentTestMode && (
-          <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs">
-            {t("admin.test_mode_warning")}
-          </div>
-        )}
+      <AlertDialog open={showConfirmDialog} onOpenChange={(open) => { 
+        if (!open && !toggleMutation.isPending) { 
+          setShowConfirmDialog(false); 
+          setPendingMode(null); 
+          setPreflightData(null); 
+        } 
+      }}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              {pendingMode === false ? (
+                <>
+                  <AlertTriangle className="h-5 w-5 text-amber-500" />
+                  Switch to Production?
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="h-5 w-5 text-blue-500" />
+                  Switch to Test Mode?
+                </>
+              )}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  {pendingMode === false 
+                    ? "This will switch BOTH Duffel (flights) and Stripe (payments) to production mode. Real charges will be processed."
+                    : "This will switch BOTH Duffel (flights) and Stripe (payments) to test mode. No real charges will be processed."
+                  }
+                </p>
 
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <p className={`text-sm font-medium ${currentTestMode ? 'text-blue-600' : 'text-emerald-600'}`}>
-            {currentTestMode ? t("admin.test_mode_safe") : t("admin.test_mode_live")}
-          </p>
-          <Button
-            data-testid="button-toggle-test-mode"
-            variant={currentTestMode ? "default" : "destructive"}
-            onClick={() => toggleMutation.mutate(!currentTestMode)}
-            disabled={isToggling || toggleMutation.isPending}
-            className="gap-2"
-          >
-            {isToggling || toggleMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : currentTestMode ? (
-              <ToggleRight className="h-4 w-4" />
-            ) : (
-              <ToggleLeft className="h-4 w-4" />
-            )}
-            {currentTestMode ? t("admin.test_mode_toggle_off") : t("admin.test_mode_toggle_on")}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+                {preflightLoading ? (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-gray-50 border border-gray-200">
+                    <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                    <span className="text-sm text-gray-500">Checking API status...</span>
+                  </div>
+                ) : preflightData ? (
+                  <div className="space-y-2">
+                    <div className={`flex items-center gap-2 p-2 rounded-lg ${preflightData.duffelReady ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                      {preflightData.duffelReady ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-red-600 shrink-0" />
+                      )}
+                      <span className={`text-sm ${preflightData.duffelReady ? 'text-green-700' : 'text-red-700'}`}>
+                        Duffel {preflightData.duffelReady ? 'ready' : 'not ready'}
+                      </span>
+                    </div>
+                    <div className={`flex items-center gap-2 p-2 rounded-lg ${preflightData.stripeReady ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                      {preflightData.stripeReady ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-red-600 shrink-0" />
+                      )}
+                      <span className={`text-sm ${preflightData.stripeReady ? 'text-green-700' : 'text-red-700'}`}>
+                        Stripe {preflightData.stripeReady ? 'ready' : 'not ready'}
+                      </span>
+                    </div>
+                    {preflightData.issues.length > 0 && (
+                      <div className="p-2 rounded-lg bg-amber-50 border border-amber-200">
+                        <p className="text-xs font-medium text-amber-700 mb-1">Issues found:</p>
+                        {preflightData.issues.map((issue, i) => (
+                          <p key={i} className="text-xs text-amber-600">- {issue}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              data-testid="button-cancel-mode-switch"
+              disabled={toggleMutation.isPending}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="button-confirm-mode-switch"
+              onClick={handleConfirm}
+              disabled={preflightLoading || toggleMutation.isPending || (preflightData ? !preflightData.ready : true)}
+              className={pendingMode === false ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
+            >
+              {toggleMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : null}
+              {pendingMode === false ? 'OK, Switch to Production' : 'OK, Switch to Test'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
