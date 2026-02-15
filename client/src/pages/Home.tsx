@@ -118,7 +118,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-6xl mx-auto"
+            className="max-w-6xl mx-auto pb-16"
           >
             <FlightSearchForm />
           </motion.div>
@@ -127,7 +127,7 @@ export default function Home() {
         <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none" />
       </section>
 
-      <section className="relative -mt-6 z-20 pb-8">
+      <section className="relative mt-6 z-20 pb-8">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
