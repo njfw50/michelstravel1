@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { Component, type ReactNode } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
@@ -34,6 +34,7 @@ import CheckoutCancel from "@/pages/CheckoutCancel";
 import MyTrips from "@/pages/MyTrips";
 import Profile from "@/pages/Profile";
 import AdminLiveChat from "@/pages/AdminLiveChat";
+import AdminApp from "@/pages/AdminApp";
 
 function TestModeBanner() {
   const { t } = useI18n();
@@ -98,16 +99,29 @@ function App() {
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
-            <Toaster />
-            <LanguageSelector />
-            <TestModeBanner />
-            <Router />
-            <SafeWrapper><Chatbot /></SafeWrapper>
-            <SafeWrapper><CookieConsent /></SafeWrapper>
+            <Route path="/atendimento" component={AdminApp} />
+            <Route path="/atendimento/:rest*" component={AdminApp} />
+            <MainApp />
           </TooltipProvider>
         </QueryClientProvider>
       </HelmetProvider>
     </ErrorBoundary>
+  );
+}
+
+function MainApp() {
+  const [location] = useLocation();
+  if (location.startsWith("/atendimento")) return null;
+
+  return (
+    <>
+      <Toaster />
+      <LanguageSelector />
+      <TestModeBanner />
+      <Router />
+      <SafeWrapper><Chatbot /></SafeWrapper>
+      <SafeWrapper><CookieConsent /></SafeWrapper>
+    </>
   );
 }
 

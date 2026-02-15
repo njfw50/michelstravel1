@@ -109,9 +109,22 @@ Preferred communication style: Simple, everyday language.
 - Escalation system: AI detects when customer needs human help via `[ESCALATE]` marker
 - When escalation triggers: updates DB, sends email notification to owner (reservastrens@gmail.com)
 - Admin can view escalated conversations at `/api/admin/chatbot/escalations`
+- WhatsApp video call button in chatbot footer (wa.me/18623501161)
 - Database tables: `conversations` (with escalation tracking) and `messages`
 - Key files: `client/src/components/Chatbot.tsx`, chatbot routes in `server/routes.ts`
 - API endpoints: `POST /api/chatbot/session`, `POST /api/chatbot/message`, `GET /api/chatbot/history/:id`
+
+### Admin Mobile App (PWA) — /atendimento
+- Standalone PWA installable on mobile phones for real-time customer support
+- Separate auth system using JWT tokens (no cookies) — works on any mobile browser
+- Login with admin password (`ADMIN_PASSWORD` env secret), rate-limited (5 attempts/15min)
+- JWT tokens signed with `SESSION_SECRET`, expire in 12 hours
+- Mobile-first UI: conversation list → tap to open full-screen chat → reply
+- WhatsApp video call shortcut in chat header
+- `requireAdmin` middleware accepts both session cookies AND JWT Bearer tokens
+- PWA manifest at `/manifest.json`, service worker at `/sw.js`
+- Key files: `client/src/pages/AdminApp.tsx`, API routes `/api/admin-app/*`
+- Admin API routes added to stateless paths (no cookie requirement)
 
 ### Post-Sale System
 - **Reference Codes**: MT-XXXXXX format generated for every booking

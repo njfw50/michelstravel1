@@ -9,6 +9,10 @@ import { users } from "@shared/models/auth";
 import { desc, eq, and, gt } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import OpenAI from "openai";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.SESSION_SECRET!;
+const JWT_EXPIRY = "12h";
 
 function generateReferenceCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -37,10 +41,22 @@ function applyMarkupToFlights(flights: any[], rate: number): any[] {
 }
 
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
-  if (!(req.session as any)?.isAdmin) {
-    return res.status(401).json({ error: "Admin authentication required" });
+  if ((req.session as any)?.isAdmin) {
+    return next();
   }
-  next();
+
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.substring(7);
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET) as { role: string };
+      if (decoded.role === "admin") {
+        return next();
+      }
+    } catch {}
+  }
+
+  return res.status(401).json({ error: "Admin authentication required" });
 }
 
 /**
@@ -1152,7 +1168,59 @@ export function registerRoutes(app: Express) {
   });
 
   app.get('/api/admin/check', (req, res) => {
-    res.json({ isAdmin: !!(req.session as any)?.isAdmin });
+    let isAdmin = !!(req.session as any)?.isAdmin;
+    if (!isAdmin) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        try {
+          const decoded = jwt.verify(authHeader.substring(7), JWT_SECRET) as { role: string };
+          isAdmin = decoded.role === "admin";
+        } catch {}
+      }
+    }
+    res.json({ isAdmin });
+  });
+
+  const adminLoginAttempts = new Map<string, { count: number; lastAttempt: number }>();
+
+  app.post('/api/admin-app/login', (req, res) => {
+    const { password } = req.body;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    const clientIp = req.ip || req.socket.remoteAddress || "unknown";
+
+    const attempts = adminLoginAttempts.get(clientIp);
+    if (attempts && attempts.count >= 5 && Date.now() - attempts.lastAttempt < 15 * 60 * 1000) {
+      return res.status(429).json({ error: "Too many login attempts. Try again in 15 minutes." });
+    }
+
+    if (!adminPassword) {
+      return res.status(500).json({ error: "Admin password not configured" });
+    }
+
+    if (!password || password !== adminPassword) {
+      const current = adminLoginAttempts.get(clientIp) || { count: 0, lastAttempt: 0 };
+      adminLoginAttempts.set(clientIp, { count: current.count + 1, lastAttempt: Date.now() });
+      return res.status(401).json({ error: "Invalid password" });
+    }
+
+    adminLoginAttempts.delete(clientIp);
+
+    const token = jwt.sign({ role: "admin", iat: Math.floor(Date.now() / 1000) }, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+    res.json({ token });
+  });
+
+  app.get('/api/admin-app/me', (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ authenticated: false });
+    }
+    try {
+      const decoded = jwt.verify(authHeader.substring(7), JWT_SECRET) as { role: string; iat: number; exp: number };
+      if (decoded.role === "admin") {
+        return res.json({ authenticated: true, expiresAt: decoded.exp * 1000 });
+      }
+    } catch {}
+    return res.status(401).json({ authenticated: false });
   });
 
   // === BLOG ROUTES ===

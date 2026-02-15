@@ -1,0 +1,25 @@
+{
+  "name": "Michels Travel - Atendimento",
+  "short_name": "Atendimento",
+  "description": "App de atendimento ao cliente - Michels Travel",
+  "start_url": "/atendimento",
+  "scope": "/atendimento",
+  "display": "standalone",
+  "background_color": "#0074DE",
+  "theme_color": "#0074DE",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
