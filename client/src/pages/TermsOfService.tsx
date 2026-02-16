@@ -156,7 +156,7 @@ export default function TermsOfService() {
             {content.contactIntro}
           </p>
           <div className="mt-3 text-sm text-gray-700 font-medium space-y-1">
-            <p>Michels Travel LLC</p>
+            <p>Michels Travel</p>
             <p>reservastrens@gmail.com</p>
             <p>+1 (862) 350-1161</p>
             <p>New Jersey, USA</p>
