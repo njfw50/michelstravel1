@@ -287,7 +287,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <ul className="space-y-3 text-sm">
                   <li><a href="/help" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.help")}</a></li>
                   <li><a href="/terms" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.terms")}</a></li>
-                  <li><a href="#" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.privacy")}</a></li>
+                  <li><a href="/privacy" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.privacy")}</a></li>
                 </ul>
               </div>
 
