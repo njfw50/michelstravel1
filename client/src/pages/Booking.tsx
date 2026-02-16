@@ -16,12 +16,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CheckCircle2, Plane, Clock, ArrowRight, Shield, Luggage, User, ChevronDown, ChevronUp, RefreshCw, X as XIcon, Briefcase, ScanLine, CreditCard, Lock, ArrowLeft } from "lucide-react";
+import { CheckCircle2, Plane, Clock, ArrowRight, Shield, Luggage, User, ChevronDown, ChevronUp, RefreshCw, X as XIcon, Briefcase, ScanLine, CreditCard, Lock, ArrowLeft, AlertTriangle, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { format, parseISO } from "date-fns";
 import { useI18n } from "@/lib/i18n";
+import { motion, AnimatePresence } from "framer-motion";
 import { ScanDocumentDialog } from "@/components/ScanDocumentDialog";
 import BaggageSelector from "@/components/BaggageSelector";
 import PaymentForm from "@/components/PaymentForm";
@@ -394,6 +395,214 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
   );
 }
 
+function BookingProcessingOverlay({ step, error, onRetry, onCancel, t }: {
+  step: "validating" | "creating" | "preparing" | "done" | "error";
+  error?: string;
+  onRetry: () => void;
+  onCancel: () => void;
+  t: (k: string) => string;
+}) {
+  const steps = [
+    { id: "validating", icon: RefreshCw, label: t("booking.processing_validating") || "Validating flight availability..." },
+    { id: "creating", icon: CreditCard, label: t("booking.processing_creating") || "Creating your booking..." },
+    { id: "preparing", icon: Lock, label: t("booking.processing_preparing") || "Preparing secure payment..." },
+  ];
+
+  const stepOrder = ["validating", "creating", "preparing", "done"];
+  const currentIdx = stepOrder.indexOf(step);
+
+  if (step === "error") {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-sm"
+        >
+          <Card className="bg-white shadow-2xl rounded-2xl overflow-visible">
+            <CardContent className="pt-8 pb-6 px-6 flex flex-col items-center text-center space-y-4">
+              <div className="h-14 w-14 rounded-full bg-amber-50 flex items-center justify-center border border-amber-200">
+                <AlertTriangle className="h-7 w-7 text-amber-500" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-gray-900" data-testid="text-booking-processing-error">
+                  {t("booking.processing_error_title") || "Something went wrong"}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {error || t("booking.processing_error_desc") || "We encountered an issue. Your card has not been charged."}
+                </p>
+              </div>
+              <div className="flex gap-3 w-full">
+                <Button variant="outline" onClick={onCancel} className="flex-1" data-testid="button-processing-cancel">
+                  {t("booking.processing_cancel") || "Go Back"}
+                </Button>
+                <Button onClick={onRetry} className="flex-1" data-testid="button-processing-retry">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  {t("booking.processing_retry") || "Try Again"}
+                </Button>
+              </div>
+              <p className="text-[10px] text-gray-400">
+                {t("booking.processing_no_charge") || "No charges were made to your card."}
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-sm"
+      >
+        <Card className="bg-white shadow-2xl rounded-2xl overflow-visible">
+          <CardContent className="pt-8 pb-6 px-6 flex flex-col items-center text-center space-y-5">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="h-14 w-14 rounded-full bg-blue-50 flex items-center justify-center border-2 border-blue-200"
+            >
+              <Plane className="h-7 w-7 text-blue-600" />
+            </motion.div>
+
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-gray-900" data-testid="text-booking-processing">
+                {t("booking.processing_title") || "Processing Your Booking"}
+              </h3>
+              <p className="text-xs text-gray-500">
+                {t("booking.processing_wait") || "Please wait, this will only take a moment..."}
+              </p>
+            </div>
+
+            <div className="w-full space-y-2">
+              {steps.map((s, idx) => {
+                const isActive = s.id === step;
+                const isDone = stepOrder.indexOf(s.id) < currentIdx;
+                const StepIcon = s.icon;
+                return (
+                  <motion.div
+                    key={s.id}
+                    initial={{ opacity: 0.3 }}
+                    animate={{ opacity: isDone || isActive ? 1 : 0.3 }}
+                    className={`flex items-center gap-3 p-2.5 rounded-lg text-left ${
+                      isActive ? "bg-blue-50 border border-blue-200" :
+                      isDone ? "bg-emerald-50 border border-emerald-200" :
+                      "bg-gray-50 border border-gray-100"
+                    }`}
+                    data-testid={`step-${s.id}`}
+                  >
+                    <div className={`h-7 w-7 rounded-full flex items-center justify-center shrink-0 ${
+                      isDone ? "bg-emerald-100" : isActive ? "bg-blue-100" : "bg-gray-100"
+                    }`}>
+                      {isDone ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                      ) : isActive ? (
+                        <Loader2 className="h-3.5 w-3.5 text-blue-600 animate-spin" />
+                      ) : (
+                        <StepIcon className="h-3.5 w-3.5 text-gray-400" />
+                      )}
+                    </div>
+                    <span className={`text-xs font-medium ${
+                      isDone ? "text-emerald-700" : isActive ? "text-blue-700" : "text-gray-400"
+                    }`}>{s.label}</span>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            <div className="w-full bg-gray-200 rounded-full h-1 overflow-hidden">
+              <motion.div
+                className="h-full bg-blue-600 rounded-full"
+                initial={{ width: "0%" }}
+                animate={{ width: `${Math.min(((currentIdx + 1) / steps.length) * 100, 100)}%` }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  );
+}
+
+function FlightLoadingSkeleton({ t }: { t: (k: string) => string }) {
+  return (
+    <div className="min-h-screen bg-gray-50" data-testid="loading-flight-skeleton">
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto max-w-6xl px-4 py-8 md:py-10">
+          <div className="h-8 w-48 bg-gray-200 rounded-md animate-pulse mb-2" />
+          <div className="h-4 w-72 bg-gray-100 rounded-md animate-pulse" />
+        </div>
+      </div>
+      <div className="container mx-auto max-w-6xl px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="border border-gray-200 shadow-sm rounded-2xl bg-white">
+              <CardContent className="p-5 md:p-6 space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="space-y-2">
+                    <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-10 w-full bg-gray-100 rounded-md animate-pulse" />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+          <div className="space-y-4">
+            <Card className="border border-gray-200 shadow-sm rounded-2xl bg-white">
+              <CardContent className="p-5 space-y-3">
+                <div className="h-5 w-36 bg-gray-200 rounded animate-pulse" />
+                <div className="h-20 w-full bg-gray-100 rounded-md animate-pulse" />
+                <div className="h-4 w-full bg-gray-100 rounded animate-pulse" />
+                <div className="h-4 w-2/3 bg-gray-100 rounded animate-pulse" />
+                <div className="h-10 w-full bg-blue-100 rounded-xl animate-pulse mt-4" />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FlightLoadError({ error, onRetry, onBack, t }: {
+  error: string;
+  onRetry: () => void;
+  onBack: () => void;
+  t: (k: string) => string;
+}) {
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50" data-testid="error-flight-load">
+      <Card className="w-full max-w-md bg-white border-gray-200 shadow-xl rounded-2xl">
+        <CardContent className="pt-10 pb-8 px-6 flex flex-col items-center text-center space-y-4">
+          <div className="h-16 w-16 rounded-full bg-amber-50 flex items-center justify-center border border-amber-200">
+            <AlertTriangle className="h-8 w-8 text-amber-500" />
+          </div>
+          <h1 className="text-lg font-bold text-gray-900" data-testid="text-flight-load-error">
+            {t("booking.flight_unavailable_title") || "Flight Unavailable"}
+          </h1>
+          <p className="text-sm text-gray-500">
+            {error || t("booking.flight_unavailable_desc") || "This flight may no longer be available. Please try again or search for new flights."}
+          </p>
+          <div className="flex gap-3 w-full">
+            <Button variant="outline" onClick={onBack} className="flex-1" data-testid="button-flight-error-back">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              {t("booking.back_search") || "Search Again"}
+            </Button>
+            <Button onClick={onRetry} className="flex-1" data-testid="button-flight-error-retry">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {t("booking.retry") || "Retry"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function SegmentDetail({ segment, t }: { segment: any; t: any }) {
   const dur = segment.duration?.startsWith("P") ? formatDuration(segment.duration) : segment.duration;
   return (
@@ -438,6 +647,8 @@ export default function Booking() {
   const createBooking = useCreateBooking();
 
   const [flight, setFlight] = useState<FlightOffer | null>(null);
+  const [flightLoading, setFlightLoading] = useState(true);
+  const [flightError, setFlightError] = useState<string | null>(null);
   const [baggageSelections, setBaggageSelections] = useState<any[]>([]);
   const [paymentStep, setPaymentStep] = useState(false);
   const [paymentData, setPaymentData] = useState<{
@@ -447,6 +658,11 @@ export default function Booking() {
     amount: number;
     currency: string;
   } | null>(null);
+
+  const [processingStep, setProcessingStep] = useState<"validating" | "creating" | "preparing" | "done" | "error" | null>(null);
+  const [processingError, setProcessingError] = useState<string | null>(null);
+  const lastSubmitDataRef = useRef<BookingFormValues | null>(null);
+
   const isDocRequired = flight?.passengerIdentityDocumentsRequired ?? false;
   const searchParams = new URLSearchParams(window.location.search);
   const numAdults = parseInt(searchParams.get("adults") || "1", 10);
@@ -500,39 +716,65 @@ export default function Booking() {
     name: "passengers",
   });
 
+  const baggageExtras = baggageSelections.reduce((sum, s) => sum + (s.price || 0) * (s.quantity || 0), 0);
+  const grandTotal = (flight?.price || 0) + baggageExtras;
+
+  const fetchFlight = useCallback(async (flightId: string) => {
+    setFlightLoading(true);
+    setFlightError(null);
+    let attempts = 0;
+    const maxAttempts = 3;
+
+    while (attempts < maxAttempts) {
+      try {
+        const res = await fetch(`/api/flights/${flightId}`);
+        const data = await res.json();
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        setFlight(data);
+        setFlightLoading(false);
+        return;
+      } catch (err: any) {
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise((r) => setTimeout(r, 1000 * attempts));
+        } else {
+          setFlightError(err.message || t("booking.flight_unavailable_desc") || "Could not load flight details.");
+          setFlightLoading(false);
+        }
+      }
+    }
+  }, [t]);
+
   useEffect(() => {
     if (params?.id) {
-      fetch(`/api/flights/${params.id}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.error) {
-            toast({ title: t("booking.error"), description: t("booking.error_desc"), variant: "destructive" });
-          } else {
-            setFlight(data);
-          }
-        })
-        .catch(err => console.error("Failed to fetch flight", err));
+      fetchFlight(params.id);
+    } else {
+      setFlightLoading(false);
     }
-  }, [params?.id]);
+  }, [params?.id, fetchFlight]);
 
-  const onSubmit = async (data: BookingFormValues) => {
+  const executeBooking = useCallback(async (data: BookingFormValues) => {
     if (!flight) return;
+    lastSubmitDataRef.current = data;
+
+    setProcessingStep("validating");
+    setProcessingError(null);
 
     try {
       const refreshRes = await fetch(`/api/flights/${flight.id}/refresh`);
       const refreshData = await refreshRes.json();
       
       if (!refreshData.valid) {
-        toast({ 
-          title: t("booking.offer_expired") || "Offer Expired", 
-          description: t("booking.offer_expired_desc") || "This flight offer has expired. Please search again for updated prices.",
-          variant: "destructive" 
-        });
+        setProcessingStep("error");
+        setProcessingError(t("booking.offer_expired_desc") || "This flight offer has expired. Please search again for updated prices.");
         return;
       }
 
       if (refreshData.price && Math.abs(refreshData.price - flight.price) > 0.01) {
         setFlight({ ...flight, price: refreshData.price, currency: refreshData.currency || flight.currency });
+        setProcessingStep(null);
         toast({ 
           title: t("booking.price_updated") || "Price Updated", 
           description: t("booking.price_updated_desc") || "The flight price has been updated. Please review the new total before proceeding.",
@@ -543,6 +785,8 @@ export default function Booking() {
     } catch (err) {
       console.warn("Could not refresh offer, proceeding with current price");
     }
+
+    setProcessingStep("creating");
 
     const passengerDetails = data.passengers.map((p, i) => ({
       ...p,
@@ -574,25 +818,46 @@ export default function Booking() {
     createBooking.mutate(bookingData as any, {
       onSuccess: (response: any) => {
         if (response.clientSecret) {
-          setPaymentData({
-            clientSecret: response.clientSecret,
-            bookingId: response.booking.id,
-            referenceCode: response.booking.referenceCode,
-            amount: grandTotal,
-            currency: flight.currency,
-          });
-          setPaymentStep(true);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          setProcessingStep("preparing");
+          setTimeout(() => {
+            setPaymentData({
+              clientSecret: response.clientSecret,
+              bookingId: response.booking.id,
+              referenceCode: response.booking.referenceCode,
+              amount: grandTotal,
+              currency: flight.currency,
+            });
+            setProcessingStep(null);
+            setPaymentStep(true);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }, 800);
         } else {
-          toast({ title: t("booking.failed"), description: t("booking.failed_desc") || "Could not initialize payment. Please try again.", variant: "destructive" });
+          setProcessingStep("error");
+          setProcessingError(t("booking.failed_desc") || "Could not initialize payment. Please try again.");
         }
       },
       onError: (error: any) => {
-        const serverMessage = error?.message || t("booking.failed_desc");
-        toast({ title: t("booking.failed"), description: serverMessage, variant: "destructive" });
+        const serverMessage = error?.message || t("booking.failed_desc") || "An error occurred while creating your booking.";
+        setProcessingStep("error");
+        setProcessingError(serverMessage);
       },
     });
+  }, [flight, grandTotal, baggageSelections, createBooking, t, toast]);
+
+  const onSubmit = async (data: BookingFormValues) => {
+    await executeBooking(data);
   };
+
+  const handleProcessingRetry = useCallback(() => {
+    if (lastSubmitDataRef.current) {
+      executeBooking(lastSubmitDataRef.current);
+    }
+  }, [executeBooking]);
+
+  const handleProcessingCancel = useCallback(() => {
+    setProcessingStep(null);
+    setProcessingError(null);
+  }, []);
 
   const stopsLabel = flight
     ? (flight.stops === 0
@@ -600,11 +865,29 @@ export default function Booking() {
       : `${flight.stops} ${flight.stops > 1 ? t("flight.stops") : t("flight.stop")}`)
     : "";
 
+  if (flightLoading) {
+    return <FlightLoadingSkeleton t={t} />;
+  }
+
+  if (flightError) {
+    return (
+      <FlightLoadError
+        error={flightError}
+        onRetry={() => params?.id && fetchFlight(params.id)}
+        onBack={() => setLocation("/")}
+        t={t}
+      />
+    );
+  }
+
   if (!flight && !params?.id) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-400">{t("booking.loading")}</div>
-      </div>
+      <FlightLoadError
+        error={t("booking.flight_unavailable_desc") || "No flight selected."}
+        onRetry={() => {}}
+        onBack={() => setLocation("/")}
+        t={t}
+      />
     );
   }
 
@@ -612,11 +895,17 @@ export default function Booking() {
   const cabinClassName = flight?.passengers?.[0]?.cabinClassName || flight?.cabinClass || "Economy";
   const fareBrand = flight?.passengers?.[0]?.fareBrandName;
 
-  const baggageExtras = baggageSelections.reduce((sum, s) => sum + (s.price || 0) * (s.quantity || 0), 0);
-  const grandTotal = (flight?.price || 0) + baggageExtras;
-
   return (
     <div className="min-h-screen bg-gray-50">
+      {processingStep && (
+        <BookingProcessingOverlay
+          step={processingStep}
+          error={processingError || undefined}
+          onRetry={handleProcessingRetry}
+          onCancel={handleProcessingCancel}
+          t={t}
+        />
+      )}
       <div className="bg-white border-b border-gray-200">
         <div className="container mx-auto max-w-6xl px-4 py-8 md:py-10">
           <div className="flex items-center gap-4 mb-2">
