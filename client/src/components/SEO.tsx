@@ -35,10 +35,6 @@ export function SEO({
       <link rel="canonical" href={url} />
       {noindex && <meta name="robots" content="noindex, nofollow" />}
 
-      <link rel="alternate" hrefLang="pt-BR" href={`${url}${url.includes('?') ? '&' : '?'}lang=pt-BR`} />
-      <link rel="alternate" hrefLang="en" href={`${url}${url.includes('?') ? '&' : '?'}lang=en`} />
-      <link rel="alternate" hrefLang="es" href={`${url}${url.includes('?') ? '&' : '?'}lang=es`} />
-      <link rel="alternate" hrefLang="x-default" href={url} />
 
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:title" content={fullTitle} />

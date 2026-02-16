@@ -1356,11 +1356,8 @@ Sitemap: ${SITE_URL}/sitemap.xml
         { url: '/privacy', priority: '0.3', changefreq: 'yearly' },
       ];
 
-      const languages = ['pt-BR', 'en', 'es'];
-
       let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 `;
 
       for (const page of staticPages) {
@@ -1369,12 +1366,8 @@ Sitemap: ${SITE_URL}/sitemap.xml
     <lastmod>${now}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
+  </url>
 `;
-        for (const lang of languages) {
-          xml += `    <xhtml:link rel="alternate" hreflang="${lang}" href="${SITE_URL}${page.url}?lang=${lang}" />\n`;
-        }
-        xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE_URL}${page.url}" />\n`;
-        xml += `  </url>\n`;
       }
 
       if (blogPosts && blogPosts.length > 0) {
