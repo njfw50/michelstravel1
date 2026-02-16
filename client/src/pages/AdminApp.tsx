@@ -395,6 +395,8 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
   const [requestingDocs, setRequestingDocs] = useState(false);
   const [creatingBooking, setCreatingBooking] = useState(false);
   const [updatingPayment, setUpdatingPayment] = useState(false);
+  const [resettingBooking, setResettingBooking] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
   const fetchLists = useCallback(async () => {
     try {
@@ -661,6 +663,7 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
   const handleApproveFlight = async (flight: FlightResult) => {
     if (!selectedSessionId || approvingFlight) return;
     setApprovingFlight(true);
+    setBookingError(null);
     try {
       const customPrice = customPrices[flight.id];
       const price = customPrice && !isNaN(parseFloat(customPrice)) ? parseFloat(customPrice) : flight.price;
@@ -675,7 +678,9 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
       });
       setBookingDrawerOpen(true);
       await fetchSessionDetail();
-    } catch {} finally {
+    } catch (err: any) {
+      setBookingError(err?.message || "Erro ao aprovar voo");
+    } finally {
       setApprovingFlight(false);
     }
   };
@@ -683,13 +688,16 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
   const handleRequestDocuments = async () => {
     if (!selectedSessionId || requestingDocs) return;
     setRequestingDocs(true);
+    setBookingError(null);
     try {
       await authFetch(`/api/live-sessions/admin/${selectedSessionId}/request-documents`, {
         method: "POST",
         body: JSON.stringify({}),
       });
       await fetchSessionDetail();
-    } catch {} finally {
+    } catch (err: any) {
+      setBookingError(err?.message || "Erro ao solicitar documentos");
+    } finally {
       setRequestingDocs(false);
     }
   };
@@ -697,13 +705,16 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
   const handleCreateBooking = async () => {
     if (!selectedSessionId || creatingBooking) return;
     setCreatingBooking(true);
+    setBookingError(null);
     try {
       await authFetch(`/api/live-sessions/admin/${selectedSessionId}/create-booking`, {
         method: "POST",
         body: JSON.stringify({}),
       });
       await fetchSessionDetail();
-    } catch {} finally {
+    } catch (err: any) {
+      setBookingError(err?.message || "Erro ao criar reserva");
+    } finally {
       setCreatingBooking(false);
     }
   };
@@ -711,14 +722,35 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
   const handleUpdatePaymentStatus = async (status: string) => {
     if (!selectedSessionId || updatingPayment) return;
     setUpdatingPayment(true);
+    setBookingError(null);
     try {
       await authFetch(`/api/live-sessions/admin/${selectedSessionId}/payment-status`, {
         method: "POST",
         body: JSON.stringify({ status }),
       });
       await fetchSessionDetail();
-    } catch {} finally {
+    } catch (err: any) {
+      setBookingError(err?.message || "Erro ao atualizar pagamento");
+    } finally {
       setUpdatingPayment(false);
+    }
+  };
+
+  const handleResetBooking = async () => {
+    if (!selectedSessionId || resettingBooking) return;
+    setResettingBooking(true);
+    setBookingError(null);
+    try {
+      await authFetch(`/api/live-sessions/admin/${selectedSessionId}/reset-booking`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
+      setBookingDrawerOpen(false);
+      await fetchSessionDetail();
+    } catch (err: any) {
+      setBookingError(err?.message || "Erro ao resetar reserva");
+    } finally {
+      setResettingBooking(false);
     }
   };
 
@@ -1040,7 +1072,7 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
                             )}
                             {isShared ? "Visível" : "Compartilhar"}
                           </Button>
-                          {!sessionBookingData?.bookingStatus && (
+                          {(!sessionBookingData?.bookingStatus || sessionBookingData.bookingStatus === "approved" || sessionBookingData.bookingStatus === "documents_requested") && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -1128,6 +1160,12 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
 
               {bookingDrawerOpen && (
                 <div className="px-3 pb-3 space-y-2">
+                  {bookingError && (
+                    <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-md p-2 text-xs text-red-600 dark:text-red-400" data-testid="booking-error">
+                      {bookingError}
+                    </div>
+                  )}
+
                   {sessionBookingData.approvedFlightData && (
                     <Card className="p-2.5 border-emerald-200 dark:border-emerald-800">
                       <div className="flex items-center gap-2 text-xs flex-wrap">
@@ -1136,10 +1174,69 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
                           {sessionBookingData.approvedFlightData.airline} {sessionBookingData.approvedFlightData.flightNumber}
                         </span>
                         <span className="ml-auto font-bold text-emerald-600">
-                          {sessionBookingData.approvedFlightData.currency} {sessionBookingData.approvedFlightData.totalAmount || sessionBookingData.approvedFlightData.price}
+                          {sessionBookingData.approvedFlightData.currency} {parseFloat(sessionBookingData.approvedFlightData.totalAmount || sessionBookingData.approvedFlightData.price || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                         </span>
                       </div>
+                      {sessionBookingData.approvedFlightData.originCode && (
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-1 flex-wrap">
+                          <span>{sessionBookingData.approvedFlightData.originCode}</span>
+                          <ArrowRight className="h-2.5 w-2.5" />
+                          <span>{sessionBookingData.approvedFlightData.destinationCode}</span>
+                          {sessionBookingData.approvedFlightData.departureTime && (
+                            <span className="ml-auto">{formatTime(sessionBookingData.approvedFlightData.departureTime)}</span>
+                          )}
+                        </div>
+                      )}
                     </Card>
+                  )}
+
+                  {(sessionBookingData.customerName || sessionBookingData.customerEmail) && (
+                    <Card className="p-2.5">
+                      <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-1">Dados do Cliente</p>
+                      <div className="space-y-0.5 text-xs">
+                        {sessionBookingData.customerName && (
+                          <div className="flex justify-between gap-2">
+                            <span className="text-muted-foreground">Nome:</span>
+                            <span className="font-medium text-foreground">{sessionBookingData.customerName}</span>
+                          </div>
+                        )}
+                        {sessionBookingData.customerEmail && (
+                          <div className="flex justify-between gap-2">
+                            <span className="text-muted-foreground">Email:</span>
+                            <span className="font-medium text-foreground">{sessionBookingData.customerEmail}</span>
+                          </div>
+                        )}
+                        {sessionBookingData.customerPhone && (
+                          <div className="flex justify-between gap-2">
+                            <span className="text-muted-foreground">Telefone:</span>
+                            <span className="font-medium text-foreground">{sessionBookingData.customerPhone}</span>
+                          </div>
+                        )}
+                      </div>
+                      {sessionBookingData.submittedDocuments?.passengers && (
+                        <div className="mt-2 pt-2 border-t border-border">
+                          <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-1">
+                            {sessionBookingData.submittedDocuments.passengers.length} Passageiro(s)
+                          </p>
+                          {sessionBookingData.submittedDocuments.passengers.map((pax: any, i: number) => (
+                            <div key={i} className="text-xs text-foreground">
+                              {pax.firstName} {pax.lastName} - {pax.dateOfBirth}
+                              {pax.documentNumber && ` - ${pax.documentType}: ${pax.documentNumber}`}
+                              {pax.nationality && ` (${pax.nationality})`}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </Card>
+                  )}
+
+                  {sessionBookingData.bookingId && (
+                    <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded-md p-2 text-xs text-center">
+                      <span className="text-muted-foreground">Ref: </span>
+                      <span className="font-bold text-emerald-700 dark:text-emerald-400" data-testid="text-booking-reference">
+                        {sessionBookingData.referenceCode || `#${sessionBookingData.bookingId}`}
+                      </span>
+                    </div>
                   )}
 
                   {sessionBookingData.bookingStatus === "approved" && (
@@ -1163,49 +1260,16 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
                   )}
 
                   {sessionBookingData.bookingStatus === "documents_submitted" && (
-                    <div className="space-y-2">
-                      <Card className="p-2.5">
-                        <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-1">Dados do Cliente</p>
-                        <div className="space-y-0.5 text-xs">
-                          <div className="flex justify-between gap-2">
-                            <span className="text-muted-foreground">Nome:</span>
-                            <span className="font-medium text-foreground">{sessionBookingData.customerName}</span>
-                          </div>
-                          <div className="flex justify-between gap-2">
-                            <span className="text-muted-foreground">Email:</span>
-                            <span className="font-medium text-foreground">{sessionBookingData.customerEmail}</span>
-                          </div>
-                          {sessionBookingData.customerPhone && (
-                            <div className="flex justify-between gap-2">
-                              <span className="text-muted-foreground">Telefone:</span>
-                              <span className="font-medium text-foreground">{sessionBookingData.customerPhone}</span>
-                            </div>
-                          )}
-                        </div>
-                        {sessionBookingData.submittedDocuments?.passengers && (
-                          <div className="mt-2 pt-2 border-t border-border">
-                            <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-1">
-                              {sessionBookingData.submittedDocuments.passengers.length} Passageiro(s)
-                            </p>
-                            {sessionBookingData.submittedDocuments.passengers.map((pax: any, i: number) => (
-                              <div key={i} className="text-xs text-foreground">
-                                {pax.firstName} {pax.lastName} - {pax.dateOfBirth} - {pax.documentType}: {pax.documentNumber}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </Card>
-                      <Button
-                        size="sm"
-                        className="w-full bg-emerald-600"
-                        onClick={handleCreateBooking}
-                        disabled={creatingBooking}
-                        data-testid="button-create-booking"
-                      >
-                        {creatingBooking ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <CheckCircle2 className="h-3.5 w-3.5 mr-1" />}
-                        Criar Reserva
-                      </Button>
-                    </div>
+                    <Button
+                      size="sm"
+                      className="w-full bg-emerald-600"
+                      onClick={handleCreateBooking}
+                      disabled={creatingBooking}
+                      data-testid="button-create-booking"
+                    >
+                      {creatingBooking ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <CheckCircle2 className="h-3.5 w-3.5 mr-1" />}
+                      Criar Reserva
+                    </Button>
                   )}
 
                   {sessionBookingData.bookingStatus === "booking_created" && (
@@ -1257,6 +1321,20 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
                       <CheckCircle2 className="h-6 w-6 text-emerald-600 mx-auto mb-1" />
                       <p className="text-xs font-medium text-emerald-600">Reserva Confirmada!</p>
                     </div>
+                  )}
+
+                  {sessionBookingData.bookingStatus !== "confirmed" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="w-full text-xs text-muted-foreground"
+                      onClick={handleResetBooking}
+                      disabled={resettingBooking}
+                      data-testid="button-reset-booking"
+                    >
+                      {resettingBooking ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <X className="h-3 w-3 mr-1" />}
+                      Cancelar e Recomecar
+                    </Button>
                   )}
                 </div>
               )}

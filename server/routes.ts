@@ -2145,7 +2145,14 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
 
       const blocks = await storage.getLiveSessionBlocks(id, true);
       const messages = await storage.getLiveSessionMessages(id);
-      res.json({ session, blocks, messages });
+
+      let referenceCode = null;
+      if (session.bookingId) {
+        const booking = await storage.getBooking(session.bookingId);
+        if (booking) referenceCode = booking.referenceCode;
+      }
+
+      res.json({ session: { ...session, referenceCode }, blocks, messages });
     } catch (error) {
       console.error("Live session get error:", error);
       res.status(500).json({ error: "Failed to get session" });
@@ -2286,7 +2293,14 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
 
       const blocks = await storage.getLiveSessionBlocks(id, false);
       const messages = await storage.getLiveSessionMessages(id);
-      res.json({ session, blocks, messages });
+
+      let referenceCode = null;
+      if (session.bookingId) {
+        const booking = await storage.getBooking(session.bookingId);
+        if (booking) referenceCode = booking.referenceCode;
+      }
+
+      res.json({ session: { ...session, referenceCode }, blocks, messages });
     } catch (error) {
       res.status(500).json({ error: "Failed to get session" });
     }
@@ -2569,6 +2583,32 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
     }
   });
 
+  app.post('/api/live-sessions/admin/:id/reset-booking', requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const session = await storage.getLiveSession(id);
+      if (!session) return res.status(404).json({ error: "Session not found" });
+
+      await storage.updateLiveSession(id, {
+        approvedOfferId: null,
+        approvedFlightData: null,
+        bookingStatus: null,
+        customerName: null,
+        customerEmail: null,
+        customerPhone: null,
+        submittedDocuments: null,
+        bookingId: null,
+      });
+
+      notifyLiveSessionClients(id, "booking_update", {
+        bookingStatus: null,
+      });
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to reset booking" });
+    }
+  });
+
   // Get booking status for client side
   app.get('/api/live-sessions/:id/booking-status', async (req, res) => {
     try {
@@ -2579,12 +2619,19 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
       const session = await storage.getLiveSession(id);
       if (!session || session.accessToken !== token) return res.status(403).json({ error: "Invalid token" });
 
+      let referenceCode = null;
+      if (session.bookingId) {
+        const booking = await storage.getBooking(session.bookingId);
+        if (booking) referenceCode = booking.referenceCode;
+      }
+
       res.json({
         bookingStatus: session.bookingStatus,
         approvedFlightData: session.approvedFlightData,
         customerName: session.customerName,
         customerEmail: session.customerEmail,
         bookingId: session.bookingId,
+        referenceCode,
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to get booking status" });

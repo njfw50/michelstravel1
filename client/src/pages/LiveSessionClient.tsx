@@ -398,18 +398,25 @@ function BookingDrawer({
                 })}
               </div>
 
-              {flightData && (bookingStatus === "approved" || bookingStatus === "documents_requested") && (
+              {flightData && (
                 <Card className="p-3">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <Plane className="h-3.5 w-3.5 text-[#0074DE]" />
                     <span className="text-xs font-semibold text-foreground">Voo Selecionado</span>
                     <span className="ml-auto text-sm font-bold text-[#0074DE]">
-                      {flightData.currency} {flightData.totalAmount || flightData.price}
+                      {flightData.currency} {parseFloat(flightData.totalAmount || flightData.price || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {flightData.airline} {flightData.flightNumber && `- ${flightData.flightNumber}`}
                   </div>
+                  {flightData.originCode && (
+                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-1 flex-wrap">
+                      <span>{flightData.originCode}</span>
+                      <ArrowRight className="h-2.5 w-2.5" />
+                      <span>{flightData.destinationCode}</span>
+                    </div>
+                  )}
                 </Card>
               )}
 
@@ -537,6 +544,15 @@ function BookingDrawer({
                   <p className="text-sm font-medium text-foreground">Documentos enviados com sucesso</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     O agente esta processando sua reserva. Aguarde a confirmacao.
+                  </p>
+                </div>
+              )}
+
+              {(session as any).referenceCode && (
+                <div className="bg-[#0074DE]/5 rounded-md p-2.5 text-center" data-testid="booking-reference-display">
+                  <span className="text-[10px] text-muted-foreground uppercase">Codigo de Reserva</span>
+                  <p className="text-base font-bold text-[#0074DE] tracking-wider" data-testid="text-customer-reference">
+                    {(session as any).referenceCode}
                   </p>
                 </div>
               )}
