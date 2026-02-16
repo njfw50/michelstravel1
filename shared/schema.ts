@@ -81,6 +81,14 @@ export const liveSessions = pgTable("live_sessions", {
   language: text("language").default("pt"),
   status: text("status").default("requested").notNull(), // requested, active, closed
   whatsappLink: text("whatsapp_link"),
+  approvedOfferId: text("approved_offer_id"),
+  approvedFlightData: jsonb("approved_flight_data"),
+  bookingId: integer("booking_id"),
+  bookingStatus: text("booking_status"), // null, approved, documents_requested, documents_submitted, booking_created, payment_pending, confirmed
+  customerName: text("customer_name"),
+  customerEmail: text("customer_email"),
+  customerPhone: text("customer_phone"),
+  submittedDocuments: jsonb("submitted_documents"),
   createdAt: timestamp("created_at").defaultNow(),
   closedAt: timestamp("closed_at"),
 });

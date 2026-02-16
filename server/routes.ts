@@ -2385,4 +2385,205 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
     }
   });
 
+  // ===== BOOKING DRAWER WORKFLOW =====
+
+  // Admin approves a flight for booking (sets the offer to proceed with)
+  app.post('/api/live-sessions/admin/:id/approve-flight', requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { offerId, flightData } = req.body;
+      if (!offerId || !flightData) return res.status(400).json({ error: "offerId and flightData required" });
+
+      const session = await storage.updateLiveSession(id, {
+        approvedOfferId: offerId,
+        approvedFlightData: flightData,
+        bookingStatus: "approved",
+      });
+      if (!session) return res.status(404).json({ error: "Session not found" });
+
+      notifyLiveSessionClients(id, "booking_update", {
+        bookingStatus: "approved",
+        approvedFlightData: flightData,
+      });
+      res.json(session);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to approve flight" });
+    }
+  });
+
+  // Admin requests documents from customer
+  app.post('/api/live-sessions/admin/:id/request-documents', requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const session = await storage.updateLiveSession(id, {
+        bookingStatus: "documents_requested",
+      });
+      if (!session) return res.status(404).json({ error: "Session not found" });
+
+      notifyLiveSessionClients(id, "booking_update", {
+        bookingStatus: "documents_requested",
+        approvedFlightData: session.approvedFlightData,
+      });
+      res.json(session);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to request documents" });
+    }
+  });
+
+  // Customer submits documents (name, email, phone, passenger info)
+  app.post('/api/live-sessions/:id/submit-documents', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const token = req.query.token as string;
+      if (!token) return res.status(401).json({ error: "Access token required" });
+
+      const session = await storage.getLiveSession(id);
+      if (!session || session.accessToken !== token) return res.status(403).json({ error: "Invalid token" });
+      if (session.bookingStatus !== "documents_requested") return res.status(400).json({ error: "Documents not requested" });
+
+      const { customerName, customerEmail, customerPhone, passengers } = req.body;
+      if (!customerName || !customerEmail || !passengers) {
+        return res.status(400).json({ error: "Name, email and passenger details required" });
+      }
+      if (typeof customerName !== "string" || typeof customerEmail !== "string") {
+        return res.status(400).json({ error: "Invalid field types" });
+      }
+      if (!customerEmail.includes("@")) {
+        return res.status(400).json({ error: "Invalid email" });
+      }
+      if (!Array.isArray(passengers) || passengers.length === 0) {
+        return res.status(400).json({ error: "At least one passenger required" });
+      }
+      for (const pax of passengers) {
+        if (!pax.firstName || !pax.lastName || !pax.dateOfBirth) {
+          return res.status(400).json({ error: "Each passenger must have firstName, lastName, dateOfBirth" });
+        }
+      }
+
+      const updated = await storage.updateLiveSession(id, {
+        customerName,
+        customerEmail,
+        customerPhone: customerPhone || null,
+        submittedDocuments: { passengers },
+        bookingStatus: "documents_submitted",
+      });
+
+      notifyLiveSessionClients(id, "booking_update", {
+        bookingStatus: "documents_submitted",
+        customerName,
+        customerEmail,
+        customerPhone,
+        submittedDocuments: { passengers },
+      });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to submit documents" });
+    }
+  });
+
+  // Admin creates the booking on behalf of the customer
+  app.post('/api/live-sessions/admin/:id/create-booking', requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const session = await storage.getLiveSession(id);
+      if (!session) return res.status(404).json({ error: "Session not found" });
+      if (session.bookingStatus !== "documents_submitted") {
+        return res.status(400).json({ error: "Documents not yet submitted" });
+      }
+
+      const flightData = session.approvedFlightData as any;
+      const docs = session.submittedDocuments as any;
+      if (!flightData || !docs) return res.status(400).json({ error: "Missing flight or document data" });
+
+      const referenceCode = `MT-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+      const commissionRate = await getCommissionRate();
+      const totalPrice = parseFloat(flightData.totalAmount || flightData.price || "0");
+      const commissionAmount = totalPrice * (commissionRate / (1 + commissionRate));
+      const basePrice = totalPrice - commissionAmount;
+
+      const booking = await storage.createBooking({
+        referenceCode,
+        userId: null as any,
+        offerId: session.approvedOfferId!,
+        status: "pending",
+        totalPrice: totalPrice.toFixed(2),
+        currency: flightData.currency || "USD",
+        commissionAmount: commissionAmount.toFixed(2),
+        basePrice: basePrice.toFixed(2),
+        passengers: docs.passengers,
+        flightDetails: flightData,
+        contactEmail: session.customerEmail,
+        contactPhone: session.customerPhone,
+        paymentIntentId: null as any,
+        duffelOrderId: null as any,
+        stripeSessionId: null as any,
+      });
+
+      await storage.updateLiveSession(id, {
+        bookingId: booking.id,
+        bookingStatus: "booking_created",
+      });
+
+      notifyLiveSessionClients(id, "booking_update", {
+        bookingStatus: "booking_created",
+        bookingId: booking.id,
+        referenceCode,
+      });
+      res.json({ booking, referenceCode });
+    } catch (error: any) {
+      console.error("Create booking error:", error);
+      res.status(500).json({ error: "Failed to create booking" });
+    }
+  });
+
+  // Admin marks booking as payment pending (manual/external payment)
+  app.post('/api/live-sessions/admin/:id/payment-status', requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      if (!["payment_pending", "confirmed"].includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+
+      const session = await storage.getLiveSession(id);
+      if (!session) return res.status(404).json({ error: "Session not found" });
+
+      await storage.updateLiveSession(id, { bookingStatus: status });
+
+      if (status === "confirmed" && session.bookingId) {
+        await storage.updateBooking(session.bookingId, { status: "confirmed" });
+      }
+
+      notifyLiveSessionClients(id, "booking_update", {
+        bookingStatus: status,
+      });
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update payment status" });
+    }
+  });
+
+  // Get booking status for client side
+  app.get('/api/live-sessions/:id/booking-status', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const token = req.query.token as string;
+      if (!token) return res.status(401).json({ error: "Access token required" });
+
+      const session = await storage.getLiveSession(id);
+      if (!session || session.accessToken !== token) return res.status(403).json({ error: "Invalid token" });
+
+      res.json({
+        bookingStatus: session.bookingStatus,
+        approvedFlightData: session.approvedFlightData,
+        customerName: session.customerName,
+        customerEmail: session.customerEmail,
+        bookingId: session.bookingId,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get booking status" });
+    }
+  });
+
 }

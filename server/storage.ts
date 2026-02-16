@@ -27,6 +27,7 @@ export interface IStorage extends IAuthStorage {
 
   // Bookings
   createBooking(booking: InsertBooking): Promise<Booking>;
+  updateBooking(id: number, updates: Partial<InsertBooking>): Promise<Booking | undefined>;
   getBookings(userId?: string): Promise<Booking[]>;
   getBooking(id: number): Promise<Booking | undefined>;
   getBookingByReference(referenceCode: string): Promise<Booking | undefined>;
@@ -51,6 +52,7 @@ export interface IStorage extends IAuthStorage {
   getLiveSessionRequests(): Promise<LiveSession[]>;
   getActiveLiveSessions(): Promise<LiveSession[]>;
   updateLiveSessionStatus(id: number, status: string): Promise<LiveSession | undefined>;
+  updateLiveSession(id: number, updates: Record<string, any>): Promise<LiveSession | undefined>;
   createLiveSessionBlock(block: InsertLiveSessionBlock): Promise<LiveSessionBlock>;
   updateLiveSessionBlock(id: number, updates: Partial<InsertLiveSessionBlock>): Promise<LiveSessionBlock | undefined>;
   getLiveSessionBlocks(sessionId: number, sharedOnly?: boolean): Promise<LiveSessionBlock[]>;
@@ -104,6 +106,11 @@ export class DatabaseStorage implements IStorage {
   async createBooking(booking: InsertBooking): Promise<Booking> {
     const [newBooking] = await db.insert(bookings).values(booking).returning();
     return newBooking;
+  }
+
+  async updateBooking(id: number, updates: Partial<InsertBooking>): Promise<Booking | undefined> {
+    const [b] = await db.update(bookings).set(updates).where(eq(bookings.id, id)).returning();
+    return b;
   }
 
   async getBookings(userId?: string): Promise<Booking[]> {
@@ -297,6 +304,11 @@ export class DatabaseStorage implements IStorage {
   async updateLiveSessionStatus(id: number, status: string): Promise<LiveSession | undefined> {
     const updates: any = { status };
     if (status === "closed") updates.closedAt = new Date();
+    const [s] = await db.update(liveSessions).set(updates).where(eq(liveSessions.id, id)).returning();
+    return s;
+  }
+
+  async updateLiveSession(id: number, updates: Record<string, any>): Promise<LiveSession | undefined> {
     const [s] = await db.update(liveSessions).set(updates).where(eq(liveSessions.id, id)).returning();
     return s;
   }

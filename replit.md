@@ -2,7 +2,7 @@
 
 ## Overview
 
-Michels Travel ("Opção Eficiente") is a full-stack flight booking platform that allows users to search for flights, book them with Stripe payments, and manage bookings. It's a commission-based travel agency app targeting Brazilian/Portuguese-speaking customers, with multi-language support (Portuguese, English, Spanish). The app integrates with the Duffel API for real-time flight search and pricing, uses Stripe for payment processing, and includes an admin dashboard for monitoring revenue and bookings. Includes a test mode toggle system for production safety.
+Michels Travel is a full-stack flight booking platform designed for Brazilian/Portuguese-speaking customers, with multi-language support. It enables users to search, book, and manage flights, integrating with the Duffel API for real-time data and Stripe for payments. The platform operates on a commission-based model, featuring an admin dashboard for business oversight and an AI chatbot for customer support. A key component is the live sales session feature, allowing administrators to assist customers in real-time, sharing custom flight offers, and managing the booking workflow.
 
 ## User Preferences
 
@@ -10,168 +10,35 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Frontend (React SPA)
-- **Framework**: React 18 with TypeScript, bundled by Vite
-- **Routing**: Wouter (lightweight client-side router)
-- **State/Data Fetching**: TanStack React Query for server state management with a custom `apiRequest` helper and `queryClient` configuration
-- **UI Components**: shadcn/ui (new-york style) built on Radix UI primitives, styled with Tailwind CSS and CSS variables for theming
-- **Animations**: Framer Motion for page transitions and UI interactions
-- **Charts**: Recharts for admin dashboard analytics
-- **Internationalization**: Custom i18n system with React Context (`I18nProvider`) supporting pt/en/es, stored in localStorage with a language selection modal on first visit
-- **Design**: Light Venmo-inspired theme (clean bold typography, card-based sections, blue/white color scheme) with Universal Orlando cinematic hero. White/light gray background, blue (#0074DE) primary, white cards with subtle borders and shadows. Fonts are Outfit (display) and DM Sans (body). Hero section uses dark wash over full-bleed imagery with white text
-- **Path aliases**: `@/` maps to `client/src/`, `@shared/` maps to `shared/`, `@assets/` maps to `attached_assets/`
+### Frontend
+- **Technology**: React 18 with TypeScript, Vite, Wouter for routing, TanStack React Query for state management.
+- **UI/UX**: shadcn/ui (new-york style) with Radix UI, Tailwind CSS, Framer Motion for animations.
+- **Theming**: Light Venmo-inspired design with a blue/white color scheme, Outfit (display) and DM Sans (body) fonts.
+- **Internationalization**: Custom i18n system for pt/en/es.
+- **Admin Mobile App**: PWA (`/atendimento`) for real-time customer support, using JWT for authentication.
 
-### Backend (Express + Node.js)
-- **Framework**: Express.js running on Node with TypeScript (via tsx in dev, esbuild for production)
-- **API Pattern**: RESTful JSON API under `/api/` prefix. Routes defined in `server/routes.ts` with typed schemas in `shared/routes.ts`
-- **Authentication**: Replit Auth via OpenID Connect (OIDC) with Passport.js, session-based auth stored in PostgreSQL via `connect-pg-simple`. Auth integration lives in `server/replit_integrations/auth/`
-- **Database**: PostgreSQL with Drizzle ORM. Schema defined in `shared/schema.ts` and `shared/models/auth.ts`. Use `npm run db:push` (drizzle-kit push) for schema migrations
-- **Session Management**: Express sessions with PostgreSQL session store, 1-week TTL
+### Backend
+- **Technology**: Express.js on Node.js with TypeScript, Drizzle ORM for PostgreSQL.
+- **API**: RESTful JSON API with Zod schemas for validation.
+- **Authentication**: Replit Auth via OpenID Connect (OIDC) with Passport.js, session-based storage in PostgreSQL.
+- **Data Models**: Key models include `users`, `bookings`, `flight_searches`, `site_settings`, `blog_posts`, `live_sessions`, `conversations`, and `messages`.
+- **Commission System**: A default 8.5% commission rate is applied server-side to all flight prices, configurable via the Admin Dashboard.
 
-### Shared Layer (`shared/`)
-- `schema.ts` — Drizzle table definitions (flight_searches, bookings, site_settings, blog_posts) plus re-exports auth models
-- `models/auth.ts` — Users and sessions tables (required for Replit Auth, do not drop)
-- `routes.ts` — API route contracts with Zod schemas for input validation and response parsing, used by both client hooks and server handlers
-
-### Key Data Models
-- **users** — Auth users with phone, optional Stripe customer/subscription IDs, and admin flag. Profile editable via `/profile` page
-- **sessions** — PostgreSQL-backed session storage for Replit Auth
-- **flight_searches** — Search history/cache for SEO and popular destinations
-- **bookings** — Flight booking records with commission tracking, Stripe payment status, passenger details as JSONB
-- **site_settings** — Admin-configurable site name, commission percentage, hero text
-- **blog_posts** — CMS-style blog content with slugs, cover images, excerpts
-
-### Storage Pattern
-- `server/storage.ts` exports a `DatabaseStorage` class implementing `IStorage` interface
-- Auth operations are delegated to `authStorage` from the Replit Auth integration
-- Stripe product/price data is read from synced tables (via `stripe-replit-sync`)
-
-### Build System
-- **Dev**: `tsx server/index.ts` with Vite dev server middleware for HMR
-- **Production**: Client built with Vite to `dist/public/`, server bundled with esbuild to `dist/index.cjs`. Specific dependencies are bundled (allowlisted) to reduce cold start times
-- **Static serving**: In production, Express serves the Vite build output and falls back to `index.html` for SPA routing
+### Core Features
+- **Flight Search & Booking**: Real-time flight search, offer requests, and booking through Duffel API.
+- **Payment Processing**: Stripe integration for secure payments using Payment Intents and Elements.
+- **Ancillary Services**: Support for baggage selection and loyalty programs.
+- **Booking Management**: User-facing "My Trips" and admin dashboard for managing bookings, cancellations, and refunds.
+- **AI Chatbot**: "Mia" provides multi-language customer support, capable of escalating issues to human agents and notifying admins via email.
+- **Live Sales Sessions**: A comprehensive platform for admins to engage with customers in real-time, share customized flight offers, and manage a guided booking workflow with secret price editing and selective sharing.
+- **Email Service**: Nodemailer for sending booking confirmations.
+- **SEO**: Dynamic sitemap, robots.txt, `react-helmet-async` for per-page SEO, and structured data.
 
 ## External Dependencies
 
-### Duffel API (Flight Search & Ancillary Services)
-- Provides real-time flight search, offer requests, and place/airport autocomplete
-- Supports multi-city (multi-slice) searches via `legs` param with `tripType=multi-city`
-- Baggage services: `GET /api/flights/:offerId/baggage` — available extra bag options
-- Order cancellation: `POST /api/bookings/:id/cancel` — cancels via Duffel, returns refund amount
-- Refund quotes: `GET /api/flights/orders/:orderId/refund-quote`
-- Requires `DUFFEL_API_TOKEN` environment variable
-- Integration in `server/services/duffel.ts` (searchFlights, getBaggageServices, cancelOrder, getRefundQuote)
-- Falls back gracefully (empty results) if token is missing
-
-### Ancillary Features
-- **Baggage Services**: Extra bag purchase (`client/src/components/BaggageSelector.tsx`) with per-passenger pricing added to checkout total
-- **Loyalty Programs**: Optional frequent flyer number + airline program fields in passenger booking form
-- **Multi-city Search**: Trip type tabs (round-trip, one-way, multi-city) with dynamic leg builder (2-5 legs). Backend builds multi-slice Duffel offer requests
-- **Booking Cancellation**: Cancel button on My Trips page with confirmation dialog, refund amount display, and proper react-query cache invalidation
-
-### Stripe (Payments)
-- Embedded payment form using Stripe Elements (PaymentElement) — card fields shown directly in the booking page
-- Two-step booking flow: Step 1 = passenger details, Step 2 = embedded payment form with card number, expiry, CVC
-- Backend creates PaymentIntent (not Checkout Session) and returns clientSecret to frontend
-- Frontend uses @stripe/react-stripe-js Elements to render payment form
-- Webhook handles both `payment_intent.succeeded` and `checkout.session.completed` events
-- Handles one-time flight booking payments and subscription checkout sessions
-- Uses Replit's Stripe connector for credentials (`server/stripeClient.ts`) — fetches keys dynamically based on deployment environment (dev vs production)
-- `stripe-replit-sync` manages webhook registration and syncs product/price data to PostgreSQL
-- Webhook endpoint must be registered before `express.json()` middleware to receive raw Buffer payloads
-- Key files: `server/stripeClient.ts`, `server/stripeService.ts`, `server/webhookHandlers.ts`
-
-### PostgreSQL Database
-- Required via `DATABASE_URL` environment variable
-- Used for all data storage: users, sessions, bookings, flight searches, site settings, blog posts, and Stripe sync tables
-- Managed with Drizzle ORM (`drizzle-orm/node-postgres`) and `pg` Pool
-
-### Replit Auth (OpenID Connect)
-- Authentication via Replit's OIDC provider
-- Requires `ISSUER_URL`, `REPL_ID`, `SESSION_SECRET` environment variables
-- Sessions stored in PostgreSQL `sessions` table
-- Integration files in `server/replit_integrations/auth/`
-
-### Email Service (Booking Confirmations)
-- Nodemailer-based email service for sending booking confirmations
-- Sends professional HTML emails with reference code, flight details, passengers, pricing
-- Gracefully degrades (logs to console) when SMTP not configured
-- Triggered automatically on test mode bookings and via `/api/bookings/:id/send-confirmation` endpoint
-- Key file: `server/services/emailService.ts`
-- Optional env vars: `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_PORT`
-
-### AI Chatbot (Customer Support)
-- Floating chat widget on all pages with AI assistant "Mia"
-- Uses Replit AI Integrations (OpenAI-compatible, gpt-5-nano model) - no API key needed
-- Multi-language support: responds in same language customer writes (pt/en/es)
-- System prompt trained on Michels Travel business info (services, booking flow, contact)
-- Streaming responses via SSE for real-time chat experience
-- Escalation system: AI detects when customer needs human help via `[ESCALATE]` marker
-- When escalation triggers: updates DB, sends email notification to owner (reservastrens@gmail.com)
-- Admin can view escalated conversations at `/api/admin/chatbot/escalations`
-- WhatsApp video call button in chatbot footer (wa.me/18623501161)
-- Database tables: `conversations` (with escalation tracking) and `messages`
-- Key files: `client/src/components/Chatbot.tsx`, chatbot routes in `server/routes.ts`
-- API endpoints: `POST /api/chatbot/session`, `POST /api/chatbot/message`, `GET /api/chatbot/history/:id`
-
-### Admin Mobile App (PWA) — /atendimento
-- Standalone PWA installable on mobile phones for real-time customer support
-- Separate auth system using JWT tokens (no cookies) — works on any mobile browser
-- Login with admin password (`ADMIN_PASSWORD` env secret), rate-limited (5 attempts/15min)
-- JWT tokens signed with `SESSION_SECRET`, expire in 12 hours
-- Mobile-first UI: conversation list → tap to open full-screen chat → reply
-- WhatsApp video call shortcut in chat header
-- `requireAdmin` middleware accepts both session cookies AND JWT Bearer tokens
-- PWA manifest at `/manifest.json`, service worker at `/sw.js`
-- Key files: `client/src/pages/AdminApp.tsx`, API routes `/api/admin-app/*`
-- Admin API routes added to stateless paths (no cookie requirement)
-
-### Live Sales Sessions (Full Selling Platform)
-- Customers request live help from the chatbot ("Atendimento ao Vivo" button)
-- Admin sees requests in /atendimento PWA (Vendas tab) and accepts them
-- **Full selling workspace**: Admin searches flights (same Duffel API as main site) and has full control
-- **Secret price editing**: Admin can customize flight prices per-flight (original shown as strikethrough, custom price in green). Customer only sees the price the admin decides to share — never the original markup price
-- **Selective sharing**: Each flight has a "Compartilhar" button to share with customer. Only shared flights appear on customer's screen
-- **Price update**: If a flight is already shared and admin changes the custom price, they can click "Atualizar" to push the new price to the customer's view
-- **Custom notes**: Admin can type and send notes to customer (e.g., "Inclui 1 mala de 23kg")
-- **Pricing summary**: Auto-calculated total of all shared flights. Admin can send a pricing breakdown to customer showing each flight + total
-- Customer views shared content in real-time at `/live/:sessionId?token=xxx`
-- Both sides can chat via live session messages (collapsible chat at bottom)
-- Security: Per-session access tokens (nanoid 32-char) required for all client endpoints; prevents session enumeration
-- SSE (Server-Sent Events) for real-time updates to client page
-- Database tables: `live_sessions` (with accessToken), `live_session_blocks` (shared flag), `live_session_messages`
-- Block types: search_results, offer_detail, pricing, baggage, custom_note
-- Key files: `client/src/pages/AdminApp.tsx` (Vendas tab), `client/src/pages/LiveSessionClient.tsx`, live session routes in `server/routes.ts`
-- API endpoints: `POST /api/live-sessions/request`, `GET /api/live-sessions/:id?token=`, `GET /api/live-sessions/:id/stream?token=`, `POST /api/live-sessions/:id/messages`
-- Admin endpoints (JWT protected): `/api/live-sessions/admin/requests`, `/api/live-sessions/admin/active`, `/api/live-sessions/admin/:id`, `/api/live-sessions/admin/:id/accept`, `/api/live-sessions/admin/:id/blocks`, `/api/live-sessions/admin/blocks/:blockId` (PATCH/DELETE), `/api/live-sessions/admin/:id/messages`, `/api/live-sessions/admin/:id/close`, `/api/live-sessions/admin/search-flights`
-
-### Post-Sale System
-- **Reference Codes**: MT-XXXXXX format generated for every booking
-- **Confirmation Page**: `/checkout/success` — comprehensive booking confirmation with print support
-- **My Trips Page**: `/my-trips` — customer dashboard showing booking history (logged-in) and booking lookup (by reference + email)
-- **Booking Lookup API**: `GET /api/bookings/lookup?reference=MT-XXX&email=...` for non-logged-in users
-
-### SEO System
-- **Meta tags**: Comprehensive meta tags in `client/index.html` (title, description, OG, Twitter Cards, JSON-LD)
-- **Per-page SEO**: `client/src/components/SEO.tsx` component using `react-helmet-async` — added to all major pages
-- **Sitemap**: Dynamic `GET /sitemap.xml` endpoint with static pages + blog posts
-- **Robots**: `GET /robots.txt` blocks /admin, /checkout/, /profile, /my-trips, /search, /book/, /api/
-- **Structured Data**: JSON-LD for TravelAgency and WebSite schemas in index.html
-- **Dynamic lang**: HTML `lang` attribute updates based on selected language (pt-BR, en, es)
-- **Domain**: https://buyflights.net
-- **Contact**: reservastrens@gmail.com, +1 (862) 350-1161, New Jersey, USA
-
-### Required Environment Variables
-- `DATABASE_URL` — PostgreSQL connection string
-- `DUFFEL_API_TOKEN` — Duffel flight API key
-- `SESSION_SECRET` — Express session secret
-- `REPL_ID` — Replit environment identifier (auto-set by Replit)
-- Stripe credentials are fetched dynamically via Replit connectors (not env vars)
-- `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_PORT` — Optional, for sending booking confirmation emails
-
-### Commission/Markup System (Updated Feb 2026)
-- Default commission rate: **8.5%** (configurable in Admin Dashboard)
-- Markup is applied **server-side** to all flight prices before returning to the client (search, details, refresh, flight board, chatbot, seat map, baggage services)
-- Customers see and pay the marked-up price; Duffel base prices are never exposed
-- Commission tracking in bookings uses reverse calculation: `commissionAmount = totalPrice * (rate / (1 + rate))` since totalPrice already includes markup
-- Helper functions in `server/routes.ts`: `getCommissionRate()`, `applyMarkupToFlight()`, `applyMarkupToFlights()`
+-   **Duffel API**: For real-time flight search, offer requests, order cancellation, and ancillary services.
+-   **Stripe**: For processing all payments, including flight bookings and managing webhooks.
+-   **PostgreSQL Database**: Primary data store for all application data, sessions, and synchronized Stripe product/price data.
+-   **Replit Auth**: OpenID Connect provider for user authentication.
+-   **Nodemailer**: For sending email notifications and booking confirmations.
+-   **Replit AI Integrations**: Used for the AI chatbot "Mia" (OpenAI-compatible, gpt-5-nano model).

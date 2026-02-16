@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
@@ -20,6 +21,13 @@ import {
   CheckCircle2,
   User,
   UserCheck,
+  FileText,
+  ShieldCheck,
+  CreditCard,
+  ChevronUp,
+  ChevronDown,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import type { FlightOffer, FlightSlice, LiveSessionBlock, LiveSessionMessage } from "@shared/schema";
 
@@ -31,9 +39,27 @@ interface SessionData {
     language: string | null;
     createdAt: string;
     closedAt: string | null;
+    bookingStatus: string | null;
+    approvedFlightData: any;
+    customerName: string | null;
+    customerEmail: string | null;
+    customerPhone: string | null;
+    submittedDocuments: any;
+    bookingId: number | null;
   };
   blocks: LiveSessionBlock[];
   messages: LiveSessionMessage[];
+}
+
+interface PassengerForm {
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  gender: string;
+  documentType: string;
+  documentNumber: string;
+  documentExpiry: string;
+  nationality: string;
 }
 
 function formatTime(dateStr: string) {
@@ -258,6 +284,311 @@ function CustomNoteBlock({ payload }: { payload: any }) {
   );
 }
 
+function BookingDrawer({
+  session,
+  sessionId,
+  accessToken,
+  onUpdate,
+}: {
+  session: SessionData["session"];
+  sessionId: string;
+  accessToken: string;
+  onUpdate: () => void;
+}) {
+  const [expanded, setExpanded] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [passengers, setPassengers] = useState<PassengerForm[]>([
+    { firstName: "", lastName: "", dateOfBirth: "", gender: "male", documentType: "passport", documentNumber: "", documentExpiry: "", nationality: "" },
+  ]);
+
+  const bookingStatus = session.bookingStatus;
+  const flightData = session.approvedFlightData;
+
+  if (!bookingStatus) return null;
+
+  const addPassenger = () => {
+    setPassengers([...passengers, { firstName: "", lastName: "", dateOfBirth: "", gender: "male", documentType: "passport", documentNumber: "", documentExpiry: "", nationality: "" }]);
+  };
+
+  const removePassenger = (idx: number) => {
+    if (passengers.length <= 1) return;
+    setPassengers(passengers.filter((_, i) => i !== idx));
+  };
+
+  const updatePassenger = (idx: number, field: keyof PassengerForm, value: string) => {
+    const updated = [...passengers];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setPassengers(updated);
+  };
+
+  const handleSubmitDocuments = async () => {
+    if (!customerName.trim() || !customerEmail.trim()) return;
+    const hasInvalidPassenger = passengers.some(p => !p.firstName.trim() || !p.lastName.trim() || !p.dateOfBirth);
+    if (hasInvalidPassenger) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/live-sessions/${sessionId}/submit-documents?token=${encodeURIComponent(accessToken)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerName, customerEmail, customerPhone, passengers }),
+      });
+      if (res.ok) onUpdate();
+    } catch {
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const statusSteps = [
+    { key: "approved", label: "Voo Aprovado", icon: Plane },
+    { key: "documents_requested", label: "Documentos", icon: FileText },
+    { key: "documents_submitted", label: "Enviados", icon: ShieldCheck },
+    { key: "booking_created", label: "Reserva", icon: CheckCircle2 },
+    { key: "payment_pending", label: "Pagamento", icon: CreditCard },
+    { key: "confirmed", label: "Confirmado", icon: CheckCircle2 },
+  ];
+
+  const currentStepIndex = statusSteps.findIndex(s => s.key === bookingStatus);
+
+  return (
+    <div className="border-t border-border bg-card" data-testid="booking-drawer">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between gap-2 px-4 py-2.5 hover-elevate"
+        data-testid="button-toggle-booking-drawer"
+      >
+        <div className="flex items-center gap-2">
+          <FileText className="h-4 w-4 text-[#0074DE]" />
+          <span className="text-sm font-semibold text-foreground">Reserva em Andamento</span>
+          {bookingStatus === "confirmed" && (
+            <Badge variant="default" className="bg-emerald-600 text-white text-[10px]">Confirmado</Badge>
+          )}
+        </div>
+        {expanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronUp className="h-4 w-4 text-muted-foreground" />}
+      </button>
+
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 space-y-3">
+              <div className="flex items-center gap-1 overflow-x-auto pb-1" data-testid="booking-progress-steps">
+                {statusSteps.map((step, i) => {
+                  const isActive = i <= currentStepIndex;
+                  const Icon = step.icon;
+                  return (
+                    <div key={step.key} className="flex items-center gap-1 flex-shrink-0">
+                      <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] ${isActive ? "bg-[#0074DE]/10 text-[#0074DE] font-medium" : "text-muted-foreground"}`}>
+                        <Icon className="h-3 w-3" />
+                        <span className="hidden sm:inline">{step.label}</span>
+                      </div>
+                      {i < statusSteps.length - 1 && (
+                        <div className={`w-3 h-px ${i < currentStepIndex ? "bg-[#0074DE]" : "bg-border"}`} />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {flightData && (bookingStatus === "approved" || bookingStatus === "documents_requested") && (
+                <Card className="p-3">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <Plane className="h-3.5 w-3.5 text-[#0074DE]" />
+                    <span className="text-xs font-semibold text-foreground">Voo Selecionado</span>
+                    <span className="ml-auto text-sm font-bold text-[#0074DE]">
+                      {flightData.currency} {flightData.totalAmount || flightData.price}
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {flightData.airline} {flightData.flightNumber && `- ${flightData.flightNumber}`}
+                  </div>
+                </Card>
+              )}
+
+              {bookingStatus === "approved" && (
+                <div className="text-center py-3">
+                  <div className="h-10 w-10 rounded-full bg-[#0074DE]/10 flex items-center justify-center mx-auto mb-2">
+                    <Clock className="h-5 w-5 text-[#0074DE]" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground">Voo aprovado pelo agente</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Aguarde a solicitacao de documentos para prosseguir com a reserva.
+                  </p>
+                </div>
+              )}
+
+              {bookingStatus === "documents_requested" && (
+                <div className="space-y-3" data-testid="documents-form">
+                  <div className="text-center pb-2">
+                    <p className="text-sm font-medium text-foreground">Preencha seus dados para a reserva</p>
+                    <p className="text-xs text-muted-foreground">Informacoes necessarias para emitir a passagem</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div>
+                      <Label className="text-xs">Nome Completo *</Label>
+                      <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Seu nome completo" data-testid="input-customer-name" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Email *</Label>
+                        <Input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} placeholder="email@exemplo.com" data-testid="input-customer-email" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Telefone</Label>
+                        <Input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="+55 11 99999-9999" data-testid="input-customer-phone" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <Label className="text-xs font-semibold">Passageiros</Label>
+                      <Button size="sm" variant="outline" onClick={addPassenger} data-testid="button-add-passenger">
+                        <Plus className="h-3 w-3 mr-1" /> Adicionar
+                      </Button>
+                    </div>
+
+                    {passengers.map((pax, idx) => (
+                      <Card key={idx} className="p-3 space-y-2" data-testid={`passenger-form-${idx}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-medium text-foreground">Passageiro {idx + 1}</span>
+                          {passengers.length > 1 && (
+                            <Button size="icon" variant="ghost" onClick={() => removePassenger(idx)} data-testid={`button-remove-passenger-${idx}`}>
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-[10px]">Nome *</Label>
+                            <Input value={pax.firstName} onChange={(e) => updatePassenger(idx, "firstName", e.target.value)} placeholder="Nome" data-testid={`input-pax-firstname-${idx}`} />
+                          </div>
+                          <div>
+                            <Label className="text-[10px]">Sobrenome *</Label>
+                            <Input value={pax.lastName} onChange={(e) => updatePassenger(idx, "lastName", e.target.value)} placeholder="Sobrenome" data-testid={`input-pax-lastname-${idx}`} />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-[10px]">Data de Nasc. *</Label>
+                            <Input type="date" value={pax.dateOfBirth} onChange={(e) => updatePassenger(idx, "dateOfBirth", e.target.value)} data-testid={`input-pax-dob-${idx}`} />
+                          </div>
+                          <div>
+                            <Label className="text-[10px]">Genero</Label>
+                            <select value={pax.gender} onChange={(e) => updatePassenger(idx, "gender", e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm" data-testid={`select-pax-gender-${idx}`}>
+                              <option value="male">Masculino</option>
+                              <option value="female">Feminino</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-[10px]">Tipo Doc.</Label>
+                            <select value={pax.documentType} onChange={(e) => updatePassenger(idx, "documentType", e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm" data-testid={`select-pax-doctype-${idx}`}>
+                              <option value="passport">Passaporte</option>
+                              <option value="id_card">RG / ID</option>
+                            </select>
+                          </div>
+                          <div>
+                            <Label className="text-[10px]">N Documento</Label>
+                            <Input value={pax.documentNumber} onChange={(e) => updatePassenger(idx, "documentNumber", e.target.value)} placeholder="Numero" data-testid={`input-pax-docnum-${idx}`} />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-[10px]">Validade Doc.</Label>
+                            <Input type="date" value={pax.documentExpiry} onChange={(e) => updatePassenger(idx, "documentExpiry", e.target.value)} data-testid={`input-pax-docexpiry-${idx}`} />
+                          </div>
+                          <div>
+                            <Label className="text-[10px]">Nacionalidade</Label>
+                            <Input value={pax.nationality} onChange={(e) => updatePassenger(idx, "nationality", e.target.value)} placeholder="Ex: Brasileira" data-testid={`input-pax-nationality-${idx}`} />
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+
+                  <Button
+                    className="w-full"
+                    onClick={handleSubmitDocuments}
+                    disabled={submitting || !customerName.trim() || !customerEmail.trim()}
+                    data-testid="button-submit-documents"
+                  >
+                    {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileText className="h-4 w-4 mr-2" />}
+                    Enviar Documentos
+                  </Button>
+                </div>
+              )}
+
+              {bookingStatus === "documents_submitted" && (
+                <div className="text-center py-3">
+                  <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center mx-auto mb-2">
+                    <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground">Documentos enviados com sucesso</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    O agente esta processando sua reserva. Aguarde a confirmacao.
+                  </p>
+                </div>
+              )}
+
+              {bookingStatus === "booking_created" && (
+                <div className="text-center py-3">
+                  <div className="h-10 w-10 rounded-full bg-[#0074DE]/10 flex items-center justify-center mx-auto mb-2">
+                    <CreditCard className="h-5 w-5 text-[#0074DE]" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground">Reserva criada</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Aguardando processamento do pagamento.
+                  </p>
+                </div>
+              )}
+
+              {bookingStatus === "payment_pending" && (
+                <div className="text-center py-3">
+                  <div className="h-10 w-10 rounded-full bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center mx-auto mb-2">
+                    <CreditCard className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground">Pagamento pendente</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    O agente esta finalizando o pagamento da sua passagem.
+                  </p>
+                </div>
+              )}
+
+              {bookingStatus === "confirmed" && (
+                <div className="text-center py-3">
+                  <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center mx-auto mb-2">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground">Reserva Confirmada!</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Sua passagem foi emitida com sucesso. Verifique seu email para detalhes.
+                  </p>
+                  {session.customerEmail && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Confirmacao enviada para: {session.customerEmail}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 function SharedBlockRenderer({ block, index }: { block: LiveSessionBlock; index: number }) {
   const payload = typeof block.payload === "string" ? JSON.parse(block.payload as string) : block.payload;
 
@@ -335,6 +666,9 @@ export default function LiveSessionClient() {
       fetchSession();
     });
     evtSource.addEventListener("message", () => {
+      fetchSession();
+    });
+    evtSource.addEventListener("booking_update", () => {
       fetchSession();
     });
     evtSource.onerror = () => {
@@ -461,6 +795,15 @@ export default function LiveSessionClient() {
               ))}
             </AnimatePresence>
           </div>
+        )}
+
+        {data.session.bookingStatus && (
+          <BookingDrawer
+            session={data.session}
+            sessionId={sessionId!}
+            accessToken={accessToken}
+            onUpdate={fetchSession}
+          />
         )}
 
         <div className="flex-1 flex flex-col min-h-0">

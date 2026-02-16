@@ -47,6 +47,7 @@ import {
   Share2,
   Mail,
   ArrowLeft,
+  FileText,
 } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 
@@ -249,6 +250,14 @@ interface LiveSessionDetail {
   visitorId: string | null;
   messages: LiveMessage[];
   blocks: LiveBlock[];
+  bookingStatus: string | null;
+  approvedFlightData: any;
+  approvedOfferId: string | null;
+  customerName: string | null;
+  customerEmail: string | null;
+  customerPhone: string | null;
+  submittedDocuments: any;
+  bookingId: number | null;
 }
 
 interface LiveBlock {
@@ -380,6 +389,12 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const liveMsgEndRef = useRef<HTMLDivElement>(null);
+
+  const [bookingDrawerOpen, setBookingDrawerOpen] = useState(false);
+  const [approvingFlight, setApprovingFlight] = useState(false);
+  const [requestingDocs, setRequestingDocs] = useState(false);
+  const [creatingBooking, setCreatingBooking] = useState(false);
+  const [updatingPayment, setUpdatingPayment] = useState(false);
 
   const fetchLists = useCallback(async () => {
     try {
@@ -639,6 +654,72 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
       setCustomPrices({});
       await fetchLists();
     } catch {}
+  };
+
+  const sessionBookingData = (sessionDetail as any)?.session || sessionDetail;
+
+  const handleApproveFlight = async (flight: FlightResult) => {
+    if (!selectedSessionId || approvingFlight) return;
+    setApprovingFlight(true);
+    try {
+      const customPrice = customPrices[flight.id];
+      const price = customPrice && !isNaN(parseFloat(customPrice)) ? parseFloat(customPrice) : flight.price;
+      const flightData = {
+        ...flight,
+        price,
+        totalAmount: price.toFixed(2),
+      };
+      await authFetch(`/api/live-sessions/admin/${selectedSessionId}/approve-flight`, {
+        method: "POST",
+        body: JSON.stringify({ offerId: flight.id, flightData }),
+      });
+      setBookingDrawerOpen(true);
+      await fetchSessionDetail();
+    } catch {} finally {
+      setApprovingFlight(false);
+    }
+  };
+
+  const handleRequestDocuments = async () => {
+    if (!selectedSessionId || requestingDocs) return;
+    setRequestingDocs(true);
+    try {
+      await authFetch(`/api/live-sessions/admin/${selectedSessionId}/request-documents`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
+      await fetchSessionDetail();
+    } catch {} finally {
+      setRequestingDocs(false);
+    }
+  };
+
+  const handleCreateBooking = async () => {
+    if (!selectedSessionId || creatingBooking) return;
+    setCreatingBooking(true);
+    try {
+      await authFetch(`/api/live-sessions/admin/${selectedSessionId}/create-booking`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
+      await fetchSessionDetail();
+    } catch {} finally {
+      setCreatingBooking(false);
+    }
+  };
+
+  const handleUpdatePaymentStatus = async (status: string) => {
+    if (!selectedSessionId || updatingPayment) return;
+    setUpdatingPayment(true);
+    try {
+      await authFetch(`/api/live-sessions/admin/${selectedSessionId}/payment-status`, {
+        method: "POST",
+        body: JSON.stringify({ status }),
+      });
+      await fetchSessionDetail();
+    } catch {} finally {
+      setUpdatingPayment(false);
+    }
   };
 
   const formatTime = (dateStr: string) => {
@@ -941,23 +1022,42 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           {flight.cabinClass && <span>{flight.cabinClass}</span>}
                         </div>
-                        <Button
-                          size="sm"
-                          variant={isShared ? "default" : "outline"}
-                          onClick={() => handleToggleShare(flight)}
-                          disabled={isToggling}
-                          className={isShared ? "bg-[#0074DE]" : ""}
-                          data-testid={`button-toggle-share-${flight.id}`}
-                        >
-                          {isToggling ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
-                          ) : isShared ? (
-                            <Eye className="h-3.5 w-3.5 mr-1" />
-                          ) : (
-                            <Share2 className="h-3.5 w-3.5 mr-1" />
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <Button
+                            size="sm"
+                            variant={isShared ? "default" : "outline"}
+                            onClick={() => handleToggleShare(flight)}
+                            disabled={isToggling}
+                            className={isShared ? "bg-[#0074DE]" : ""}
+                            data-testid={`button-toggle-share-${flight.id}`}
+                          >
+                            {isToggling ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                            ) : isShared ? (
+                              <Eye className="h-3.5 w-3.5 mr-1" />
+                            ) : (
+                              <Share2 className="h-3.5 w-3.5 mr-1" />
+                            )}
+                            {isShared ? "Visível" : "Compartilhar"}
+                          </Button>
+                          {!sessionBookingData?.bookingStatus && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleApproveFlight(flight)}
+                              disabled={approvingFlight}
+                              className="text-emerald-600 border-emerald-300 dark:border-emerald-800"
+                              data-testid={`button-approve-flight-${flight.id}`}
+                            >
+                              {approvingFlight ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                              ) : (
+                                <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                              )}
+                              Reservar
+                            </Button>
                           )}
-                          {isShared ? "Visível" : "Compartilhar"}
-                        </Button>
+                        </div>
                       </div>
                     </div>
                   </Card>
@@ -999,6 +1099,167 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
             <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
               <Plane className="h-8 w-8 mb-2 opacity-20" />
               <p className="text-xs">Busque voos para compartilhar com o cliente</p>
+            </div>
+          )}
+
+          {sessionBookingData?.bookingStatus && (
+            <div className="border-t border-border" data-testid="admin-booking-drawer">
+              <button
+                onClick={() => setBookingDrawerOpen(!bookingDrawerOpen)}
+                className="w-full flex items-center justify-between gap-2 px-3 py-2 hover-elevate"
+                data-testid="button-toggle-admin-booking"
+              >
+                <div className="flex items-center gap-2">
+                  <Receipt className="h-4 w-4 text-emerald-600" />
+                  <span className="text-xs font-semibold uppercase text-emerald-700 dark:text-emerald-400">
+                    Reserva
+                  </span>
+                  <Badge variant="secondary" className="text-[10px]">
+                    {sessionBookingData.bookingStatus === "approved" && "Aprovado"}
+                    {sessionBookingData.bookingStatus === "documents_requested" && "Docs Solicitados"}
+                    {sessionBookingData.bookingStatus === "documents_submitted" && "Docs Recebidos"}
+                    {sessionBookingData.bookingStatus === "booking_created" && "Reserva Criada"}
+                    {sessionBookingData.bookingStatus === "payment_pending" && "Pgto Pendente"}
+                    {sessionBookingData.bookingStatus === "confirmed" && "Confirmado"}
+                  </Badge>
+                </div>
+                {bookingDrawerOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+              </button>
+
+              {bookingDrawerOpen && (
+                <div className="px-3 pb-3 space-y-2">
+                  {sessionBookingData.approvedFlightData && (
+                    <Card className="p-2.5 border-emerald-200 dark:border-emerald-800">
+                      <div className="flex items-center gap-2 text-xs flex-wrap">
+                        <Plane className="h-3 w-3 text-emerald-600" />
+                        <span className="font-medium text-foreground">
+                          {sessionBookingData.approvedFlightData.airline} {sessionBookingData.approvedFlightData.flightNumber}
+                        </span>
+                        <span className="ml-auto font-bold text-emerald-600">
+                          {sessionBookingData.approvedFlightData.currency} {sessionBookingData.approvedFlightData.totalAmount || sessionBookingData.approvedFlightData.price}
+                        </span>
+                      </div>
+                    </Card>
+                  )}
+
+                  {sessionBookingData.bookingStatus === "approved" && (
+                    <Button
+                      size="sm"
+                      className="w-full bg-[#0074DE]"
+                      onClick={handleRequestDocuments}
+                      disabled={requestingDocs}
+                      data-testid="button-request-documents"
+                    >
+                      {requestingDocs ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <FileText className="h-3.5 w-3.5 mr-1" />}
+                      Solicitar Documentos do Cliente
+                    </Button>
+                  )}
+
+                  {sessionBookingData.bookingStatus === "documents_requested" && (
+                    <div className="text-center py-2">
+                      <Clock className="h-5 w-5 text-amber-500 mx-auto mb-1" />
+                      <p className="text-xs text-muted-foreground">Aguardando o cliente enviar os documentos...</p>
+                    </div>
+                  )}
+
+                  {sessionBookingData.bookingStatus === "documents_submitted" && (
+                    <div className="space-y-2">
+                      <Card className="p-2.5">
+                        <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-1">Dados do Cliente</p>
+                        <div className="space-y-0.5 text-xs">
+                          <div className="flex justify-between gap-2">
+                            <span className="text-muted-foreground">Nome:</span>
+                            <span className="font-medium text-foreground">{sessionBookingData.customerName}</span>
+                          </div>
+                          <div className="flex justify-between gap-2">
+                            <span className="text-muted-foreground">Email:</span>
+                            <span className="font-medium text-foreground">{sessionBookingData.customerEmail}</span>
+                          </div>
+                          {sessionBookingData.customerPhone && (
+                            <div className="flex justify-between gap-2">
+                              <span className="text-muted-foreground">Telefone:</span>
+                              <span className="font-medium text-foreground">{sessionBookingData.customerPhone}</span>
+                            </div>
+                          )}
+                        </div>
+                        {sessionBookingData.submittedDocuments?.passengers && (
+                          <div className="mt-2 pt-2 border-t border-border">
+                            <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-1">
+                              {sessionBookingData.submittedDocuments.passengers.length} Passageiro(s)
+                            </p>
+                            {sessionBookingData.submittedDocuments.passengers.map((pax: any, i: number) => (
+                              <div key={i} className="text-xs text-foreground">
+                                {pax.firstName} {pax.lastName} - {pax.dateOfBirth} - {pax.documentType}: {pax.documentNumber}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </Card>
+                      <Button
+                        size="sm"
+                        className="w-full bg-emerald-600"
+                        onClick={handleCreateBooking}
+                        disabled={creatingBooking}
+                        data-testid="button-create-booking"
+                      >
+                        {creatingBooking ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <CheckCircle2 className="h-3.5 w-3.5 mr-1" />}
+                        Criar Reserva
+                      </Button>
+                    </div>
+                  )}
+
+                  {sessionBookingData.bookingStatus === "booking_created" && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground text-center">Reserva criada. Processe o pagamento.</p>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => handleUpdatePaymentStatus("payment_pending")}
+                          disabled={updatingPayment}
+                          data-testid="button-set-payment-pending"
+                        >
+                          Pgto Pendente
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="flex-1 bg-emerald-600"
+                          onClick={() => handleUpdatePaymentStatus("confirmed")}
+                          disabled={updatingPayment}
+                          data-testid="button-confirm-payment"
+                        >
+                          {updatingPayment ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <CheckCircle2 className="h-3.5 w-3.5 mr-1" />}
+                          Confirmar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {sessionBookingData.bookingStatus === "payment_pending" && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-amber-600 text-center font-medium">Pagamento pendente</p>
+                      <Button
+                        size="sm"
+                        className="w-full bg-emerald-600"
+                        onClick={() => handleUpdatePaymentStatus("confirmed")}
+                        disabled={updatingPayment}
+                        data-testid="button-confirm-payment-final"
+                      >
+                        {updatingPayment ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <CheckCircle2 className="h-3.5 w-3.5 mr-1" />}
+                        Confirmar Pagamento
+                      </Button>
+                    </div>
+                  )}
+
+                  {sessionBookingData.bookingStatus === "confirmed" && (
+                    <div className="text-center py-2">
+                      <CheckCircle2 className="h-6 w-6 text-emerald-600 mx-auto mb-1" />
+                      <p className="text-xs font-medium text-emerald-600">Reserva Confirmada!</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
