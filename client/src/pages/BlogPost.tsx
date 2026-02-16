@@ -48,7 +48,36 @@ export default function BlogPost() {
 
   return (
     <div className="min-h-screen bg-white">
-      <SEO title={post?.title || "Blog"} description={post?.excerpt || "Artigo do blog Michels Travel"} path={"/blog/" + (post?.slug || "")} type="article" />
+      <SEO
+        title={post?.title || "Blog"}
+        description={post?.excerpt || "Artigo do blog Michels Travel"}
+        path={"/blog/" + (post?.slug || "")}
+        type="article"
+        image={post?.coverImage || undefined}
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          "headline": post?.title,
+          "description": post?.excerpt,
+          "image": post?.coverImage || "https://buyflights.net/images/og-cover.png",
+          "author": { "@type": "Organization", "name": "Michels Travel" },
+          "publisher": {
+            "@type": "Organization",
+            "name": "Michels Travel",
+            "logo": { "@type": "ImageObject", "url": "https://buyflights.net/favicon.png" },
+          },
+          "datePublished": post?.createdAt,
+          "mainEntityOfPage": `https://buyflights.net/blog/${post?.slug}`,
+          "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://buyflights.net/" },
+              { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://buyflights.net/blog" },
+              { "@type": "ListItem", "position": 3, "name": post?.title, "item": `https://buyflights.net/blog/${post?.slug}` },
+            ],
+          },
+        }}
+      />
 
       {post.coverImage ? (
         <div className="h-[300px] md:h-[450px] w-full relative overflow-hidden">

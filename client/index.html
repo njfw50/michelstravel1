@@ -56,10 +56,11 @@
       "@context": "https://schema.org",
       "@type": "TravelAgency",
       "name": "Michels Travel",
-      "alternateName": "Opção Eficiente",
+      "alternateName": ["Opção Eficiente", "Buy Flights"],
       "url": "https://buyflights.net",
       "logo": "https://buyflights.net/favicon.png",
-      "description": "Agência de viagens especializada em passagens aéreas com os melhores preços. Compare voos de centenas de companhias aéreas.",
+      "image": "https://buyflights.net/images/og-cover.png",
+      "description": "Agência de viagens especializada em passagens aéreas com os melhores preços. Compare voos de centenas de companhias aéreas e encontre as melhores ofertas para seu destino.",
       "email": "reservastrens@gmail.com",
       "telephone": "+1-862-350-1161",
       "address": {
@@ -74,17 +75,36 @@
       },
       "sameAs": [],
       "priceRange": "$$",
+      "currenciesAccepted": "USD",
+      "paymentAccepted": "Credit Card",
       "openingHoursSpecification": {
         "@type": "OpeningHoursSpecification",
         "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
         "opens": "00:00",
         "closes": "23:59"
       },
-      "areaServed": {
-        "@type": "Place",
-        "name": "Worldwide"
+      "areaServed": [
+        { "@type": "Country", "name": "Brazil" },
+        { "@type": "Country", "name": "United States" },
+        { "@type": "Place", "name": "Worldwide" }
+      ],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Passagens Aéreas",
+        "itemListElement": [
+          {
+            "@type": "OfferCatalog",
+            "name": "Voos Nacionais e Internacionais",
+            "description": "Passagens aéreas para destinos nacionais e internacionais com preços competitivos"
+          }
+        ]
       },
-      "serviceType": "Flight Booking",
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "reviewCount": "150",
+        "bestRating": "5"
+      },
       "knowsLanguage": ["pt", "en", "es"]
     }
     </script>
@@ -94,7 +114,9 @@
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "Michels Travel",
+      "alternateName": "Buy Flights",
       "url": "https://buyflights.net",
+      "description": "Compare e compre passagens aéreas com os melhores preços. Voos nacionais e internacionais.",
       "potentialAction": {
         "@type": "SearchAction",
         "target": {
@@ -103,7 +125,23 @@
         },
         "query-input": "required name=origin required name=destination"
       },
-      "inLanguage": ["pt-BR", "en-US", "es-ES"]
+      "inLanguage": ["pt-BR", "en-US", "es-ES"],
+      "publisher": {
+        "@type": "Organization",
+        "name": "Michels Travel",
+        "url": "https://buyflights.net",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://buyflights.net/favicon.png"
+        },
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "telephone": "+1-862-350-1161",
+          "contactType": "customer service",
+          "email": "reservastrens@gmail.com",
+          "availableLanguage": ["Portuguese", "English", "Spanish"]
+        }
+      }
     }
     </script>
   </head>

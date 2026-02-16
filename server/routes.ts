@@ -1329,12 +1329,14 @@ export function registerRoutes(app: Express) {
     res.send(`User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /atendimento
 Disallow: /checkout/
 Disallow: /profile
 Disallow: /my-trips
-Disallow: /search
 Disallow: /book/
 Disallow: /api/
+Disallow: /live/
+Disallow: /messages
 
 Sitemap: ${SITE_URL}/sitemap.xml
 `);
@@ -1349,10 +1351,16 @@ Sitemap: ${SITE_URL}/sitemap.xml
         { url: '/', priority: '1.0', changefreq: 'daily' },
         { url: '/about', priority: '0.8', changefreq: 'monthly' },
         { url: '/blog', priority: '0.7', changefreq: 'weekly' },
+        { url: '/help', priority: '0.7', changefreq: 'monthly' },
+        { url: '/terms', priority: '0.3', changefreq: 'yearly' },
+        { url: '/privacy', priority: '0.3', changefreq: 'yearly' },
       ];
 
+      const languages = ['pt-BR', 'en', 'es'];
+
       let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
 `;
 
       for (const page of staticPages) {
@@ -1361,8 +1369,12 @@ Sitemap: ${SITE_URL}/sitemap.xml
     <lastmod>${now}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
-  </url>
 `;
+        for (const lang of languages) {
+          xml += `    <xhtml:link rel="alternate" hreflang="${lang}" href="${SITE_URL}${page.url}?lang=${lang}" />\n`;
+        }
+        xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE_URL}${page.url}" />\n`;
+        xml += `  </url>\n`;
       }
 
       if (blogPosts && blogPosts.length > 0) {

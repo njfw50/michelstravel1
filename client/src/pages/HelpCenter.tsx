@@ -138,11 +138,26 @@ export default function HelpCenter() {
     ? categories.find((c) => c.id === activeCategory)
     : null;
 
+  const faqStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": allFaqs.map((faq) => ({
+      "@type": "Question",
+      "name": faq.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.a,
+      },
+    })),
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <SEO
         title={t("help.title")}
         description={t("help.subtitle")}
+        path="/help"
+        structuredData={faqStructuredData}
       />
 
       <div className="max-w-3xl mx-auto">

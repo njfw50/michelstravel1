@@ -11,7 +11,19 @@ export default function About() {
 
   return (
     <div className="min-h-screen">
-      <SEO title="Sobre Nós" description="Conheça a Michels Travel, agência de viagens registrada em New Jersey. Encontramos os melhores preços em passagens aéreas para você." path="/about" />
+      <SEO
+        title="Sobre Nós"
+        description="Conheça a Michels Travel, agência de viagens registrada em New Jersey. Encontramos os melhores preços em passagens aéreas para você."
+        path="/about"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://buyflights.net/" },
+            { "@type": "ListItem", "position": 2, "name": "Sobre Nós", "item": "https://buyflights.net/about" },
+          ],
+        }}
+      />
       <div className="relative py-28 md:py-36 px-4 text-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-50 via-white to-white" />
         <div className="relative z-10 container mx-auto max-w-4xl">
