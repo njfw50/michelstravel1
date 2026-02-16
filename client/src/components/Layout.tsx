@@ -52,7 +52,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/my-trips", label: t("nav.my_trips") || "My Trips" },
     { href: "/about", label: t("footer.about") },
     { href: "/blog", label: t("nav.blog") },
-    { href: "/help", label: t("nav.help") },
   ];
 
   return (
@@ -286,7 +285,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="md:col-span-2">
                 <h4 className="font-bold text-gray-900 text-sm mb-5 uppercase tracking-wider">{t("footer.support")}</h4>
                 <ul className="space-y-3 text-sm">
-                  <li><a href="#" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.help")}</a></li>
+                  <li><a href="/help" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.help")}</a></li>
                   <li><a href="#" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.terms")}</a></li>
                   <li><a href="#" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.privacy")}</a></li>
                 </ul>
