@@ -37,17 +37,21 @@ export class StripeService {
       ? metadata.passengers.map((p: any) => `${p.givenName || p.firstName || ''} ${p.familyName || p.lastName || ''}`).join(', ')
       : '';
 
+    // Enhanced flight description with more details
     const flightDescription = [
       metadata.airline ? `${metadata.airline}` : '',
       metadata.flightNumber ? `Flight ${metadata.flightNumber}` : '',
       metadata.origin && metadata.destination ? `${metadata.origin} → ${metadata.destination}` : '',
       metadata.departureDate ? `Departure: ${metadata.departureDate}` : '',
+      metadata.returnDate ? `Return: ${metadata.returnDate}` : '',
+      metadata.cabinClass ? `Class: ${metadata.cabinClass}` : '',
       passengerSummary ? `Passengers: ${passengerSummary}` : '',
     ].filter(Boolean).join(' | ');
 
     const expiresAt = Math.floor(Date.now() / 1000) + 1800;
 
     const sessionConfig: any = {
+      payment_method_types: ['card', 'pix'],
       line_items: [{
         price_data: {
           currency: currency.toLowerCase(),
@@ -66,6 +70,24 @@ export class StripeService {
       billing_address_collection: 'required',
       phone_number_collection: {
         enabled: true,
+      },
+      invoice_creation: {
+        enabled: true,
+        invoice_data: {
+          description: `Flight Booking ${metadata.referenceCode || '#' + metadata.bookingId}`,
+          custom_fields: [
+            { name: 'Booking Reference', value: metadata.referenceCode || `MT-${metadata.bookingId}` },
+            { name: 'Flight Number', value: metadata.flightNumber || 'N/A' },
+            { name: 'Route', value: `${metadata.origin || ''} → ${metadata.destination || ''}` },
+            { name: 'Departure Date', value: metadata.departureDate || 'N/A' },
+          ].concat(metadata.returnDate ? [{ name: 'Return Date', value: metadata.returnDate }] : []),
+          footer: 'Thank you for choosing Michels Travel. Have a great flight! For support, contact us at reservastrens@gmail.com or +1 (862) 350-1161',
+          metadata: {
+            bookingId: String(metadata.bookingId),
+            referenceCode: metadata.referenceCode || '',
+            flightType: metadata.returnDate ? 'round_trip' : 'one_way',
+          },
+        },
       },
       metadata: {
         bookingId: String(metadata.bookingId),
@@ -94,12 +116,29 @@ export class StripeService {
         },
       },
       payment_intent_data: {
-        description: `Michels Travel Booking ${metadata.referenceCode || '#' + metadata.bookingId}: ${metadata.origin || ''} → ${metadata.destination || ''}`,
+        description: [
+          `Michels Travel - Booking ${metadata.referenceCode || '#' + metadata.bookingId}`,
+          '',
+          `OUTBOUND: ${metadata.origin || ''} → ${metadata.destination || ''}`,
+          `Departure: ${metadata.departureDate || 'N/A'}`,
+          metadata.airline ? `Airline: ${metadata.airline} ${metadata.flightNumber || ''}` : '',
+          '',
+          metadata.returnDate ? `RETURN: ${metadata.destination || ''} → ${metadata.origin || ''}` : '',
+          metadata.returnDate ? `Return: ${metadata.returnDate}` : '',
+          '',
+          `Passengers: ${metadata.passengerCount || 1} (${metadata.cabinClass || 'economy'})`,
+          passengerSummary ? `Names: ${passengerSummary}` : '',
+        ].filter(Boolean).join('\n'),
         statement_descriptor: 'MICHELS TRAVEL',
         statement_descriptor_suffix: (metadata.referenceCode || '').substring(0, 22),
         metadata: {
           bookingId: String(metadata.bookingId),
           referenceCode: metadata.referenceCode || '',
+          origin: metadata.origin || '',
+          destination: metadata.destination || '',
+          departureDate: metadata.departureDate || '',
+          returnDate: metadata.returnDate || '',
+          passengerCount: String(metadata.passengerCount || 1),
         },
         receipt_email: metadata.contactEmail || undefined,
       },

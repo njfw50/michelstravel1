@@ -66,20 +66,42 @@ function buildConfirmationHTML(booking: BookingEmailData): string {
   let flightHTML = "";
   if (slices.length > 0) {
     slices.forEach((slice: any, i: number) => {
-      const label = i === 0 ? "Outbound" : "Return";
+      const label = i === 0 ? "Outbound Flight" : "Return Flight";
+      const firstSegment = slice.segments?.[0];
+      const lastSegment = slice.segments?.[slice.segments.length - 1];
+      const departureDate = firstSegment?.departureTime ? formatDate(firstSegment.departureTime) : '';
+      
       flightHTML += `
-        <div style="margin-bottom:16px;">
-          <div style="font-weight:bold;color:#0074DE;font-size:13px;margin-bottom:6px;">${label}: ${slice.originCode || ""} &rarr; ${slice.destinationCode || ""}</div>
-          ${(slice.segments || []).map((seg: any) => `
-            <div style="padding:8px 0;border-bottom:1px solid #f0f0f0;">
-              <div style="font-size:14px;">
-                <strong>${formatTime(seg.departureTime)}</strong> ${seg.originCode}
-                &rarr;
-                <strong>${formatTime(seg.arrivalTime)}</strong> ${seg.destinationCode}
-              </div>
-              <div style="font-size:12px;color:#888;margin-top:2px;">
-                ${seg.carrierName || fd.airline || ""} ${seg.flightNumber || ""}
-                ${seg.aircraftType ? `(${seg.aircraftType})` : ""}
+        <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:12px;padding:16px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-weight:bold;color:#0074DE;font-size:15px;">${label}</div>
+            <div style="font-size:12px;color:#6B7280;">${departureDate}</div>
+          </div>
+          ${(slice.segments || []).map((seg: any, idx: number) => `
+            <div style="padding:12px 0;${idx < slice.segments.length - 1 ? 'border-bottom:1px dashed #E5E7EB;' : ''}">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <div style="text-align:left;">
+                  <div style="font-size:20px;font-weight:bold;color:#111827;">${formatTime(seg.departureTime)}</div>
+                  <div style="font-size:14px;color:#374151;font-weight:600;margin-top:2px;">${seg.originCode}</div>
+                  <div style="font-size:11px;color:#9CA3AF;margin-top:2px;">${seg.originCity || ''}</div>
+                  ${seg.originTerminal ? `<div style="font-size:10px;color:#6B7280;margin-top:2px;">Terminal ${seg.originTerminal}</div>` : ''}
+                </div>
+                <div style="text-align:center;flex:1;padding:0 16px;">
+                  <div style="font-size:11px;color:#6B7280;margin-bottom:4px;">✈️</div>
+                  <div style="height:2px;background:#E5E7EB;position:relative;">
+                    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:0 8px;">
+                      <span style="font-size:10px;color:#9CA3AF;">${seg.duration || ''}</span>
+                    </div>
+                  </div>
+                  <div style="font-size:11px;color:#0074DE;margin-top:4px;font-weight:600;">${seg.carrierName || fd.airline || ''}</div>
+                  <div style="font-size:10px;color:#6B7280;">${seg.flightNumber || ''} ${seg.aircraftType ? `• ${seg.aircraftType}` : ''}</div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:20px;font-weight:bold;color:#111827;">${formatTime(seg.arrivalTime)}</div>
+                  <div style="font-size:14px;color:#374151;font-weight:600;margin-top:2px;">${seg.destinationCode}</div>
+                  <div style="font-size:11px;color:#9CA3AF;margin-top:2px;">${seg.destinationCity || ''}</div>
+                  ${seg.destinationTerminal ? `<div style="font-size:10px;color:#6B7280;margin-top:2px;">Terminal ${seg.destinationTerminal}</div>` : ''}
+                </div>
               </div>
             </div>
           `).join("")}
@@ -147,13 +169,39 @@ function buildConfirmationHTML(booking: BookingEmailData): string {
 
         <hr style="border:none;border-top:1px solid #f0f0f0;margin:16px 0;" />
 
-        <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:14px;">
-          <h4 style="font-size:13px;color:#92400E;margin:0 0 8px;font-weight:bold;">Important Information</h4>
-          <ul style="margin:0;padding:0 0 0 16px;font-size:12px;color:#78350F;line-height:1.8;">
-            <li>Check in online 24-48 hours before departure</li>
-            <li>Arrive at the airport at least 2-3 hours before international flights</li>
-            <li>Bring a valid photo ID or passport</li>
-            <li>Check your airline's baggage policy for carry-on and checked bag limits</li>
+        <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:16px;">
+          <h4 style="font-size:14px;color:#92400E;margin:0 0 12px;font-weight:bold;display:flex;align-items:center;">
+            <span style="font-size:18px;margin-right:8px;">ℹ️</span> Important Travel Information
+          </h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div style="background:white;border-radius:8px;padding:10px;">
+              <div style="font-size:11px;color:#92400E;font-weight:bold;margin-bottom:4px;">✓ CHECK-IN</div>
+              <div style="font-size:11px;color:#78350F;line-height:1.6;">Online check-in opens 24-48 hours before departure</div>
+            </div>
+            <div style="background:white;border-radius:8px;padding:10px;">
+              <div style="font-size:11px;color:#92400E;font-weight:bold;margin-bottom:4px;">⏰ ARRIVAL TIME</div>
+              <div style="font-size:11px;color:#78350F;line-height:1.6;">Arrive 2-3 hours before international flights</div>
+            </div>
+            <div style="background:white;border-radius:8px;padding:10px;">
+              <div style="font-size:11px;color:#92400E;font-weight:bold;margin-bottom:4px;">🛂 DOCUMENTS</div>
+              <div style="font-size:11px;color:#78350F;line-height:1.6;">Valid passport required for international travel</div>
+            </div>
+            <div style="background:white;border-radius:8px;padding:10px;">
+              <div style="font-size:11px;color:#92400E;font-weight:bold;margin-bottom:4px;">🧳 BAGGAGE</div>
+              <div style="font-size:11px;color:#78350F;line-height:1.6;">Check airline policy for size and weight limits</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#DCFCE7;border:1px solid #86EFAC;border-radius:12px;padding:14px;margin-top:12px;">
+          <h4 style="font-size:13px;color:#166534;margin:0 0 8px;font-weight:bold;display:flex;align-items:center;">
+            <span style="font-size:16px;margin-right:6px;">💡</span> Travel Tips
+          </h4>
+          <ul style="margin:0;padding:0 0 0 16px;font-size:11px;color:#15803D;line-height:1.8;">
+            <li>Download your airline's mobile app for real-time flight updates</li>
+            <li>Take photos of your luggage and keep important documents in carry-on</li>
+            <li>Arrive early to avoid stress and enjoy airport amenities</li>
+            <li>Stay hydrated and move around during long flights</li>
           </ul>
         </div>
 

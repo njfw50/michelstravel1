@@ -237,6 +237,7 @@ export default function SearchResults() {
   const [selectedStops, setSelectedStops] = useState<Set<string>>(new Set());
   const [selectedAirlines, setSelectedAirlines] = useState<Set<string>>(new Set());
   const [selectedDepartureTimes, setSelectedDepartureTimes] = useState<Set<DepartureTime>>(new Set());
+  const [selectedReturnTimes, setSelectedReturnTimes] = useState<Set<DepartureTime>>(new Set());
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
@@ -268,14 +269,16 @@ export default function SearchResults() {
     if (selectedStops.size > 0) count++;
     if (selectedAirlines.size > 0) count++;
     if (selectedDepartureTimes.size > 0) count++;
+    if (selectedReturnTimes.size > 0) count++;
     if (priceRange && (priceRange[0] > priceExtents.min || priceRange[1] < priceExtents.max)) count++;
     return count;
-  }, [selectedStops, selectedAirlines, selectedDepartureTimes, priceRange, priceExtents]);
+  }, [selectedStops, selectedAirlines, selectedDepartureTimes, selectedReturnTimes, priceRange, priceExtents]);
 
   const clearFilters = useCallback(() => {
     setSelectedStops(new Set());
     setSelectedAirlines(new Set());
     setSelectedDepartureTimes(new Set());
+    setSelectedReturnTimes(new Set());
     setPriceRange(null);
   }, []);
 
@@ -295,6 +298,18 @@ export default function SearchResults() {
       if (selectedDepartureTimes.size > 0) {
         const bucket = getDepartureTimeBucket(flight.departureTime);
         if (!selectedDepartureTimes.has(bucket)) return false;
+      }
+
+      if (selectedReturnTimes.size > 0) {
+        // Check return flight time for round trips
+        if (flight.slices && flight.slices.length > 1) {
+          const returnSlice = flight.slices[1];
+          const returnDepartureTime = returnSlice.segments?.[0]?.departureTime;
+          if (returnDepartureTime) {
+            const bucket = getDepartureTimeBucket(returnDepartureTime);
+            if (!selectedReturnTimes.has(bucket)) return false;
+          }
+        }
       }
 
       if (priceRange) {
@@ -321,7 +336,7 @@ export default function SearchResults() {
     });
 
     return filtered;
-  }, [flights, selectedStops, selectedAirlines, selectedDepartureTimes, priceRange, sortBy]);
+  }, [flights, selectedStops, selectedAirlines, selectedDepartureTimes, selectedReturnTimes, priceRange, sortBy]);
 
   const stopsOptions = [
     { key: "direct", label: t("flight.direct") || "Direct" },
@@ -440,7 +455,7 @@ export default function SearchResults() {
       <div className="h-px bg-gray-100" />
 
       <div>
-        <h4 className="text-sm font-semibold mb-3 text-gray-700">{t("results.departure_time") || "Departure Time"}</h4>
+        <h4 className="text-sm font-semibold mb-3 text-gray-700">{t("results.departure_time") || "Outbound Time"}</h4>
         <div className="space-y-2.5">
           {departureTimeOptions.map(opt => {
             const Icon = opt.icon;
@@ -455,6 +470,31 @@ export default function SearchResults() {
                   className="rounded border-gray-300 bg-white text-blue-500 focus:ring-blue-500/30 h-4 w-4"
                   checked={selectedDepartureTimes.has(opt.key)}
                   onChange={() => toggleSetItem(setSelectedDepartureTimes, opt.key)}
+                />
+                <Icon className="h-3.5 w-3.5 text-gray-400" />
+                {opt.label}
+              </label>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <h4 className="text-sm font-semibold mb-3 text-gray-700">{t("results.return_time") || "Return Time"}</h4>
+        <div className="space-y-2.5">
+          {departureTimeOptions.map(opt => {
+            const Icon = opt.icon;
+            return (
+              <label
+                key={opt.key}
+                className="flex items-center gap-2.5 text-sm text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
+                data-testid={`filter-return-${opt.key}`}
+              >
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300 bg-white text-blue-500 focus:ring-blue-500/30 h-4 w-4"
+                  checked={selectedReturnTimes.has(opt.key)}
+                  onChange={() => toggleSetItem(setSelectedReturnTimes, opt.key)}
                 />
                 <Icon className="h-3.5 w-3.5 text-gray-400" />
                 {opt.label}

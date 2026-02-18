@@ -734,6 +734,9 @@ export default function Booking() {
         }
         setFlight(data);
         setFlightLoading(false);
+        
+        // Validate price immediately after loading
+        validateFlightPrice(flightId, data);
         return;
       } catch (err: any) {
         attempts++;
@@ -746,6 +749,33 @@ export default function Booking() {
       }
     }
   }, [t]);
+
+  const validateFlightPrice = useCallback(async (flightId: string, currentFlight: FlightOffer) => {
+    try {
+      const refreshRes = await fetch(`/api/flights/${flightId}/refresh`);
+      const refreshData = await refreshRes.json();
+      
+      if (!refreshData.valid) {
+        toast({
+          title: t("booking.offer_expired") || "Offer Expired",
+          description: t("booking.offer_expired_desc") || "This flight offer has expired. Please search again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (refreshData.price && Math.abs(refreshData.price - currentFlight.price) > 0.01) {
+        setFlight({ ...currentFlight, price: refreshData.price, currency: refreshData.currency || currentFlight.currency });
+        toast({
+          title: t("booking.price_updated") || "Price Updated",
+          description: t("booking.price_updated_desc") || "The flight price has been updated. Please review the new total.",
+          variant: "default",
+        });
+      }
+    } catch (err) {
+      console.warn("Could not validate price on load:", err);
+    }
+  }, [t, toast]);
 
   useEffect(() => {
     if (params?.id) {
