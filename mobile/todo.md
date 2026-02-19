@@ -286,15 +286,59 @@
 ## Deploy no GitHub e Replit
 
 ### Git e GitHub
-- [ ] Clonar repositório njfw50/flight-commission-hub
-- [ ] Verificar estrutura atual do repositório
-- [ ] Copiar código do app mobile para o repositório
-- [ ] Fazer git add de todos os arquivos
-- [ ] Fazer git commit com mensagem descritiva
-- [ ] Fazer git push para GitHub
-- [ ] Verificar se push foi bem sucedido
+- [x] Clonar repositório njfw50/flight-commission-hub
+- [x] Verificar estrutura atual do repositório
+- [x] Copiar código do app mobile para o repositório (pasta /mobile)
+- [x] Fazer git add de todos os arquivos
+- [x] Fazer git commit com mensagem descritiva
+- [x] Fazer git push para GitHub
+- [x] Push bem sucedido - 143 arquivos enviados
 
 ### Deploy no Replit
 - [ ] Orientar usuário sobre como importar do GitHub no Replit
 - [ ] Verificar se variáveis de ambiente estão configuradas
 - [ ] Testar app no Replit após deploy
+
+
+## Bug Fix - Erro de Refresh Token no Login
+
+### Problema
+- [ ] Erro "no refresh token available" ao fazer login
+- [ ] Tokens não estão sendo salvos corretamente no SecureStore
+- [ ] API client tenta renovar token mas não encontra refresh token
+
+### Solução
+- [x] Verificar se login está salvando accessToken e refreshToken
+- [x] Adicionar flag para ignorar refresh em rotas de autenticação (/auth/login, /auth/refresh)
+- [x] Ajustar interceptor do axios para não tentar refresh durante login
+- [x] Adicionar logs para debug do fluxo de autenticação
+- [x] Limpar refreshSubscribers após erro de refresh
+- [ ] Testar fluxo completo de login no celular
+- [ ] Verificar se tokens persistem após reiniciar app
+
+
+## Bug Fix - Erro 401 no Login
+
+### Problema
+- [ ] Erro "request failed with status code 401" ao tentar fazer login
+- [ ] Possíveis causas: usuário não existe, senha incorreta, API não funcionando
+
+### Diagnóstico
+- [x] Verificar se usuário admin existe na tabela mobile_users - OK, existe
+- [x] Testar API /api/mobile/auth/login com curl - OK, retorna 200
+- [x] Verificar logs do servidor - Encontrado: email com "n" extra (njfw23@gmail.comn)
+- [x] Causa identificada: Usuário digitou caractere extra no celular
+
+### Solução
+- [x] Adicionar trim() no email e senha para remover espaços e caracteres extras
+- [ ] Testar login novamente no celular
+
+
+## Push para GitHub - Atualizar Repositório
+
+### Tarefas
+- [ ] Copiar código atualizado para repositório local
+- [ ] Fazer git add de todos os arquivos modificados
+- [ ] Fazer git commit com mensagem descritiva das correções
+- [ ] Fazer git push para GitHub
+- [ ] Verificar se push foi bem sucedido

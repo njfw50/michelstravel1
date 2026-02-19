@@ -20,14 +20,17 @@ export default function LoginScreen() {
   const { login, isLoading, error, clearError } = useAuthCustom();
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+    
+    if (!trimmedEmail || !trimmedPassword) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos');
       return;
     }
 
     try {
       clearError();
-      await login(email, password);
+      await login(trimmedEmail, trimmedPassword);
       router.replace('/(tabs)');
     } catch (err: any) {
       Alert.alert('Erro ao fazer login', err.message || 'Verifique suas credenciais');

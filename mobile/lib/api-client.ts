@@ -37,7 +37,11 @@ class ApiClient {
       async (error: AxiosError) => {
         const originalRequest = error.config as any;
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // Não tentar refresh em rotas de autenticação
+        const isAuthRoute = originalRequest.url?.includes('/auth/login') || 
+                           originalRequest.url?.includes('/auth/refresh');
+        
+        if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
           if (this.refreshing) {
             return new Promise((resolve) => {
               this.refreshSubscribers.push((token: string) => {
@@ -59,7 +63,9 @@ class ApiClient {
             return this.client(originalRequest);
           } catch (refreshError) {
             this.refreshing = false;
+            this.refreshSubscribers = [];
             await this.clearTokens();
+            console.log('Refresh token failed, user needs to login again');
             // Redirecionar para login seria feito aqui
             return Promise.reject(refreshError);
           }
@@ -85,8 +91,11 @@ class ApiClient {
   private async refreshAccessToken(): Promise<string> {
     const refreshToken = await this.getRefreshToken();
     if (!refreshToken) {
+      console.log('No refresh token found in SecureStore');
       throw new Error('No refresh token available');
     }
+    
+    console.log('Attempting to refresh access token...');
 
     const response = await axios.post(`${API_BASE_URL}/api/mobile/auth/refresh`, {
       refreshToken,
@@ -107,16 +116,22 @@ class ApiClient {
 
   // Métodos de autenticação
   async login(email: string, password: string): Promise<AuthTokens> {
+    console.log('Attempting login for:', email);
+    
     const response = await this.client.post<ApiResponse<AuthTokens>>(
       '/api/mobile/auth/login',
       { email, password }
     );
 
+    console.log('Login response received:', response.data);
+
     if (response.data.success && response.data.data) {
       const tokens = response.data.data;
+      console.log('Saving tokens to SecureStore...');
       await SecureStore.setItemAsync('accessToken', tokens.accessToken);
       await SecureStore.setItemAsync('refreshToken', tokens.refreshToken);
       await SecureStore.setItemAsync('tokenExpiresAt', tokens.expiresAt.toString());
+      console.log('Tokens saved successfully');
       return tokens;
     }
 
