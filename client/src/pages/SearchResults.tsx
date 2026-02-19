@@ -264,6 +264,12 @@ export default function SearchResults() {
     return s.segments.map(seg => `${seg.flightNumber}-${seg.departureTime}`).join("|");
   }, []);
 
+  const getReturnKey = useCallback((flight: FlightOffer) => {
+    if (!flight.slices || flight.slices.length < 2) return flight.id;
+    const s = flight.slices[1];
+    return s.segments.map(seg => `${seg.flightNumber}-${seg.departureTime}`).join("|");
+  }, []);
+
   useEffect(() => {
     if (searchKey !== lastSearchKey) {
       setSelectedOutboundKey(null);
@@ -367,51 +373,108 @@ export default function SearchResults() {
     return filtered;
   }, [flights, selectedStops, selectedAirlines, selectedDepartureTimes, selectedReturnTimes, priceRange, sortBy]);
 
-  const outboundGroups = useMemo(() => {
-    if (!isRoundTrip || !filteredAndSortedFlights || filteredAndSortedFlights.length === 0) return null;
-    const hasSlices = filteredAndSortedFlights.some(f => f.slices && f.slices.length >= 2);
-    if (!hasSlices) return null;
+  const offerMatrix = useMemo(() => {
+    if (!isRoundTrip || !flights || flights.length === 0) return null;
+    const roundTripOffers = flights.filter(f => f.slices && f.slices.length >= 2);
+    if (roundTripOffers.length === 0) return null;
 
-    const groups = new Map<string, { outboundSlice: FlightSlice; offers: FlightOffer[]; lowestPrice: number; airline: string; logoUrl?: string | null }>();
-    for (const flight of filteredAndSortedFlights) {
-      if (!flight.slices || flight.slices.length < 2) continue;
-      const key = getOutboundKey(flight);
-      const existing = groups.get(key);
-      if (existing) {
-        existing.offers.push(flight);
-        if (flight.price < existing.lowestPrice) existing.lowestPrice = flight.price;
-      } else {
-        groups.set(key, {
-          outboundSlice: flight.slices[0],
-          offers: [flight],
-          lowestPrice: flight.price,
-          airline: flight.airline,
-          logoUrl: flight.logoUrl,
-        });
+    const outboundMap = new Map<string, { slice: FlightSlice; airline: string; logoUrl?: string | null; lowestPrice: number }>();
+    const returnMap = new Map<string, { slice: FlightSlice; airline: string; logoUrl?: string | null; lowestPrice: number }>();
+    const comboMap = new Map<string, FlightOffer>();
+
+    for (const flight of roundTripOffers) {
+      const obKey = getOutboundKey(flight);
+      const rtKey = getReturnKey(flight);
+      const comboKey = `${obKey}::${rtKey}`;
+
+      const existingCombo = comboMap.get(comboKey);
+      if (!existingCombo || flight.price < existingCombo.price) {
+        comboMap.set(comboKey, flight);
+      }
+
+      const existingOb = outboundMap.get(obKey);
+      if (!existingOb) {
+        outboundMap.set(obKey, { slice: flight.slices![0], airline: flight.airline, logoUrl: flight.logoUrl, lowestPrice: flight.price });
+      } else if (flight.price < existingOb.lowestPrice) {
+        existingOb.lowestPrice = flight.price;
+      }
+
+      const existingRt = returnMap.get(rtKey);
+      if (!existingRt) {
+        returnMap.set(rtKey, { slice: flight.slices![1], airline: flight.airline, logoUrl: flight.logoUrl, lowestPrice: flight.price });
+      } else if (flight.price < existingRt.lowestPrice) {
+        existingRt.lowestPrice = flight.price;
       }
     }
-    return groups;
-  }, [filteredAndSortedFlights, isRoundTrip, getOutboundKey]);
 
-  const returnOffers = useMemo(() => {
-    if (!selectedOutboundKey || !outboundGroups) return [];
-    const group = outboundGroups.get(selectedOutboundKey);
-    if (!group) return [];
-    return [...group.offers].sort((a, b) => {
+    return { outboundMap, returnMap, comboMap };
+  }, [flights, isRoundTrip, getOutboundKey, getReturnKey]);
+
+  const filteredOutboundKeys = useMemo(() => {
+    if (!offerMatrix || !filteredAndSortedFlights) return new Set<string>();
+    const keys = new Set<string>();
+    for (const flight of filteredAndSortedFlights) {
+      if (flight.slices && flight.slices.length >= 2) {
+        keys.add(getOutboundKey(flight));
+      }
+    }
+    return keys;
+  }, [offerMatrix, filteredAndSortedFlights, getOutboundKey]);
+
+  const filteredComboMap = useMemo(() => {
+    if (!isRoundTrip || !filteredAndSortedFlights) return new Map<string, FlightOffer>();
+    const map = new Map<string, FlightOffer>();
+    for (const flight of filteredAndSortedFlights) {
+      if (!flight.slices || flight.slices.length < 2) continue;
+      const obKey = getOutboundKey(flight);
+      const rtKey = getReturnKey(flight);
+      const comboKey = `${obKey}::${rtKey}`;
+      const existing = map.get(comboKey);
+      if (!existing || flight.price < existing.price) {
+        map.set(comboKey, flight);
+      }
+    }
+    return map;
+  }, [filteredAndSortedFlights, isRoundTrip, getOutboundKey, getReturnKey]);
+
+  const returnOptionsForSelected = useMemo(() => {
+    if (!selectedOutboundKey || !offerMatrix) return [];
+    const { returnMap } = offerMatrix;
+    const results: { returnKey: string; slice: FlightSlice; airline: string; logoUrl?: string | null; offer: FlightOffer | null; price: number | null }[] = [];
+
+    for (const [rtKey, rtData] of Array.from(returnMap.entries())) {
+      const comboKey = `${selectedOutboundKey}::${rtKey}`;
+      const matchingOffer = filteredComboMap.get(comboKey) || null;
+      results.push({
+        returnKey: rtKey,
+        slice: rtData.slice,
+        airline: rtData.airline,
+        logoUrl: rtData.logoUrl,
+        offer: matchingOffer,
+        price: matchingOffer ? matchingOffer.price : null,
+      });
+    }
+
+    const available = results.filter(r => r.offer !== null);
+    const unavailable = results.filter(r => r.offer === null);
+
+    available.sort((a, b) => {
       switch (sortBy) {
-        case "cheapest": return a.price - b.price;
-        case "fastest": return parseDurationToMinutes(a.slices?.[1]?.duration || a.duration) - parseDurationToMinutes(b.slices?.[1]?.duration || b.duration);
+        case "cheapest": return (a.price || 0) - (b.price || 0);
+        case "fastest": return parseDurationToMinutes(a.slice.duration) - parseDurationToMinutes(b.slice.duration);
         case "best": {
-          const sa = a.price * 0.6 + parseDurationToMinutes(a.slices?.[1]?.duration || a.duration) * 0.4;
-          const sb = b.price * 0.6 + parseDurationToMinutes(b.slices?.[1]?.duration || b.duration) * 0.4;
+          const sa = (a.price || 0) * 0.6 + parseDurationToMinutes(a.slice.duration) * 0.4;
+          const sb = (b.price || 0) * 0.6 + parseDurationToMinutes(b.slice.duration) * 0.4;
           return sa - sb;
         }
         default: return 0;
       }
     });
-  }, [selectedOutboundKey, outboundGroups, sortBy]);
 
-  const showTwoStepFlow = isRoundTrip && outboundGroups && outboundGroups.size > 0;
+    return [...available, ...unavailable];
+  }, [selectedOutboundKey, offerMatrix, sortBy]);
+
+  const showTwoStepFlow = isRoundTrip && offerMatrix !== null;
 
   const stopsOptions = [
     { key: "direct", label: t("flight.direct") || "Direct" },
@@ -617,10 +680,10 @@ export default function SearchResults() {
                 <h2 className="text-xl font-bold text-gray-900" data-testid="text-results-count">
                   {isSearching
                     ? t("results.searching") || "Searching..."
-                    : showTwoStepFlow && !selectedOutboundKey
-                      ? `${outboundGroups!.size} ${t("results.outbound_flights") || "voos de ida"}`
+                    : showTwoStepFlow && !selectedOutboundKey && offerMatrix
+                      ? `${filteredOutboundKeys.size > 0 ? filteredOutboundKeys.size : offerMatrix.outboundMap.size} ${t("results.outbound_flights") || "voos de ida"}`
                       : showTwoStepFlow && selectedOutboundKey
-                        ? `${returnOffers.length} ${t("results.return_flights") || "opcoes de volta"}`
+                        ? `${returnOptionsForSelected.filter(r => r.offer).length} ${t("results.return_flights") || "opcoes de volta"}`
                         : `${filteredAndSortedFlights.length} ${t("results.flights_found") || "flights found"}`}
                 </h2>
                 {activeFilterCount > 0 && (
@@ -699,25 +762,26 @@ export default function SearchResults() {
               </div>
             )}
 
-            {!isSearching && showTwoStepFlow && !selectedOutboundKey && (
+            {!isSearching && showTwoStepFlow && !selectedOutboundKey && offerMatrix && (
               <div className="space-y-2">
                 <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4 flex items-center gap-3" data-testid="step-indicator-outbound">
                   <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0">1</div>
                   <div>
                     <p className="text-sm font-bold text-blue-900 dark:text-blue-100">{t("results.select_outbound") || "Selecione o voo de ida"}</p>
-                    <p className="text-xs text-blue-600 dark:text-blue-400">{params.origin} → {params.destination} · {outboundGroups!.size} {t("results.options") || "opcoes"}</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">{params.origin} → {params.destination} · {offerMatrix.outboundMap.size} {t("results.options") || "opcoes"}</p>
                   </div>
                 </div>
                 <div className="space-y-3">
-                  {Array.from(outboundGroups!.entries())
+                  {Array.from(offerMatrix.outboundMap.entries())
+                    .filter(([key]) => filteredOutboundKeys.size === 0 || filteredOutboundKeys.has(key))
                     .sort(([,a], [,b]) => a.lowestPrice - b.lowestPrice)
                     .map(([key, group]) => {
-                      const slice = group.outboundSlice;
+                      const slice = group.slice;
                       const firstSeg = slice.segments[0];
                       const lastSeg = slice.segments[slice.segments.length - 1];
                       const stopsCount = slice.segments.length - 1;
                       const sliceDuration = slice.duration.startsWith("P") ? formatDurationUtil(slice.duration) : slice.duration;
-                      const currency = group.offers[0]?.currency || "USD";
+                      const currency = filteredAndSortedFlights[0]?.currency || "USD";
 
                       return (
                         <Card
@@ -770,7 +834,6 @@ export default function SearchResults() {
                                 <p className="text-xl font-bold text-gray-900">
                                   {new Intl.NumberFormat("en-US", { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(group.lowestPrice)}
                                 </p>
-                                <p className="text-[10px] text-gray-400">{group.offers.length} {t("results.return_options") || "opcoes de volta"}</p>
                               </div>
                               <Button size="sm" className="bg-blue-600 text-white rounded-lg" data-testid={`button-select-outbound-${key}`}>
                                 {t("flight.select") || "Selecionar"} <ArrowRight className="ml-1 h-3.5 w-3.5" />
@@ -784,7 +847,7 @@ export default function SearchResults() {
               </div>
             )}
 
-            {!isSearching && showTwoStepFlow && selectedOutboundKey && outboundGroups?.get(selectedOutboundKey) && (
+            {!isSearching && showTwoStepFlow && selectedOutboundKey && offerMatrix?.outboundMap.get(selectedOutboundKey) && (
               <div className="space-y-2">
                 <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 mb-2" data-testid="selected-outbound-summary">
                   <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -795,13 +858,13 @@ export default function SearchResults() {
                       <div>
                         <p className="text-xs text-emerald-600 font-semibold uppercase">{t("results.outbound_selected") || "Voo de ida selecionado"}</p>
                         {(() => {
-                          const group = outboundGroups!.get(selectedOutboundKey)!;
-                          const s = group.outboundSlice;
+                          const obData = offerMatrix!.outboundMap.get(selectedOutboundKey)!;
+                          const s = obData.slice;
                           const firstSeg = s.segments[0];
                           const lastSeg = s.segments[s.segments.length - 1];
                           return (
                             <p className="text-sm font-bold text-gray-900">
-                              {group.airline} · {s.originCode} {format(parseISO(firstSeg.departureTime), "HH:mm")} → {s.destinationCode} {format(parseISO(lastSeg.arrivalTime), "HH:mm")}
+                              {obData.airline} · {s.originCode} {format(parseISO(firstSeg.departureTime), "HH:mm")} → {s.destinationCode} {format(parseISO(lastSeg.arrivalTime), "HH:mm")}
                             </p>
                           );
                         })()}
@@ -823,37 +886,37 @@ export default function SearchResults() {
                   <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0">2</div>
                   <div>
                     <p className="text-sm font-bold text-blue-900 dark:text-blue-100">{t("results.select_return") || "Agora selecione o voo de volta"}</p>
-                    <p className="text-xs text-blue-600 dark:text-blue-400">{params.destination} → {params.origin} · {returnOffers.length} {t("results.options") || "opcoes"}</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">{params.destination} → {params.origin} · {returnOptionsForSelected.filter(r => r.offer).length} {t("results.available") || "disponiveis"} / {returnOptionsForSelected.length} {t("results.options") || "opcoes"}</p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  {returnOffers.map((flight) => {
-                      const returnSlice = flight.slices?.[1];
-                      if (!returnSlice) return null;
+                  {returnOptionsForSelected.map((rt) => {
+                      const returnSlice = rt.slice;
                       const firstSeg = returnSlice.segments[0];
                       const lastSeg = returnSlice.segments[returnSlice.segments.length - 1];
                       const stopsCount = returnSlice.segments.length - 1;
                       const sliceDuration = returnSlice.duration.startsWith("P") ? formatDurationUtil(returnSlice.duration) : returnSlice.duration;
-                      const bookUrl = `/book/${flight.id}?${searchParams.toString()}`;
+                      const isAvailable = rt.offer !== null;
+                      const bookUrl = isAvailable ? `/book/${rt.offer!.id}?${searchParams.toString()}` : "";
 
                       return (
                         <Card
-                          key={flight.id}
-                          className="p-0 overflow-hidden border border-gray-200 hover:border-blue-300 transition-all bg-white rounded-2xl"
-                          data-testid={`return-option-${flight.id}`}
+                          key={rt.returnKey}
+                          className={`p-0 overflow-hidden border transition-all bg-white rounded-2xl ${isAvailable ? "border-gray-200 hover:border-blue-300" : "border-gray-100 opacity-50"}`}
+                          data-testid={`return-option-${rt.returnKey}`}
                         >
                           <div className="p-5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
                             <div className="md:col-span-3 flex items-center gap-3">
                               <div className="h-10 w-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center p-1.5 overflow-hidden shrink-0">
-                                {flight.logoUrl ? (
-                                  <img src={flight.logoUrl} alt={flight.airline} className="w-full h-full object-contain" />
+                                {rt.logoUrl ? (
+                                  <img src={rt.logoUrl} alt={rt.airline} className="w-full h-full object-contain" />
                                 ) : (
                                   <Plane className="text-gray-400 h-5 w-5" />
                                 )}
                               </div>
                               <div>
-                                <p className="font-bold text-gray-900 text-sm">{flight.airline}</p>
+                                <p className="font-bold text-gray-900 text-sm">{rt.airline}</p>
                                 <p className="text-xs text-blue-600 font-semibold">{firstSeg.flightNumber}</p>
                               </div>
                             </div>
@@ -882,18 +945,27 @@ export default function SearchResults() {
                             </div>
 
                             <div className="md:col-span-4 flex items-center justify-end gap-4">
-                              <div className="text-right">
-                                <p className="text-xs text-gray-400">{t("flight.total_price") || "Preco total"}</p>
-                                <p className="text-2xl font-bold text-gray-900">
-                                  {new Intl.NumberFormat("en-US", { style: "currency", currency: flight.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(flight.price)}
-                                </p>
-                                <p className="text-[10px] text-gray-400">{t("results.round_trip_total") || "ida + volta"}</p>
-                              </div>
-                              <Link href={bookUrl}>
-                                <Button size="sm" className="bg-blue-600 text-white rounded-lg" data-testid={`button-select-return-${flight.id}`}>
-                                  {t("flight.select") || "Selecionar"} <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                                </Button>
-                              </Link>
+                              {isAvailable ? (
+                                <>
+                                  <div className="text-right">
+                                    <p className="text-xs text-gray-400">{t("flight.total_price") || "Preco total"}</p>
+                                    <p className="text-2xl font-bold text-gray-900">
+                                      {new Intl.NumberFormat("en-US", { style: "currency", currency: rt.offer!.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(rt.price!)}
+                                    </p>
+                                    <p className="text-[10px] text-gray-400">{t("results.round_trip_total") || "ida + volta"}</p>
+                                  </div>
+                                  <Link href={bookUrl}>
+                                    <Button size="sm" className="bg-blue-600 text-white rounded-lg" data-testid={`button-select-return-${rt.returnKey}`}>
+                                      {t("flight.select") || "Selecionar"} <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                                    </Button>
+                                  </Link>
+                                </>
+                              ) : (
+                                <div className="text-right">
+                                  <p className="text-xs text-gray-400">{t("results.unavailable_combo") || "Combinacao indisponivel"}</p>
+                                  <p className="text-sm font-semibold text-gray-400">{t("results.try_another_outbound") || "Selecione outra ida"}</p>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </Card>
