@@ -3,12 +3,15 @@ import { useLocation } from "wouter";
 import { FlightSearchForm } from "@/components/FlightSearchForm";
 import { FlightCard } from "@/components/FlightCard";
 import { useFlightSearch } from "@/hooks/use-flights";
-import { Loader2, Filter, AlertCircle, Plane, X, Sun, Sunrise, Sunset, Moon, Globe, BarChart3, Armchair, Sparkles, CheckCircle2 } from "lucide-react";
+import { Loader2, Filter, AlertCircle, Plane, X, Sun, Sunrise, Sunset, Moon, Globe, BarChart3, Armchair, Sparkles, CheckCircle2, Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
+import { Card } from "@/components/ui/card";
 import { useI18n } from "@/lib/i18n";
 import { SEO } from "@/components/SEO";
+import { Link } from "wouter";
+import { format, parseISO } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sheet,
@@ -17,7 +20,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import type { FlightOffer } from "@shared/schema";
+import type { FlightOffer, FlightSlice } from "@shared/schema";
 
 type SortOption = "cheapest" | "fastest" | "best";
 type DepartureTime = "morning" | "afternoon" | "evening" | "night";
@@ -28,6 +31,16 @@ function parseDurationToMinutes(duration: string): number {
   const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
   const minutes = minutesMatch ? parseInt(minutesMatch[1], 10) : 0;
   return hours * 60 + minutes;
+}
+
+function formatDurationUtil(duration: string): string {
+  const hoursMatch = duration.match(/(\d+)H/);
+  const minutesMatch = duration.match(/(\d+)M/);
+  const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
+  const minutes = minutesMatch ? parseInt(minutesMatch[1], 10) : 0;
+  if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h`;
+  return `${minutes}m`;
 }
 
 function getDepartureHour(departureTime: string): number {
@@ -241,6 +254,22 @@ export default function SearchResults() {
   const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
+  const [selectedOutboundKey, setSelectedOutboundKey] = useState<string | null>(null);
+
+  const isRoundTrip = !!(params as any).returnDate;
+
+  const getOutboundKey = useCallback((flight: FlightOffer) => {
+    if (!flight.slices || flight.slices.length < 2) return flight.id;
+    const s = flight.slices[0];
+    return s.segments.map(seg => `${seg.flightNumber}-${seg.departureTime}`).join("|");
+  }, []);
+
+  useEffect(() => {
+    if (searchKey !== lastSearchKey) {
+      setSelectedOutboundKey(null);
+    }
+  }, [searchKey, lastSearchKey]);
+
   const uniqueAirlines = useMemo(() => {
     if (!flights) return [];
     return Array.from(new Set(flights.map(f => f.airline))).sort();
@@ -337,6 +366,52 @@ export default function SearchResults() {
 
     return filtered;
   }, [flights, selectedStops, selectedAirlines, selectedDepartureTimes, selectedReturnTimes, priceRange, sortBy]);
+
+  const outboundGroups = useMemo(() => {
+    if (!isRoundTrip || !filteredAndSortedFlights || filteredAndSortedFlights.length === 0) return null;
+    const hasSlices = filteredAndSortedFlights.some(f => f.slices && f.slices.length >= 2);
+    if (!hasSlices) return null;
+
+    const groups = new Map<string, { outboundSlice: FlightSlice; offers: FlightOffer[]; lowestPrice: number; airline: string; logoUrl?: string | null }>();
+    for (const flight of filteredAndSortedFlights) {
+      if (!flight.slices || flight.slices.length < 2) continue;
+      const key = getOutboundKey(flight);
+      const existing = groups.get(key);
+      if (existing) {
+        existing.offers.push(flight);
+        if (flight.price < existing.lowestPrice) existing.lowestPrice = flight.price;
+      } else {
+        groups.set(key, {
+          outboundSlice: flight.slices[0],
+          offers: [flight],
+          lowestPrice: flight.price,
+          airline: flight.airline,
+          logoUrl: flight.logoUrl,
+        });
+      }
+    }
+    return groups;
+  }, [filteredAndSortedFlights, isRoundTrip, getOutboundKey]);
+
+  const returnOffers = useMemo(() => {
+    if (!selectedOutboundKey || !outboundGroups) return [];
+    const group = outboundGroups.get(selectedOutboundKey);
+    if (!group) return [];
+    return [...group.offers].sort((a, b) => {
+      switch (sortBy) {
+        case "cheapest": return a.price - b.price;
+        case "fastest": return parseDurationToMinutes(a.slices?.[1]?.duration || a.duration) - parseDurationToMinutes(b.slices?.[1]?.duration || b.duration);
+        case "best": {
+          const sa = a.price * 0.6 + parseDurationToMinutes(a.slices?.[1]?.duration || a.duration) * 0.4;
+          const sb = b.price * 0.6 + parseDurationToMinutes(b.slices?.[1]?.duration || b.duration) * 0.4;
+          return sa - sb;
+        }
+        default: return 0;
+      }
+    });
+  }, [selectedOutboundKey, outboundGroups, sortBy]);
+
+  const showTwoStepFlow = isRoundTrip && outboundGroups && outboundGroups.size > 0;
 
   const stopsOptions = [
     { key: "direct", label: t("flight.direct") || "Direct" },
@@ -542,7 +617,11 @@ export default function SearchResults() {
                 <h2 className="text-xl font-bold text-gray-900" data-testid="text-results-count">
                   {isSearching
                     ? t("results.searching") || "Searching..."
-                    : `${filteredAndSortedFlights.length} ${t("results.flights_found") || "flights found"}`}
+                    : showTwoStepFlow && !selectedOutboundKey
+                      ? `${outboundGroups!.size} ${t("results.outbound_flights") || "voos de ida"}`
+                      : showTwoStepFlow && selectedOutboundKey
+                        ? `${returnOffers.length} ${t("results.return_flights") || "opcoes de volta"}`
+                        : `${filteredAndSortedFlights.length} ${t("results.flights_found") || "flights found"}`}
                 </h2>
                 {activeFilterCount > 0 && (
                   <Badge variant="secondary" data-testid="badge-active-filters">
@@ -620,7 +699,211 @@ export default function SearchResults() {
               </div>
             )}
 
-            {!isSearching && (
+            {!isSearching && showTwoStepFlow && !selectedOutboundKey && (
+              <div className="space-y-2">
+                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4 flex items-center gap-3" data-testid="step-indicator-outbound">
+                  <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0">1</div>
+                  <div>
+                    <p className="text-sm font-bold text-blue-900 dark:text-blue-100">{t("results.select_outbound") || "Selecione o voo de ida"}</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">{params.origin} → {params.destination} · {outboundGroups!.size} {t("results.options") || "opcoes"}</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {Array.from(outboundGroups!.entries())
+                    .sort(([,a], [,b]) => a.lowestPrice - b.lowestPrice)
+                    .map(([key, group]) => {
+                      const slice = group.outboundSlice;
+                      const firstSeg = slice.segments[0];
+                      const lastSeg = slice.segments[slice.segments.length - 1];
+                      const stopsCount = slice.segments.length - 1;
+                      const sliceDuration = slice.duration.startsWith("P") ? formatDurationUtil(slice.duration) : slice.duration;
+                      const currency = group.offers[0]?.currency || "USD";
+
+                      return (
+                        <Card
+                          key={key}
+                          className="p-0 overflow-hidden border border-gray-200 hover:border-blue-300 transition-all cursor-pointer bg-white rounded-2xl"
+                          onClick={() => setSelectedOutboundKey(key)}
+                          data-testid={`outbound-option-${key}`}
+                        >
+                          <div className="p-5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                            <div className="md:col-span-3 flex items-center gap-3">
+                              <div className="h-10 w-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center p-1.5 overflow-hidden shrink-0">
+                                {group.logoUrl ? (
+                                  <img src={group.logoUrl} alt={group.airline} className="w-full h-full object-contain" />
+                                ) : (
+                                  <Plane className="text-gray-400 h-5 w-5" />
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-bold text-gray-900 text-sm">{group.airline}</p>
+                                <p className="text-xs text-blue-600 font-semibold">{firstSeg.flightNumber}</p>
+                              </div>
+                            </div>
+
+                            <div className="md:col-span-5 flex items-center justify-between gap-2">
+                              <div className="text-center">
+                                <div className="text-xl font-bold text-gray-900">{format(parseISO(firstSeg.departureTime), "HH:mm")}</div>
+                                <div className="text-xs text-gray-500 font-semibold uppercase">{slice.originCode}</div>
+                              </div>
+                              <div className="flex-1 flex flex-col items-center px-3">
+                                <div className="text-[10px] text-gray-400 mb-1 flex items-center gap-1">
+                                  <Clock className="h-2.5 w-2.5" />
+                                  {sliceDuration}
+                                </div>
+                                <div className="w-full h-[2px] bg-gray-200 relative">
+                                  <Plane className="h-3 w-3 text-blue-500 rotate-90 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+                                </div>
+                                <div className={`text-[10px] font-medium mt-1 ${stopsCount === 0 ? "text-emerald-600" : "text-amber-600"}`}>
+                                  {stopsCount === 0 ? (t("flight.direct") || "Direto") : `${stopsCount} ${stopsCount > 1 ? (t("flight.stops") || "paradas") : (t("flight.stop") || "parada")}`}
+                                </div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-xl font-bold text-gray-900">{format(parseISO(lastSeg.arrivalTime), "HH:mm")}</div>
+                                <div className="text-xs text-gray-500 font-semibold uppercase">{slice.destinationCode}</div>
+                              </div>
+                            </div>
+
+                            <div className="md:col-span-4 flex items-center justify-end gap-4">
+                              <div className="text-right">
+                                <p className="text-xs text-gray-400">{t("results.from") || "a partir de"}</p>
+                                <p className="text-xl font-bold text-gray-900">
+                                  {new Intl.NumberFormat("en-US", { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(group.lowestPrice)}
+                                </p>
+                                <p className="text-[10px] text-gray-400">{group.offers.length} {t("results.return_options") || "opcoes de volta"}</p>
+                              </div>
+                              <Button size="sm" className="bg-blue-600 text-white rounded-lg" data-testid={`button-select-outbound-${key}`}>
+                                {t("flight.select") || "Selecionar"} <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+
+            {!isSearching && showTwoStepFlow && selectedOutboundKey && outboundGroups?.get(selectedOutboundKey) && (
+              <div className="space-y-2">
+                <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 mb-2" data-testid="selected-outbound-summary">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-emerald-600 font-semibold uppercase">{t("results.outbound_selected") || "Voo de ida selecionado"}</p>
+                        {(() => {
+                          const group = outboundGroups!.get(selectedOutboundKey)!;
+                          const s = group.outboundSlice;
+                          const firstSeg = s.segments[0];
+                          const lastSeg = s.segments[s.segments.length - 1];
+                          return (
+                            <p className="text-sm font-bold text-gray-900">
+                              {group.airline} · {s.originCode} {format(parseISO(firstSeg.departureTime), "HH:mm")} → {s.destinationCode} {format(parseISO(lastSeg.arrivalTime), "HH:mm")}
+                            </p>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedOutboundKey(null)}
+                      data-testid="button-change-outbound"
+                      className="border-emerald-300 text-emerald-700"
+                    >
+                      {t("results.change_outbound") || "Alterar ida"}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4 flex items-center gap-3" data-testid="step-indicator-return">
+                  <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0">2</div>
+                  <div>
+                    <p className="text-sm font-bold text-blue-900 dark:text-blue-100">{t("results.select_return") || "Agora selecione o voo de volta"}</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">{params.destination} → {params.origin} · {returnOffers.length} {t("results.options") || "opcoes"}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {returnOffers.map((flight) => {
+                      const returnSlice = flight.slices?.[1];
+                      if (!returnSlice) return null;
+                      const firstSeg = returnSlice.segments[0];
+                      const lastSeg = returnSlice.segments[returnSlice.segments.length - 1];
+                      const stopsCount = returnSlice.segments.length - 1;
+                      const sliceDuration = returnSlice.duration.startsWith("P") ? formatDurationUtil(returnSlice.duration) : returnSlice.duration;
+                      const bookUrl = `/book/${flight.id}?${searchParams.toString()}`;
+
+                      return (
+                        <Card
+                          key={flight.id}
+                          className="p-0 overflow-hidden border border-gray-200 hover:border-blue-300 transition-all bg-white rounded-2xl"
+                          data-testid={`return-option-${flight.id}`}
+                        >
+                          <div className="p-5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                            <div className="md:col-span-3 flex items-center gap-3">
+                              <div className="h-10 w-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center p-1.5 overflow-hidden shrink-0">
+                                {flight.logoUrl ? (
+                                  <img src={flight.logoUrl} alt={flight.airline} className="w-full h-full object-contain" />
+                                ) : (
+                                  <Plane className="text-gray-400 h-5 w-5" />
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-bold text-gray-900 text-sm">{flight.airline}</p>
+                                <p className="text-xs text-blue-600 font-semibold">{firstSeg.flightNumber}</p>
+                              </div>
+                            </div>
+
+                            <div className="md:col-span-5 flex items-center justify-between gap-2">
+                              <div className="text-center">
+                                <div className="text-xl font-bold text-gray-900">{format(parseISO(firstSeg.departureTime), "HH:mm")}</div>
+                                <div className="text-xs text-gray-500 font-semibold uppercase">{returnSlice.originCode}</div>
+                              </div>
+                              <div className="flex-1 flex flex-col items-center px-3">
+                                <div className="text-[10px] text-gray-400 mb-1 flex items-center gap-1">
+                                  <Clock className="h-2.5 w-2.5" />
+                                  {sliceDuration}
+                                </div>
+                                <div className="w-full h-[2px] bg-gray-200 relative">
+                                  <Plane className="h-3 w-3 text-blue-500 rotate-90 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+                                </div>
+                                <div className={`text-[10px] font-medium mt-1 ${stopsCount === 0 ? "text-emerald-600" : "text-amber-600"}`}>
+                                  {stopsCount === 0 ? (t("flight.direct") || "Direto") : `${stopsCount} ${stopsCount > 1 ? (t("flight.stops") || "paradas") : (t("flight.stop") || "parada")}`}
+                                </div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-xl font-bold text-gray-900">{format(parseISO(lastSeg.arrivalTime), "HH:mm")}</div>
+                                <div className="text-xs text-gray-500 font-semibold uppercase">{returnSlice.destinationCode}</div>
+                              </div>
+                            </div>
+
+                            <div className="md:col-span-4 flex items-center justify-end gap-4">
+                              <div className="text-right">
+                                <p className="text-xs text-gray-400">{t("flight.total_price") || "Preco total"}</p>
+                                <p className="text-2xl font-bold text-gray-900">
+                                  {new Intl.NumberFormat("en-US", { style: "currency", currency: flight.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(flight.price)}
+                                </p>
+                                <p className="text-[10px] text-gray-400">{t("results.round_trip_total") || "ida + volta"}</p>
+                              </div>
+                              <Link href={bookUrl}>
+                                <Button size="sm" className="bg-blue-600 text-white rounded-lg" data-testid={`button-select-return-${flight.id}`}>
+                                  {t("flight.select") || "Selecionar"} <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        </Card>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+
+            {!isSearching && !showTwoStepFlow && (
               <div className="space-y-4">
                 {filteredAndSortedFlights.map((flight) => (
                   <FlightCard key={flight.id} flight={flight} />
