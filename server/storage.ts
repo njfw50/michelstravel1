@@ -4,7 +4,7 @@ import { eq, desc, sql, and } from "drizzle-orm";
 import {
   flightSearches, bookings, siteSettings, blogPosts, users,
   liveSessions, liveSessionBlocks, liveSessionMessages,
-  internalThreads, internalMessages,
+  internalThreads, internalMessages, voiceEscalations,
   type FlightSearch, type InsertFlightSearch,
   type Booking, type InsertBooking,
   type SiteSetting, type InsertSiteSetting,
@@ -14,6 +14,7 @@ import {
   type LiveSessionMessage, type InsertLiveSessionMessage,
   type InternalThread, type InsertInternalThread,
   type InternalMessage, type InsertInternalMessage,
+  type VoiceEscalation, type InsertVoiceEscalation,
 } from "@shared/schema";
 
 // Import Auth Storage
@@ -70,6 +71,11 @@ export interface IStorage extends IAuthStorage {
   markMessagesRead(threadId: number, role: "admin" | "user"): Promise<void>;
   getUnreadCountForUser(userId: string): Promise<number>;
   getUnreadCountForAdmin(): Promise<number>;
+
+  // Voice Escalations
+  createVoiceEscalation(escalation: InsertVoiceEscalation): Promise<VoiceEscalation>;
+  getAllVoiceEscalations(): Promise<VoiceEscalation[]>;
+  updateVoiceEscalation(id: number, updates: Partial<InsertVoiceEscalation>): Promise<VoiceEscalation | undefined>;
 
   // Stripe
   getProduct(productId: string): Promise<any>;
@@ -404,6 +410,21 @@ export class DatabaseStorage implements IStorage {
       WHERE read_by_admin = false AND sender_role = 'user'
     `);
     return Number(result.rows[0]?.count || 0);
+  }
+
+  // --- Voice Escalations ---
+  async createVoiceEscalation(escalation: InsertVoiceEscalation): Promise<VoiceEscalation> {
+    const [newEscalation] = await db.insert(voiceEscalations).values(escalation).returning();
+    return newEscalation;
+  }
+
+  async getAllVoiceEscalations(): Promise<VoiceEscalation[]> {
+    return await db.select().from(voiceEscalations).orderBy(desc(voiceEscalations.createdAt));
+  }
+
+  async updateVoiceEscalation(id: number, updates: Partial<InsertVoiceEscalation>): Promise<VoiceEscalation | undefined> {
+    const [updated] = await db.update(voiceEscalations).set(updates).where(eq(voiceEscalations.id, id)).returning();
+    return updated;
   }
 }
 

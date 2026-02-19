@@ -132,6 +132,20 @@ export const internalMessages = pgTable("internal_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// === VOICE ESCALATIONS (Phone Assistant) ===
+export const voiceEscalations = pgTable("voice_escalations", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(), // 'voice' or 'chat'
+  reason: text("reason").notNull(),
+  customerPhone: text("customer_phone"),
+  summary: text("summary"),
+  callSid: text("call_sid"),
+  status: text("status").default("pending").notNull(), // pending, in_progress, resolved
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+});
+
 // === RELATIONS ===
 export const bookingsRelations = relations(bookings, ({ one }) => ({
   user: one(users, {
@@ -150,6 +164,7 @@ export const insertLiveSessionBlockSchema = createInsertSchema(liveSessionBlocks
 export const insertLiveSessionMessageSchema = createInsertSchema(liveSessionMessages).omit({ id: true, createdAt: true });
 export const insertInternalThreadSchema = createInsertSchema(internalThreads).omit({ id: true, createdAt: true, lastMessageAt: true });
 export const insertInternalMessageSchema = createInsertSchema(internalMessages).omit({ id: true, createdAt: true });
+export const insertVoiceEscalationSchema = createInsertSchema(voiceEscalations).omit({ id: true, createdAt: true, resolvedAt: true });
 
 // === TYPES ===
 export type FlightSearch = typeof flightSearches.$inferSelect;
@@ -175,6 +190,9 @@ export type InternalThread = typeof internalThreads.$inferSelect;
 export type InsertInternalThread = z.infer<typeof insertInternalThreadSchema>;
 export type InternalMessage = typeof internalMessages.$inferSelect;
 export type InsertInternalMessage = z.infer<typeof insertInternalMessageSchema>;
+
+export type VoiceEscalation = typeof voiceEscalations.$inferSelect;
+export type InsertVoiceEscalation = z.infer<typeof insertVoiceEscalationSchema>;
 
 // === API TYPES ===
 // Search Query Params

@@ -1,6 +1,7 @@
 import express, { type Request, type Response, type NextFunction } from "express";
 import { runMigrations } from 'stripe-replit-sync';
 import { registerRoutes } from "./routes";
+import { registerVoiceEscalationRoutes } from "./routes/voice_escalation";
 import { setupVite } from "./vite";
 import { serveStatic } from "./static";
 import { storage } from "./storage";
@@ -165,6 +166,7 @@ app.use((req, res, next) => {
   await setupAuth(app);
   registerAuthRoutes(app);
   registerRoutes(app);
+  registerVoiceEscalationRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
