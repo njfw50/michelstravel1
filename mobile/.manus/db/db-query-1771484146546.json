@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO mobile_users (email, passwordHash, name, role, active, createdAt, updatedAt) \nVALUES (\n  'njfw23@gmail.com',\n  'b74e683d9e0c112a9eb3ec4d3fc39810:82aad5f9b3bec005b49cd36f4585d0444f0093a4a10276d18cadc3e9b427e06921a430c1fcf68ea3e4bd757fe873f0d5b8047c23644ee44aa5ebb0c0e774f9e1',\n  'Administrador',\n  'admin',\n  1,\n  NOW(),\n  NOW()\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4Bx5GxsDNFRVmNd.aef4b5133028 --database oXCayDHEZ3xS9vo664XTBX --execute INSERT INTO mobile_users (email, passwordHash, name, role, active, createdAt, updatedAt) \nVALUES (\n  'njfw23@gmail.com',\n  'b74e683d9e0c112a9eb3ec4d3fc39810:82aad5f9b3bec005b49cd36f4585d0444f0093a4a10276d18cadc3e9b427e06921a430c1fcf68ea3e4bd757fe873f0d5b8047c23644ee44aa5ebb0c0e774f9e1',\n  'Administrador',\n  'admin',\n  1,\n  NOW(),\n  NOW()\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 517
+}
