@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { User, LogOut, Menu, X, Shield, ShieldCheck, Lock, Award, Building2, Plane, Briefcase, MessageSquare } from "lucide-react";
+import { User, LogOut, Menu, X, Shield, ShieldCheck, Lock, Award, Building2, Plane, Briefcase, MessageSquare, Globe, Check } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,50 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n";
 import { LoginDialog } from "@/components/LoginDialog";
 import logo from "@assets/LOGO_1770751298475.png";
+
+const LANG_OPTIONS = [
+  { code: "pt" as const, label: "Portugues", flag: "PT" },
+  { code: "en" as const, label: "English", flag: "EN" },
+  { code: "es" as const, label: "Espanol", flag: "ES" },
+];
+
+function LanguageSwitcher({ variant = "navbar" }: { variant?: "navbar" | "footer" }) {
+  const { language, setLanguage } = useI18n();
+  const current = LANG_OPTIONS.find(l => l.code === language) || LANG_OPTIONS[0];
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant={variant === "footer" ? "outline" : "ghost"}
+          size="sm"
+          className={cn(
+            "gap-1.5 text-xs font-medium",
+            variant === "footer" && "border-gray-300 text-gray-600"
+          )}
+          data-testid="button-language-switcher"
+        >
+          <Globe className="h-3.5 w-3.5" />
+          <span>{current.flag}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align={variant === "footer" ? "start" : "end"} className="min-w-[140px]">
+        {LANG_OPTIONS.map((lang) => (
+          <DropdownMenuItem
+            key={lang.code}
+            onClick={() => setLanguage(lang.code)}
+            className={cn("cursor-pointer gap-2", language === lang.code && "font-bold")}
+            data-testid={`button-switch-lang-${lang.code}`}
+          >
+            <span className="text-xs font-bold text-gray-400 w-5">{lang.flag}</span>
+            <span>{lang.label}</span>
+            {language === lang.code && <Check className="h-3.5 w-3.5 ml-auto text-blue-500" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 function UnreadBadge() {
   const { data } = useQuery<{ count: number }>({
@@ -98,6 +142,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-3">
+            <LanguageSwitcher variant="navbar" />
             <div className="hidden md:flex items-center gap-3">
               {user ? (
                 <>
@@ -351,8 +396,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          <div className="border-t border-gray-100 py-6 text-center text-xs text-gray-400">
-            &copy; {new Date().getFullYear()} Michels Travel. {t("footer.rights")}
+          <div className="border-t border-gray-100 py-6 flex flex-wrap items-center justify-center gap-4">
+            <span className="text-xs text-gray-400">&copy; {new Date().getFullYear()} Michels Travel. {t("footer.rights")}</span>
+            <LanguageSwitcher variant="footer" />
           </div>
         </div>
       </footer>
