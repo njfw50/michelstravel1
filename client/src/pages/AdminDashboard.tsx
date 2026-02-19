@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare, AlertTriangle, CheckCircle2, XCircle, Lock, Phone } from "lucide-react";
+import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare, AlertTriangle, CheckCircle2, XCircle, Lock, Phone, Megaphone, Plus, Trash2, ExternalLink, Copy } from "lucide-react";
 import { VoiceEscalations } from "@/components/VoiceEscalations";
 import { useI18n } from "@/lib/i18n";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -14,6 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
+import type { FeaturedDeal } from "@shared/schema";
 
 function TestModeControl() {
   const { t } = useI18n();
@@ -431,6 +434,266 @@ function CommissionControl() {
   );
 }
 
+function FeaturedDealsManager() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [showForm, setShowForm] = useState(false);
+  const [editingDeal, setEditingDeal] = useState<FeaturedDeal | null>(null);
+  const [form, setForm] = useState({
+    origin: '', originCity: '', destination: '', destinationCity: '',
+    departureDate: '', returnDate: '', price: '', currency: 'USD',
+    airline: '', cabinClass: 'economy', headline: '', description: '', isActive: true,
+  });
+
+  const { data: deals, isLoading } = useQuery<FeaturedDeal[]>({
+    queryKey: ['/api/admin/featured-deals'],
+  });
+
+  const zapierUrl = `${window.location.origin}/api/public/flight-deals`;
+
+  const onMutationError = (error: Error) => {
+    toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+  };
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('POST', '/api/admin/featured-deals', data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['/api/admin/featured-deals'] });
+      toast({ title: 'Oferta criada com sucesso' });
+      resetForm();
+    },
+    onError: onMutationError,
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
+      apiRequest('PATCH', `/api/admin/featured-deals/${id}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['/api/admin/featured-deals'] });
+      toast({ title: 'Oferta atualizada' });
+      resetForm();
+    },
+    onError: onMutationError,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => apiRequest('DELETE', `/api/admin/featured-deals/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['/api/admin/featured-deals'] });
+      toast({ title: 'Oferta removida' });
+    },
+    onError: onMutationError,
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
+      apiRequest('PATCH', `/api/admin/featured-deals/${id}`, { isActive }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['/api/admin/featured-deals'] });
+    },
+    onError: onMutationError,
+  });
+
+  const resetForm = () => {
+    setShowForm(false);
+    setEditingDeal(null);
+    setForm({
+      origin: '', originCity: '', destination: '', destinationCity: '',
+      departureDate: '', returnDate: '', price: '', currency: 'USD',
+      airline: '', cabinClass: 'economy', headline: '', description: '', isActive: true,
+    });
+  };
+
+  const startEdit = (deal: FeaturedDeal) => {
+    setEditingDeal(deal);
+    setForm({
+      origin: deal.origin, originCity: deal.originCity || '', destination: deal.destination,
+      destinationCity: deal.destinationCity || '', departureDate: deal.departureDate || '',
+      returnDate: deal.returnDate || '', price: deal.price || '', currency: deal.currency || 'USD',
+      airline: deal.airline || '', cabinClass: deal.cabinClass || 'economy',
+      headline: deal.headline || '', description: deal.description || '', isActive: deal.isActive ?? true,
+    });
+    setShowForm(true);
+  };
+
+  const handleSubmit = () => {
+    if (!form.origin || !form.destination) {
+      toast({ title: 'Preencha origem e destino', variant: 'destructive' });
+      return;
+    }
+    if (editingDeal) {
+      updateMutation.mutate({ id: editingDeal.id, data: form });
+    } else {
+      createMutation.mutate(form);
+    }
+  };
+
+  const copyUrl = () => {
+    navigator.clipboard.writeText(zapierUrl);
+    toast({ title: 'URL copiada!' });
+  };
+
+  return (
+    <Card className="bg-white border border-gray-200 shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center">
+            <Megaphone className="h-5 w-5 text-purple-600" />
+          </div>
+          <div>
+            <CardTitle className="text-gray-900">Ofertas em Destaque (Zapier)</CardTitle>
+            <p className="text-xs text-gray-500 mt-0.5">Crie ofertas que o Zapier publica no Facebook</p>
+          </div>
+        </div>
+        <Button
+          data-testid="button-add-deal"
+          size="sm"
+          onClick={() => { resetForm(); setShowForm(true); }}
+          className="gap-1.5"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Nova Oferta
+        </Button>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 border border-blue-200">
+          <ExternalLink className="h-4 w-4 text-blue-600 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-blue-800">URL para o Zapier:</p>
+            <code className="text-xs text-blue-600 break-all" data-testid="text-zapier-url">{zapierUrl}</code>
+          </div>
+          <Button size="icon" variant="ghost" onClick={copyUrl} data-testid="button-copy-zapier-url">
+            <Copy className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+
+        {showForm && (
+          <div className="p-4 rounded-lg border border-gray-200 bg-gray-50 space-y-3">
+            <h4 className="font-medium text-sm text-gray-900">
+              {editingDeal ? 'Editar Oferta' : 'Nova Oferta'}
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Origem (IATA)</Label>
+                <Input data-testid="input-deal-origin" placeholder="GRU" value={form.origin}
+                  onChange={e => setForm(f => ({ ...f, origin: e.target.value.toUpperCase() }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Cidade Origem</Label>
+                <Input data-testid="input-deal-origin-city" placeholder="Sao Paulo" value={form.originCity}
+                  onChange={e => setForm(f => ({ ...f, originCity: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Destino (IATA)</Label>
+                <Input data-testid="input-deal-destination" placeholder="LIS" value={form.destination}
+                  onChange={e => setForm(f => ({ ...f, destination: e.target.value.toUpperCase() }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Cidade Destino</Label>
+                <Input data-testid="input-deal-dest-city" placeholder="Lisboa" value={form.destinationCity}
+                  onChange={e => setForm(f => ({ ...f, destinationCity: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Data Ida</Label>
+                <Input data-testid="input-deal-departure" type="date" value={form.departureDate}
+                  onChange={e => setForm(f => ({ ...f, departureDate: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Data Volta</Label>
+                <Input data-testid="input-deal-return" type="date" value={form.returnDate}
+                  onChange={e => setForm(f => ({ ...f, returnDate: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Preco</Label>
+                <Input data-testid="input-deal-price" type="number" placeholder="599.99" value={form.price}
+                  onChange={e => setForm(f => ({ ...f, price: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Moeda</Label>
+                <Input data-testid="input-deal-currency" placeholder="USD" value={form.currency}
+                  onChange={e => setForm(f => ({ ...f, currency: e.target.value.toUpperCase() }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Companhia Aerea</Label>
+                <Input data-testid="input-deal-airline" placeholder="LATAM" value={form.airline}
+                  onChange={e => setForm(f => ({ ...f, airline: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Classe</Label>
+                <Input data-testid="input-deal-cabin" placeholder="economy" value={form.cabinClass}
+                  onChange={e => setForm(f => ({ ...f, cabinClass: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Titulo (para o banner)</Label>
+              <Input data-testid="input-deal-headline" placeholder="Voos para Lisboa a partir de $599!"
+                value={form.headline} onChange={e => setForm(f => ({ ...f, headline: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Descricao</Label>
+              <Textarea data-testid="input-deal-description" placeholder="Reserve agora os melhores voos..."
+                value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                className="resize-none" rows={2} />
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Button data-testid="button-save-deal" size="sm" onClick={handleSubmit}
+                disabled={createMutation.isPending || updateMutation.isPending} className="gap-1.5">
+                {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                <Save className="h-3.5 w-3.5" />
+                {editingDeal ? 'Atualizar' : 'Salvar'}
+              </Button>
+              <Button data-testid="button-cancel-deal" size="sm" variant="outline" onClick={resetForm}>
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-gray-400" /></div>
+        ) : !deals?.length ? (
+          <p className="text-sm text-gray-400 text-center py-4">Nenhuma oferta criada ainda</p>
+        ) : (
+          <div className="space-y-2">
+            {deals.map(deal => (
+              <div key={deal.id} className="flex items-center justify-between gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100" data-testid={`card-deal-${deal.id}`}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-bold text-sm text-gray-900">
+                      {deal.originCity || deal.origin} → {deal.destinationCity || deal.destination}
+                    </span>
+                    {deal.price && (
+                      <Badge variant="secondary" className="text-xs">
+                        {deal.currency} {parseFloat(deal.price).toFixed(2)}
+                      </Badge>
+                    )}
+                    <Badge variant={deal.isActive ? "default" : "outline"} className="text-xs">
+                      {deal.isActive ? 'Ativa' : 'Inativa'}
+                    </Badge>
+                  </div>
+                  {deal.headline && <p className="text-xs text-gray-500 mt-0.5 truncate">{deal.headline}</p>}
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button size="icon" variant="ghost" onClick={() => toggleMutation.mutate({ id: deal.id, isActive: !deal.isActive })}
+                    data-testid={`button-toggle-deal-${deal.id}`}>
+                    {deal.isActive ? <ToggleRight className="h-4 w-4 text-green-500" /> : <ToggleLeft className="h-4 w-4 text-gray-400" />}
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={() => startEdit(deal)} data-testid={`button-edit-deal-${deal.id}`}>
+                    <Percent className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(deal.id)} data-testid={`button-delete-deal-${deal.id}`}>
+                    <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function AdminLoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -587,6 +850,8 @@ export default function AdminDashboard() {
 
         <TestModeControl />
         <CommissionControl />
+        
+        <FeaturedDealsManager />
         
         {/* Voice Escalations Section */}
         <VoiceEscalations />

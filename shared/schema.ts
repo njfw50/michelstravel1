@@ -146,6 +146,26 @@ export const voiceEscalations = pgTable("voice_escalations", {
   resolvedAt: timestamp("resolved_at"),
 });
 
+// === FEATURED DEALS (Zapier/Social Media Promotions) ===
+export const featuredDeals = pgTable("featured_deals", {
+  id: serial("id").primaryKey(),
+  origin: text("origin").notNull(),
+  originCity: text("origin_city"),
+  destination: text("destination").notNull(),
+  destinationCity: text("destination_city"),
+  departureDate: text("departure_date"),
+  returnDate: text("return_date"),
+  price: decimal("price", { precision: 10, scale: 2 }),
+  currency: text("currency").default("USD"),
+  airline: text("airline"),
+  cabinClass: text("cabin_class").default("economy"),
+  headline: text("headline"),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  lastPublishedAt: timestamp("last_published_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // === RELATIONS ===
 export const bookingsRelations = relations(bookings, ({ one }) => ({
   user: one(users, {
@@ -165,6 +185,7 @@ export const insertLiveSessionMessageSchema = createInsertSchema(liveSessionMess
 export const insertInternalThreadSchema = createInsertSchema(internalThreads).omit({ id: true, createdAt: true, lastMessageAt: true });
 export const insertInternalMessageSchema = createInsertSchema(internalMessages).omit({ id: true, createdAt: true });
 export const insertVoiceEscalationSchema = createInsertSchema(voiceEscalations).omit({ id: true, createdAt: true, resolvedAt: true });
+export const insertFeaturedDealSchema = createInsertSchema(featuredDeals).omit({ id: true, createdAt: true, lastPublishedAt: true });
 
 // === TYPES ===
 export type FlightSearch = typeof flightSearches.$inferSelect;
@@ -193,6 +214,9 @@ export type InsertInternalMessage = z.infer<typeof insertInternalMessageSchema>;
 
 export type VoiceEscalation = typeof voiceEscalations.$inferSelect;
 export type InsertVoiceEscalation = z.infer<typeof insertVoiceEscalationSchema>;
+
+export type FeaturedDeal = typeof featuredDeals.$inferSelect;
+export type InsertFeaturedDeal = z.infer<typeof insertFeaturedDealSchema>;
 
 // === API TYPES ===
 // Search Query Params

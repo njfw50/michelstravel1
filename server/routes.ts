@@ -4,7 +4,7 @@ import { storage } from './storage';
 import { stripeService } from './stripeService';
 import { getUncachableStripeClient } from './stripeClient';
 import { db } from "./db";
-import { flightSearches, bookings, siteSettings, conversations, messages, type FlightSearchParams } from "@shared/schema";
+import { flightSearches, bookings, siteSettings, conversations, messages, insertFeaturedDealSchema, type FlightSearchParams } from "@shared/schema";
 import { users } from "@shared/models/auth";
 import { desc, eq, and, gt } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -2635,6 +2635,92 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to get booking status" });
+    }
+  });
+
+  // ======= PUBLIC API - Zapier Flight Deals =======
+  app.get('/api/public/flight-deals', async (_req, res) => {
+    try {
+      const deals = await storage.getFeaturedDeals(true);
+      const siteUrl = 'https://buyflights.net';
+
+      const formatted = deals.map(deal => ({
+        id: deal.id,
+        origin: deal.origin,
+        origin_city: deal.originCity || deal.origin,
+        destination: deal.destination,
+        destination_city: deal.destinationCity || deal.destination,
+        departure_date: deal.departureDate || '',
+        return_date: deal.returnDate || '',
+        price: deal.price ? `${deal.currency || 'USD'} ${parseFloat(deal.price).toFixed(2)}` : '',
+        price_value: deal.price ? parseFloat(deal.price) : null,
+        currency: deal.currency || 'USD',
+        airline: deal.airline || '',
+        cabin_class: deal.cabinClass || 'economy',
+        headline: deal.headline || `${deal.originCity || deal.origin} → ${deal.destinationCity || deal.destination}`,
+        description: deal.description || `Voos a partir de ${deal.currency || 'USD'} ${deal.price}. Reserve agora!`,
+        booking_url: `${siteUrl}/?origin=${deal.origin}&destination=${deal.destination}`,
+        created_at: deal.createdAt,
+      }));
+
+      res.json({
+        deals: formatted,
+        count: formatted.length,
+        site: siteUrl,
+        generated_at: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Public flight deals error:', error);
+      res.status(500).json({ error: 'Failed to fetch flight deals' });
+    }
+  });
+
+  // ======= ADMIN - Featured Deals CRUD =======
+  app.get('/api/admin/featured-deals', requireAdmin, async (_req, res) => {
+    try {
+      const deals = await storage.getFeaturedDeals();
+      res.json(deals);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch deals' });
+    }
+  });
+
+  app.post('/api/admin/featured-deals', requireAdmin, async (req, res) => {
+    try {
+      const parsed = insertFeaturedDealSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: 'Invalid data', details: parsed.error.flatten() });
+      }
+      const deal = await storage.createFeaturedDeal(parsed.data);
+      res.json(deal);
+    } catch (error) {
+      console.error('Create deal error:', error);
+      res.status(500).json({ error: 'Failed to create deal' });
+    }
+  });
+
+  app.patch('/api/admin/featured-deals/:id', requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const partial = insertFeaturedDealSchema.partial().safeParse(req.body);
+      if (!partial.success) {
+        return res.status(400).json({ error: 'Invalid data', details: partial.error.flatten() });
+      }
+      const deal = await storage.updateFeaturedDeal(id, partial.data);
+      if (!deal) return res.status(404).json({ error: 'Deal not found' });
+      res.json(deal);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to update deal' });
+    }
+  });
+
+  app.delete('/api/admin/featured-deals/:id', requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteFeaturedDeal(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to delete deal' });
     }
   });
 

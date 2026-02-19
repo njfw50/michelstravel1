@@ -4,7 +4,7 @@ import { eq, desc, sql, and } from "drizzle-orm";
 import {
   flightSearches, bookings, siteSettings, blogPosts, users,
   liveSessions, liveSessionBlocks, liveSessionMessages,
-  internalThreads, internalMessages, voiceEscalations,
+  internalThreads, internalMessages, voiceEscalations, featuredDeals,
   type FlightSearch, type InsertFlightSearch,
   type Booking, type InsertBooking,
   type SiteSetting, type InsertSiteSetting,
@@ -15,6 +15,7 @@ import {
   type InternalThread, type InsertInternalThread,
   type InternalMessage, type InsertInternalMessage,
   type VoiceEscalation, type InsertVoiceEscalation,
+  type FeaturedDeal, type InsertFeaturedDeal,
 } from "@shared/schema";
 
 // Import Auth Storage
@@ -76,6 +77,13 @@ export interface IStorage extends IAuthStorage {
   createVoiceEscalation(escalation: InsertVoiceEscalation): Promise<VoiceEscalation>;
   getAllVoiceEscalations(): Promise<VoiceEscalation[]>;
   updateVoiceEscalation(id: number, updates: Partial<InsertVoiceEscalation>): Promise<VoiceEscalation | undefined>;
+
+  // Featured Deals (Zapier)
+  getFeaturedDeals(activeOnly?: boolean): Promise<FeaturedDeal[]>;
+  getFeaturedDeal(id: number): Promise<FeaturedDeal | undefined>;
+  createFeaturedDeal(deal: InsertFeaturedDeal): Promise<FeaturedDeal>;
+  updateFeaturedDeal(id: number, updates: Partial<InsertFeaturedDeal>): Promise<FeaturedDeal | undefined>;
+  deleteFeaturedDeal(id: number): Promise<void>;
 
   // Stripe
   getProduct(productId: string): Promise<any>;
@@ -425,6 +433,33 @@ export class DatabaseStorage implements IStorage {
   async updateVoiceEscalation(id: number, updates: Partial<InsertVoiceEscalation>): Promise<VoiceEscalation | undefined> {
     const [updated] = await db.update(voiceEscalations).set(updates).where(eq(voiceEscalations.id, id)).returning();
     return updated;
+  }
+
+  // --- Featured Deals (Zapier) ---
+  async getFeaturedDeals(activeOnly = false): Promise<FeaturedDeal[]> {
+    if (activeOnly) {
+      return await db.select().from(featuredDeals).where(eq(featuredDeals.isActive, true)).orderBy(desc(featuredDeals.createdAt));
+    }
+    return await db.select().from(featuredDeals).orderBy(desc(featuredDeals.createdAt));
+  }
+
+  async getFeaturedDeal(id: number): Promise<FeaturedDeal | undefined> {
+    const [deal] = await db.select().from(featuredDeals).where(eq(featuredDeals.id, id));
+    return deal;
+  }
+
+  async createFeaturedDeal(deal: InsertFeaturedDeal): Promise<FeaturedDeal> {
+    const [newDeal] = await db.insert(featuredDeals).values(deal).returning();
+    return newDeal;
+  }
+
+  async updateFeaturedDeal(id: number, updates: Partial<InsertFeaturedDeal>): Promise<FeaturedDeal | undefined> {
+    const [updated] = await db.update(featuredDeals).set(updates).where(eq(featuredDeals.id, id)).returning();
+    return updated;
+  }
+
+  async deleteFeaturedDeal(id: number): Promise<void> {
+    await db.delete(featuredDeals).where(eq(featuredDeals.id, id));
   }
 }
 
