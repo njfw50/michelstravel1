@@ -219,7 +219,7 @@ export default function SearchResults() {
 
   const { data: flights, isLoading, isFetching, error } = useFlightSearch(params);
 
-  const searchKey = `${params.origin}-${params.destination}-${params.date}`;
+  const searchKey = `${params.origin}-${params.destination}-${params.date}-${(params as any).returnDate || ''}-${params.passengers}-${params.adults}-${params.children}-${params.infants}-${params.cabinClass}-${(params as any).tripType || ''}-${(params as any).legs || ''}`;
   const [showAnimation, setShowAnimation] = useState(true);
   const [lastSearchKey, setLastSearchKey] = useState(searchKey);
 
@@ -283,6 +283,16 @@ export default function SearchResults() {
       setVisibleReturnCount(FLIGHTS_PER_PAGE);
     }
   }, [searchKey, lastSearchKey]);
+
+  useEffect(() => {
+    setVisibleReturnCount(FLIGHTS_PER_PAGE);
+  }, [selectedOutboundKey]);
+
+  useEffect(() => {
+    setVisibleOneWayCount(FLIGHTS_PER_PAGE);
+    setVisibleOutboundCount(FLIGHTS_PER_PAGE);
+    setVisibleReturnCount(FLIGHTS_PER_PAGE);
+  }, [sortBy, selectedStops, selectedAirlines, selectedDepartureTimes, selectedReturnTimes, priceRange]);
 
   const uniqueAirlines = useMemo(() => {
     if (!flights) return [];
@@ -483,7 +493,7 @@ export default function SearchResults() {
     });
 
     return [...available, ...unavailable];
-  }, [selectedOutboundKey, offerMatrix, sortBy]);
+  }, [selectedOutboundKey, offerMatrix, filteredComboMap, sortBy]);
 
   const showTwoStepFlow = isRoundTrip && offerMatrix !== null;
 
@@ -840,10 +850,13 @@ export default function SearchResults() {
                       </div>
 
                       <div className="space-y-3">
-                        {Array.from(offerMatrix.outboundMap.entries())
-                          .filter(([key]) => filteredOutboundKeys.size === 0 || filteredOutboundKeys.has(key))
-                          .sort(([,a], [,b]) => a.lowestPrice - b.lowestPrice)
-                          .map(([key, group]) => {
+                        {(() => {
+                          const allOutbound = Array.from(offerMatrix.outboundMap.entries())
+                            .filter(([key]) => filteredOutboundKeys.size === 0 || filteredOutboundKeys.has(key))
+                            .sort(([,a], [,b]) => a.lowestPrice - b.lowestPrice);
+                          const visibleOutbound = allOutbound.slice(0, visibleOutboundCount);
+                          return (<>
+                        {visibleOutbound.map(([key, group]) => {
                             const slice = group.slice;
                             const firstSeg = slice.segments[0];
                             const lastSeg = slice.segments[slice.segments.length - 1];
@@ -920,6 +933,26 @@ export default function SearchResults() {
                               </Card>
                             );
                           })}
+
+                        {allOutbound.length > visibleOutboundCount && (
+                          <div className="flex flex-col items-center gap-2 pt-2" data-testid="outbound-pagination">
+                            <p className="text-xs text-gray-500">
+                              {t("results.showing") || "Mostrando"} {Math.min(visibleOutboundCount, allOutbound.length)} {t("results.of") || "de"} {allOutbound.length} {t("results.outbound_flights") || "voos de ida"}
+                            </p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setVisibleOutboundCount(prev => prev + FLIGHTS_PER_PAGE)}
+                              className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300"
+                              data-testid="button-show-more-outbound"
+                            >
+                              <Plane className="h-3.5 w-3.5 mr-2" />
+                              {t("results.show_more") || "Mostrar mais voos"} ({Math.min(FLIGHTS_PER_PAGE, allOutbound.length - visibleOutboundCount)})
+                            </Button>
+                          </div>
+                        )}
+                        </>);
+                        })()}
                       </div>
                     </motion.div>
                   </AnimatePresence>
@@ -1007,7 +1040,7 @@ export default function SearchResults() {
                       </div>
 
                       <div className="space-y-3">
-                        {returnOptionsForSelected.map((rt) => {
+                        {returnOptionsForSelected.slice(0, visibleReturnCount).map((rt) => {
                             const returnSlice = rt.slice;
                             const firstSeg = returnSlice.segments[0];
                             const lastSeg = returnSlice.segments[returnSlice.segments.length - 1];
@@ -1095,17 +1128,52 @@ export default function SearchResults() {
                             );
                           })}
                       </div>
+
+                      {returnOptionsForSelected.length > visibleReturnCount && (
+                        <div className="flex flex-col items-center gap-2 pt-2" data-testid="return-pagination">
+                          <p className="text-xs text-gray-500">
+                            {t("results.showing") || "Mostrando"} {Math.min(visibleReturnCount, returnOptionsForSelected.length)} {t("results.of") || "de"} {returnOptionsForSelected.length} {t("results.return_flights") || "voos de volta"}
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setVisibleReturnCount(prev => prev + FLIGHTS_PER_PAGE)}
+                            className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300"
+                            data-testid="button-show-more-returns"
+                          >
+                            <Plane className="h-3.5 w-3.5 mr-2" />
+                            {t("results.show_more") || "Mostrar mais voos"} ({Math.min(FLIGHTS_PER_PAGE, returnOptionsForSelected.length - visibleReturnCount)})
+                          </Button>
+                        </div>
+                      )}
                     </motion.div>
                   </AnimatePresence>
                 )}
               </div>
             )}
 
-            {!isSearching && !showTwoStepFlow && (
+            {!isSearching && !showTwoStepFlow && filteredAndSortedFlights.length > 0 && (
               <div className="space-y-4">
-                {filteredAndSortedFlights.map((flight) => (
+                {filteredAndSortedFlights.slice(0, visibleOneWayCount).map((flight) => (
                   <FlightCard key={flight.id} flight={flight} />
                 ))}
+                {filteredAndSortedFlights.length > visibleOneWayCount && (
+                  <div className="flex flex-col items-center gap-2 pt-2" data-testid="oneway-pagination">
+                    <p className="text-xs text-gray-500">
+                      {t("results.showing") || "Mostrando"} {Math.min(visibleOneWayCount, filteredAndSortedFlights.length)} {t("results.of") || "de"} {filteredAndSortedFlights.length} {t("results.flights") || "voos"}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setVisibleOneWayCount(prev => prev + FLIGHTS_PER_PAGE)}
+                      className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300"
+                      data-testid="button-show-more-flights"
+                    >
+                      <Plane className="h-3.5 w-3.5 mr-2" />
+                      {t("results.show_more") || "Mostrar mais voos"} ({Math.min(FLIGHTS_PER_PAGE, filteredAndSortedFlights.length - visibleOneWayCount)})
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>
