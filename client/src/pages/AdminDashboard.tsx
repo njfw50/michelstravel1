@@ -912,11 +912,28 @@ export default function AdminDashboard() {
                         <p className="text-xs text-gray-500">ID: {booking.id}</p>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right space-y-1">
                       <p className="font-bold text-sm text-gray-900">${booking.totalPrice}</p>
-                      <span className="text-[10px] uppercase font-bold text-green-600 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
-                        {booking.status}
-                      </span>
+                      <div className="flex flex-col items-end gap-0.5">
+                        <span className="text-[10px] uppercase font-bold text-green-600 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                          {booking.status}
+                        </span>
+                        {booking.ticketStatus && booking.ticketStatus !== 'pending' && (
+                          <span data-testid={`badge-ticket-status-${booking.id}`} className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
+                            booking.ticketStatus === 'issued' ? 'text-blue-600 bg-blue-50 border border-blue-200' :
+                            booking.ticketStatus === 'schedule_changed' ? 'text-orange-600 bg-orange-50 border border-orange-200' :
+                            booking.ticketStatus === 'cancelled' ? 'text-red-600 bg-red-50 border border-red-200' :
+                            booking.ticketStatus === 'failed' ? 'text-red-600 bg-red-50 border border-red-200' :
+                            'text-gray-600 bg-gray-50 border border-gray-200'
+                          }`}>
+                            {booking.ticketStatus === 'issued' ? 'Ticket Issued' :
+                             booking.ticketStatus === 'schedule_changed' ? 'Schedule Changed' :
+                             booking.ticketStatus === 'cancelled' ? 'Ticket Cancelled' :
+                             booking.ticketStatus === 'failed' ? 'Ticket Failed' :
+                             booking.ticketStatus}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}

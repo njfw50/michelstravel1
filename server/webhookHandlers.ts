@@ -106,6 +106,9 @@ export class WebhookHandlers {
                   if (duffelResult) {
                     await db.update(bookings)
                       .set({
+                        duffelOrderId: duffelResult.orderId,
+                        duffelBookingReference: duffelResult.bookingReference,
+                        ticketStatus: 'issued',
                         flightData: {
                           ...flightData,
                           duffelOrderId: duffelResult.orderId,
@@ -119,6 +122,7 @@ export class WebhookHandlers {
                     console.error(`[WEBHOOK] Failed to create Duffel order for booking #${id}`);
                     await db.update(bookings)
                       .set({
+                        ticketStatus: 'failed',
                         flightData: {
                           ...flightData,
                           ticketIssued: false,
@@ -131,6 +135,7 @@ export class WebhookHandlers {
                   console.error(`[WEBHOOK] Duffel order creation error for booking #${id}:`, duffelError?.message || duffelError);
                   await db.update(bookings)
                     .set({
+                      ticketStatus: 'failed',
                       flightData: {
                         ...flightData,
                         ticketIssued: false,
@@ -219,6 +224,9 @@ export class WebhookHandlers {
                     if (duffelResult) {
                       await db.update(bookings)
                         .set({
+                          duffelOrderId: duffelResult.orderId,
+                          duffelBookingReference: duffelResult.bookingReference,
+                          ticketStatus: 'issued',
                           flightData: {
                             ...flightData,
                             duffelOrderId: duffelResult.orderId,
@@ -231,6 +239,7 @@ export class WebhookHandlers {
                     } else {
                       await db.update(bookings)
                         .set({
+                          ticketStatus: 'failed',
                           flightData: { ...flightData, ticketIssued: false, ticketError: 'Failed to create Duffel order' },
                         })
                         .where(eq(bookings.id, id));
@@ -239,6 +248,7 @@ export class WebhookHandlers {
                     console.error(`[WEBHOOK] Duffel error for booking #${id}:`, duffelError?.message);
                     await db.update(bookings)
                       .set({
+                        ticketStatus: 'failed',
                         flightData: { ...flightData, ticketIssued: false, ticketError: duffelError?.message || 'Unknown error' },
                       })
                       .where(eq(bookings.id, id));

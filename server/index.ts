@@ -7,6 +7,7 @@ import { serveStatic } from "./static";
 import { storage } from "./storage";
 import { getStripeSync } from "./stripeClient";
 import { WebhookHandlers } from "./webhookHandlers";
+import { DuffelWebhookHandlers } from "./duffelWebhookHandlers";
 import { createServer } from "http";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 
@@ -112,6 +113,37 @@ app.post(
         console.error(helpfulMsg);
       }
 
+      res.status(400).json({ error: 'Webhook processing error' });
+    }
+  }
+);
+
+app.post(
+  '/api/duffel/webhook',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    const signatureHeader = req.headers['x-duffel-signature'];
+
+    if (!signatureHeader) {
+      return res.status(400).json({ error: 'Missing X-Duffel-Signature header' });
+    }
+
+    if (!Buffer.isBuffer(req.body)) {
+      console.error('[DUFFEL WEBHOOK] req.body is not a Buffer');
+      return res.status(500).json({ error: 'Webhook processing error' });
+    }
+
+    try {
+      const sig = Array.isArray(signatureHeader) ? signatureHeader[0] : signatureHeader;
+      const result = await DuffelWebhookHandlers.processWebhook(req.body as Buffer, sig);
+
+      if (result.success) {
+        res.status(200).json({ received: true });
+      } else {
+        res.status(400).json({ error: result.message });
+      }
+    } catch (error: any) {
+      console.error('[DUFFEL WEBHOOK] Error:', error.message);
       res.status(400).json({ error: 'Webhook processing error' });
     }
   }

@@ -45,6 +45,12 @@ export const bookings = pgTable("bookings", {
   confirmationEmailSent: boolean("confirmation_email_sent").default(false),
   contactEmail: text("contact_email").notNull(),
   contactPhone: text("contact_phone"),
+  duffelOrderId: text("duffel_order_id"),
+  duffelBookingReference: text("duffel_booking_reference"),
+  ticketStatus: text("ticket_status").default("pending"),
+  ticketNumber: text("ticket_number"),
+  airlineInitiatedChanges: jsonb("airline_initiated_changes"),
+  lastDuffelWebhookAt: timestamp("last_duffel_webhook_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
