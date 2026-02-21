@@ -762,216 +762,331 @@ export default function SearchResults() {
               </div>
             )}
 
-            {!isSearching && showTwoStepFlow && !selectedOutboundKey && offerMatrix && (
-              <div className="space-y-2">
-                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4 flex items-center gap-3" data-testid="step-indicator-outbound">
-                  <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0">1</div>
-                  <div>
-                    <p className="text-sm font-bold text-blue-900 dark:text-blue-100">{t("results.select_outbound") || "Selecione o voo de ida"}</p>
-                    <p className="text-xs text-blue-600 dark:text-blue-400">{params.origin} → {params.destination} · {offerMatrix.outboundMap.size} {t("results.options") || "opcoes"}</p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  {Array.from(offerMatrix.outboundMap.entries())
-                    .filter(([key]) => filteredOutboundKeys.size === 0 || filteredOutboundKeys.has(key))
-                    .sort(([,a], [,b]) => a.lowestPrice - b.lowestPrice)
-                    .map(([key, group]) => {
-                      const slice = group.slice;
-                      const firstSeg = slice.segments[0];
-                      const lastSeg = slice.segments[slice.segments.length - 1];
-                      const stopsCount = slice.segments.length - 1;
-                      const sliceDuration = slice.duration.startsWith("P") ? formatDurationUtil(slice.duration) : slice.duration;
-                      const currency = filteredAndSortedFlights[0]?.currency || "USD";
-
-                      return (
-                        <Card
-                          key={key}
-                          className="p-0 overflow-hidden border border-gray-200 hover:border-blue-300 transition-all cursor-pointer bg-white rounded-2xl"
-                          onClick={() => setSelectedOutboundKey(key)}
-                          data-testid={`outbound-option-${key}`}
-                        >
-                          <div className="p-5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                            <div className="md:col-span-3 flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center p-1.5 overflow-hidden shrink-0">
-                                {group.logoUrl ? (
-                                  <img src={group.logoUrl} alt={group.airline} className="w-full h-full object-contain" />
-                                ) : (
-                                  <Plane className="text-gray-400 h-5 w-5" />
-                                )}
-                              </div>
-                              <div>
-                                <p className="font-bold text-gray-900 text-sm">{group.airline}</p>
-                                <p className="text-xs text-blue-600 font-semibold">{firstSeg.flightNumber}</p>
-                              </div>
-                            </div>
-
-                            <div className="md:col-span-5 flex items-center justify-between gap-2">
-                              <div className="text-center">
-                                <div className="text-xl font-bold text-gray-900">{format(parseISO(firstSeg.departureTime), "HH:mm")}</div>
-                                <div className="text-xs text-gray-500 font-semibold uppercase">{slice.originCode}</div>
-                              </div>
-                              <div className="flex-1 flex flex-col items-center px-3">
-                                <div className="text-[10px] text-gray-400 mb-1 flex items-center gap-1">
-                                  <Clock className="h-2.5 w-2.5" />
-                                  {sliceDuration}
-                                </div>
-                                <div className="w-full h-[2px] bg-gray-200 relative">
-                                  <Plane className="h-3 w-3 text-blue-500 rotate-90 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
-                                </div>
-                                <div className={`text-[10px] font-medium mt-1 ${stopsCount === 0 ? "text-emerald-600" : "text-amber-600"}`}>
-                                  {stopsCount === 0 ? (t("flight.direct") || "Direto") : `${stopsCount} ${stopsCount > 1 ? (t("flight.stops") || "paradas") : (t("flight.stop") || "parada")}`}
-                                </div>
-                              </div>
-                              <div className="text-center">
-                                <div className="text-xl font-bold text-gray-900">{format(parseISO(lastSeg.arrivalTime), "HH:mm")}</div>
-                                <div className="text-xs text-gray-500 font-semibold uppercase">{slice.destinationCode}</div>
-                              </div>
-                            </div>
-
-                            <div className="md:col-span-4 flex items-center justify-end gap-4">
-                              <div className="text-right">
-                                <p className="text-xs text-gray-400">{t("results.from") || "a partir de"}</p>
-                                <p className="text-xl font-bold text-gray-900">
-                                  {new Intl.NumberFormat("en-US", { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(group.lowestPrice)}
-                                </p>
-                              </div>
-                              <Button size="sm" className="bg-blue-600 text-white rounded-lg" data-testid={`button-select-outbound-${key}`}>
-                                {t("flight.select") || "Selecionar"} <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          </div>
-                        </Card>
-                      );
-                    })}
-                </div>
-              </div>
-            )}
-
-            {!isSearching && showTwoStepFlow && selectedOutboundKey && offerMatrix?.outboundMap.get(selectedOutboundKey) && (
-              <div className="space-y-2">
-                <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 mb-2" data-testid="selected-outbound-summary">
-                  <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
-                        <CheckCircle2 className="h-4 w-4" />
+            {!isSearching && showTwoStepFlow && offerMatrix && (
+              <div className="space-y-4">
+                <div className="bg-white dark:bg-card rounded-2xl border border-gray-200 dark:border-gray-700 p-4 mb-2" data-testid="step-progress-bar">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 flex-1">
+                      <div className={`h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${selectedOutboundKey ? "bg-emerald-500 text-white" : "bg-blue-600 text-white"}`}>
+                        {selectedOutboundKey ? <CheckCircle2 className="h-4.5 w-4.5" /> : "1"}
                       </div>
-                      <div>
-                        <p className="text-xs text-emerald-600 font-semibold uppercase">{t("results.outbound_selected") || "Voo de ida selecionado"}</p>
-                        {(() => {
-                          const obData = offerMatrix!.outboundMap.get(selectedOutboundKey)!;
-                          const s = obData.slice;
-                          const firstSeg = s.segments[0];
-                          const lastSeg = s.segments[s.segments.length - 1];
-                          return (
-                            <p className="text-sm font-bold text-gray-900">
-                              {obData.airline} · {s.originCode} {format(parseISO(firstSeg.departureTime), "HH:mm")} → {s.destinationCode} {format(parseISO(lastSeg.arrivalTime), "HH:mm")}
-                            </p>
-                          );
-                        })()}
+                      <div className="min-w-0">
+                        <p className={`text-xs font-semibold uppercase ${selectedOutboundKey ? "text-emerald-600" : "text-blue-600"}`}>
+                          {t("results.outbound") || "Ida"}
+                        </p>
+                        <p className="text-sm font-bold text-gray-900 truncate">
+                          {flights?.[0]?.originCity || params.origin} → {flights?.[0]?.destinationCity || params.destination}
+                        </p>
+                        {params.date && (
+                          <p className="text-xs text-gray-500">{format(parseISO(params.date), "dd MMM yyyy")}</p>
+                        )}
                       </div>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedOutboundKey(null)}
-                      data-testid="button-change-outbound"
-                      className="border-emerald-300 text-emerald-700"
+
+                    <div className="hidden sm:flex items-center px-2">
+                      <div className={`w-12 h-0.5 transition-colors ${selectedOutboundKey ? "bg-emerald-400" : "bg-gray-200"}`} />
+                      <ArrowRight className={`h-4 w-4 mx-1 ${selectedOutboundKey ? "text-emerald-400" : "text-gray-300"}`} />
+                      <div className={`w-12 h-0.5 ${selectedOutboundKey ? "bg-blue-400" : "bg-gray-200"}`} />
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-1">
+                      <div className={`h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${selectedOutboundKey ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>
+                        2
+                      </div>
+                      <div className="min-w-0">
+                        <p className={`text-xs font-semibold uppercase ${selectedOutboundKey ? "text-blue-600" : "text-gray-400"}`}>
+                          {t("results.return") || "Volta"}
+                        </p>
+                        <p className={`text-sm font-bold truncate ${selectedOutboundKey ? "text-gray-900" : "text-gray-400"}`}>
+                          {flights?.[0]?.destinationCity || params.destination} → {flights?.[0]?.originCity || params.origin}
+                        </p>
+                        {(params as any).returnDate && (
+                          <p className={`text-xs ${selectedOutboundKey ? "text-gray-500" : "text-gray-300"}`}>{format(parseISO((params as any).returnDate), "dd MMM yyyy")}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {!selectedOutboundKey && (
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key="outbound-step"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.25 }}
+                      className="space-y-2"
                     >
-                      {t("results.change_outbound") || "Alterar ida"}
-                    </Button>
-                  </div>
-                </div>
+                      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-2 flex items-center gap-3" data-testid="step-indicator-outbound">
+                        <Plane className="h-5 w-5 text-blue-600 shrink-0" />
+                        <div>
+                          <p className="text-sm font-bold text-blue-900 dark:text-blue-100">{t("results.select_outbound") || "Selecione o voo de ida"}</p>
+                          <p className="text-xs text-blue-600 dark:text-blue-400">
+                            {flights?.[0]?.originCity || params.origin} → {flights?.[0]?.destinationCity || params.destination} · {filteredOutboundKeys.size > 0 ? filteredOutboundKeys.size : offerMatrix.outboundMap.size} {t("results.options") || "opções"}
+                          </p>
+                        </div>
+                      </div>
 
-                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4 flex items-center gap-3" data-testid="step-indicator-return">
-                  <div className="h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0">2</div>
-                  <div>
-                    <p className="text-sm font-bold text-blue-900 dark:text-blue-100">{t("results.select_return") || "Agora selecione o voo de volta"}</p>
-                    <p className="text-xs text-blue-600 dark:text-blue-400">{params.destination} → {params.origin} · {returnOptionsForSelected.filter(r => r.offer).length} {t("results.available") || "disponiveis"} / {returnOptionsForSelected.length} {t("results.options") || "opcoes"}</p>
-                  </div>
-                </div>
+                      <div className="space-y-3">
+                        {Array.from(offerMatrix.outboundMap.entries())
+                          .filter(([key]) => filteredOutboundKeys.size === 0 || filteredOutboundKeys.has(key))
+                          .sort(([,a], [,b]) => a.lowestPrice - b.lowestPrice)
+                          .map(([key, group]) => {
+                            const slice = group.slice;
+                            const firstSeg = slice.segments[0];
+                            const lastSeg = slice.segments[slice.segments.length - 1];
+                            const stopsCount = slice.segments.length - 1;
+                            const sliceDuration = slice.duration.startsWith("P") ? formatDurationUtil(slice.duration) : slice.duration;
+                            const currency = filteredAndSortedFlights[0]?.currency || "USD";
+                            const depDate = format(parseISO(firstSeg.departureTime), "dd MMM");
+                            const arrDate = format(parseISO(lastSeg.arrivalTime), "dd MMM");
+                            const isDiffDay = depDate !== arrDate;
 
-                <div className="space-y-3">
-                  {returnOptionsForSelected.map((rt) => {
-                      const returnSlice = rt.slice;
-                      const firstSeg = returnSlice.segments[0];
-                      const lastSeg = returnSlice.segments[returnSlice.segments.length - 1];
-                      const stopsCount = returnSlice.segments.length - 1;
-                      const sliceDuration = returnSlice.duration.startsWith("P") ? formatDurationUtil(returnSlice.duration) : returnSlice.duration;
-                      const isAvailable = rt.offer !== null;
-                      const bookUrl = isAvailable ? `/book/${rt.offer!.id}?${searchParams.toString()}` : "";
+                            return (
+                              <Card
+                                key={key}
+                                className="p-0 overflow-hidden border border-gray-200 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer bg-white rounded-2xl group"
+                                onClick={() => setSelectedOutboundKey(key)}
+                                data-testid={`outbound-option-${key}`}
+                              >
+                                <div className="p-5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                                  <div className="md:col-span-3 flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center p-1.5 overflow-hidden shrink-0">
+                                      {group.logoUrl ? (
+                                        <img src={group.logoUrl} alt={group.airline} className="w-full h-full object-contain" />
+                                      ) : (
+                                        <Plane className="text-gray-400 h-5 w-5" />
+                                      )}
+                                    </div>
+                                    <div>
+                                      <p className="font-bold text-gray-900 text-sm">{group.airline}</p>
+                                      <p className="text-xs text-gray-500">{firstSeg.flightNumber}</p>
+                                    </div>
+                                  </div>
 
-                      return (
-                        <Card
-                          key={rt.returnKey}
-                          className={`p-0 overflow-hidden border transition-all bg-white rounded-2xl ${isAvailable ? "border-gray-200 hover:border-blue-300" : "border-gray-100 opacity-50"}`}
-                          data-testid={`return-option-${rt.returnKey}`}
-                        >
-                          <div className="p-5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                            <div className="md:col-span-3 flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center p-1.5 overflow-hidden shrink-0">
-                                {rt.logoUrl ? (
-                                  <img src={rt.logoUrl} alt={rt.airline} className="w-full h-full object-contain" />
+                                  <div className="md:col-span-5 flex items-center justify-between gap-2">
+                                    <div className="text-center min-w-[60px]">
+                                      <div className="text-xl font-bold text-gray-900">{format(parseISO(firstSeg.departureTime), "HH:mm")}</div>
+                                      <div className="text-xs text-gray-500 font-medium">{slice.originCity || slice.originCode}</div>
+                                      <div className="text-[10px] text-gray-400">{depDate}</div>
+                                    </div>
+                                    <div className="flex-1 flex flex-col items-center px-3">
+                                      <div className="text-[10px] text-gray-400 mb-1 flex items-center gap-1">
+                                        <Clock className="h-2.5 w-2.5" />
+                                        {sliceDuration}
+                                      </div>
+                                      <div className="w-full h-[2px] bg-gray-200 relative">
+                                        <Plane className="h-3 w-3 text-blue-500 rotate-90 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+                                      </div>
+                                      <div className={`text-[10px] font-medium mt-1 ${stopsCount === 0 ? "text-emerald-600" : "text-amber-600"}`}>
+                                        {stopsCount === 0 ? (t("flight.direct") || "Direto") : `${stopsCount} ${stopsCount > 1 ? (t("flight.stops") || "paradas") : (t("flight.stop") || "parada")}`}
+                                      </div>
+                                    </div>
+                                    <div className="text-center min-w-[60px]">
+                                      <div className="text-xl font-bold text-gray-900">
+                                        {format(parseISO(lastSeg.arrivalTime), "HH:mm")}
+                                        {isDiffDay && <sup className="text-[10px] text-red-500 ml-0.5">+1</sup>}
+                                      </div>
+                                      <div className="text-xs text-gray-500 font-medium">{slice.destinationCity || slice.destinationCode}</div>
+                                      <div className="text-[10px] text-gray-400">{arrDate}</div>
+                                    </div>
+                                  </div>
+
+                                  <div className="md:col-span-4 flex items-center justify-end gap-3">
+                                    <div className="text-right">
+                                      <p className="text-[10px] text-gray-400 uppercase">{t("results.from") || "a partir de"}</p>
+                                      <p className="text-xl font-bold text-gray-900">
+                                        {new Intl.NumberFormat("en-US", { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(group.lowestPrice)}
+                                      </p>
+                                      <p className="text-[10px] text-gray-400">{t("results.round_trip_total") || "ida + volta"}</p>
+                                    </div>
+                                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg group-hover:shadow-md transition-all" data-testid={`button-select-outbound-${key}`}>
+                                      {t("flight.select") || "Selecionar"} <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </Card>
+                            );
+                          })}
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+                )}
+
+                {selectedOutboundKey && offerMatrix?.outboundMap.get(selectedOutboundKey) && (
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key="return-step"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.25 }}
+                      className="space-y-3"
+                    >
+                      {(() => {
+                        const obData = offerMatrix!.outboundMap.get(selectedOutboundKey)!;
+                        const s = obData.slice;
+                        const firstSeg = s.segments[0];
+                        const lastSeg = s.segments[s.segments.length - 1];
+                        const stopsCount = s.segments.length - 1;
+                        const sliceDuration = s.duration.startsWith("P") ? formatDurationUtil(s.duration) : s.duration;
+                        return (
+                          <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-5 mb-1" data-testid="selected-outbound-summary">
+                            <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
+                              <div className="flex items-center gap-2">
+                                <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                                <p className="text-xs text-emerald-600 font-bold uppercase tracking-wide">{t("results.outbound_selected") || "Voo de ida selecionado"}</p>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedOutboundKey(null)}
+                                data-testid="button-change-outbound"
+                                className="border-emerald-300 text-emerald-700 hover:bg-emerald-100 text-xs"
+                              >
+                                {t("results.change_outbound") || "Alterar voo de ida"}
+                              </Button>
+                            </div>
+                            <div className="flex items-center gap-4 flex-wrap">
+                              <div className="h-10 w-10 rounded-xl bg-white border border-emerald-200 flex items-center justify-center p-1.5 overflow-hidden shrink-0">
+                                {obData.logoUrl ? (
+                                  <img src={obData.logoUrl} alt={obData.airline} className="w-full h-full object-contain" />
                                 ) : (
                                   <Plane className="text-gray-400 h-5 w-5" />
                                 )}
                               </div>
-                              <div>
-                                <p className="font-bold text-gray-900 text-sm">{rt.airline}</p>
-                                <p className="text-xs text-blue-600 font-semibold">{firstSeg.flightNumber}</p>
-                              </div>
-                            </div>
-
-                            <div className="md:col-span-5 flex items-center justify-between gap-2">
-                              <div className="text-center">
-                                <div className="text-xl font-bold text-gray-900">{format(parseISO(firstSeg.departureTime), "HH:mm")}</div>
-                                <div className="text-xs text-gray-500 font-semibold uppercase">{returnSlice.originCode}</div>
-                              </div>
-                              <div className="flex-1 flex flex-col items-center px-3">
-                                <div className="text-[10px] text-gray-400 mb-1 flex items-center gap-1">
-                                  <Clock className="h-2.5 w-2.5" />
-                                  {sliceDuration}
+                              <div className="flex items-center gap-4 flex-1 flex-wrap">
+                                <div>
+                                  <p className="font-bold text-gray-900 text-sm">{obData.airline}</p>
+                                  <p className="text-xs text-gray-500">{firstSeg.flightNumber}</p>
                                 </div>
-                                <div className="w-full h-[2px] bg-gray-200 relative">
-                                  <Plane className="h-3 w-3 text-blue-500 rotate-90 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
-                                </div>
-                                <div className={`text-[10px] font-medium mt-1 ${stopsCount === 0 ? "text-emerald-600" : "text-amber-600"}`}>
-                                  {stopsCount === 0 ? (t("flight.direct") || "Direto") : `${stopsCount} ${stopsCount > 1 ? (t("flight.stops") || "paradas") : (t("flight.stop") || "parada")}`}
-                                </div>
-                              </div>
-                              <div className="text-center">
-                                <div className="text-xl font-bold text-gray-900">{format(parseISO(lastSeg.arrivalTime), "HH:mm")}</div>
-                                <div className="text-xs text-gray-500 font-semibold uppercase">{returnSlice.destinationCode}</div>
-                              </div>
-                            </div>
-
-                            <div className="md:col-span-4 flex items-center justify-end gap-4">
-                              {isAvailable ? (
-                                <>
-                                  <div className="text-right">
-                                    <p className="text-xs text-gray-400">{t("flight.total_price") || "Preco total"}</p>
-                                    <p className="text-2xl font-bold text-gray-900">
-                                      {new Intl.NumberFormat("en-US", { style: "currency", currency: rt.offer!.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(rt.price!)}
-                                    </p>
-                                    <p className="text-[10px] text-gray-400">{t("results.round_trip_total") || "ida + volta"}</p>
+                                <div className="flex items-center gap-3 text-sm">
+                                  <div className="text-center">
+                                    <span className="font-bold text-gray-900">{format(parseISO(firstSeg.departureTime), "HH:mm")}</span>
+                                    <span className="text-xs text-gray-500 ml-1">{s.originCity || s.originCode}</span>
                                   </div>
-                                  <Link href={bookUrl}>
-                                    <Button size="sm" className="bg-blue-600 text-white rounded-lg" data-testid={`button-select-return-${rt.returnKey}`}>
-                                      {t("flight.select") || "Selecionar"} <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                                    </Button>
-                                  </Link>
-                                </>
-                              ) : (
-                                <div className="text-right">
-                                  <p className="text-xs text-gray-400">{t("results.unavailable_combo") || "Combinacao indisponivel"}</p>
-                                  <p className="text-sm font-semibold text-gray-400">{t("results.try_another_outbound") || "Selecione outra ida"}</p>
+                                  <div className="flex items-center gap-1 text-gray-400">
+                                    <div className="w-6 h-px bg-gray-300" />
+                                    <span className="text-[10px]">{sliceDuration}</span>
+                                    <div className="w-6 h-px bg-gray-300" />
+                                  </div>
+                                  <div className="text-center">
+                                    <span className="font-bold text-gray-900">{format(parseISO(lastSeg.arrivalTime), "HH:mm")}</span>
+                                    <span className="text-xs text-gray-500 ml-1">{s.destinationCity || s.destinationCode}</span>
+                                  </div>
+                                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${stopsCount === 0 ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                                    {stopsCount === 0 ? (t("flight.direct") || "Direto") : `${stopsCount} ${t("flight.stop") || "parada"}`}
+                                  </span>
                                 </div>
-                              )}
+                              </div>
                             </div>
                           </div>
-                        </Card>
-                      );
-                    })}
-                </div>
+                        );
+                      })()}
+
+                      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex items-center gap-3" data-testid="step-indicator-return">
+                        <Plane className="h-5 w-5 text-blue-600 shrink-0 -scale-x-100" />
+                        <div>
+                          <p className="text-sm font-bold text-blue-900 dark:text-blue-100">{t("results.select_return") || "Agora selecione o voo de volta"}</p>
+                          <p className="text-xs text-blue-600 dark:text-blue-400">
+                            {flights?.[0]?.destinationCity || params.destination} → {flights?.[0]?.originCity || params.origin} · {returnOptionsForSelected.filter(r => r.offer).length} {t("results.available") || "disponíveis"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        {returnOptionsForSelected.map((rt) => {
+                            const returnSlice = rt.slice;
+                            const firstSeg = returnSlice.segments[0];
+                            const lastSeg = returnSlice.segments[returnSlice.segments.length - 1];
+                            const stopsCount = returnSlice.segments.length - 1;
+                            const sliceDuration = returnSlice.duration.startsWith("P") ? formatDurationUtil(returnSlice.duration) : returnSlice.duration;
+                            const isAvailable = rt.offer !== null;
+                            const bookUrl = isAvailable ? `/book/${rt.offer!.id}?${searchParams.toString()}` : "";
+                            const depDate = format(parseISO(firstSeg.departureTime), "dd MMM");
+                            const arrDate = format(parseISO(lastSeg.arrivalTime), "dd MMM");
+                            const isDiffDay = depDate !== arrDate;
+
+                            return (
+                              <Card
+                                key={rt.returnKey}
+                                className={`p-0 overflow-hidden border transition-all bg-white rounded-2xl ${isAvailable ? "border-gray-200 hover:border-blue-400 hover:shadow-md group" : "border-gray-100 opacity-40 pointer-events-none"}`}
+                                data-testid={`return-option-${rt.returnKey}`}
+                              >
+                                <div className="p-5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                                  <div className="md:col-span-3 flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center p-1.5 overflow-hidden shrink-0">
+                                      {rt.logoUrl ? (
+                                        <img src={rt.logoUrl} alt={rt.airline} className="w-full h-full object-contain" />
+                                      ) : (
+                                        <Plane className="text-gray-400 h-5 w-5" />
+                                      )}
+                                    </div>
+                                    <div>
+                                      <p className="font-bold text-gray-900 text-sm">{rt.airline}</p>
+                                      <p className="text-xs text-gray-500">{firstSeg.flightNumber}</p>
+                                    </div>
+                                  </div>
+
+                                  <div className="md:col-span-5 flex items-center justify-between gap-2">
+                                    <div className="text-center min-w-[60px]">
+                                      <div className="text-xl font-bold text-gray-900">{format(parseISO(firstSeg.departureTime), "HH:mm")}</div>
+                                      <div className="text-xs text-gray-500 font-medium">{returnSlice.originCity || returnSlice.originCode}</div>
+                                      <div className="text-[10px] text-gray-400">{depDate}</div>
+                                    </div>
+                                    <div className="flex-1 flex flex-col items-center px-3">
+                                      <div className="text-[10px] text-gray-400 mb-1 flex items-center gap-1">
+                                        <Clock className="h-2.5 w-2.5" />
+                                        {sliceDuration}
+                                      </div>
+                                      <div className="w-full h-[2px] bg-gray-200 relative">
+                                        <Plane className="h-3 w-3 text-blue-500 rotate-90 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+                                      </div>
+                                      <div className={`text-[10px] font-medium mt-1 ${stopsCount === 0 ? "text-emerald-600" : "text-amber-600"}`}>
+                                        {stopsCount === 0 ? (t("flight.direct") || "Direto") : `${stopsCount} ${stopsCount > 1 ? (t("flight.stops") || "paradas") : (t("flight.stop") || "parada")}`}
+                                      </div>
+                                    </div>
+                                    <div className="text-center min-w-[60px]">
+                                      <div className="text-xl font-bold text-gray-900">
+                                        {format(parseISO(lastSeg.arrivalTime), "HH:mm")}
+                                        {isDiffDay && <sup className="text-[10px] text-red-500 ml-0.5">+1</sup>}
+                                      </div>
+                                      <div className="text-xs text-gray-500 font-medium">{returnSlice.destinationCity || returnSlice.destinationCode}</div>
+                                      <div className="text-[10px] text-gray-400">{arrDate}</div>
+                                    </div>
+                                  </div>
+
+                                  <div className="md:col-span-4 flex items-center justify-end gap-3">
+                                    {isAvailable ? (
+                                      <>
+                                        <div className="text-right">
+                                          <p className="text-[10px] text-gray-400 uppercase">{t("flight.total_price") || "Preço total"}</p>
+                                          <p className="text-2xl font-bold text-gray-900">
+                                            {new Intl.NumberFormat("en-US", { style: "currency", currency: rt.offer!.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(rt.price!)}
+                                          </p>
+                                          <p className="text-[10px] text-gray-400">{t("results.round_trip_total") || "ida + volta"}</p>
+                                        </div>
+                                        <Link href={bookUrl}>
+                                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg group-hover:shadow-md transition-all" data-testid={`button-select-return-${rt.returnKey}`}>
+                                            {t("flight.book") || "Reservar"} <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                                          </Button>
+                                        </Link>
+                                      </>
+                                    ) : (
+                                      <div className="text-right">
+                                        <p className="text-xs text-gray-400">{t("results.unavailable_combo") || "Combinação indisponível"}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </Card>
+                            );
+                          })}
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+                )}
               </div>
             )}
 
