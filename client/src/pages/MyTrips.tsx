@@ -33,6 +33,9 @@ import {
   XCircle,
   HelpCircle,
   Receipt,
+  Ticket,
+  RefreshCw,
+  ShieldAlert,
 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -296,6 +299,57 @@ function BookingCard({ booking, defaultExpanded = false }: { booking: Booking; d
                   </div>
                 </div>
               </div>
+
+              {(booking as any).ticketStatus && (booking as any).ticketStatus !== 'pending' && (
+                <div className={`p-3 rounded-xl border text-sm ${
+                  (booking as any).ticketStatus === 'issued' ? 'bg-emerald-50 border-emerald-200' :
+                  (booking as any).ticketStatus === 'schedule_changed' ? 'bg-amber-50 border-amber-200' :
+                  (booking as any).ticketStatus === 'cancelled' ? 'bg-red-50 border-red-200' :
+                  (booking as any).ticketStatus === 'failed' ? 'bg-red-50 border-red-200' :
+                  'bg-gray-50 border-gray-200'
+                }`} data-testid={`section-ticket-info-${booking.id}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Ticket className={`h-4 w-4 ${
+                      (booking as any).ticketStatus === 'issued' ? 'text-emerald-600' :
+                      (booking as any).ticketStatus === 'schedule_changed' ? 'text-amber-600' :
+                      'text-red-600'
+                    }`} />
+                    <span className="font-bold text-xs uppercase tracking-wider">
+                      {(booking as any).ticketStatus === 'issued' ? (t("trips.ticket_issued") || "Ticket Issued") :
+                       (booking as any).ticketStatus === 'schedule_changed' ? (t("trips.schedule_changed") || "Schedule Changed by Airline") :
+                       (booking as any).ticketStatus === 'cancelled' ? (t("trips.ticket_cancelled") || "Ticket Cancelled") :
+                       (booking as any).ticketStatus === 'failed' ? (t("trips.ticket_failed") || "Ticket Issue Failed") :
+                       (booking as any).ticketStatus}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    {(booking as any).duffelBookingReference && (
+                      <div>
+                        <span className="text-gray-500">{t("trips.airline_ref") || "Airline Reference"}:</span>
+                        <span className="font-mono font-bold ml-1" data-testid={`text-airline-ref-${booking.id}`}>{(booking as any).duffelBookingReference}</span>
+                      </div>
+                    )}
+                    {(booking as any).ticketNumber && (
+                      <div>
+                        <span className="text-gray-500">{t("trips.ticket_number") || "Ticket Number"}:</span>
+                        <span className="font-mono font-bold ml-1" data-testid={`text-ticket-number-${booking.id}`}>{(booking as any).ticketNumber}</span>
+                      </div>
+                    )}
+                  </div>
+                  {(booking as any).ticketStatus === 'schedule_changed' && (
+                    <div className="mt-2 flex items-center gap-2 text-amber-700">
+                      <ShieldAlert className="h-3.5 w-3.5" />
+                      <span className="text-xs">{t("trips.schedule_changed_desc") || "The airline has made changes to your flight schedule. Please review the updated details above."}</span>
+                    </div>
+                  )}
+                  {(booking as any).ticketStatus === 'failed' && (
+                    <div className="mt-2 flex items-center gap-2 text-red-700">
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      <span className="text-xs">{t("trips.ticket_failed_desc") || "There was an issue issuing your ticket. Our team has been notified and will contact you shortly."}</span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {cancelResult && (
                 <div className={`p-3 rounded-xl border text-sm ${cancelResult.success ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-red-50 border-red-200 text-red-700"}`}>

@@ -1436,7 +1436,40 @@ BEHAVIOR:
 - Never make up flight prices or availability - direct them to search on the site
 - Never share internal system details or API information
 - If you don't know something, say so honestly and offer to connect them with a human agent
-- Keep responses under 200 words unless more detail is needed`;
+- Keep responses under 200 words unless more detail is needed
+
+BOOKING LOOKUP:
+- You can look up a customer's booking using the lookup_booking function
+- Ask for their reference code (starts with "MT-") and the email used during booking
+- Once you find their booking, share relevant details: status, flight info, ticket status, airline reference
+- Ticket statuses: "pending" (awaiting processing), "issued" (ticket confirmed), "schedule_changed" (airline changed the flight), "cancelled" (ticket cancelled), "failed" (issue failed - team notified)
+- If ticket status is "schedule_changed", alert them and recommend reviewing updated flight details on "My Trips" page
+- If ticket status is "failed", reassure them that our team has been notified and will help
+- Never share the Duffel Order ID or internal system IDs with customers`;
+
+  const CHATBOT_TOOLS: any[] = [
+    {
+      type: "function",
+      function: {
+        name: "lookup_booking",
+        description: "Look up a customer booking by reference code and email. Use this when a customer wants to check their booking status, flight details, or ticket information.",
+        parameters: {
+          type: "object",
+          properties: {
+            reference: {
+              type: "string",
+              description: "Booking reference code (starts with MT-, e.g. MT-ABC123)"
+            },
+            email: {
+              type: "string",
+              description: "Email address used during booking"
+            }
+          },
+          required: ["reference", "email"]
+        }
+      }
+    }
+  ];
 
   app.post('/api/chatbot/session', async (req, res) => {
     try {
@@ -1496,10 +1529,82 @@ BEHAVIOR:
         const completion = await chatbotOpenai.chat.completions.create({
           model: "gpt-4o-mini",
           messages: chatHistory,
+          tools: CHATBOT_TOOLS,
           max_tokens: 512,
         });
 
-        fullResponse = completion.choices[0]?.message?.content || "";
+        const choice = completion.choices[0];
+
+        if (choice.finish_reason === "tool_calls" && choice.message.tool_calls) {
+          const toolCall = choice.message.tool_calls[0] as any;
+          if (toolCall.function?.name === "lookup_booking") {
+            let args: any;
+            try {
+              args = JSON.parse(toolCall.function.arguments);
+            } catch {
+              args = {};
+            }
+
+            if (args.reference && args.email) {
+              try {
+                const booking = await storage.getBookingByReferenceAndEmail(args.reference, args.email);
+                if (booking) {
+                  const fd = booking.flightData as any;
+                  const bookingInfo = {
+                    referenceCode: booking.referenceCode,
+                    status: booking.status,
+                    ticketStatus: (booking as any).ticketStatus || 'pending',
+                    ticketNumber: (booking as any).ticketNumber || null,
+                    airlineReference: (booking as any).duffelBookingReference || null,
+                    airline: fd?.airline || null,
+                    origin: fd?.origin || fd?.originCode || null,
+                    destination: fd?.destination || fd?.destinationCode || null,
+                    departureDate: fd?.departureTime || null,
+                    flightNumber: fd?.flightNumber || null,
+                    hasScheduleChange: (booking as any).ticketStatus === 'schedule_changed',
+                    passengerCount: Array.isArray(booking.passengerDetails) ? (booking.passengerDetails as any[]).length : 0,
+                  };
+
+                  chatHistory.push({
+                    role: "assistant",
+                    content: `[Function called: lookup_booking] Booking found: ${JSON.stringify(bookingInfo)}`,
+                  });
+
+                  const followUp = await chatbotOpenai.chat.completions.create({
+                    model: "gpt-4o-mini",
+                    messages: [
+                      ...chatHistory,
+                      { role: "user" as const, content: `Based on the booking data above, write a helpful summary for the customer. Share status, flight details, ticket status, and airline reference if available. Respond in the same language the customer has been using. Do NOT share any internal IDs, prices, or email addresses.` },
+                    ],
+                    max_tokens: 512,
+                  });
+                  fullResponse = followUp.choices[0]?.message?.content || "";
+                } else {
+                  chatHistory.push({
+                    role: "assistant",
+                    content: `[Function called: lookup_booking] No booking found with reference "${args.reference}" and email "${args.email}".`,
+                  });
+                  const followUp = await chatbotOpenai.chat.completions.create({
+                    model: "gpt-4o-mini",
+                    messages: [
+                      ...chatHistory,
+                      { role: "user" as const, content: `The booking was not found. Let the customer know politely and suggest they double-check their reference code (starts with MT-) and email. Respond in the same language they've been using.` },
+                    ],
+                    max_tokens: 256,
+                  });
+                  fullResponse = followUp.choices[0]?.message?.content || "";
+                }
+              } catch (lookupErr: any) {
+                console.error("Booking lookup error in chatbot:", lookupErr?.message);
+                fullResponse = "I tried to look up your booking but encountered a technical issue. Please try the booking lookup on the 'My Trips' page, or I can connect you with a human agent.";
+              }
+            } else {
+              fullResponse = choice.message.content || "I need both your reference code (starts with MT-) and your email address to look up your booking.";
+            }
+          }
+        } else {
+          fullResponse = choice.message.content || "";
+        }
       } catch (modelError: any) {
         console.error("Primary model failed, trying fallback:", modelError.message);
         try {
@@ -1571,29 +1676,31 @@ BEHAVIOR:
   const AGENT_SYSTEM_PROMPT = `${CHATBOT_SYSTEM_PROMPT}
 
 AGENT MODE - IMPORTANT:
-You are now in AGENT MODE. You have the ability to search for real flights using the search_flights function.
+You are now in AGENT MODE. You have enhanced capabilities:
 
-WHEN TO USE search_flights:
+1. SEARCH FLIGHTS (search_flights):
 - When a customer asks to find or search for flights
-- When they mention traveling from one place to another
-- When they want to know prices or availability
-- When they say things like "I want to fly to...", "find me flights...", "quanto custa voo para...", "buscar voo..."
+- Extract: origin IATA code, destination IATA code, departure date
+- If customer provides city names, convert to IATA codes (e.g., "São Paulo" → "GRU", "New York" → "JFK", "Miami" → "MIA")
+- Default to 1 adult, economy class if not specified
 
-HOW TO USE search_flights:
-- You MUST extract: origin airport code (3-letter IATA), destination airport code (3-letter IATA), and departure date
-- If the customer doesn't provide airport codes, use your knowledge to determine the correct IATA codes (e.g., "São Paulo" → "GRU", "New York" → "JFK", "Miami" → "MIA", "Orlando" → "MCO", "Lisboa" → "LIS")
-- If date is missing, ask the customer for the travel date
-- If origin is missing, ask where they're departing from
-- Default to 1 adult passenger if not specified
-- Default to "economy" cabin class if not specified
+2. LOOKUP BOOKING (lookup_booking):
+- When a customer wants to check their booking status, ticket info, or flight details
+- Requires reference code (MT-...) and email
+- Share status, ticket status, airline reference, flight details
+- Never share internal IDs (Duffel Order ID)
+
+3. CANCEL BOOKING (cancel_booking):
+- When a customer or admin requests to cancel a booking
+- Requires the booking ID (get it from lookup_booking first)
+- ALWAYS confirm with the customer before cancelling
+- Inform them about refund processing
 
 AFTER SEARCH RESULTS:
-- Present the results in a friendly, helpful way
-- Mention the airline, price, departure/arrival times, and stops
-- Tell them they can click "Book" on any result to start the booking process
-- If no results found, suggest trying different dates or nearby airports
+- Present results in a friendly way with airline, price, times, stops
+- Tell them they can click "Book" on any result
 
-IMPORTANT: Always use the search_flights function when the customer wants to find flights. Never make up flight prices or availability.`;
+IMPORTANT: Always use the appropriate function. Never make up data.`;
 
   const AGENT_TOOLS: any[] = [
     {
@@ -1631,6 +1738,48 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
             }
           },
           required: ["origin", "destination", "date"]
+        }
+      }
+    },
+    {
+      type: "function",
+      function: {
+        name: "lookup_booking",
+        description: "Look up a booking by reference code and email. Use when customer wants to check booking status, ticket info, or flight details.",
+        parameters: {
+          type: "object",
+          properties: {
+            reference: {
+              type: "string",
+              description: "Booking reference code (starts with MT-)"
+            },
+            email: {
+              type: "string",
+              description: "Email address used during booking"
+            }
+          },
+          required: ["reference", "email"]
+        }
+      }
+    },
+    {
+      type: "function",
+      function: {
+        name: "cancel_booking",
+        description: "Cancel a booking by its ID. ONLY use after: 1) looking up the booking first, 2) presenting booking details to customer, 3) customer explicitly confirms they want to cancel. Set confirmed=true only when the customer has explicitly said yes to cancellation.",
+        parameters: {
+          type: "object",
+          properties: {
+            bookingId: {
+              type: "integer",
+              description: "The numeric booking ID (obtained from lookup_booking)"
+            },
+            confirmed: {
+              type: "boolean",
+              description: "Must be true - indicates the customer has explicitly confirmed cancellation"
+            }
+          },
+          required: ["bookingId", "confirmed"]
         }
       }
     }
@@ -1777,6 +1926,238 @@ IMPORTANT: Always use the search_flights function when the customer wants to fin
               conversationId: sessionId,
               role: "assistant",
               content: errorMsg,
+            });
+          }
+        } else if (toolCall.function?.name === "lookup_booking") {
+          let args: any;
+          try {
+            args = JSON.parse(toolCall.function.arguments);
+          } catch {
+            args = {};
+          }
+
+          if (args.reference && args.email) {
+            try {
+              const booking = await storage.getBookingByReferenceAndEmail(args.reference, args.email);
+              if (booking) {
+                const fd = booking.flightData as any;
+                const passengers = booking.passengerDetails as any[];
+                const bookingInfo = {
+                  id: booking.id,
+                  referenceCode: booking.referenceCode,
+                  status: booking.status,
+                  totalPrice: booking.totalPrice,
+                  currency: booking.currency,
+                  contactEmail: booking.contactEmail,
+                  contactPhone: booking.contactPhone,
+                  ticketStatus: (booking as any).ticketStatus || 'pending',
+                  ticketNumber: (booking as any).ticketNumber || null,
+                  airlineReference: (booking as any).duffelBookingReference || null,
+                  airline: fd?.airline || null,
+                  origin: fd?.origin || fd?.originCode || null,
+                  destination: fd?.destination || fd?.destinationCode || null,
+                  departureDate: fd?.departureTime || null,
+                  flightNumber: fd?.flightNumber || null,
+                  stripePaymentStatus: booking.stripePaymentStatus,
+                  createdAt: booking.createdAt,
+                  hasScheduleChange: (booking as any).ticketStatus === 'schedule_changed',
+                  airlineChanges: (booking as any).airlineInitiatedChanges || null,
+                  passengerCount: passengers?.length || 0,
+                  passengers: passengers?.map((p: any) => ({
+                    name: `${p.givenName || p.firstName || ''} ${p.familyName || p.lastName || ''}`.trim(),
+                    type: p.type || 'adult',
+                    email: p.email,
+                  })),
+                };
+
+                chatHistory.push({
+                  role: "assistant",
+                  content: `[Function called: lookup_booking] Booking found: ${JSON.stringify(bookingInfo)}`,
+                });
+
+                const followUp = await chatbotOpenai.chat.completions.create({
+                  model: "gpt-5-nano",
+                  messages: [
+                    ...chatHistory,
+                    { role: "user" as const, content: `Present this booking information clearly. Include: status, ticket status, airline reference, passenger info, payment status, flight details. Do NOT share internal system IDs. Respond in the same language the customer has been using.` },
+                  ],
+                  stream: true,
+                  max_completion_tokens: 512,
+                });
+
+                let fullResponse = "";
+                for await (const chunk of followUp) {
+                  if (clientDisconnected) break;
+                  const text = chunk.choices[0]?.delta?.content || "";
+                  if (text) {
+                    fullResponse += text;
+                    res.write(`data: ${JSON.stringify({ content: text, type: "text" })}\n\n`);
+                    if (typeof (res as any).flush === "function") (res as any).flush();
+                  }
+                }
+
+                await db.insert(messages).values({
+                  conversationId: sessionId,
+                  role: "assistant",
+                  content: `[AGENT: Looked up booking ${args.reference}]\n${fullResponse}`,
+                });
+              } else {
+                const notFoundMsg = `Booking not found with reference "${args.reference}" and email "${args.email}". Please verify the information.`;
+                res.write(`data: ${JSON.stringify({ content: notFoundMsg, type: "text" })}\n\n`);
+                if (typeof (res as any).flush === "function") (res as any).flush();
+                await db.insert(messages).values({
+                  conversationId: sessionId,
+                  role: "assistant",
+                  content: notFoundMsg,
+                });
+              }
+            } catch (lookupErr: any) {
+              console.error("Booking lookup error in agent mode:", lookupErr?.message);
+              const errorMsg = "Failed to look up the booking. Please try again or check the booking directly in the admin dashboard.";
+              res.write(`data: ${JSON.stringify({ content: errorMsg, type: "text" })}\n\n`);
+              if (typeof (res as any).flush === "function") (res as any).flush();
+              await db.insert(messages).values({
+                conversationId: sessionId,
+                role: "assistant",
+                content: errorMsg,
+              });
+            }
+          } else {
+            const askMsg = "I need both the reference code (starts with MT-) and the email address to look up a booking.";
+            res.write(`data: ${JSON.stringify({ content: askMsg, type: "text" })}\n\n`);
+            if (typeof (res as any).flush === "function") (res as any).flush();
+            await db.insert(messages).values({
+              conversationId: sessionId,
+              role: "assistant",
+              content: askMsg,
+            });
+          }
+        } else if (toolCall.function?.name === "cancel_booking") {
+          let args: any;
+          try {
+            args = JSON.parse(toolCall.function.arguments);
+          } catch {
+            args = {};
+          }
+
+          if (args.bookingId && args.confirmed === true) {
+            try {
+              const booking = await storage.getBooking(args.bookingId);
+              if (!booking) {
+                const notFoundMsg = `Booking #${args.bookingId} not found.`;
+                res.write(`data: ${JSON.stringify({ content: notFoundMsg, type: "text" })}\n\n`);
+                if (typeof (res as any).flush === "function") (res as any).flush();
+                await db.insert(messages).values({
+                  conversationId: sessionId,
+                  role: "assistant",
+                  content: notFoundMsg,
+                });
+              } else if (booking.status === 'cancelled' || booking.status === 'refunded') {
+                const alreadyMsg = `Booking ${booking.referenceCode} is already ${booking.status}.`;
+                res.write(`data: ${JSON.stringify({ content: alreadyMsg, type: "text" })}\n\n`);
+                if (typeof (res as any).flush === "function") (res as any).flush();
+                await db.insert(messages).values({
+                  conversationId: sessionId,
+                  role: "assistant",
+                  content: alreadyMsg,
+                });
+              } else {
+                await db.update(bookings)
+                  .set({ status: 'cancelled' })
+                  .where(eq(bookings.id, args.bookingId));
+
+                const fd = booking.flightData as any;
+                const duffelOrderId = (booking as any).duffelOrderId || fd?.duffelOrderId;
+                let refundInfo = "";
+
+                if (duffelOrderId) {
+                  try {
+                    const { cancelDuffelOrder } = await import("./services/duffel");
+                    if (typeof cancelDuffelOrder === 'function') {
+                      await cancelDuffelOrder(duffelOrderId);
+                      refundInfo = " Duffel order cancellation initiated.";
+                    }
+                  } catch (duffelErr: any) {
+                    console.error("Duffel cancel error:", duffelErr?.message);
+                    refundInfo = " Note: Duffel cancellation may need manual processing.";
+                  }
+                }
+
+                if (booking.stripePaymentIntentId) {
+                  try {
+                    const { getUncachableStripeClient } = await import('./stripeClient');
+                    const stripe = await getUncachableStripeClient();
+                    await stripe.refunds.create({ payment_intent: booking.stripePaymentIntentId });
+                    refundInfo += " Stripe refund initiated.";
+                    await db.update(bookings)
+                      .set({ status: 'refunded', stripePaymentStatus: 'refunded' })
+                      .where(eq(bookings.id, args.bookingId));
+                  } catch (stripeErr: any) {
+                    console.error("Stripe refund error:", stripeErr?.message);
+                    refundInfo += " Note: Stripe refund may need manual processing.";
+                  }
+                }
+
+                chatHistory.push({
+                  role: "assistant",
+                  content: `[Function called: cancel_booking] Booking ${booking.referenceCode} has been cancelled.${refundInfo}`,
+                });
+
+                const followUp = await chatbotOpenai.chat.completions.create({
+                  model: "gpt-5-nano",
+                  messages: [
+                    ...chatHistory,
+                    { role: "user" as const, content: `Confirm the cancellation to the customer. Mention the reference code, and any refund info. Be empathetic. Respond in the same language they've been using.` },
+                  ],
+                  stream: true,
+                  max_completion_tokens: 256,
+                });
+
+                let fullResponse = "";
+                for await (const chunk of followUp) {
+                  if (clientDisconnected) break;
+                  const text = chunk.choices[0]?.delta?.content || "";
+                  if (text) {
+                    fullResponse += text;
+                    res.write(`data: ${JSON.stringify({ content: text, type: "text" })}\n\n`);
+                    if (typeof (res as any).flush === "function") (res as any).flush();
+                  }
+                }
+
+                await db.insert(messages).values({
+                  conversationId: sessionId,
+                  role: "assistant",
+                  content: `[AGENT: Cancelled booking ${booking.referenceCode}${refundInfo}]\n${fullResponse}`,
+                });
+              }
+            } catch (cancelErr: any) {
+              console.error("Cancel booking error in agent mode:", cancelErr?.message);
+              const errorMsg = "Failed to cancel the booking. Please try through the admin dashboard.";
+              res.write(`data: ${JSON.stringify({ content: errorMsg, type: "text" })}\n\n`);
+              if (typeof (res as any).flush === "function") (res as any).flush();
+              await db.insert(messages).values({
+                conversationId: sessionId,
+                role: "assistant",
+                content: errorMsg,
+              });
+            }
+          } else if (args.bookingId && !args.confirmed) {
+            const confirmMsg = "I need explicit confirmation from the customer before proceeding with the cancellation. Please confirm that you'd like to cancel this booking.";
+            res.write(`data: ${JSON.stringify({ content: confirmMsg, type: "text" })}\n\n`);
+            if (typeof (res as any).flush === "function") (res as any).flush();
+            await db.insert(messages).values({
+              conversationId: sessionId,
+              role: "assistant",
+              content: confirmMsg,
+            });
+          } else {
+            const askMsg = "I need the booking ID to cancel. Please look up the booking first using the reference code and email.";
+            res.write(`data: ${JSON.stringify({ content: askMsg, type: "text" })}\n\n`);
+            if (typeof (res as any).flush === "function") (res as any).flush();
+            await db.insert(messages).values({
+              conversationId: sessionId,
+              role: "assistant",
+              content: askMsg,
             });
           }
         }
