@@ -582,36 +582,38 @@ export function registerRoutes(app: Express) {
 
   app.get('/api/flights/:offerId/seat-map', async (req, res) => {
     try {
-      const { getSeatMap } = await import('./services/duffel');
-      const seatMap = await getSeatMap(req.params.offerId);
-      if (!seatMap) {
-        return res.json({ available: false, cabins: [] });
+      const { getSeatMaps } = await import('./services/duffel');
+      const seatMaps = await getSeatMaps(req.params.offerId);
+      if (!seatMaps || seatMaps.length === 0) {
+        return res.json({ available: false, cabins: [], seatMaps: [] });
       }
 
       const seatMarkupRate = await getCommissionRate();
-      const processed = seatMap.map((sm: any) => ({
-        sliceId: sm.slice_id,
-        segmentId: sm.segment_id,
+      const processed = seatMaps.map((sm: any) => ({
+        segmentId: sm.segmentId,
         cabins: (sm.cabins || []).map((cabin: any) => ({
-          deckType: cabin.deck || 'main',
+          cabinClass: cabin.cabinClass || 'economy',
+          aisles: cabin.aisles || 1,
           wings: cabin.wings || null,
           rows: (cabin.rows || []).map((row: any) => ({
-            sectionNumber: row.sections?.[0]?.number || null,
-            seats: (row.sections || []).flatMap((section: any) =>
-              (section.elements || []).filter((el: any) => el.type === 'seat').map((seat: any) => {
-                const rawPrice = seat.available_services?.[0]?.total_amount || null;
-                return {
-                  id: seat.designator,
-                  designator: seat.designator,
-                  available: seat.available_services?.length > 0,
-                  type: seat.type || 'standard',
-                  disclosures: seat.disclosures || [],
-                  price: rawPrice ? parseFloat((parseFloat(rawPrice) * (1 + seatMarkupRate)).toFixed(2)).toString() : null,
-                  currency: seat.available_services?.[0]?.total_currency || null,
-                  serviceId: seat.available_services?.[0]?.id || null,
-                };
-              })
-            ),
+            sections: (row.sections || []).map((section: any) => ({
+              elements: (section.elements || []).map((el: any) => {
+                if (el.type === 'seat') {
+                  const rawPrice = el.totalAmount || null;
+                  return {
+                    type: 'seat',
+                    designator: el.designator || '',
+                    name: el.name || undefined,
+                    available: el.available ?? false,
+                    disclosures: el.disclosures || [],
+                    price: rawPrice && el.available ? parseFloat((parseFloat(rawPrice) * (1 + seatMarkupRate)).toFixed(2)).toString() : null,
+                    currency: el.totalCurrency || null,
+                    serviceId: el.serviceId || null,
+                  };
+                }
+                return { type: el.type };
+              }),
+            })),
           })),
         })),
       }));
@@ -619,7 +621,7 @@ export function registerRoutes(app: Express) {
       res.json({ available: true, seatMaps: processed });
     } catch (error) {
       console.error("Seat map error:", error);
-      res.json({ available: false, cabins: [] });
+      res.json({ available: false, cabins: [], seatMaps: [] });
     }
   });
 
@@ -726,6 +728,158 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Refund quote error:", error);
       res.status(500).json({ error: "Failed to get refund quote" });
+    }
+  });
+
+  app.post('/api/bookings/:id/sync', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+
+      const booking = await storage.getBooking(id);
+      if (!booking) return res.status(404).json({ error: "Booking not found" });
+
+      const duffelOrderId = (booking as any).duffelOrderId || (booking.flightData as any)?.duffelOrderId;
+      if (!duffelOrderId) {
+        return res.status(400).json({ error: "No Duffel order linked to this booking" });
+      }
+
+      const { syncDuffelOrder } = await import('./services/duffel');
+      const syncResult = await syncDuffelOrder(duffelOrderId);
+
+      if (!syncResult.synced) {
+        return res.status(500).json({ error: "Failed to sync with Duffel" });
+      }
+
+      const updates: Record<string, any> = {};
+      if (syncResult.bookingReference) {
+        updates.duffelBookingReference = syncResult.bookingReference;
+      }
+      if (syncResult.ticketNumbers && syncResult.ticketNumbers.length > 0) {
+        updates.ticketNumber = syncResult.ticketNumbers.join(', ');
+        updates.ticketStatus = 'issued';
+      }
+      if (syncResult.status === 'cancelled') {
+        updates.ticketStatus = 'cancelled';
+      }
+      if (syncResult.airlineInitiatedChanges && syncResult.airlineInitiatedChanges.length > 0) {
+        updates.airlineInitiatedChanges = syncResult.airlineInitiatedChanges;
+        if (!updates.ticketStatus || updates.ticketStatus === 'issued') {
+          updates.ticketStatus = 'schedule_changed';
+        }
+      }
+      updates.lastDuffelWebhookAt = new Date();
+
+      if (Object.keys(updates).length > 0) {
+        await db.update(bookings)
+          .set(updates)
+          .where(eq(bookings.id, id));
+      }
+
+      const updatedBooking = await storage.getBooking(id);
+      res.json({
+        synced: true,
+        booking: updatedBooking,
+        duffelStatus: syncResult.status,
+        availableActions: syncResult.availableActions,
+        conditions: syncResult.conditions,
+        documents: syncResult.documents,
+        paymentStatus: syncResult.paymentStatus,
+      });
+    } catch (error) {
+      console.error("Booking sync error:", error);
+      res.status(500).json({ error: "Failed to sync booking" });
+    }
+  });
+
+  app.post('/api/bookings/:id/change-request', async (req, res) => {
+    try {
+      const user = (req as any).user;
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+
+      const booking = await storage.getBooking(id);
+      if (!booking) return res.status(404).json({ error: "Booking not found" });
+
+      const userId = user.claims?.sub;
+      const isAdmin = (req.session as any)?.isAdmin;
+      if (!isAdmin && (!userId || booking.userId !== userId)) {
+        return res.status(403).json({ error: "Access denied - you do not own this booking" });
+      }
+
+      const duffelOrderId = (booking as any).duffelOrderId || (booking.flightData as any)?.duffelOrderId;
+      if (!duffelOrderId) {
+        return res.status(400).json({ error: "No Duffel order linked - cannot change" });
+      }
+
+      const { slicesToRemove, slicesToAdd } = req.body;
+      if (!slicesToRemove || !slicesToAdd) {
+        return res.status(400).json({ error: "slicesToRemove and slicesToAdd are required" });
+      }
+
+      const { createOrderChangeRequest } = await import('./services/duffel');
+      const result = await createOrderChangeRequest(duffelOrderId, slicesToRemove, slicesToAdd);
+
+      if (!result) {
+        return res.status(500).json({ error: "Failed to create change request with airline" });
+      }
+
+      res.json({
+        changeRequestId: result.id,
+        changeOffers: result.changeOffers,
+      });
+    } catch (error) {
+      console.error("Order change request error:", error);
+      res.status(500).json({ error: "Failed to create change request" });
+    }
+  });
+
+  app.post('/api/bookings/:id/confirm-change', async (req, res) => {
+    try {
+      const user = (req as any).user;
+      if (!user) return res.status(401).json({ error: "Unauthorized" });
+
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+
+      const booking = await storage.getBooking(id);
+      if (!booking) return res.status(404).json({ error: "Booking not found" });
+
+      const userId = user.claims?.sub;
+      const isAdmin = (req.session as any)?.isAdmin;
+      if (!isAdmin && (!userId || booking.userId !== userId)) {
+        return res.status(403).json({ error: "Access denied - you do not own this booking" });
+      }
+
+      const { orderChangeOfferId } = req.body;
+      if (!orderChangeOfferId) {
+        return res.status(400).json({ error: "orderChangeOfferId is required" });
+      }
+
+      const { confirmOrderChange } = await import('./services/duffel');
+      const success = await confirmOrderChange(orderChangeOfferId);
+
+      if (!success) {
+        return res.status(500).json({ error: "Failed to confirm flight change" });
+      }
+
+      const duffelOrderId = (booking as any).duffelOrderId || (booking.flightData as any)?.duffelOrderId;
+      if (duffelOrderId) {
+        const { syncDuffelOrder } = await import('./services/duffel');
+        const syncResult = await syncDuffelOrder(duffelOrderId);
+        if (syncResult.synced && syncResult.bookingReference) {
+          await db.update(bookings)
+            .set({ duffelBookingReference: syncResult.bookingReference, lastDuffelWebhookAt: new Date() })
+            .where(eq(bookings.id, id));
+        }
+      }
+
+      res.json({ success: true, message: "Flight change confirmed" });
+    } catch (error) {
+      console.error("Confirm order change error:", error);
+      res.status(500).json({ error: "Failed to confirm flight change" });
     }
   });
 

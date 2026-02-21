@@ -2,7 +2,7 @@ import { type FlightOffer } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plane, Clock, ArrowRight, Luggage } from "lucide-react";
+import { Plane, Clock, ArrowRight, Luggage, Leaf } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Link } from "wouter";
 import { useI18n } from "@/lib/i18n";
@@ -199,6 +199,11 @@ export function FlightCard({ flight }: FlightCardProps) {
               {carryOnBags && carryOnBags.quantity > 0 && (
                 <span className="text-[10px] text-blue-600 flex items-center gap-1">
                   <Luggage className="h-2.5 w-2.5" /> {carryOnBags.quantity}x {t("booking.carry_on")}
+                </span>
+              )}
+              {(flight as any).totalEmissionsKg && (
+                <span className="text-[10px] text-emerald-500 flex items-center gap-1" data-testid="text-co2-emissions">
+                  <Leaf className="h-2.5 w-2.5" /> {Math.round((flight as any).totalEmissionsKg)} kg CO₂
                 </span>
               )}
             </div>

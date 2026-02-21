@@ -1,5 +1,5 @@
 import { Duffel } from "@duffel/api";
-import { type FlightOffer, type FlightSearchParams, type FlightSlice, type FlightSegment, type FlightPassengerInfo } from "@shared/schema";
+import { type FlightOffer, type FlightSearchParams, type FlightSlice, type FlightSegment, type FlightPassengerInfo, type SeatMap, type SeatMapCabin, type OrderSyncResult, type FlightAvailableService } from "@shared/schema";
 import { db } from "../db";
 import { siteSettings } from "@shared/schema";
 
@@ -495,6 +495,8 @@ export async function searchFlights(params: FlightSearchParams): Promise<FlightO
         passengerIdentityDocumentsRequired: (offer as any).passenger_identity_documents_required ?? false,
         taxAmount: (offer as any).tax_amount || null,
         baseAmount: (offer as any).base_amount || null,
+        totalEmissionsKg: (offer as any).total_emissions_kg || null,
+        supportedLoyaltyProgrammes: (offer as any).supported_loyalty_programmes || [],
         conditions: conditions ? {
           changeBeforeDeparture: conditions.change_before_departure ? {
             allowed: conditions.change_before_departure.allowed ?? false,
@@ -548,7 +550,7 @@ export async function getFlight(id: string): Promise<FlightOffer | null> {
     }
 
     const duffel = getActiveDuffelClient();
-    const offer = await duffel.offers.get(id);
+    const offer = await duffel.offers.get(id, { return_available_services: true });
     const offerData = offer.data as any;
     
     const slice = offerData.slices[0];
@@ -624,6 +626,17 @@ export async function getFlight(id: string): Promise<FlightOffer | null> {
 
     const conditions = offerData.conditions || null;
 
+    const availableServices: FlightAvailableService[] = (offerData.available_services || []).map((svc: any) => ({
+      id: svc.id,
+      type: svc.type,
+      totalAmount: svc.total_amount,
+      totalCurrency: svc.total_currency,
+      maxQuantity: svc.maximum_quantity || 1,
+      passengerIds: svc.passenger_ids || [],
+      segmentIds: svc.segment_ids || [],
+      metadata: svc.metadata || {},
+    }));
+
     return {
       id: offerData.id,
       airline,
@@ -646,6 +659,9 @@ export async function getFlight(id: string): Promise<FlightOffer | null> {
       passengerIdentityDocumentsRequired: offerData.passenger_identity_documents_required ?? false,
       taxAmount: offerData.tax_amount || null,
       baseAmount: offerData.base_amount || null,
+      totalEmissionsKg: offerData.total_emissions_kg || null,
+      supportedLoyaltyProgrammes: offerData.supported_loyalty_programmes || [],
+      availableServices: availableServices.length > 0 ? availableServices : undefined,
       conditions: conditions ? {
         changeBeforeDeparture: conditions.change_before_departure ? {
           allowed: conditions.change_before_departure.allowed ?? false,
@@ -898,6 +914,239 @@ export async function createDuffelOrder(
     };
   } catch (error: any) {
     console.error("Duffel createOrder Error:", error?.errors || error?.message || error);
+    return null;
+  }
+}
+
+export async function syncDuffelOrder(orderId: string): Promise<OrderSyncResult> {
+  try {
+    const token = getActiveToken();
+    if (!token) return { synced: false };
+
+    const duffel = getActiveDuffelClient();
+    const order = await duffel.orders.get(orderId);
+    const data = order.data as any;
+
+    const ticketNumbers: string[] = [];
+    if (data.documents) {
+      for (const doc of data.documents) {
+        if (doc.type === 'electronic_ticket' && doc.unique_identifier) {
+          ticketNumbers.push(doc.unique_identifier);
+        }
+      }
+    }
+
+    const documents = (data.documents || []).map((doc: any) => ({
+      type: doc.type,
+      uniqueIdentifier: doc.unique_identifier || undefined,
+    }));
+
+    return {
+      synced: true,
+      status: data.cancelled_at ? 'cancelled' : (typeof data.payment_status === 'string' ? (data.payment_status === 'awaiting_payment' ? 'awaiting_payment' : data.payment_status) : 'confirmed'),
+      bookingReference: data.booking_reference || undefined,
+      ticketNumbers,
+      documents,
+      availableActions: data.available_actions || [],
+      conditions: data.conditions || undefined,
+      airlineInitiatedChanges: data.airline_initiated_changes || [],
+      slices: data.slices?.map((s: any) => ({
+        origin: s.origin?.iata_code,
+        destination: s.destination?.iata_code,
+        departureDate: s.segments?.[0]?.departing_at,
+        arrivalDate: s.segments?.[s.segments.length - 1]?.arriving_at,
+        segments: s.segments?.map((seg: any) => ({
+          flightNumber: safeFlightNumber(seg.operating_carrier?.iata_code, seg.operating_carrier_flight_number),
+          departureTime: seg.departing_at,
+          arrivalTime: seg.arriving_at,
+          origin: seg.origin?.iata_code,
+          destination: seg.destination?.iata_code,
+        })),
+      })) || [],
+      paymentStatus: data.payment_status || undefined,
+    };
+  } catch (error: any) {
+    console.error("Duffel syncOrder Error:", error?.errors || error?.message || error);
+    return { synced: false };
+  }
+}
+
+export async function getSeatMaps(offerId: string): Promise<SeatMap[]> {
+  try {
+    const token = getActiveToken();
+    if (!token) return [];
+
+    const response = await fetch(
+      `${DUFFEL_BASE}/air/seat_maps?offer_id=${encodeURIComponent(offerId)}`,
+      { headers: headers() }
+    );
+
+    if (!response.ok) {
+      const body = await response.text();
+      console.error(`Duffel Seat Maps API error: ${response.status}`, body);
+      return [];
+    }
+
+    const result = await response.json();
+
+    return (result.data || []).map((seatMap: any) => {
+      const segmentId = seatMap.segment_id || '';
+
+      const cabins: SeatMapCabin[] = (seatMap.cabins || []).map((cabin: any) => ({
+        cabinClass: cabin.cabin_class || 'economy',
+        aisles: cabin.aisles_count || 1,
+        wings: cabin.wings ? {
+          firstRowIndex: cabin.wings.first_row_index,
+          lastRowIndex: cabin.wings.last_row_index,
+        } : null,
+        rows: (cabin.rows || []).map((row: any) => ({
+          sections: (row.sections || []).map((section: any) => ({
+            elements: (section.elements || []).map((el: any) => {
+              const element: any = {
+                type: el.type || 'empty',
+              };
+              if (el.type === 'seat') {
+                element.designator = el.designator || '';
+                element.name = el.name || undefined;
+                element.disclosures = el.disclosures || [];
+                if (el.available_services && el.available_services.length > 0) {
+                  const svc = el.available_services[0];
+                  element.available = true;
+                  element.totalAmount = svc.total_amount || '0';
+                  element.totalCurrency = svc.total_currency || 'USD';
+                  element.serviceId = svc.id || undefined;
+                } else {
+                  element.available = false;
+                }
+              }
+              return element;
+            }),
+          })),
+        })),
+      }));
+
+      return { segmentId, cabins };
+    });
+  } catch (error: any) {
+    console.error("Duffel getSeatMaps Error:", error?.errors || error?.message || error);
+    return [];
+  }
+}
+
+export async function createOrderChangeRequest(
+  orderId: string,
+  slicesToRemove: string[],
+  slicesToAdd: Array<{ origin: string; destination: string; departureDate: string; cabinClass?: string }>
+): Promise<{ id: string; changeOffers: any[] } | null> {
+  try {
+    const token = getActiveToken();
+    if (!token) return null;
+
+    const response = await fetch(`${DUFFEL_BASE}/air/order_change_requests`, {
+      method: 'POST',
+      headers: {
+        ...headers(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        data: {
+          order_id: orderId,
+          slices: {
+            remove: slicesToRemove.map(id => ({ slice_id: id })),
+            add: slicesToAdd.map(s => ({
+              origin: s.origin,
+              destination: s.destination,
+              departure_date: s.departureDate,
+              cabin_class: s.cabinClass || 'economy',
+            })),
+          },
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      console.error(`Duffel Order Change Request error: ${response.status}`, body);
+      return null;
+    }
+
+    const result = await response.json();
+    const data = result.data;
+
+    return {
+      id: data.id,
+      changeOffers: (data.order_change_offers || []).map((offer: any) => ({
+        id: offer.id,
+        changeTotalAmount: offer.change_total_amount,
+        changeTotalCurrency: offer.change_total_currency,
+        newTotalAmount: offer.new_total_amount,
+        newTotalCurrency: offer.new_total_currency,
+        penaltyTotalAmount: offer.penalty_total_amount,
+        penaltyTotalCurrency: offer.penalty_total_currency,
+        refundTo: offer.refund_to,
+        expiresAt: offer.expires_at,
+        slicesAdd: offer.slices?.add?.map((s: any) => ({
+          origin: s.origin?.iata_code,
+          destination: s.destination?.iata_code,
+          duration: s.duration,
+          segments: s.segments?.map((seg: any) => ({
+            flightNumber: safeFlightNumber(seg.operating_carrier?.iata_code, seg.operating_carrier_flight_number),
+            departureTime: seg.departing_at,
+            arrivalTime: seg.arriving_at,
+            origin: seg.origin?.iata_code,
+            destination: seg.destination?.iata_code,
+            airline: seg.operating_carrier?.name,
+          })),
+        })) || [],
+      })),
+    };
+  } catch (error: any) {
+    console.error("Duffel createOrderChangeRequest Error:", error?.errors || error?.message || error);
+    return null;
+  }
+}
+
+export async function confirmOrderChange(orderChangeOfferId: string): Promise<boolean> {
+  try {
+    const token = getActiveToken();
+    if (!token) return false;
+
+    const response = await fetch(`${DUFFEL_BASE}/air/order_changes`, {
+      method: 'POST',
+      headers: {
+        ...headers(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        data: {
+          selected_order_change_offer: orderChangeOfferId,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      console.error(`Duffel Confirm Order Change error: ${response.status}`, body);
+      return false;
+    }
+
+    return true;
+  } catch (error: any) {
+    console.error("Duffel confirmOrderChange Error:", error?.errors || error?.message || error);
+    return false;
+  }
+}
+
+export async function getDuffelOrder(orderId: string): Promise<any | null> {
+  try {
+    const token = getActiveToken();
+    if (!token) return null;
+
+    const duffel = getActiveDuffelClient();
+    const order = await duffel.orders.get(orderId);
+    return order.data;
+  } catch (error: any) {
+    console.error("Duffel getDuffelOrder Error:", error?.errors || error?.message || error);
     return null;
   }
 }

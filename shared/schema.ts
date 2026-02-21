@@ -304,8 +304,66 @@ export interface FlightOffer {
   passengerIdentityDocumentsRequired?: boolean;
   taxAmount?: string | null;
   baseAmount?: string | null;
+  totalEmissionsKg?: string | null;
+  supportedLoyaltyProgrammes?: string[];
+  availableServices?: FlightAvailableService[];
   conditions?: {
     changeBeforeDeparture?: { allowed: boolean; penaltyAmount?: string; penaltyCurrency?: string } | null;
     refundBeforeDeparture?: { allowed: boolean; penaltyAmount?: string; penaltyCurrency?: string } | null;
   } | null;
+}
+
+export interface FlightAvailableService {
+  id: string;
+  type: string;
+  totalAmount: string;
+  totalCurrency: string;
+  maxQuantity: number;
+  passengerIds: string[];
+  segmentIds: string[];
+  metadata?: any;
+}
+
+export interface SeatMapCabin {
+  cabinClass: string;
+  aisles: number;
+  rows: SeatMapRow[];
+  wings?: { firstRowIndex: number; lastRowIndex: number } | null;
+}
+
+export interface SeatMapRow {
+  sections: SeatMapSection[];
+}
+
+export interface SeatMapSection {
+  elements: SeatMapElement[];
+}
+
+export interface SeatMapElement {
+  type: string;
+  designator?: string;
+  name?: string;
+  disclosures?: string[];
+  available?: boolean;
+  totalAmount?: string;
+  totalCurrency?: string;
+  serviceId?: string;
+}
+
+export interface SeatMap {
+  segmentId: string;
+  cabins: SeatMapCabin[];
+}
+
+export interface OrderSyncResult {
+  synced: boolean;
+  status?: string;
+  bookingReference?: string;
+  ticketNumbers?: string[];
+  documents?: Array<{ type: string; uniqueIdentifier?: string }>;
+  availableActions?: string[];
+  conditions?: any;
+  airlineInitiatedChanges?: any[];
+  slices?: any[];
+  paymentStatus?: any;
 }
