@@ -256,6 +256,11 @@ export default function SearchResults() {
 
   const [selectedOutboundKey, setSelectedOutboundKey] = useState<string | null>(null);
 
+  const FLIGHTS_PER_PAGE = 10;
+  const [visibleOneWayCount, setVisibleOneWayCount] = useState(FLIGHTS_PER_PAGE);
+  const [visibleOutboundCount, setVisibleOutboundCount] = useState(FLIGHTS_PER_PAGE);
+  const [visibleReturnCount, setVisibleReturnCount] = useState(FLIGHTS_PER_PAGE);
+
   const isRoundTrip = !!(params as any).returnDate;
 
   const getOutboundKey = useCallback((flight: FlightOffer) => {
@@ -273,6 +278,9 @@ export default function SearchResults() {
   useEffect(() => {
     if (searchKey !== lastSearchKey) {
       setSelectedOutboundKey(null);
+      setVisibleOneWayCount(FLIGHTS_PER_PAGE);
+      setVisibleOutboundCount(FLIGHTS_PER_PAGE);
+      setVisibleReturnCount(FLIGHTS_PER_PAGE);
     }
   }, [searchKey, lastSearchKey]);
 
@@ -315,6 +323,9 @@ export default function SearchResults() {
     setSelectedDepartureTimes(new Set());
     setSelectedReturnTimes(new Set());
     setPriceRange(null);
+    setVisibleOneWayCount(FLIGHTS_PER_PAGE);
+    setVisibleOutboundCount(FLIGHTS_PER_PAGE);
+    setVisibleReturnCount(FLIGHTS_PER_PAGE);
   }, []);
 
   const filteredAndSortedFlights = useMemo(() => {
