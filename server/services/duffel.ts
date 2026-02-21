@@ -5,6 +5,55 @@ import { siteSettings } from "@shared/schema";
 
 const DUFFEL_BASE = "https://api.duffel.com";
 
+const CITY_NAME_FALLBACK: Record<string, string> = {
+  JFK: "New York", EWR: "Newark", LGA: "New York",
+  LAX: "Los Angeles", SFO: "San Francisco", ORD: "Chicago",
+  MIA: "Miami", ATL: "Atlanta", DFW: "Dallas", DEN: "Denver",
+  SEA: "Seattle", BOS: "Boston", IAD: "Washington", DCA: "Washington",
+  MCO: "Orlando", PHL: "Philadelphia", IAH: "Houston", MSP: "Minneapolis",
+  DTW: "Detroit", CLT: "Charlotte", PHX: "Phoenix", SAN: "San Diego",
+  TPA: "Tampa", FLL: "Fort Lauderdale", BWI: "Baltimore", SLC: "Salt Lake City",
+  ONT: "Ontario", BUR: "Burbank", LGB: "Long Beach", SNA: "Santa Ana",
+  GRU: "São Paulo", GIG: "Rio de Janeiro", BSB: "Brasília",
+  CNF: "Belo Horizonte", SSA: "Salvador", REC: "Recife",
+  FOR: "Fortaleza", CWB: "Curitiba", POA: "Porto Alegre",
+  LHR: "London", LGW: "London", STN: "London", LTN: "London",
+  CDG: "Paris", ORY: "Paris",
+  FCO: "Rome", MXP: "Milan", LIN: "Milan",
+  MAD: "Madrid", BCN: "Barcelona",
+  LIS: "Lisbon", OPO: "Porto",
+  AMS: "Amsterdam", FRA: "Frankfurt", MUC: "Munich",
+  ZRH: "Zurich", VIE: "Vienna", BRU: "Brussels",
+  CPH: "Copenhagen", OSL: "Oslo", ARN: "Stockholm", HEL: "Helsinki",
+  IST: "Istanbul", ATH: "Athens", DUB: "Dublin",
+  NRT: "Tokyo", HND: "Tokyo", KIX: "Osaka",
+  ICN: "Seoul", GMP: "Seoul",
+  PEK: "Beijing", PVG: "Shanghai", HKG: "Hong Kong",
+  SIN: "Singapore", BKK: "Bangkok", KUL: "Kuala Lumpur",
+  DEL: "New Delhi", BOM: "Mumbai",
+  DXB: "Dubai", DOH: "Doha", AUH: "Abu Dhabi",
+  JNB: "Johannesburg", CPT: "Cape Town", CAI: "Cairo",
+  SYD: "Sydney", MEL: "Melbourne", AKL: "Auckland",
+  CUN: "Cancún", MEX: "Mexico City", GDL: "Guadalajara",
+  BOG: "Bogotá", SCL: "Santiago", LIM: "Lima", EZE: "Buenos Aires",
+  PTY: "Panama City", SJO: "San José", HAV: "Havana",
+  YYZ: "Toronto", YVR: "Vancouver", YUL: "Montreal",
+};
+
+function getCityName(iataCode: string, airportLookup?: { cityName?: string | null }, duffelCityName?: string | null): string {
+  if (airportLookup?.cityName) return airportLookup.cityName;
+  if (duffelCityName) return duffelCityName;
+  return CITY_NAME_FALLBACK[iataCode] || iataCode;
+}
+
+function safeFlightNumber(carrierCode: string | null | undefined, flightNum: string | null | undefined): string {
+  const code = carrierCode || "";
+  const num = flightNum || "";
+  if (!code && !num) return "";
+  if (!num) return code;
+  return `${code}${num}`;
+}
+
 function getTestToken(): string {
   return process.env.DUFFEL_API_TOKEN || '';
 }
@@ -378,18 +427,18 @@ export async function searchFlights(params: FlightSearchParams): Promise<FlightO
             segmentId: seg.id,
             carrierCode: seg.operating_carrier.iata_code || seg.marketing_carrier?.iata_code || "",
             carrierName: seg.operating_carrier.name || airline,
-            flightNumber: `${seg.operating_carrier.iata_code || ""}${seg.operating_carrier_flight_number || ""}`,
+            flightNumber: safeFlightNumber(seg.operating_carrier.iata_code, seg.operating_carrier_flight_number),
             aircraftType: segAircraft?.name || null,
             departureTime: seg.departing_at,
             arrivalTime: seg.arriving_at,
             duration: seg.duration || "PT0H",
             originCode: seg.origin.iata_code || "",
             originName: seg.origin.name || "",
-            originCity: segOrigin?.cityName || seg.origin.city_name || null,
+            originCity: getCityName(seg.origin.iata_code || "", segOrigin, seg.origin.city_name),
             originTerminal: seg.origin_terminal || null,
             destinationCode: seg.destination.iata_code || "",
             destinationName: seg.destination.name || "",
-            destinationCity: segDest?.cityName || seg.destination.city_name || null,
+            destinationCity: getCityName(seg.destination.iata_code || "", segDest, seg.destination.city_name),
             destinationTerminal: seg.destination_terminal || null,
           };
         });
@@ -397,9 +446,9 @@ export async function searchFlights(params: FlightSearchParams): Promise<FlightO
         return {
           duration: s.duration || "PT0H",
           originCode: firstSeg.origin.iata_code || "",
-          originCity: originAp?.cityName || null,
+          originCity: getCityName(firstSeg.origin.iata_code || "", originAp),
           destinationCode: lastSeg.destination.iata_code || "",
-          destinationCity: destAp?.cityName || null,
+          destinationCity: getCityName(lastSeg.destination.iata_code || "", destAp),
           segments,
         };
       });
@@ -427,7 +476,7 @@ export async function searchFlights(params: FlightSearchParams): Promise<FlightO
       return {
         id: offer.id,
         airline,
-        flightNumber: `${segment.operating_carrier.iata_code}${segment.operating_carrier_flight_number}`,
+        flightNumber: safeFlightNumber(segment.operating_carrier.iata_code, segment.operating_carrier_flight_number),
         departureTime: segment.departing_at,
         arrivalTime: lastSegment.arriving_at,
         duration: slice.duration || "PT0H", 
@@ -436,8 +485,8 @@ export async function searchFlights(params: FlightSearchParams): Promise<FlightO
         stops: slice.segments.length - 1,
         logoUrl,
         aircraftType: aircraftInfo?.name || null,
-        originCity: originAirport?.cityName || segment.origin.iata_code || params.origin,
-        destinationCity: destAirport?.cityName || lastSegment.destination.iata_code || params.destination,
+        originCity: getCityName(segment.origin.iata_code || params.origin, originAirport),
+        destinationCity: getCityName(lastSegment.destination.iata_code || params.destination, destAirport),
         originCode: segment.origin.iata_code || params.origin,
         destinationCode: lastSegment.destination.iata_code || params.destination,
         cabinClass: passengers[0]?.cabinClass || (params.cabinClass as string) || "economy",
@@ -530,18 +579,18 @@ export async function getFlight(id: string): Promise<FlightOffer | null> {
           segmentId: seg.id,
           carrierCode: seg.operating_carrier.iata_code || seg.marketing_carrier?.iata_code || "",
           carrierName: seg.operating_carrier.name || airline,
-          flightNumber: `${seg.operating_carrier.iata_code || ""}${seg.operating_carrier_flight_number || ""}`,
+          flightNumber: safeFlightNumber(seg.operating_carrier.iata_code, seg.operating_carrier_flight_number),
           aircraftType: segAircraft?.name || null,
           departureTime: seg.departing_at,
           arrivalTime: seg.arriving_at,
           duration: seg.duration || "PT0H",
           originCode: seg.origin.iata_code || "",
           originName: seg.origin.name || "",
-          originCity: segOrigin?.cityName || seg.origin.city_name || null,
+          originCity: getCityName(seg.origin.iata_code || "", segOrigin, seg.origin.city_name),
           originTerminal: seg.origin_terminal || null,
           destinationCode: seg.destination.iata_code || "",
           destinationName: seg.destination.name || "",
-          destinationCity: segDest?.cityName || seg.destination.city_name || null,
+          destinationCity: getCityName(seg.destination.iata_code || "", segDest, seg.destination.city_name),
           destinationTerminal: seg.destination_terminal || null,
         };
       });
@@ -549,9 +598,9 @@ export async function getFlight(id: string): Promise<FlightOffer | null> {
       return {
         duration: s.duration || "PT0H",
         originCode: firstSeg.origin.iata_code || "",
-        originCity: originAp?.cityName || null,
+        originCity: getCityName(firstSeg.origin.iata_code || "", originAp),
         destinationCode: lastSeg.destination.iata_code || "",
-        destinationCity: destAp?.cityName || null,
+        destinationCity: getCityName(lastSeg.destination.iata_code || "", destAp),
         segments,
       };
     });
@@ -578,7 +627,7 @@ export async function getFlight(id: string): Promise<FlightOffer | null> {
     return {
       id: offerData.id,
       airline,
-      flightNumber: `${segment.operating_carrier.iata_code}${segment.operating_carrier_flight_number}`,
+      flightNumber: safeFlightNumber(segment.operating_carrier.iata_code, segment.operating_carrier_flight_number),
       departureTime: segment.departing_at,
       arrivalTime: lastSegment.arriving_at,
       duration: slice.duration || "PT0H",
@@ -587,8 +636,8 @@ export async function getFlight(id: string): Promise<FlightOffer | null> {
       stops: slice.segments.length - 1,
       logoUrl,
       aircraftType: aircraftInfo?.name || null,
-      originCity: originAirport?.cityName || segment.origin.iata_code || "",
-      destinationCity: destAirport?.cityName || lastSegment.destination.iata_code || "",
+      originCity: getCityName(segment.origin.iata_code || "", originAirport),
+      destinationCity: getCityName(lastSegment.destination.iata_code || "", destAirport),
       originCode: segment.origin.iata_code || "",
       destinationCode: lastSegment.destination.iata_code || "",
       cabinClass: passengers[0]?.cabinClass || "economy",
