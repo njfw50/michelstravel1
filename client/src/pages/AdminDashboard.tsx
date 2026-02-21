@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare, AlertTriangle, CheckCircle2, XCircle, Lock, Phone, Megaphone, Plus, Trash2, ExternalLink, Copy } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Line, ComposedChart } from 'recharts';
+import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare, AlertTriangle, CheckCircle2, XCircle, Lock, Phone, Megaphone, Plus, Trash2, ExternalLink, Copy, Search, RefreshCw, ChevronDown, ChevronUp, Calendar, MapPin, ArrowRightLeft } from "lucide-react";
 import { VoiceEscalations } from "@/components/VoiceEscalations";
 import { useI18n } from "@/lib/i18n";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -16,6 +18,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
+import { format, parseISO } from "date-fns";
 import type { FeaturedDeal } from "@shared/schema";
 
 function TestModeControl() {
@@ -770,15 +773,72 @@ function AdminLoginForm() {
   );
 }
 
+function getStatusColor(status: string) {
+  switch (status) {
+    case 'confirmed': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+    case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+    case 'cancelled': return 'bg-red-100 text-red-700 border-red-200';
+    case 'failed': return 'bg-red-100 text-red-700 border-red-200';
+    default: return 'bg-gray-100 text-gray-700 border-gray-200';
+  }
+}
+
+function getTicketStatusColor(status: string) {
+  switch (status) {
+    case 'issued': return 'bg-blue-100 text-blue-700 border-blue-200';
+    case 'schedule_changed': return 'bg-orange-100 text-orange-700 border-orange-200';
+    case 'cancelled': return 'bg-red-100 text-red-700 border-red-200';
+    case 'failed': return 'bg-red-100 text-red-700 border-red-200';
+    case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+    default: return 'bg-gray-100 text-gray-700 border-gray-200';
+  }
+}
+
+function getStatusDotColor(status: string) {
+  switch (status) {
+    case 'confirmed': return 'bg-emerald-400';
+    case 'pending': return 'bg-yellow-400';
+    case 'cancelled': return 'bg-red-400';
+    case 'failed': return 'bg-red-400';
+    default: return 'bg-gray-400';
+  }
+}
+
 export default function AdminDashboard() {
   const { data: stats, isLoading: statsLoading } = useAdminStats();
   const { data: bookings } = useAllBookings();
   const { t } = useI18n();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const qc = useQueryClient();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [expandedBookingId, setExpandedBookingId] = useState<number | null>(null);
 
   const { data: adminCheck, isLoading: adminCheckLoading } = useQuery<{ isAdmin: boolean }>({
     queryKey: ["/api/admin/check"],
+  });
+
+  const syncMutation = useMutation({
+    mutationFn: async (bookingId: number) => {
+      const res = await apiRequest('POST', `/api/bookings/${bookingId}/sync`);
+      return res.json();
+    },
+    onSuccess: (data, bookingId) => {
+      qc.invalidateQueries({ queryKey: ['/api/admin/bookings'] });
+      toast({
+        title: "Sincronizado",
+        description: data.synced ? `Reserva #${bookingId} sincronizada com sucesso` : `Reserva #${bookingId} - sem alteracoes`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao sincronizar",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   const handleLogout = async () => {
@@ -801,26 +861,28 @@ export default function AdminDashboard() {
     return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>;
   }
 
-  const statCards = [
-    { title: t("admin.total_revenue"), value: `$${(stats?.totalRevenue ?? 0).toLocaleString()}`, icon: DollarSign, color: "text-emerald-500" },
-    { title: t("admin.commissions"), value: `$${(stats?.totalCommission ?? 0).toLocaleString()}`, icon: TrendingUp, color: "text-blue-500" },
-    { title: t("admin.total_bookings"), value: stats?.totalBookings ?? 0, icon: Plane, color: "text-teal-500" },
-    { title: t("admin.recent_searches"), value: stats?.recentSearches ?? 0, icon: Users, color: "text-orange-500" },
-  ];
+  const filteredBookings = (bookings || []).filter((booking: any) => {
+    const matchesSearch = searchQuery === "" || 
+      booking.contactEmail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      booking.referenceCode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      String(booking.id).includes(searchQuery);
+    const matchesStatus = statusFilter === "all" || booking.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
-  const chartData = [
-    { name: 'Mon', revenue: 4000 },
-    { name: 'Tue', revenue: 3000 },
-    { name: 'Wed', revenue: 2000 },
-    { name: 'Thu', revenue: 2780 },
-    { name: 'Fri', revenue: 1890 },
-    { name: 'Sat', revenue: 2390 },
-    { name: 'Sun', revenue: 3490 },
-  ];
+  const chartData = (stats as any)?.dailyRevenue?.map((d: any) => ({
+    date: d.date,
+    revenue: d.revenue,
+    commission: d.commission,
+    bookings: d.bookings,
+  })) || [];
+
+  const statusBreakdown = (stats as any)?.statusBreakdown || {};
+  const topRoutes = (stats as any)?.topRoutes || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex justify-between items-center flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold font-display text-gray-900" data-testid="text-admin-title">{t("admin.dashboard")}</h1>
@@ -848,100 +910,390 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <TestModeControl />
-        <CommissionControl />
-        
-        <FeaturedDealsManager />
-        
-        {/* Voice Escalations Section */}
-        <VoiceEscalations />
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 max-w-md" data-testid="tabs-admin-nav">
+            <TabsTrigger value="overview" data-testid="tab-overview">Visao Geral</TabsTrigger>
+            <TabsTrigger value="bookings" data-testid="tab-bookings">Reservas</TabsTrigger>
+            <TabsTrigger value="settings" data-testid="tab-settings">Configuracoes</TabsTrigger>
+          </TabsList>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {statCards.map((stat, i) => (
-            <Card key={i} className="bg-white border border-gray-200 shadow-sm hover-elevate transition-colors">
-              <CardContent className="p-6 flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">{stat.title}</p>
-                  <h3 className="text-2xl font-bold text-gray-900" data-testid={`text-stat-${i}`}>{stat.value}</h3>
-                </div>
-                <div className={`h-12 w-12 rounded-xl border flex items-center justify-center shadow-inner ${stat.color} bg-gray-50 border-gray-200`}>
-                  <stat.icon className="h-6 w-6" />
+          <TabsContent value="overview" className="space-y-6 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="bg-white border border-gray-200 shadow-sm">
+                <CardContent className="p-6 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 mb-1">{t("admin.total_revenue")}</p>
+                    <h3 className="text-2xl font-bold text-gray-900" data-testid="text-stat-revenue">${((stats as any)?.totalRevenue ?? 0).toLocaleString()}</h3>
+                    <p className="text-xs text-gray-400 mt-1">Hoje: ${((stats as any)?.revenueToday ?? 0).toLocaleString()}</p>
+                  </div>
+                  <div className="h-12 w-12 rounded-xl border flex items-center justify-center shadow-inner text-emerald-500 bg-emerald-50 border-emerald-200">
+                    <DollarSign className="h-6 w-6" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white border border-gray-200 shadow-sm">
+                <CardContent className="p-6 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 mb-1">{t("admin.commissions")}</p>
+                    <h3 className="text-2xl font-bold text-gray-900" data-testid="text-stat-commission">${((stats as any)?.totalCommission ?? 0).toLocaleString()}</h3>
+                    <p className="text-xs text-gray-400 mt-1">7 dias: ${((stats as any)?.revenue7Days ?? 0).toLocaleString()}</p>
+                  </div>
+                  <div className="h-12 w-12 rounded-xl border flex items-center justify-center shadow-inner text-blue-500 bg-blue-50 border-blue-200">
+                    <TrendingUp className="h-6 w-6" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white border border-gray-200 shadow-sm">
+                <CardContent className="p-6 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 mb-1">{t("admin.total_bookings")}</p>
+                    <h3 className="text-2xl font-bold text-gray-900" data-testid="text-stat-bookings">{(stats as any)?.totalBookings ?? 0}</h3>
+                    <p className="text-xs text-gray-400 mt-1">7 dias: {(stats as any)?.bookings7Days ?? 0}</p>
+                  </div>
+                  <div className="h-12 w-12 rounded-xl border flex items-center justify-center shadow-inner text-teal-500 bg-teal-50 border-teal-200">
+                    <Plane className="h-6 w-6" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white border border-gray-200 shadow-sm">
+                <CardContent className="p-6 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 mb-1">Buscas Hoje</p>
+                    <h3 className="text-2xl font-bold text-gray-900" data-testid="text-stat-searches">{(stats as any)?.searchesToday ?? 0}</h3>
+                    <p className="text-xs text-gray-400 mt-1">Total: {(stats as any)?.recentSearches ?? 0}</p>
+                  </div>
+                  <div className="h-12 w-12 rounded-xl border flex items-center justify-center shadow-inner text-orange-500 bg-orange-50 border-orange-200">
+                    <Search className="h-6 w-6" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card className="lg:col-span-2 bg-white border border-gray-200 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="text-gray-900">Receita - Ultimos 7 dias</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.08)" />
+                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: 'rgba(0,0,0,0.45)', fontSize: 12}} />
+                        <YAxis axisLine={false} tickLine={false} tick={{fill: 'rgba(0,0,0,0.45)'}} tickFormatter={(value) => `$${value}`} />
+                        <Tooltip 
+                          cursor={{fill: 'rgba(0,0,0,0.03)'}}
+                          contentStyle={{borderRadius: '12px', border: '1px solid #e5e7eb', background: '#ffffff', color: '#111827', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} 
+                        />
+                        <Bar dataKey="revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Receita" />
+                        <Line type="monotone" dataKey="commission" stroke="#10b981" strokeWidth={2} dot={{r: 3}} name="Comissao" />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="space-y-6">
+                <Card className="bg-white border border-gray-200 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm text-gray-900">Status das Reservas</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {Object.entries(statusBreakdown).length === 0 ? (
+                      <p className="text-xs text-gray-400 text-center py-2">Sem dados</p>
+                    ) : (
+                      Object.entries(statusBreakdown).map(([status, count]) => (
+                        <div key={status} className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className={`h-2.5 w-2.5 rounded-full ${getStatusDotColor(status)}`} />
+                            <span className="text-sm text-gray-700 capitalize">{status}</span>
+                          </div>
+                          <span className="text-sm font-bold text-gray-900" data-testid={`text-status-count-${status}`}>{count as number}</span>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white border border-gray-200 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm text-gray-900">Rotas Populares</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {topRoutes.length === 0 ? (
+                      <p className="text-xs text-gray-400 text-center py-2">Sem dados</p>
+                    ) : (
+                      topRoutes.slice(0, 5).map((route: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <ArrowRightLeft className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                            <span className="text-sm text-gray-700 truncate">{route.route}</span>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="text-xs font-bold text-gray-900">{route.count}x</span>
+                            <span className="text-xs text-gray-400 ml-1">${route.revenue}</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            <Card className="bg-white border border-gray-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-gray-900">{t("admin.recent_bookings")}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {bookings?.slice(0, 5).map((booking: any) => {
+                    const flightOrigin = (booking.flightData as any)?.origin || '';
+                    const flightDest = (booking.flightData as any)?.destination || '';
+                    const routeLabel = flightOrigin && flightDest ? `${flightOrigin} → ${flightDest}` : '';
+                    return (
+                      <div key={booking.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100" data-testid={`card-recent-booking-${booking.id}`}>
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 border border-blue-100 shadow-inner">
+                            <Plane className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm text-gray-900">{booking.contactEmail}</p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {routeLabel && <span className="text-xs text-gray-500">{routeLabel}</span>}
+                              {booking.referenceCode && (
+                                <span className="text-xs text-blue-500 font-mono">#{booking.referenceCode}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right space-y-1">
+                          <p className="font-bold text-sm text-gray-900">${booking.totalPrice}</p>
+                          <div className="flex flex-col items-end gap-0.5">
+                            <Badge variant="outline" className={`text-[10px] uppercase font-bold ${getStatusColor(booking.status)}`}>
+                              {booking.status}
+                            </Badge>
+                            {booking.ticketStatus && booking.ticketStatus !== 'pending' && (
+                              <Badge variant="outline" className={`text-[10px] uppercase font-bold ${getTicketStatusColor(booking.ticketStatus)}`} data-testid={`badge-ticket-status-${booking.id}`}>
+                                {booking.ticketStatus === 'issued' ? 'Ticket Issued' :
+                                 booking.ticketStatus === 'schedule_changed' ? 'Schedule Changed' :
+                                 booking.ticketStatus === 'cancelled' ? 'Ticket Cancelled' :
+                                 booking.ticketStatus === 'failed' ? 'Ticket Failed' :
+                                 booking.ticketStatus}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {!bookings?.length && <p className="text-gray-400 text-sm text-center py-4">{t("admin.no_bookings")}</p>}
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
+          </TabsContent>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <Card className="lg:col-span-2 bg-white border border-gray-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-gray-900">{t("admin.revenue_overview")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.08)" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'rgba(0,0,0,0.45)'}} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: 'rgba(0,0,0,0.45)'}} tickFormatter={(value) => `$${value}`} />
-                    <Tooltip 
-                      cursor={{fill: 'rgba(0,0,0,0.03)'}}
-                      contentStyle={{borderRadius: '12px', border: '1px solid #e5e7eb', background: '#ffffff', color: '#111827', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} 
+          <TabsContent value="bookings" className="space-y-6 mt-6">
+            <Card className="bg-white border border-gray-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-gray-900">Gerenciamento de Reservas</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      data-testid="input-booking-search"
+                      placeholder="Buscar por email, codigo ou ID..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 bg-white"
                     />
-                    <Bar dataKey="revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border border-gray-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-gray-900">{t("admin.recent_bookings")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {bookings?.slice(0, 5).map((booking: any) => (
-                  <div key={booking.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100 hover-elevate transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 border border-blue-100 shadow-inner">
-                        <Plane className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-sm text-gray-900">{booking.contactEmail}</p>
-                        <p className="text-xs text-gray-500">ID: {booking.id}</p>
-                      </div>
-                    </div>
-                    <div className="text-right space-y-1">
-                      <p className="font-bold text-sm text-gray-900">${booking.totalPrice}</p>
-                      <div className="flex flex-col items-end gap-0.5">
-                        <span className="text-[10px] uppercase font-bold text-green-600 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
-                          {booking.status}
-                        </span>
-                        {booking.ticketStatus && booking.ticketStatus !== 'pending' && (
-                          <span data-testid={`badge-ticket-status-${booking.id}`} className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                            booking.ticketStatus === 'issued' ? 'text-blue-600 bg-blue-50 border border-blue-200' :
-                            booking.ticketStatus === 'schedule_changed' ? 'text-orange-600 bg-orange-50 border border-orange-200' :
-                            booking.ticketStatus === 'cancelled' ? 'text-red-600 bg-red-50 border border-red-200' :
-                            booking.ticketStatus === 'failed' ? 'text-red-600 bg-red-50 border border-red-200' :
-                            'text-gray-600 bg-gray-50 border border-gray-200'
-                          }`}>
-                            {booking.ticketStatus === 'issued' ? 'Ticket Issued' :
-                             booking.ticketStatus === 'schedule_changed' ? 'Schedule Changed' :
-                             booking.ticketStatus === 'cancelled' ? 'Ticket Cancelled' :
-                             booking.ticketStatus === 'failed' ? 'Ticket Failed' :
-                             booking.ticketStatus}
-                          </span>
-                        )}
-                      </div>
-                    </div>
                   </div>
-                ))}
-                {!bookings?.length && <p className="text-gray-400 text-sm text-center py-4">{t("admin.no_bookings")}</p>}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {["all", "pending", "confirmed", "cancelled"].map((status) => (
+                      <Button
+                        key={status}
+                        data-testid={`button-filter-${status}`}
+                        variant={statusFilter === status ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setStatusFilter(status)}
+                      >
+                        {status === "all" ? "Todos" :
+                         status === "pending" ? "Pendente" :
+                         status === "confirmed" ? "Confirmado" :
+                         "Cancelado"}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border rounded-lg">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[60px]">ID</TableHead>
+                        <TableHead>Contato</TableHead>
+                        <TableHead>Rota</TableHead>
+                        <TableHead className="text-right">Preco</TableHead>
+                        <TableHead className="text-right">Comissao</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Ticket</TableHead>
+                        <TableHead>Data</TableHead>
+                        <TableHead className="w-[100px]">Acoes</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredBookings.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={9} className="text-center text-gray-400 py-8">
+                            Nenhuma reserva encontrada
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredBookings.map((booking: any) => {
+                          const flightOrigin = (booking.flightData as any)?.origin || '';
+                          const flightDest = (booking.flightData as any)?.destination || '';
+                          const routeLabel = flightOrigin && flightDest ? `${flightOrigin} → ${flightDest}` : '-';
+                          const isExpanded = expandedBookingId === booking.id;
+
+                          return (
+                            <>
+                              <TableRow key={booking.id} className="cursor-pointer" data-testid={`row-booking-${booking.id}`}>
+                                <TableCell className="font-mono text-xs text-gray-500">#{booking.id}</TableCell>
+                                <TableCell>
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-900">{booking.contactEmail}</p>
+                                    {booking.contactPhone && (
+                                      <p className="text-xs text-gray-400">{booking.contactPhone}</p>
+                                    )}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <span className="text-sm text-gray-700">{routeLabel}</span>
+                                </TableCell>
+                                <TableCell className="text-right font-bold text-sm text-gray-900">${booking.totalPrice}</TableCell>
+                                <TableCell className="text-right text-sm text-gray-600">${booking.commissionAmount || '0.00'}</TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className={`text-[10px] uppercase font-bold ${getStatusColor(booking.status)}`}>
+                                    {booking.status}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className={`text-[10px] uppercase font-bold ${getTicketStatusColor(booking.ticketStatus || 'pending')}`}>
+                                    {booking.ticketStatus || 'pending'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-xs text-gray-500">
+                                  {booking.createdAt ? format(parseISO(booking.createdAt), 'dd/MM/yyyy') : '-'}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      data-testid={`button-sync-${booking.id}`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        syncMutation.mutate(booking.id);
+                                      }}
+                                      disabled={syncMutation.isPending}
+                                    >
+                                      <RefreshCw className={`h-4 w-4 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
+                                    </Button>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      data-testid={`button-expand-${booking.id}`}
+                                      onClick={() => setExpandedBookingId(isExpanded ? null : booking.id)}
+                                    >
+                                      {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                              {isExpanded && (
+                                <TableRow key={`${booking.id}-details`}>
+                                  <TableCell colSpan={9} className="bg-gray-50 p-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                      <div className="space-y-2">
+                                        <h4 className="font-bold text-gray-900 flex items-center gap-1.5">
+                                          <MapPin className="h-3.5 w-3.5" />
+                                          Detalhes do Voo
+                                        </h4>
+                                        <div className="space-y-1">
+                                          {(booking.flightData as any)?.airline && (
+                                            <p className="text-gray-600">Companhia: <span className="font-medium text-gray-900">{(booking.flightData as any).airline}</span></p>
+                                          )}
+                                          {(booking.flightData as any)?.flightNumber && (
+                                            <p className="text-gray-600">Voo: <span className="font-medium text-gray-900">{(booking.flightData as any).flightNumber}</span></p>
+                                          )}
+                                          <p className="text-gray-600">Rota: <span className="font-medium text-gray-900">{routeLabel}</span></p>
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <h4 className="font-bold text-gray-900 flex items-center gap-1.5">
+                                          <Calendar className="h-3.5 w-3.5" />
+                                          Referencias
+                                        </h4>
+                                        <div className="space-y-1">
+                                          {booking.referenceCode && (
+                                            <p className="text-gray-600">Codigo: <span className="font-mono font-medium text-gray-900">{booking.referenceCode}</span></p>
+                                          )}
+                                          {booking.duffelOrderId && (
+                                            <p className="text-gray-600">Duffel ID: <span className="font-mono font-medium text-gray-900 text-xs">{booking.duffelOrderId}</span></p>
+                                          )}
+                                          {booking.duffelBookingReference && (
+                                            <p className="text-gray-600">Ref Duffel: <span className="font-mono font-medium text-gray-900">{booking.duffelBookingReference}</span></p>
+                                          )}
+                                          {booking.ticketNumber && (
+                                            <p className="text-gray-600">Ticket: <span className="font-mono font-medium text-gray-900">{booking.ticketNumber}</span></p>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <h4 className="font-bold text-gray-900 flex items-center gap-1.5">
+                                          <Users className="h-3.5 w-3.5" />
+                                          Passageiros
+                                        </h4>
+                                        <div className="space-y-1">
+                                          {Array.isArray(booking.passengerDetails) ? (
+                                            (booking.passengerDetails as any[]).map((p: any, idx: number) => (
+                                              <p key={idx} className="text-gray-600">
+                                                {p.firstName || p.given_name || ''} {p.lastName || p.family_name || ''}
+                                                {p.type && <span className="text-xs text-gray-400 ml-1">({p.type})</span>}
+                                              </p>
+                                            ))
+                                          ) : (
+                                            <p className="text-gray-400 text-xs">Sem dados de passageiros</p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              )}
+                            </>
+                          );
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-6 mt-6">
+            <TestModeControl />
+            <CommissionControl />
+            <FeaturedDealsManager />
+            <VoiceEscalations />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

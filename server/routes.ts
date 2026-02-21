@@ -1182,21 +1182,100 @@ export function registerRoutes(app: Express) {
   
   // Admin Stats
   app.get('/api/admin/stats', requireAdmin, async (req, res) => {
-    // Calculate stats
-    const allBookings = await db.select().from(bookings);
-    const totalBookings = allBookings.length;
-    const totalRevenue = allBookings.reduce((acc, b) => acc + Number(b.totalPrice), 0);
-    const totalCommission = allBookings.reduce((acc, b) => acc + (Number(b.commissionAmount) || 0), 0);
-    
-    // Mock recent searches count (or count from DB if we want accurate)
-    const recentSearches = await db.select().from(flightSearches).limit(100);
-    
-    res.json({
+    try {
+      const allBookings = await db.select().from(bookings);
+      const totalBookings = allBookings.length;
+      const totalRevenue = allBookings.reduce((acc, b) => acc + Number(b.totalPrice || 0), 0);
+      const totalCommission = allBookings.reduce((acc, b) => acc + (Number(b.commissionAmount) || 0), 0);
+
+      const recentSearches = await db.select().from(flightSearches).limit(500);
+
+      const statusBreakdown: Record<string, number> = {};
+      const ticketStatusBreakdown: Record<string, number> = {};
+      allBookings.forEach(b => {
+        const st = b.status || 'unknown';
+        statusBreakdown[st] = (statusBreakdown[st] || 0) + 1;
+        const ts = (b as any).ticketStatus || 'pending';
+        ticketStatusBreakdown[ts] = (ticketStatusBreakdown[ts] || 0) + 1;
+      });
+
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const last7Days = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const last30Days = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      const todayBookings = allBookings.filter(b => b.createdAt && new Date(b.createdAt) >= today);
+      const week7Bookings = allBookings.filter(b => b.createdAt && new Date(b.createdAt) >= last7Days);
+      const month30Bookings = allBookings.filter(b => b.createdAt && new Date(b.createdAt) >= last30Days);
+
+      const revenueToday = todayBookings.reduce((a, b) => a + Number(b.totalPrice || 0), 0);
+      const revenue7Days = week7Bookings.reduce((a, b) => a + Number(b.totalPrice || 0), 0);
+      const revenue30Days = month30Bookings.reduce((a, b) => a + Number(b.totalPrice || 0), 0);
+
+      const dailyRevenue: Array<{ date: string; revenue: number; bookings: number; commission: number }> = [];
+      for (let i = 6; i >= 0; i--) {
+        const dayStart = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+        const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+        const dayBookings = allBookings.filter(b => {
+          const d = b.createdAt ? new Date(b.createdAt) : null;
+          return d && d >= dayStart && d < dayEnd;
+        });
+        dailyRevenue.push({
+          date: dayStart.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+          revenue: dayBookings.reduce((a, b) => a + Number(b.totalPrice || 0), 0),
+          bookings: dayBookings.length,
+          commission: dayBookings.reduce((a, b) => a + Number(b.commissionAmount || 0), 0),
+        });
+      }
+
+      const topRoutes: Record<string, { count: number; revenue: number }> = {};
+      allBookings.forEach(b => {
+        const fd = b.flightData as any;
+        if (fd?.origin && fd?.destination) {
+          const route = `${fd.origin}-${fd.destination}`;
+          if (!topRoutes[route]) topRoutes[route] = { count: 0, revenue: 0 };
+          topRoutes[route].count++;
+          topRoutes[route].revenue += Number(b.totalPrice || 0);
+        }
+      });
+      const topRoutesArr = Object.entries(topRoutes)
+        .sort((a, b) => b[1].count - a[1].count)
+        .slice(0, 5)
+        .map(([route, data]) => ({ route, ...data }));
+
+      const pendingPayments = allBookings.filter(b => b.status === 'pending' || b.status === 'payment_pending').length;
+      const confirmedBookings = allBookings.filter(b => b.status === 'confirmed' || b.status === 'completed').length;
+      const cancelledBookings = allBookings.filter(b => b.status === 'cancelled').length;
+
+      const avgBookingValue = totalBookings > 0 ? Math.round(totalRevenue / totalBookings) : 0;
+
+      const searchesToday = recentSearches.filter(s => s.lastSearchedAt && new Date(s.lastSearchedAt) >= today).length;
+
+      res.json({
         totalBookings,
-        totalRevenue,
-        totalCommission,
-        recentSearches: recentSearches.length
-    });
+        totalRevenue: Math.round(totalRevenue * 100) / 100,
+        totalCommission: Math.round(totalCommission * 100) / 100,
+        recentSearches: recentSearches.length,
+        searchesToday,
+        revenueToday: Math.round(revenueToday * 100) / 100,
+        revenue7Days: Math.round(revenue7Days * 100) / 100,
+        revenue30Days: Math.round(revenue30Days * 100) / 100,
+        bookingsToday: todayBookings.length,
+        bookings7Days: week7Bookings.length,
+        bookings30Days: month30Bookings.length,
+        statusBreakdown,
+        ticketStatusBreakdown,
+        dailyRevenue,
+        topRoutes: topRoutesArr,
+        pendingPayments,
+        confirmedBookings,
+        cancelledBookings,
+        avgBookingValue,
+      });
+    } catch (error) {
+      console.error("Admin stats error:", error);
+      res.status(500).json({ error: "Failed to compute stats" });
+    }
   });
 
   // Get Admin Settings
