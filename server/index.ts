@@ -2,7 +2,6 @@ import express, { type Request, type Response, type NextFunction } from "express
 import { runMigrations } from 'stripe-replit-sync';
 import { registerRoutes } from "./routes";
 import { registerVoiceEscalationRoutes } from "./routes/voice_escalation";
-import { setupVite } from "./vite";
 import { serveStatic } from "./static";
 import { storage } from "./storage";
 import { getStripeSync } from "./stripeClient";
@@ -214,6 +213,7 @@ app.use((req, res, next) => {
   });
 
   if (app.get("env") === "development") {
+    const { setupVite } = await import("./vite");
     await setupVite(httpServer, app);
   } else {
     serveStatic(app);
