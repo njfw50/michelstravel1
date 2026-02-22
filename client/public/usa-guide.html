@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guia de Viagem — Principais Cidades dos EUA | Michels Travel</title>
+  <meta name="description" content="Guia completo de viagem para as principais cidades dos Estados Unidos: Nova York, Los Angeles, Miami, Chicago, Las Vegas e mais." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── DESIGN TOKENS (flight-commission-hub) ── */
+    :root {
+      --background:    hsl(220, 20%, 97%);   /* #f4f5f9 */
+      --foreground:    hsl(220, 25%, 12%);   /* #171c2b */
+      --card:          #ffffff;
+      --card-border:   hsl(220, 15%, 90%);   /* #e2e5ec */
+      --primary:       hsl(213, 90%, 50%);   /* #0d7fe8 */
+      --primary-dark:  hsl(213, 90%, 38%);   /* #0a5aa6 */
+      --primary-light: hsl(213, 85%, 95%);   /* #e8f3fd */
+      --muted:         hsl(220, 15%, 94%);
+      --muted-fg:      hsl(220, 10%, 45%);   /* #6b7280 */
+      --accent:        hsl(213, 85%, 95%);
+      --accent-fg:     hsl(213, 90%, 35%);
+      --radius:        0.75rem;              /* 12px */
+      --font-display:  'Outfit', sans-serif;
+      --font-body:     'DM Sans', sans-serif;
+      --shadow-sm:     0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md:     0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
+      --shadow-lg:     0 10px 40px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--foreground);
+      background: var(--background);
+      line-height: 1.6;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: var(--font-display);
+      letter-spacing: -0.02em;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(23,28,43,0.15); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(23,28,43,0.25); }
+
+    /* ── HEADER ── */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      width: 100%;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--card-border);
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+    }
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.1rem;
+    }
+    .logo-text {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--foreground);
+      letter-spacing: -0.03em;
+    }
+    .logo-text span { color: var(--primary); }
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      list-style: none;
+    }
+    .header-nav a {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--muted-fg);
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+    }
+    .header-nav a:hover {
+      background: var(--muted);
+      color: var(--foreground);
+    }
+    .header-nav a.active {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--primary);
+      color: white;
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 0.5rem 1.1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.15s;
+      white-space: nowrap;
+    }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: transparent;
+      color: var(--primary);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 0.5rem 1.1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      border: 1.5px solid var(--primary);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-outline:hover { background: var(--primary-light); }
+    @media (max-width: 768px) {
+      .header-nav { display: none; }
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: clamp(380px, 55vw, 560px);
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+    }
+    .hero-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 40%;
+      transform: scale(1.05);
+    }
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to bottom,
+        hsl(220,25%,12%,0.55) 0%,
+        hsl(213,90%,20%,0.30) 50%,
+        hsl(220,20%,97%,0.95) 100%
+      );
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.92);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 6vw, 3.8rem);
+      font-weight: 800;
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+      color: white;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      margin-bottom: 0.75rem;
+    }
+    .hero h1 span { color: hsl(213, 85%, 75%); }
+    .hero p {
+      font-size: clamp(0.95rem, 2vw, 1.1rem);
+      color: rgba(255,255,255,0.78);
+      font-weight: 500;
+      max-width: 560px;
+      line-height: 1.65;
+    }
+
+    /* ── LAYOUT ── */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    section { padding: 3.5rem 0; }
+    section:nth-child(even) { background: var(--card); }
+
+    /* ── SECTION HEADER ── */
+    .section-header { margin-bottom: 2rem; }
+    .section-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      margin-bottom: 0.6rem;
+    }
+    .section-title {
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      font-weight: 800;
+      color: var(--foreground);
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+    }
+    .section-desc {
+      font-size: 0.975rem;
+      color: var(--muted-fg);
+      max-width: 560px;
+      line-height: 1.65;
+    }
+
+    /* ── CITY CARDS GRID ── */
+    .cities-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+      gap: 1.25rem;
+    }
+    .city-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.25s ease, transform 0.25s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .city-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-3px);
+    }
+    .city-card-img {
+      height: 180px;
+      overflow: hidden;
+      position: relative;
+    }
+    .city-card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+    .city-card:hover .city-card-img img { transform: scale(1.06); }
+    .city-card-region {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.75rem;
+      background: var(--primary);
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+    }
+    .city-card-body {
+      padding: 1.25rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .city-card-meta {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.78rem;
+      color: var(--muted-fg);
+      font-weight: 500;
+    }
+    .meta-icon { font-size: 0.85rem; }
+    .city-card-name {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--foreground);
+      margin-bottom: 0.4rem;
+      letter-spacing: -0.02em;
+    }
+    .city-card-desc {
+      font-size: 0.875rem;
+      color: var(--muted-fg);
+      line-height: 1.65;
+      margin-bottom: 1rem;
+      flex: 1;
+    }
+    .city-card-attractions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+    }
+    .attraction-tag {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--accent-fg);
+      background: var(--accent);
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+    }
+    .city-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 1rem;
+      border-top: 1px solid var(--card-border);
+      gap: 0.75rem;
+    }
+    .price-label { font-size: 0.72rem; color: var(--muted-fg); }
+    .price-value {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--foreground);
+    }
+    .price-value span { font-size: 0.75rem; font-weight: 500; color: var(--muted-fg); }
+
+    /* ── TIPS SECTION ── */
+    .tips-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+      gap: 1rem;
+    }
+    .tip-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.2s;
+    }
+    .tip-card:hover { box-shadow: var(--shadow-md); }
+    .tip-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--primary-light);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      margin-bottom: 0.75rem;
+    }
+    .tip-title {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--foreground);
+      margin-bottom: 0.4rem;
+    }
+    .tip-text { font-size: 0.875rem; color: var(--muted-fg); line-height: 1.65; }
+
+    /* ── SEASON TABLE ── */
+    .season-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+      gap: 1rem;
+    }
+    .season-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .season-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .season-name {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--foreground);
+      margin-bottom: 0.3rem;
+    }
+    .season-months {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--primary);
+      background: var(--primary-light);
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+    }
+    .season-text { font-size: 0.85rem; color: var(--muted-fg); line-height: 1.6; }
+
+    /* ── CTA BANNER ── */
+    .cta-section {
+      background: linear-gradient(135deg, hsl(220,25%,12%) 0%, hsl(213,90%,25%) 100%);
+      padding: 4rem 1.5rem;
+      text-align: center;
+    }
+    .cta-section h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      font-weight: 800;
+      color: white;
+      margin-bottom: 0.6rem;
+      letter-spacing: -0.02em;
+    }
+    .cta-section p {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.75);
+      max-width: 480px;
+      margin: 0 auto 2rem;
+      line-height: 1.65;
+    }
+    .cta-buttons {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-cta-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--primary);
+      color: white;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 0.75rem 1.75rem;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .btn-cta-primary:hover { background: hsl(213,90%,42%); transform: translateY(-2px); }
+    .btn-cta-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255,255,255,0.12);
+      color: white;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 0.75rem 1.75rem;
+      border-radius: 10px;
+      text-decoration: none;
+      border: 1.5px solid rgba(255,255,255,0.25);
+      transition: background 0.15s;
+    }
+    .btn-cta-outline:hover { background: rgba(255,255,255,0.2); }
+
+    /* ── FOOTER ── */
+    .site-footer {
+      background: var(--foreground);
+      color: rgba(255,255,255,0.6);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      font-size: 0.875rem;
+    }
+    .site-footer strong { color: white; }
+    .site-footer a { color: var(--primary); text-decoration: none; }
+    .site-footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+    <a href="#" class="logo">
+      <div class="logo-icon">✈</div>
+      <span class="logo-text">Michels<span>Travel</span></span>
+    </a>
+    <nav>
+      <ul class="header-nav">
+        <li><a href="#cidades">Cidades</a></li>
+        <li><a href="#dicas">Dicas de Viagem</a></li>
+        <li><a href="#epoca">Melhor Época</a></li>
+        <li><a href="brazil-guide.html">Guia Brasil</a></li>
+      </ul>
+    </nav>
+    <a href="#" class="btn-primary">✈ Buscar Voos</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <img class="hero-img" src="images/new-york.jpg" alt="Skyline de Nova York com o Central Park" loading="eager" />
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-badge">✈ Guia de Viagem</div>
+    <h1>Principais Cidades<br><span>dos Estados Unidos</span></h1>
+    <p>Da energia de Nova York ao glamour de Las Vegas — descubra os destinos mais incríveis dos EUA com dicas práticas, atrações imperdíveis e os melhores preços de voos.</p>
+  </div>
+</section>
+
+<!-- CIDADES -->
+<section id="cidades">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">🗺 Destinos em Destaque</div>
+      <h2 class="section-title">Explore as cidades mais visitadas<br>dos Estados Unidos</h2>
+      <p class="section-desc">Cada cidade tem sua personalidade única. Encontre o destino perfeito para sua próxima viagem.</p>
+    </div>
+
+    <div class="cities-grid">
+
+      <!-- NOVA YORK -->
+      <div class="city-card">
+        <div class="city-card-img">
+          <img src="images/new-york.jpg" alt="Nova York" loading="lazy" />
+          <span class="city-card-region">Nordeste</span>
+        </div>
+        <div class="city-card-body">
+          <div class="city-card-meta">
+            <span class="meta-item"><span class="meta-icon">🌡</span> 5°C – 29°C</span>
+            <span class="meta-item"><span class="meta-icon">🗣</span> Inglês</span>
+            <span class="meta-item"><span class="meta-icon">💵</span> USD</span>
+          </div>
+          <div class="city-card-name">Nova York, NY</div>
+          <p class="city-card-desc">A cidade que nunca dorme é um universo à parte. Times Square, o Central Park, a Estátua da Liberdade e uma gastronomia sem igual fazem de Nova York uma experiência única e inesquecível.</p>
+          <div class="city-card-attractions">
+            <span class="attraction-tag">Central Park</span>
+            <span class="attraction-tag">Times Square</span>
+            <span class="attraction-tag">Estátua da Liberdade</span>
+            <span class="attraction-tag">Brooklyn Bridge</span>
+            <span class="attraction-tag">Metropolitan Museum</span>
+          </div>
+          <div class="city-card-footer">
+            <div>
+              <div class="price-label">Voos a partir de</div>
+              <div class="price-value">R$ 3.200 <span>/ pessoa</span></div>
+            </div>
+            <a href="#" class="btn-primary">Buscar Voo ✈</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOS ANGELES -->
+      <div class="city-card">
+        <div class="city-card-img">
+          <img src="images/los-angeles.jpg" alt="Los Angeles" loading="lazy" />
+          <span class="city-card-region">Costa Oeste</span>
+        </div>
+        <div class="city-card-body">
+          <div class="city-card-meta">
+            <span class="meta-item"><span class="meta-icon">🌡</span> 14°C – 29°C</span>
+            <span class="meta-item"><span class="meta-icon">🗣</span> Inglês</span>
+            <span class="meta-item"><span class="meta-icon">💵</span> USD</span>
+          </div>
+          <div class="city-card-name">Los Angeles, CA</div>
+          <p class="city-card-desc">A cidade dos sonhos. Hollywood, praias de Santa Mônica, o Getty Center e a energia vibrante da cultura pop americana fazem de LA um destino irresistível para qualquer viajante.</p>
+          <div class="city-card-attractions">
+            <span class="attraction-tag">Hollywood Sign</span>
+            <span class="attraction-tag">Santa Monica</span>
+            <span class="attraction-tag">Getty Center</span>
+            <span class="attraction-tag">Venice Beach</span>
+            <span class="attraction-tag">Universal Studios</span>
+          </div>
+          <div class="city-card-footer">
+            <div>
+              <div class="price-label">Voos a partir de</div>
+              <div class="price-value">R$ 3.500 <span>/ pessoa</span></div>
+            </div>
+            <a href="#" class="btn-primary">Buscar Voo ✈</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- MIAMI -->
+      <div class="city-card">
+        <div class="city-card-img">
+          <img src="images/miami.jpg" alt="Miami" loading="lazy" />
+          <span class="city-card-region">Sul</span>
+        </div>
+        <div class="city-card-body">
+          <div class="city-card-meta">
+            <span class="meta-item"><span class="meta-icon">🌡</span> 20°C – 32°C</span>
+            <span class="meta-item"><span class="meta-icon">🗣</span> Inglês / Espanhol</span>
+            <span class="meta-item"><span class="meta-icon">💵</span> USD</span>
+          </div>
+          <div class="city-card-name">Miami, FL</div>
+          <p class="city-card-desc">Sol, praias paradisíacas e uma vibrante cena cultural latina. Miami Beach, o bairro de Wynwood com seus murais de arte e a vida noturna incomparável fazem da cidade um destino único.</p>
+          <div class="city-card-attractions">
+            <span class="attraction-tag">Miami Beach</span>
+            <span class="attraction-tag">Wynwood Walls</span>
+            <span class="attraction-tag">South Beach</span>
+            <span class="attraction-tag">Little Havana</span>
+            <span class="attraction-tag">Everglades</span>
+          </div>
+          <div class="city-card-footer">
+            <div>
+              <div class="price-label">Voos a partir de</div>
+              <div class="price-value">R$ 2.900 <span>/ pessoa</span></div>
+            </div>
+            <a href="#" class="btn-primary">Buscar Voo ✈</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHICAGO -->
+      <div class="city-card">
+        <div class="city-card-img">
+          <img src="images/chicago.jpg" alt="Chicago" loading="lazy" />
+          <span class="city-card-region">Meio-Oeste</span>
+        </div>
+        <div class="city-card-body">
+          <div class="city-card-meta">
+            <span class="meta-item"><span class="meta-icon">🌡</span> -5°C – 28°C</span>
+            <span class="meta-item"><span class="meta-icon">🗣</span> Inglês</span>
+            <span class="meta-item"><span class="meta-icon">💵</span> USD</span>
+          </div>
+          <div class="city-card-name">Chicago, IL</div>
+          <p class="city-card-desc">A Cidade dos Ventos impressiona com sua arquitetura icônica, o Millennium Park, o famoso Cloud Gate e uma cena gastronômica de nível mundial. Uma das cidades mais subestimadas dos EUA.</p>
+          <div class="city-card-attractions">
+            <span class="attraction-tag">Millennium Park</span>
+            <span class="attraction-tag">Cloud Gate</span>
+            <span class="attraction-tag">Art Institute</span>
+            <span class="attraction-tag">Navy Pier</span>
+            <span class="attraction-tag">Willis Tower</span>
+          </div>
+          <div class="city-card-footer">
+            <div>
+              <div class="price-label">Voos a partir de</div>
+              <div class="price-value">R$ 3.100 <span>/ pessoa</span></div>
+            </div>
+            <a href="#" class="btn-primary">Buscar Voo ✈</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAS VEGAS -->
+      <div class="city-card">
+        <div class="city-card-img">
+          <img src="images/las-vegas.jpg" alt="Las Vegas" loading="lazy" />
+          <span class="city-card-region">Sudoeste</span>
+        </div>
+        <div class="city-card-body">
+          <div class="city-card-meta">
+            <span class="meta-item"><span class="meta-icon">🌡</span> 7°C – 40°C</span>
+            <span class="meta-item"><span class="meta-icon">🗣</span> Inglês</span>
+            <span class="meta-item"><span class="meta-icon">💵</span> USD</span>
+          </div>
+          <div class="city-card-name">Las Vegas, NV</div>
+          <p class="city-card-desc">A capital mundial do entretenimento. A Strip iluminada, os cassinos grandiosos, os shows de classe mundial e a proximidade com o Grand Canyon fazem de Las Vegas uma experiência sem igual.</p>
+          <div class="city-card-attractions">
+            <span class="attraction-tag">The Strip</span>
+            <span class="attraction-tag">Bellagio Fountains</span>
+            <span class="attraction-tag">Grand Canyon</span>
+            <span class="attraction-tag">Fremont Street</span>
+            <span class="attraction-tag">High Roller</span>
+          </div>
+          <div class="city-card-footer">
+            <div>
+              <div class="price-label">Voos a partir de</div>
+              <div class="price-value">R$ 3.300 <span>/ pessoa</span></div>
+            </div>
+            <a href="#" class="btn-primary">Buscar Voo ✈</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- SAN FRANCISCO -->
+      <div class="city-card">
+        <div class="city-card-img">
+          <img src="images/san-francisco.jpg" alt="San Francisco" loading="lazy" />
+          <span class="city-card-region">Costa Oeste</span>
+        </div>
+        <div class="city-card-body">
+          <div class="city-card-meta">
+            <span class="meta-item"><span class="meta-icon">🌡</span> 10°C – 22°C</span>
+            <span class="meta-item"><span class="meta-icon">🗣</span> Inglês</span>
+            <span class="meta-item"><span class="meta-icon">💵</span> USD</span>
+          </div>
+          <div class="city-card-name">San Francisco, CA</div>
+          <p class="city-card-desc">A cidade das colinas e da Golden Gate Bridge. O bairro de Fisherman's Wharf, Alcatraz, os bondinhos históricos e a vibrante cena tecnológica do Vale do Silício encantam qualquer visitante.</p>
+          <div class="city-card-attractions">
+            <span class="attraction-tag">Golden Gate Bridge</span>
+            <span class="attraction-tag">Alcatraz</span>
+            <span class="attraction-tag">Fisherman's Wharf</span>
+            <span class="attraction-tag">Cable Cars</span>
+            <span class="attraction-tag">Chinatown</span>
+          </div>
+          <div class="city-card-footer">
+            <div>
+              <div class="price-label">Voos a partir de</div>
+              <div class="price-value">R$ 3.600 <span>/ pessoa</span></div>
+            </div>
+            <a href="#" class="btn-primary">Buscar Voo ✈</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORLANDO -->
+      <div class="city-card">
+        <div class="city-card-img">
+          <img src="images/orlando.jpg" alt="Orlando" loading="lazy" />
+          <span class="city-card-region">Sul</span>
+        </div>
+        <div class="city-card-body">
+          <div class="city-card-meta">
+            <span class="meta-item"><span class="meta-icon">🌡</span> 18°C – 33°C</span>
+            <span class="meta-item"><span class="meta-icon">🗣</span> Inglês</span>
+            <span class="meta-item"><span class="meta-icon">💵</span> USD</span>
+          </div>
+          <div class="city-card-name">Orlando, FL</div>
+          <p class="city-card-desc">O paraíso dos parques temáticos. Walt Disney World, Universal Studios, SeaWorld e LEGOLAND fazem de Orlando o destino mais visitado pelos brasileiros nos Estados Unidos, perfeito para toda a família.</p>
+          <div class="city-card-attractions">
+            <span class="attraction-tag">Walt Disney World</span>
+            <span class="attraction-tag">Universal Studios</span>
+            <span class="attraction-tag">SeaWorld</span>
+            <span class="attraction-tag">LEGOLAND</span>
+            <span class="attraction-tag">Kennedy Space Center</span>
+          </div>
+          <div class="city-card-footer">
+            <div>
+              <div class="price-label">Voos a partir de</div>
+              <div class="price-value">R$ 2.800 <span>/ pessoa</span></div>
+            </div>
+            <a href="#" class="btn-primary">Buscar Voo ✈</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- WASHINGTON DC -->
+      <div class="city-card">
+        <div class="city-card-img">
+          <img src="images/washington.jpg" alt="Washington D.C." loading="lazy" />
+          <span class="city-card-region">Nordeste</span>
+        </div>
+        <div class="city-card-body">
+          <div class="city-card-meta">
+            <span class="meta-item"><span class="meta-icon">🌡</span> 2°C – 30°C</span>
+            <span class="meta-item"><span class="meta-icon">🗣</span> Inglês</span>
+            <span class="meta-item"><span class="meta-icon">💵</span> USD</span>
+          </div>
+          <div class="city-card-name">Washington, D.C.</div>
+          <p class="city-card-desc">A capital dos Estados Unidos é um museu a céu aberto. A Casa Branca, o Capitólio, o Lincoln Memorial e os museus Smithsonian — todos gratuitos — fazem de D.C. um destino cultural imperdível.</p>
+          <div class="city-card-attractions">
+            <span class="attraction-tag">Casa Branca</span>
+            <span class="attraction-tag">Lincoln Memorial</span>
+            <span class="attraction-tag">Smithsonian</span>
+            <span class="attraction-tag">Capitólio</span>
+            <span class="attraction-tag">National Mall</span>
+          </div>
+          <div class="city-card-footer">
+            <div>
+              <div class="price-label">Voos a partir de</div>
+              <div class="price-value">R$ 3.000 <span>/ pessoa</span></div>
+            </div>
+            <a href="#" class="btn-primary">Buscar Voo ✈</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEW ORLEANS -->
+      <div class="city-card">
+        <div class="city-card-img">
+          <img src="images/new-orleans.jpg" alt="New Orleans" loading="lazy" />
+          <span class="city-card-region">Sul</span>
+        </div>
+        <div class="city-card-body">
+          <div class="city-card-meta">
+            <span class="meta-item"><span class="meta-icon">🌡</span> 12°C – 32°C</span>
+            <span class="meta-item"><span class="meta-icon">🗣</span> Inglês / Francês</span>
+            <span class="meta-item"><span class="meta-icon">💵</span> USD</span>
+          </div>
+          <div class="city-card-name">New Orleans, LA</div>
+          <p class="city-card-desc">A alma musical dos EUA. O French Quarter, o jazz ao vivo no Bourbon Street, o Mardi Gras e a culinária crioula única fazem de Nova Orleans uma das cidades mais autênticas e vibrantes da América.</p>
+          <div class="city-card-attractions">
+            <span class="attraction-tag">French Quarter</span>
+            <span class="attraction-tag">Bourbon Street</span>
+            <span class="attraction-tag">Jazz Clubs</span>
+            <span class="attraction-tag">Garden District</span>
+            <span class="attraction-tag">Mardi Gras</span>
+          </div>
+          <div class="city-card-footer">
+            <div>
+              <div class="price-label">Voos a partir de</div>
+              <div class="price-value">R$ 3.400 <span>/ pessoa</span></div>
+            </div>
+            <a href="#" class="btn-primary">Buscar Voo ✈</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- DICAS ESSENCIAIS -->
+<section id="dicas">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">💡 Dicas Essenciais</div>
+      <h2 class="section-title">Tudo que você precisa saber<br>antes de viajar para os EUA</h2>
+    </div>
+    <div class="tips-grid">
+      <div class="tip-card">
+        <div class="tip-icon">🛂</div>
+        <div class="tip-title">Visto e Documentação</div>
+        <p class="tip-text">Brasileiros precisam de visto americano (B1/B2) para entrar nos EUA. Solicite com antecedência mínima de 3 meses. Leve passaporte com validade superior a 6 meses e comprovantes de vínculos no Brasil.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">💱</div>
+        <div class="tip-title">Dinheiro e Pagamentos</div>
+        <p class="tip-text">O dólar americano (USD) é aceito em todo o país. Cartões de crédito internacionais são amplamente aceitos. Leve algum dinheiro em espécie para gorjetas e pequenas despesas.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">🏥</div>
+        <div class="tip-title">Seguro de Saúde</div>
+        <p class="tip-text">O sistema de saúde americano é extremamente caro. Um seguro de viagem internacional com cobertura médica ampla é absolutamente indispensável. Não viaje sem ele.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">🚗</div>
+        <div class="tip-title">Transporte</div>
+        <p class="tip-text">Nas cidades grandes, use metrô e Uber. Para explorar o interior, alugar um carro é a melhor opção. A Amtrak conecta as principais cidades por trem com conforto e pontualidade.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">📱</div>
+        <div class="tip-title">Conectividade</div>
+        <p class="tip-text">Compre um chip local ou ative o roaming internacional antes de viajar. Operadoras como T-Mobile e AT&T oferecem planos pré-pagos acessíveis para turistas com dados ilimitados.</p>
+      </div>
+      <div class="tip-card">
+        <div class="tip-icon">🍽</div>
+        <div class="tip-title">Gorjetas</div>
+        <p class="tip-text">Gorjetas (tips) são obrigatórias nos EUA. Em restaurantes, deixe entre 18% e 22% do valor da conta. Em táxis e serviços, 15% é o padrão. Não deixar gorjeta é considerado ofensivo.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MELHOR ÉPOCA -->
+<section id="epoca">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">🗓 Planejamento</div>
+      <h2 class="section-title">Qual a melhor época<br>para visitar os EUA?</h2>
+      <p class="section-desc">Os EUA são um país continental com climas muito variados. A época ideal depende do destino e do tipo de experiência que você busca.</p>
+    </div>
+    <div class="season-grid">
+      <div class="season-card">
+        <div class="season-icon">🌸</div>
+        <div class="season-name">Primavera</div>
+        <div class="season-months">Março – Maio</div>
+        <p class="season-text">Clima ameno em todo o país. Ideal para Nova York, Washington D.C. (cerejeiras em flor) e San Francisco. Preços mais acessíveis que o verão.</p>
+      </div>
+      <div class="season-card">
+        <div class="season-icon">☀️</div>
+        <div class="season-name">Verão</div>
+        <div class="season-months">Junho – Agosto</div>
+        <p class="season-text">Alta temporada. Praias de Miami e Los Angeles em plena atividade. Parques temáticos de Orlando lotados. Reserve com muita antecedência e espere preços elevados.</p>
+      </div>
+      <div class="season-card">
+        <div class="season-icon">🍂</div>
+        <div class="season-name">Outono</div>
+        <div class="season-months">Setembro – Novembro</div>
+        <p class="season-text">A melhor época para visitar a Costa Leste. As folhagens de Nova York e Nova Inglaterra são espetaculares. Clima agradável e preços mais baixos que o verão.</p>
+      </div>
+      <div class="season-card">
+        <div class="season-icon">❄️</div>
+        <div class="season-name">Inverno</div>
+        <div class="season-months">Dezembro – Fevereiro</div>
+        <p class="season-text">Ideal para Miami, Orlando e Las Vegas. Nova York no Natal é mágica, mas muito fria. Chicago e o Meio-Oeste têm invernos rigorosos. Preços baixos fora do período natalino.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div style="max-width:1200px; margin:0 auto;">
+    <h2>Pronto para Explorar os EUA?</h2>
+    <p>Encontre as melhores tarifas de voos para todas as cidades americanas e reserve com segurança pela Michels Travel.</p>
+    <div class="cta-buttons">
+      <a href="#" class="btn-cta-primary">✈ Buscar Voos para os EUA</a>
+      <a href="brazil-guide.html" class="btn-cta-outline">🇧🇷 Ver Guia do Brasil</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <p><strong>Michels Travel</strong> — Seu parceiro de viagens de confiança</p>
+  <p style="margin-top:0.5rem;">© 2026 Michels Travel. Todos os direitos reservados. | <a href="brazil-guide.html">Guia Rio &amp; São Paulo</a></p>
+</footer>
+
+</body>
+</html>
