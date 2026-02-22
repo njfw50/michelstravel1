@@ -28,6 +28,8 @@ const allowlist = [
   "xlsx",
   "zod",
   "zod-validation-error",
+  "vite",
+  "@vitejs/plugin-react",
 ];
 
 async function buildAll() {

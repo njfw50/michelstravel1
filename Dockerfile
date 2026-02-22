@@ -3,7 +3,7 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies
+# Install ALL dependencies (including dev for build)
 COPY package*.json ./
 RUN npm install --legacy-peer-deps
 
@@ -11,6 +11,8 @@ RUN npm install --legacy-peer-deps
 COPY . .
 
 # Build the project (frontend + backend)
+# dist/public = client build (served as static files)
+# dist/index.mjs = server bundle
 RUN npm run build
 
 # ── Stage 2: Production ──────────────────────────────────────
@@ -18,13 +20,14 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Install only production dependencies
+# Install production dependencies + vite (needed at runtime for server/vite.ts import)
 COPY package*.json ./
-RUN npm install --legacy-peer-deps --omit=dev
+RUN npm install --legacy-peer-deps --omit=dev && \
+    npm install --legacy-peer-deps vite @vitejs/plugin-react
 
 # Copy built artifacts from builder stage
+# dist/ contains index.mjs (server) and public/ (client assets)
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/client/public ./client/public
 
 # Expose port (Railway uses PORT env variable)
 EXPOSE 5000
