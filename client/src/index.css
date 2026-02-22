@@ -53,55 +53,38 @@
   }
 }
 
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  @apply bg-foreground/15 rounded-full;
-}
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-foreground/25;
-}
+/* ─── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply bg-foreground/15 rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-foreground/25; }
 
+/* ─── Glass utilities ────────────────────────────────────── */
 .glass {
   @apply bg-white/80 backdrop-blur-md border border-white/20;
 }
-
 .glass-dark {
   @apply bg-white/90 backdrop-blur-lg border border-gray-200/60;
 }
 
+/* ─── Animations ─────────────────────────────────────────── */
 @keyframes marquee {
-  0% { transform: translateX(0); }
+  0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
-
-.animate-marquee {
-  animation: marquee 40s linear infinite;
-}
-
-.animate-marquee:hover {
-  animation-play-state: paused;
-}
+.animate-marquee { animation: marquee 40s linear infinite; }
+.animate-marquee:hover { animation-play-state: paused; }
 
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
+  50%       { transform: translateY(-8px); }
 }
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
+.animate-float { animation: float 6s ease-in-out infinite; }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
 }
-
 .shimmer-text {
   background: linear-gradient(
     90deg,
@@ -118,38 +101,182 @@
   animation: shimmer 4s linear infinite;
 }
 
-.section-light {
-  background: hsl(220, 20%, 97%);
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+.animate-fade-in-up { animation: fadeInUp 0.7s cubic-bezier(0.16,1,0.3,1) both; }
 
-.section-white {
-  background: hsl(0, 0%, 100%);
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(213 90% 50% / 0.3); }
+  50%       { box-shadow: 0 0 0 12px hsl(213 90% 50% / 0); }
 }
+.animate-pulse-glow { animation: pulse-glow 2.5s ease-in-out infinite; }
 
+/* ─── Section backgrounds ────────────────────────────────── */
+.section-light   { background: hsl(220, 20%, 97%); }
+.section-white   { background: hsl(0, 0%, 100%); }
+
+/* ─── Hero overlay ───────────────────────────────────────── */
 .hero-wash {
   background: linear-gradient(
     180deg,
-    hsla(213, 50%, 15%, 0.3) 0%,
-    hsla(213, 50%, 15%, 0.5) 30%,
+    hsla(213, 50%, 15%, 0.30)  0%,
+    hsla(213, 50%, 15%, 0.50) 30%,
     hsla(213, 50%, 15%, 0.85) 70%,
-    hsla(213, 50%, 10%, 1) 100%
+    hsla(213, 50%, 10%, 1.00) 100%
   );
 }
 
-.gradient-border {
-  position: relative;
-}
-
+/* ─── Gradient border ────────────────────────────────────── */
+.gradient-border { position: relative; }
 .gradient-border::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, hsla(213, 90%, 50%, 0.3), hsla(213, 60%, 60%, 0.3));
+  background: linear-gradient(135deg, hsla(213,90%,50%,0.3), hsla(213,60%,60%,0.3));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
+}
+
+/* ─── Guide-style section header ────────────────────────── */
+.section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: hsl(213, 90%, 50%);
+  background: hsl(213, 85%, 95%);
+  border: 1px solid hsl(213, 85%, 88%);
+  border-radius: 9999px;
+  padding: 0.35rem 1rem;
+  margin-bottom: 1rem;
+}
+
+/* ─── Guide-style card ───────────────────────────────────── */
+.guide-card {
+  background: #fff;
+  border: 1px solid hsl(220, 15%, 90%);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+}
+.guide-card:hover {
+  box-shadow: 0 12px 40px -8px hsl(213 90% 50% / 0.15);
+  border-color: hsl(213, 85%, 80%);
+  transform: translateY(-3px);
+}
+
+/* ─── Guide-style badge/tag ──────────────────────────────── */
+.guide-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: hsl(213, 90%, 40%);
+  background: hsl(213, 85%, 95%);
+  border: 1px solid hsl(213, 80%, 88%);
+  border-radius: 9999px;
+  padding: 0.2rem 0.75rem;
+}
+
+/* ─── Guide CTA section ──────────────────────────────────── */
+.guide-cta-section {
+  background: linear-gradient(135deg, hsl(220, 25%, 12%) 0%, hsl(213, 90%, 25%) 100%);
+  border-radius: 24px;
+  overflow: hidden;
+  position: relative;
+}
+.guide-cta-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 70% 50%, hsl(213 90% 50% / 0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ─── Destination card image overlay ────────────────────── */
+.dest-card-overlay {
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.85) 0%,
+    rgba(0,0,0,0.25) 50%,
+    transparent 100%
+  );
+}
+
+/* ─── Stat card ──────────────────────────────────────────── */
+.stat-card {
+  background: #fff;
+  border: 1px solid hsl(220, 15%, 90%);
+  border-radius: 16px;
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: box-shadow 0.2s ease;
+}
+.stat-card:hover {
+  box-shadow: 0 4px 20px -4px hsl(213 90% 50% / 0.12);
+}
+
+/* ─── Step card ──────────────────────────────────────────── */
+.step-card {
+  background: #fff;
+  border: 1px solid hsl(220, 15%, 90%);
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+}
+.step-card:hover {
+  box-shadow: 0 12px 32px -8px hsl(213 90% 50% / 0.14);
+  border-color: hsl(213, 80%, 82%);
+  transform: translateY(-2px);
+}
+
+/* ─── Testimonial card ───────────────────────────────────── */
+.testimonial-card {
+  background: #fff;
+  border: 1px solid hsl(220, 15%, 90%);
+  border-radius: 16px;
+  padding: 2rem;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.testimonial-card:hover {
+  box-shadow: 0 8px 28px -6px hsl(213 90% 50% / 0.12);
+  border-color: hsl(213, 80%, 82%);
+}
+
+/* ─── Primary button guide style ────────────────────────── */
+.btn-guide-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: hsl(213, 90%, 50%);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  border-radius: 9999px;
+  padding: 0.85rem 2rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 16px hsl(213 90% 50% / 0.3);
+}
+.btn-guide-primary:hover {
+  background: hsl(213, 90%, 43%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px hsl(213 90% 50% / 0.35);
 }

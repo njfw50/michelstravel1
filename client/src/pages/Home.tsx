@@ -85,7 +85,7 @@ export default function Home() {
             alt="Airplane flying through bright sky"
             className="w-full h-full object-cover scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/60 via-blue-900/30 to-white/90" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/65 via-blue-900/35 to-white/95" />
         </div>
 
         <div className="container mx-auto px-4 md:px-6 relative z-10">
@@ -99,17 +99,17 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.3 }}
-              className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/20 rounded-full px-5 py-2 mb-8 shadow-sm"
+              className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/25 rounded-full px-5 py-2 mb-8 shadow-sm"
             >
               <Sparkles className="h-3.5 w-3.5 text-blue-300" />
-              <span className="text-xs font-semibold text-white/90 uppercase tracking-wider">{t("home.stats.secure")} &middot; {t("home.stats.support")}</span>
+              <span className="text-xs font-semibold text-white/90 uppercase tracking-[0.15em]">{t("home.stats.secure")} &middot; {t("home.stats.support")}</span>
             </motion.div>
 
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-extrabold text-white mb-6 leading-[0.95] tracking-tight drop-shadow-[0_4px_20px_rgba(0,0,0,0.3)]" data-testid="text-hero-title">
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-extrabold text-white mb-6 leading-[0.93] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)]" data-testid="text-hero-title">
               {t("home.title.1")} <br/>
-              <span className="text-blue-300">{t("home.title.2")}</span>
+              <span className="text-blue-300 drop-shadow-[0_2px_12px_rgba(59,130,246,0.5)]">{t("home.title.2")}</span>
             </h1>
-            <p className="text-lg md:text-xl text-white/75 max-w-2xl mx-auto font-medium leading-relaxed" data-testid="text-hero-subtitle">
+            <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto font-medium leading-relaxed" data-testid="text-hero-subtitle">
               {t("home.subtitle")}
             </p>
           </motion.div>
@@ -124,7 +124,7 @@ export default function Home() {
           </motion.div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-[hsl(220,20%,97%)] to-transparent pointer-events-none" />
       </section>
 
       <section className="relative mt-6 z-20 pb-8">
@@ -133,7 +133,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 md:p-8 shadow-lg shadow-gray-200/50 border border-white/60"
+            className="bg-white rounded-2xl p-6 md:p-8 shadow-[0_4px_32px_-8px_hsl(213_90%_50%/0.12)] border border-gray-200/80"
           >
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
               {[
@@ -150,12 +150,12 @@ export default function Home() {
                   transition={{ delay: i * 0.08 }}
                   className="flex items-center gap-4"
                 >
-                  <div className={`h-12 w-12 rounded-xl ${stat.bg} border border-gray-100/50 flex items-center justify-center ${stat.color} flex-shrink-0`}>
+                  <div className={`h-12 w-12 rounded-xl ${stat.bg} border border-gray-100 flex items-center justify-center ${stat.color} flex-shrink-0`}>
                     <stat.icon className="h-5 w-5" />
                   </div>
                   <div>
                     <span className="text-2xl md:text-3xl font-extrabold font-display text-gray-900 block leading-none">{stat.value}</span>
-                    <span className="text-[11px] text-gray-400 mt-0.5 uppercase tracking-widest font-semibold block">{t(stat.labelKey)}</span>
+                    <span className="text-[11px] text-gray-400 mt-0.5 uppercase tracking-[0.15em] font-semibold block">{t(stat.labelKey)}</span>
                   </div>
                 </motion.div>
               ))}
@@ -164,7 +164,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-24 md:py-32 bg-gray-50">
+      <section className="py-24 md:py-32 section-light">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -172,7 +172,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <span className="text-xs font-bold text-blue-500 uppercase tracking-[0.2em] mb-3 block">{t("home.how.title")}</span>
+            <span className="section-eyebrow">{t("home.how.title")}</span>
             <h2 className="text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-4">{t("home.how.subtitle")}</h2>
           </motion.div>
           
@@ -188,10 +188,10 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.12 }}
-                className="relative group flex flex-col items-center text-center p-8 md:p-10 rounded-2xl bg-white border border-gray-200 transition-all duration-300 hover:shadow-lg hover:border-blue-200"
+                className="step-card group"
               >
                 <span className="text-[11px] font-bold text-blue-500 tracking-[0.3em] mb-6 block">{item.step}</span>
-                <div className={`h-16 w-16 rounded-2xl ${item.color} flex items-center justify-center mb-6 mx-auto shadow-md`}>
+                <div className={`h-16 w-16 rounded-2xl ${item.color} flex items-center justify-center mb-6 mx-auto shadow-md shadow-blue-500/20`}>
                   <item.icon className="h-7 w-7 text-white" />
                 </div>
                 <h3 className="font-bold text-lg mb-3 text-gray-900">{t(item.titleKey)}</h3>
@@ -202,7 +202,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-24 md:py-32 bg-white">
+      <section className="py-24 md:py-32 section-white">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -210,7 +210,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <span className="text-xs font-bold text-blue-500 uppercase tracking-[0.2em] mb-3 block">{t("home.trust.title")}</span>
+            <span className="section-eyebrow">{t("home.trust.title")}</span>
             <h2 className="text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-4">{t("home.trust.subtitle")}</h2>
           </motion.div>
           
@@ -226,9 +226,9 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="group relative overflow-visible rounded-2xl bg-gray-50 border border-gray-200 p-8 md:p-10 transition-all duration-300 hover:shadow-lg hover:border-blue-200"
+                className="guide-card p-8 md:p-10"
               >
-                <div className={`h-14 w-14 rounded-xl ${item.color} flex items-center justify-center mb-6 shadow-md`}>
+                <div className={`h-14 w-14 rounded-xl ${item.color} flex items-center justify-center mb-6 shadow-md shadow-blue-500/20`}>
                   <item.icon className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-bold text-xl mb-3 text-gray-900">{t(item.titleKey)}</h3>
@@ -240,10 +240,10 @@ export default function Home() {
       </section>
 
       {topAirlines.length > 0 && (
-        <section className="py-16 bg-gray-50 border-y border-gray-200">
+        <section className="py-16 section-light border-y border-gray-200/80">
           <div className="container mx-auto px-4 md:px-6">
             <div className="text-center mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold font-display text-gray-900 mb-2">{t("home.airlines")}</h2>
+              <span className="section-eyebrow">{t("home.airlines")}</span>
               <p className="text-gray-500 text-sm">{t("home.airlines_sub")}</p>
             </div>
             
@@ -279,7 +279,7 @@ export default function Home() {
       )}
 
       {airports && airports.length > 0 && (
-        <section className="py-24 md:py-32 bg-white" data-testid="section-destinations">
+        <section className="py-24 md:py-32 section-white" data-testid="section-destinations">
           <div className="container mx-auto px-4 md:px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -288,7 +288,7 @@ export default function Home() {
               className="flex justify-between items-end mb-12 flex-wrap gap-4"
             >
               <div>
-                <span className="text-xs font-bold text-blue-500 uppercase tracking-[0.2em] mb-3 block">{t("home.popular.title")}</span>
+                <span className="section-eyebrow">{t("home.popular.title")}</span>
                 <h2 className="text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-2">{t("home.popular.subtitle")}</h2>
               </div>
             </motion.div>
@@ -357,7 +357,7 @@ export default function Home() {
 
       <FlightBoard />
 
-      <section className="py-24 md:py-32 bg-gray-50">
+      <section className="py-24 md:py-32 section-light">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -365,7 +365,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <span className="text-xs font-bold text-blue-500 uppercase tracking-[0.2em] mb-3 block">{t("home.testimonials.title")}</span>
+            <span className="section-eyebrow">{t("home.testimonials.title")}</span>
             <h2 className="text-3xl md:text-5xl font-extrabold font-display text-gray-900">{t("home.testimonials.subtitle")}</h2>
           </motion.div>
 
@@ -381,7 +381,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="p-8 rounded-2xl bg-white border border-gray-200 transition-all duration-300 hover:shadow-lg hover:border-blue-200"
+                className="testimonial-card"
               >
                 <div className="flex gap-1 mb-5">
                   {Array.from({ length: 5 }).map((_, j) => (
@@ -511,20 +511,23 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-24 md:py-32 relative overflow-hidden bg-white">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-transparent to-blue-50/50 pointer-events-none" />
-        <div className="container mx-auto px-4 md:px-6 text-center relative z-10">
+      <section className="py-24 md:py-32 section-white">
+        <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="max-w-3xl mx-auto"
+            className="max-w-5xl mx-auto guide-cta-section p-10 md:p-16 text-center"
           >
-            <h2 className="text-4xl md:text-6xl font-extrabold font-display text-gray-900 mb-6 leading-tight">{t("home.cta.title")}</h2>
-            <p className="text-gray-500 text-lg mb-10 max-w-xl mx-auto leading-relaxed">{t("home.cta.subtitle")}</p>
+            <span className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-5 py-2 text-xs font-bold text-blue-200 uppercase tracking-[0.15em] mb-8">
+              <Sparkles className="h-3.5 w-3.5" />
+              Michels Travel
+            </span>
+            <h2 className="text-4xl md:text-6xl font-extrabold font-display text-white mb-6 leading-tight">{t("home.cta.title")}</h2>
+            <p className="text-blue-200/80 text-lg mb-10 max-w-xl mx-auto leading-relaxed">{t("home.cta.subtitle")}</p>
             <Button 
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="rounded-full px-10 py-6 text-lg font-bold bg-blue-500 hover:bg-blue-600 text-white shadow-md shadow-blue-500/20 transition-all"
+              className="rounded-full px-10 py-6 text-lg font-bold bg-white text-blue-600 hover:bg-blue-50 shadow-xl shadow-black/20 transition-all duration-200 hover:-translate-y-0.5"
               data-testid="button-cta-search"
             >
               {t("home.cta.button")} <ArrowRight className="ml-2 h-5 w-5" />

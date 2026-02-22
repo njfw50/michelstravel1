@@ -43,7 +43,7 @@ export function FlightCard({ flight }: FlightCardProps) {
   const hasSlices = flight.slices && flight.slices.length > 0;
 
   return (
-    <Card data-testid={`flight-card-${flight.id}`} className="p-0 overflow-hidden border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-300 group bg-white rounded-2xl">
+    <Card data-testid={`flight-card-${flight.id}`} className="p-0 overflow-hidden border border-gray-200 shadow-sm hover:shadow-[0_8px_32px_-8px_hsl(213_90%_50%/0.18)] hover:border-blue-200 transition-all duration-300 group bg-white rounded-2xl hover:-translate-y-0.5">
       <div className="p-6 grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
         
         {/* Airline Info */}
@@ -58,11 +58,11 @@ export function FlightCard({ flight }: FlightCardProps) {
           <div>
             <h3 className="font-bold text-gray-900 leading-tight" data-testid="text-airline-name">{flight.airline}</h3>
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-              <span className="text-xs text-blue-600 font-semibold bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md inline-block" data-testid="text-flight-number">
+              <span className="guide-tag" data-testid="text-flight-number">
                 {flight.flightNumber}
               </span>
               {cabinClassName && (
-                <span className="text-xs text-emerald-600 font-medium bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md inline-block">
+                <span className="text-xs text-emerald-600 font-medium bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full inline-block">
                   {cabinClassName}
                 </span>
               )}

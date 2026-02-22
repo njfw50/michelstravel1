@@ -103,7 +103,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <header className={cn(
         "fixed top-0 z-50 w-full transition-all duration-500",
         scrolled
-          ? "bg-white/95 backdrop-blur-xl border-b border-gray-200/60 shadow-sm"
+          ? "bg-white/97 backdrop-blur-xl border-b border-gray-200/70 shadow-[0_2px_20px_-4px_hsl(213_90%_50%/0.08)]"
           : "bg-transparent border-b border-transparent"
       )}>
         <div className="container mx-auto px-4 md:px-6 h-20 flex items-center justify-between gap-4">
@@ -116,23 +116,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
               />
             </Link>
 
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden md:flex items-center gap-0.5">
               {navLinks.map((link) => (
                 <Link 
                   key={link.href} 
                   href={link.href}
                   className={cn(
-                    "relative text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200",
+                    "relative text-sm font-semibold px-4 py-2 rounded-full transition-all duration-200",
                     location === link.href
-                      ? "text-blue-600 bg-blue-50"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100/50"
+                      ? "text-blue-600 bg-blue-50 shadow-sm"
+                      : "text-gray-500 hover:text-gray-900 hover:bg-gray-100/70"
                   )}
                 >
                   {link.label}
                   {location === link.href && (
                     <motion.div 
                       layoutId="activeNav"
-                      className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full bg-blue-500"
+                      className="absolute bottom-1 left-4 right-4 h-[2px] rounded-full bg-blue-500"
                       transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
                     />
                   )}
@@ -205,7 +205,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               ) : (
                 <Button 
                   onClick={() => setLoginDialogOpen(true)}
-                  className="rounded-full px-6 font-bold shadow-md transition-all text-sm bg-blue-600 hover:bg-blue-700 text-white"
+                  className="rounded-full px-6 font-bold shadow-md shadow-blue-500/25 transition-all duration-200 text-sm bg-blue-500 hover:bg-blue-600 hover:-translate-y-0.5 text-white"
                   data-testid="button-signin"
                 >
                   {t("nav.signin")}
@@ -302,7 +302,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
-      <footer className="relative bg-white border-t border-gray-200">
+      <footer className="relative bg-white border-t border-gray-100">
         <div className="container mx-auto px-4 md:px-6 relative">
           <div className="py-16">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
@@ -320,7 +320,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
               
               <div className="md:col-span-2">
-                <h4 className="font-bold text-gray-900 text-sm mb-5 uppercase tracking-wider">{t("footer.company")}</h4>
+                <h4 className="font-bold text-gray-900 text-xs mb-5 uppercase tracking-[0.15em]">{t("footer.company")}</h4>
                 <ul className="space-y-3 text-sm">
                   <li><Link href="/about" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.about")}</Link></li>
                   <li><Link href="/blog" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("nav.blog")}</Link></li>
@@ -328,7 +328,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
 
               <div className="md:col-span-2">
-                <h4 className="font-bold text-gray-900 text-sm mb-5 uppercase tracking-wider">{t("footer.support")}</h4>
+                <h4 className="font-bold text-gray-900 text-xs mb-5 uppercase tracking-[0.15em]">{t("footer.support")}</h4>
                 <ul className="space-y-3 text-sm">
                   <li><a href="/help" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.help")}</a></li>
                   <li><a href="/terms" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.terms")}</a></li>
@@ -337,7 +337,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
 
               <div className="md:col-span-4">
-                <h4 className="font-bold text-gray-900 text-sm mb-5 uppercase tracking-wider">{t("footer.newsletter")}</h4>
+                <h4 className="font-bold text-gray-900 text-xs mb-5 uppercase tracking-[0.15em]">{t("footer.newsletter")}</h4>
                 <p className="text-sm text-gray-500 mb-4">{t("footer.subscribe")}</p>
                 <div className="flex gap-2">
                   <input 
@@ -346,7 +346,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 text-gray-900 placeholder:text-gray-400 transition-all outline-none"
                     data-testid="input-newsletter-email"
                   />
-                  <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-5 font-bold" data-testid="button-newsletter">{t("footer.go")}</Button>
+                  <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-5 font-bold shadow-sm shadow-blue-500/20 transition-all" data-testid="button-newsletter">{t("footer.go")}</Button>
                 </div>
               </div>
             </div>

@@ -145,13 +145,13 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
       className={cn(
-        "bg-white/95 backdrop-blur-lg rounded-2xl shadow-xl shadow-black/5 border border-white/80 relative z-10 max-w-5xl mx-auto",
+        "bg-white rounded-2xl shadow-[0_8px_40px_-8px_hsl(213_90%_50%/0.18)] border border-gray-200/90 relative z-10 max-w-5xl mx-auto",
         className
       )}
     >
       <div className="px-6 md:px-8 pt-6 pb-3 flex items-center justify-between flex-wrap gap-3">
         <Tabs defaultValue="round-trip" value={tripType} onValueChange={setTripType}>
-          <TabsList className="bg-gray-50 p-1 rounded-xl border border-gray-100">
+          <TabsList className="bg-gray-50 p-1 rounded-full border border-gray-200/80">
             {["round-trip", "one-way", "multi-city"].map((type) => (
               <TabsTrigger
                 key={type}

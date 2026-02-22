@@ -104,7 +104,7 @@ export function FlightBoard() {
   const hasMore = (flights?.length || 0) > 8;
 
   return (
-    <section className="py-24 md:py-32 bg-white" data-testid="section-flight-board">
+    <section className="py-24 md:py-32 section-white" data-testid="section-flight-board">
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex justify-between items-end mb-10 flex-wrap gap-4">
           <div>
@@ -137,8 +137,8 @@ export function FlightBoard() {
           </div>
         </div>
 
-        <div className="overflow-hidden border border-gray-200 bg-white rounded-2xl shadow-sm">
-          <div className="grid grid-cols-[160px_80px_1fr_100px_100px_120px_80px] gap-0 px-5 py-3.5 border-b border-gray-100 bg-gray-50/80 text-[11px] font-bold text-gray-400 uppercase tracking-widest hidden md:grid items-center">
+        <div className="overflow-hidden border border-gray-200 bg-white rounded-2xl shadow-[0_4px_32px_-8px_hsl(213_90%_50%/0.10)]">
+          <div className="grid grid-cols-[160px_80px_1fr_100px_100px_120px_80px] gap-0 px-5 py-3.5 border-b border-gray-100 bg-gray-50 text-[11px] font-bold text-gray-400 uppercase tracking-[0.15em] hidden md:grid items-center">
             <div>{t("home.board.col_flight")}</div>
             <div>{t("home.board.col_time")}</div>
             <div className="pl-4">{t("home.board.col_route")}</div>
@@ -171,7 +171,7 @@ export function FlightBoard() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ delay: i * 0.03 }}
-                  className="grid grid-cols-1 md:grid-cols-[160px_80px_1fr_100px_100px_120px_80px] gap-2 md:gap-0 px-5 py-3.5 border-b border-gray-100 hover:bg-blue-50/50 transition-all duration-200 cursor-pointer group items-center"
+                  className="grid grid-cols-1 md:grid-cols-[160px_80px_1fr_100px_100px_120px_80px] gap-2 md:gap-0 px-5 py-3.5 border-b border-gray-100 hover:bg-blue-50/40 transition-all duration-200 cursor-pointer group items-center"
                   onClick={() => setLocation(`/book/${flight.id}?adults=1&children=0&infants=0`)}
                   data-testid={`board-row-${i}`}
                 >
