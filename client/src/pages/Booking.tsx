@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CheckCircle2, Plane, Clock, ArrowRight, Shield, Luggage, User, ChevronDown, ChevronUp, RefreshCw, X as XIcon, Briefcase, ScanLine, CreditCard, Lock, ArrowLeft, AlertTriangle, Loader2 } from "lucide-react";
+import { CheckCircle2, Plane, Clock, ArrowRight, Shield, Luggage, User, ChevronDown, ChevronUp, RefreshCw, X as XIcon, Briefcase, ScanLine, CreditCard, Lock, ArrowLeft, AlertTriangle, Loader2, PhoneCall, HeartHandshake, MessageCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState, useCallback, useRef } from "react";
@@ -642,7 +642,7 @@ export default function Booking() {
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   
   const createBooking = useCreateBooking();
 
@@ -665,10 +665,41 @@ export default function Booking() {
 
   const isDocRequired = flight?.passengerIdentityDocumentsRequired ?? false;
   const searchParams = new URLSearchParams(window.location.search);
+  const isEasyMode = searchParams.get("ui") === "easy";
   const numAdults = parseInt(searchParams.get("adults") || "1", 10);
   const numChildren = parseInt(searchParams.get("children") || "0", 10);
   const numInfants = parseInt(searchParams.get("infants") || "0", 10);
   const totalPassengers = numAdults + numChildren + numInfants;
+  const easyModeCopy = language === "en"
+    ? {
+        badge: "Easy Mode support",
+        title: "You can finish this booking step by step.",
+        description: "If any field feels confusing, call the team or open the chat before paying.",
+        call: "Call now",
+        assistant: "Open chat",
+        back: "Back to Easy Mode",
+      }
+    : language === "es"
+      ? {
+          badge: "Apoyo del Modo Fácil",
+          title: "Puede terminar esta reserva paso a paso.",
+          description: "Si algún campo parece confuso, llame al equipo o abra el chat antes de pagar.",
+          call: "Llamar ahora",
+          assistant: "Abrir chat",
+          back: "Volver al Modo Fácil",
+        }
+      : {
+          badge: "Apoio do Modo Fácil",
+          title: "Você pode concluir esta reserva passo a passo.",
+          description: "Se algum campo parecer confuso, ligue para a equipe ou abra o chat antes de pagar.",
+          call: "Ligar agora",
+          assistant: "Abrir chat",
+          back: "Voltar ao Modo Fácil",
+        };
+  const openAssistant = () => {
+    const chatButton = document.querySelector('[data-testid="button-chatbot-toggle"]') as HTMLButtonElement | null;
+    chatButton?.click();
+  };
 
   const buildDefaultPassengers = () => {
     const pax: any[] = [];
@@ -975,6 +1006,43 @@ export default function Booking() {
           </div>
         </div>
       </div>
+
+      {isEasyMode && (
+        <div className="border-b border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_55%,rgba(219,234,254,0.96))]">
+          <div className="container mx-auto max-w-6xl px-4 py-5">
+            <div className="flex flex-col gap-5 rounded-[28px] border border-blue-100 bg-white/75 p-5 shadow-[0_20px_80px_-44px_rgba(37,99,235,0.45)] lg:flex-row lg:items-center lg:justify-between">
+              <div className="max-w-2xl">
+                <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
+                  <HeartHandshake className="h-4 w-4" />
+                  {easyModeCopy.badge}
+                </span>
+                <h2 className="mt-4 text-2xl md:text-3xl font-display font-extrabold text-slate-950">
+                  {easyModeCopy.title}
+                </h2>
+                <p className="mt-2 text-sm md:text-base leading-relaxed text-slate-600">
+                  {easyModeCopy.description}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <Button asChild className="rounded-full bg-blue-600 hover:bg-blue-700 text-white" data-testid="button-easy-mode-call-booking">
+                  <a href="tel:+18623501161">
+                    <PhoneCall className="mr-2 h-4 w-4" />
+                    {easyModeCopy.call}
+                  </a>
+                </Button>
+                <Button variant="outline" onClick={openAssistant} className="rounded-full border-slate-300 bg-white text-slate-800" data-testid="button-easy-mode-chat-booking">
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  {easyModeCopy.assistant}
+                </Button>
+                <Button variant="ghost" onClick={() => setLocation("/easy")} className="rounded-full text-blue-700 hover:bg-blue-50" data-testid="button-easy-mode-back-booking">
+                  {easyModeCopy.back}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       <div className="container mx-auto max-w-6xl px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

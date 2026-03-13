@@ -10,6 +10,7 @@ interface LocationSearchProps {
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  size?: "default" | "large";
 }
 
 interface Place {
@@ -21,7 +22,7 @@ interface Place {
   type: string;
 }
 
-export function LocationSearch({ label, placeholder, value, onChange, className }: LocationSearchProps) {
+export function LocationSearch({ label, placeholder, value, onChange, className, size = "default" }: LocationSearchProps) {
   const [query, setQuery] = useState(value);
   const [displayText, setDisplayText] = useState("");
   const debouncedQuery = useDebounce(query, 500);
@@ -30,6 +31,7 @@ export function LocationSearch({ label, placeholder, value, onChange, className 
   const [isLoading, setIsLoading] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const selectedRef = useRef(false);
+  const isLarge = size === "large";
 
   useEffect(() => {
     if (debouncedQuery && debouncedQuery.length >= 2 && !selectedRef.current) {
@@ -82,12 +84,21 @@ export function LocationSearch({ label, placeholder, value, onChange, className 
 
   return (
     <div className={cn("relative", className)} ref={wrapperRef}>
-      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2 pl-1">{label}</label>
-      <div className="flex items-center bg-gray-50/80 border border-gray-200 rounded-xl px-4 h-14 focus-within:border-blue-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-500/10 transition-all duration-300 hover:border-blue-300 hover:bg-white relative">
-        <MapPin className="h-5 w-5 text-blue-500 mr-3 shrink-0" />
+      <label className={cn(
+        "font-semibold text-gray-500 block mb-2 pl-1",
+        isLarge ? "text-sm tracking-[0.08em]" : "text-xs uppercase tracking-wider",
+      )}>{label}</label>
+      <div className={cn(
+        "flex items-center bg-gray-50/80 border border-gray-200 relative transition-all duration-300 hover:border-blue-300 hover:bg-white focus-within:border-blue-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-500/10",
+        isLarge ? "rounded-2xl px-5 h-16 md:h-[72px]" : "rounded-xl px-4 h-14",
+      )}>
+        <MapPin className={cn("text-blue-500 shrink-0", isLarge ? "h-6 w-6 mr-4" : "h-5 w-5 mr-3")} />
         <Input 
           placeholder={placeholder || "City or Airport"} 
-          className="border-none shadow-none focus-visible:ring-0 p-0 h-full text-base font-medium placeholder:text-gray-400 w-full bg-transparent text-gray-900"
+          className={cn(
+            "border-none shadow-none focus-visible:ring-0 p-0 h-full w-full bg-transparent text-gray-900 placeholder:text-gray-400",
+            isLarge ? "text-lg md:text-xl font-semibold" : "text-base font-medium",
+          )}
           data-testid={`input-${label.toLowerCase()}`}
           value={displayText || query}
           onChange={(e) => {
@@ -102,11 +113,14 @@ export function LocationSearch({ label, placeholder, value, onChange, className 
             if (results.length > 0) setIsOpen(true);
           }}
         />
-        {isLoading && <Loader2 className="h-5 w-5 animate-spin text-blue-500 absolute right-4" />}
+        {isLoading && <Loader2 className={cn("animate-spin text-blue-500 absolute", isLarge ? "h-6 w-6 right-5" : "h-5 w-5 right-4")} />}
       </div>
 
       {isOpen && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 max-h-72 overflow-y-auto overflow-x-hidden">
+        <div className={cn(
+          "absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 shadow-2xl z-50 max-h-72 overflow-y-auto overflow-x-hidden",
+          isLarge ? "rounded-2xl" : "rounded-xl",
+        )}>
           <div className="p-2 space-y-0.5">
             {results.map((place) => (
               <button
@@ -114,16 +128,24 @@ export function LocationSearch({ label, placeholder, value, onChange, className 
                 key={place.id}
                 onClick={() => handleSelect(place)}
                 data-testid={`place-option-${place.iataCode}`}
-                className="w-full text-left px-3 py-3 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-3 group"
+                className={cn(
+                  "w-full text-left transition-colors flex items-center gap-3 group hover:bg-blue-50",
+                  isLarge ? "px-4 py-4 rounded-xl" : "px-3 py-3 rounded-lg",
+                )}
               >
-                <div className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
-                  {place.type === 'airport' ? <Plane className="h-5 w-5 text-blue-500" /> : <MapPin className="h-5 w-5 text-blue-500" />}
+                <div className={cn(
+                  "rounded-xl bg-gray-100 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors",
+                  isLarge ? "h-12 w-12" : "h-10 w-10",
+                )}>
+                  {place.type === 'airport'
+                    ? <Plane className={cn("text-blue-500", isLarge ? "h-6 w-6" : "h-5 w-5")} />
+                    : <MapPin className={cn("text-blue-500", isLarge ? "h-6 w-6" : "h-5 w-5")} />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-gray-900 text-sm">
+                  <div className={cn("font-semibold text-gray-900", isLarge ? "text-base" : "text-sm")}>
                     {place.name} <span className="text-blue-600 font-bold">({place.iataCode})</span>
                   </div>
-                  <div className="text-xs text-gray-400 mt-0.5">
+                  <div className={cn("text-gray-400 mt-0.5", isLarge ? "text-sm" : "text-xs")}>
                     {place.cityName ? `${place.cityName}, ` : ''}{place.countryName}
                   </div>
                 </div>

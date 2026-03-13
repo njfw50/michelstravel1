@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { FlightSearchForm } from "@/components/FlightSearchForm";
 import { FlightCard } from "@/components/FlightCard";
 import { useFlightSearch } from "@/hooks/use-flights";
-import { Loader2, Filter, AlertCircle, Plane, X, Sun, Sunrise, Sunset, Moon, Globe, BarChart3, Armchair, Sparkles, CheckCircle2, Clock, ArrowRight } from "lucide-react";
+import { Loader2, Filter, AlertCircle, Plane, X, Sun, Sunrise, Sunset, Moon, Globe, BarChart3, Armchair, Sparkles, CheckCircle2, Clock, ArrowRight, PhoneCall, HeartHandshake, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
@@ -183,10 +183,37 @@ function FlightSearchAnimation({ t }: { t: (key: string) => string }) {
 
 export default function SearchResults() {
   const [location] = useLocation();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const searchParams = new URLSearchParams(window.location.search);
   const tripType = searchParams.get('tripType');
   const legsRaw = searchParams.get('legs');
+  const isEasyMode = searchParams.get("ui") === "easy";
+  const easyModeCopy = language === "en"
+    ? {
+        badge: "Easy Mode active",
+        title: "Review the flights calmly.",
+        description: "If you want help comparing options, call the team or open the chat before you continue.",
+        call: "Call now",
+        assistant: "Open chat",
+        back: "Back to Easy Mode",
+      }
+    : language === "es"
+      ? {
+          badge: "Modo Fácil activo",
+          title: "Revise los vuelos con calma.",
+          description: "Si quiere ayuda para comparar opciones, llame al equipo o abra el chat antes de continuar.",
+          call: "Llamar ahora",
+          assistant: "Abrir chat",
+          back: "Volver al Modo Fácil",
+        }
+      : {
+          badge: "Modo Fácil ativo",
+          title: "Revise os voos com calma.",
+          description: "Se quiser ajuda para comparar opções, ligue para a equipe ou abra o chat antes de continuar.",
+          call: "Ligar agora",
+          assistant: "Abrir chat",
+          back: "Voltar ao Modo Fácil",
+        };
 
   const isMultiCity = tripType === 'multi-city' && legsRaw;
   let multiCityLegs: { origin: string; destination: string; date: string }[] = [];
@@ -238,6 +265,10 @@ export default function SearchResults() {
   }, [isLoading, isFetching, showAnimation]);
 
   const isSearching = (isLoading || isFetching) || showAnimation;
+  const openAssistant = () => {
+    const chatButton = document.querySelector('[data-testid="button-chatbot-toggle"]') as HTMLButtonElement | null;
+    chatButton?.click();
+  };
 
   const defaultValues = {
     origin: params.origin,
@@ -670,11 +701,48 @@ export default function SearchResults() {
       <SEO title="Resultados da Pesquisa" description="Compare voos e encontre as melhores ofertas de passagens aéreas. Preços atualizados em tempo real." path="/search" noindex={true} />
       <div className="bg-white border-b border-gray-200 shadow-sm pb-6 pt-8 px-4">
         <div className="container mx-auto max-w-6xl">
-           <FlightSearchForm defaultValues={defaultValues} />
+           <FlightSearchForm defaultValues={defaultValues} extraSearchParams={isEasyMode ? { ui: "easy" } : undefined} />
         </div>
       </div>
 
       <div className="container mx-auto px-4 mt-8 max-w-6xl">
+        {isEasyMode && (
+          <div className="mb-6 rounded-[28px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_55%,rgba(219,234,254,0.96))] p-5 md:p-6 shadow-[0_20px_80px_-44px_rgba(37,99,235,0.45)]">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+              <div className="max-w-2xl">
+                <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
+                  <HeartHandshake className="h-4 w-4" />
+                  {easyModeCopy.badge}
+                </span>
+                <h2 className="mt-4 text-2xl md:text-3xl font-display font-extrabold text-slate-950">
+                  {easyModeCopy.title}
+                </h2>
+                <p className="mt-2 text-sm md:text-base leading-relaxed text-slate-600">
+                  {easyModeCopy.description}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <Button asChild className="rounded-full bg-blue-600 hover:bg-blue-700 text-white" data-testid="button-easy-mode-call-results">
+                  <a href="tel:+18623501161">
+                    <PhoneCall className="mr-2 h-4 w-4" />
+                    {easyModeCopy.call}
+                  </a>
+                </Button>
+                <Button variant="outline" onClick={openAssistant} className="rounded-full border-slate-300 bg-white text-slate-800" data-testid="button-easy-mode-chat-results">
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  {easyModeCopy.assistant}
+                </Button>
+                <Link href="/easy">
+                  <Button variant="ghost" className="rounded-full text-blue-700 hover:bg-blue-50" data-testid="button-easy-mode-back-results">
+                    {easyModeCopy.back}
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
           <div className="hidden lg:block lg:col-span-3 space-y-6">

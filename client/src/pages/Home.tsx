@@ -4,7 +4,7 @@ import { FlightBoard } from "@/components/FlightBoard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldCheck, Zap, Globe, ArrowRight, MapPin, Plane, Search, CreditCard, Ticket, Star, Clock, Headphones, Users, TrendingUp, ChevronRight, Sparkles, MessageCircle, CheckCircle2, Languages, UserCheck } from "lucide-react";
+import { ShieldCheck, Zap, Globe, ArrowRight, MapPin, Plane, Search, CreditCard, Ticket, Star, Clock, Headphones, Users, TrendingUp, ChevronRight, Sparkles, MessageCircle, CheckCircle2, Languages, UserCheck, PhoneCall, HeartHandshake } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
@@ -77,6 +77,44 @@ export default function Home() {
   const airportCount = airports?.length || 0;
   const catalogDeals = featuredDeals?.slice(0, 6) || [];
   const locale = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
+  const easyModeContent = language === "en"
+    ? {
+        badge: "Help for a calmer booking",
+        title: "Need a simpler screen to buy your flight?",
+        description: "Open Easy Mode for larger text, fewer choices at a time, and visible support by phone or chat.",
+        primary: "Open Easy Mode",
+        secondary: "Call the team",
+        features: [
+          "Larger text and clearer buttons",
+          "Less information per step",
+          "Human support always nearby",
+        ],
+      }
+    : language === "es"
+      ? {
+          badge: "Ayuda para comprar con calma",
+          title: "¿Necesita una pantalla más simple para comprar su vuelo?",
+          description: "Abra el Modo Fácil para ver texto más grande, menos opciones por vez y apoyo visible por teléfono o chat.",
+          primary: "Abrir Modo Fácil",
+          secondary: "Llamar al equipo",
+          features: [
+            "Texto más grande y botones más claros",
+            "Menos información por paso",
+            "Apoyo humano siempre cerca",
+          ],
+        }
+      : {
+          badge: "Ajuda para comprar com calma",
+          title: "Precisa de uma tela mais simples para comprar sua passagem?",
+          description: "Abra o Modo Fácil para ver letras maiores, menos opções por vez e apoio visível por telefone ou chat.",
+          primary: "Abrir Modo Fácil",
+          secondary: "Ligar para a equipe",
+          features: [
+            "Letras maiores e botões mais claros",
+            "Menos informação por etapa",
+            "Suporte humano sempre por perto",
+          ],
+        };
 
   const formatDealDate = (date: string) => {
     if (!date) return "";
@@ -213,6 +251,98 @@ export default function Home() {
                   </div>
                 </motion.div>
               ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="pb-10 md:pb-14 section-light">
+        <div className="container mx-auto px-4 md:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="relative overflow-hidden rounded-[32px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_55%,rgba(219,234,254,0.95))] p-7 md:p-10 shadow-[0_20px_80px_-36px_rgba(37,99,235,0.35)]"
+          >
+            <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-200/50 blur-3xl" />
+            <div className="absolute bottom-0 left-1/3 h-32 w-32 rounded-full bg-emerald-100/70 blur-3xl" />
+            <div className="relative grid grid-cols-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,360px)] gap-8 items-center">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/90 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
+                  <HeartHandshake className="h-4 w-4" />
+                  {easyModeContent.badge}
+                </span>
+                <h2 className="mt-5 text-3xl md:text-5xl font-display font-extrabold leading-tight text-slate-950">
+                  {easyModeContent.title}
+                </h2>
+                <p className="mt-4 max-w-2xl text-base md:text-lg leading-relaxed text-slate-600">
+                  {easyModeContent.description}
+                </p>
+
+                <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {easyModeContent.features.map((feature) => (
+                    <div key={feature} className="rounded-2xl border border-white/80 bg-white/85 px-4 py-4 text-sm font-semibold text-slate-700 shadow-sm">
+                      {feature}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <Button
+                    onClick={() => setLocation("/easy")}
+                    className="rounded-full px-7 py-6 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
+                    data-testid="button-open-easy-mode"
+                  >
+                    {easyModeContent.primary}
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="rounded-full px-7 py-6 text-base font-bold border-slate-300 bg-white/90 text-slate-800"
+                  >
+                    <a href="tel:+18623501161">
+                      <PhoneCall className="mr-2 h-5 w-5" />
+                      {easyModeContent.secondary}
+                    </a>
+                  </Button>
+                </div>
+              </div>
+
+              <Card className="rounded-[28px] border border-slate-200 bg-slate-950 text-white shadow-[0_24px_80px_-40px_rgba(15,23,42,0.9)]">
+                <CardContent className="p-6 md:p-7">
+                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-blue-200">Michels Travel</span>
+                  <h3 className="mt-3 text-2xl font-display font-extrabold">
+                    {language === "en" ? "Designed for people who prefer clarity over rush." : language === "es" ? "Pensado para quien prefiere claridad en lugar de prisa." : "Pensado para quem prefere clareza no lugar de pressa."}
+                  </h3>
+                  <div className="mt-6 space-y-3">
+                    {[1, 2, 3].map((item) => (
+                      <div key={item} className="flex items-start gap-3 rounded-2xl bg-white/5 px-4 py-3">
+                        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
+                        <span className="text-sm leading-relaxed text-slate-100">
+                          {language === "en"
+                            ? item === 1
+                              ? "Start with origin, destination, and date."
+                              : item === 2
+                                ? "See the flights and review calmly before paying."
+                                : "If anything feels confusing, call or open the chat."
+                            : language === "es"
+                              ? item === 1
+                                ? "Empiece con origen, destino y fecha."
+                                : item === 2
+                                  ? "Vea los vuelos y revise todo con calma antes de pagar."
+                                  : "Si algo parece confuso, llame o abra el chat."
+                              : item === 1
+                                ? "Comece por origem, destino e data."
+                                : item === 2
+                                  ? "Veja os voos e revise tudo com calma antes de pagar."
+                                  : "Se algo parecer confuso, ligue ou abra o chat."}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </motion.div>
         </div>

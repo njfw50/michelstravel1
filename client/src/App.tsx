@@ -22,6 +22,7 @@ class SafeWrapper extends Component<{ children: ReactNode }, { hasError: boolean
 }
 
 import Home from "@/pages/Home";
+import EasyBooking from "@/pages/EasyBooking";
 import SearchResults from "@/pages/SearchResults";
 import Booking from "@/pages/Booking";
 import AdminDashboard from "@/pages/AdminDashboard";
@@ -79,6 +80,7 @@ function Router() {
       </Route>
 
       <Route path="/" component={() => <Layout><Home /></Layout>} />
+      <Route path="/easy" component={() => <Layout><EasyBooking /></Layout>} />
       <Route path="/search" component={() => <Layout><SearchResults /></Layout>} />
       <Route path="/book/:id" component={() => <Layout><Booking /></Layout>} />
       

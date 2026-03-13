@@ -24,6 +24,7 @@ interface FlightSearchFormProps {
     date: Date | undefined;
     passengers: string;
   };
+  extraSearchParams?: Record<string, string | undefined>;
 }
 
 interface MultiCityLeg {
@@ -32,7 +33,7 @@ interface MultiCityLeg {
   date: Date | undefined;
 }
 
-export function FlightSearchForm({ className, defaultValues }: FlightSearchFormProps) {
+export function FlightSearchForm({ className, defaultValues, extraSearchParams }: FlightSearchFormProps) {
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
   const { t } = useI18n();
@@ -56,6 +57,13 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
   const totalPassengers = adults + children + infants;
 
   const classLabel = (id: string) => t(`class.${id}`);
+  const appendExtraSearchParams = (params: URLSearchParams) => {
+    if (!extraSearchParams) return;
+
+    for (const [key, value] of Object.entries(extraSearchParams)) {
+      if (value) params.set(key, value);
+    }
+  };
 
   const updateLeg = (index: number, field: keyof MultiCityLeg, value: any) => {
     const updated = [...multiCityLegs];
@@ -106,6 +114,7 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
       params.set("children", children.toString());
       params.set("infants", infants.toString());
       params.set("cabinClass", cabinClass);
+      appendExtraSearchParams(params);
       setLocation(`/search?${params.toString()}`);
       return;
     }
@@ -135,6 +144,7 @@ export function FlightSearchForm({ className, defaultValues }: FlightSearchFormP
     params.set("children", children.toString());
     params.set("infants", infants.toString());
     params.set("cabinClass", cabinClass);
+    appendExtraSearchParams(params);
 
     setLocation(`/search?${params.toString()}`);
   };

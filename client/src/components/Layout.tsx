@@ -81,8 +81,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [authError, setAuthError] = useState<string | null>(null);
   const [location, setLocation] = useLocation();
   const [scrolled, setScrolled] = useState(false);
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const isHome = location === "/";
+  const easyModeLabel = language === "en" ? "Easy Mode" : language === "es" ? "Modo Fácil" : "Modo Fácil";
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -131,6 +132,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const navLinks = [
     { href: "/", label: t("nav.flights") },
+    { href: "/easy", label: easyModeLabel },
     { href: "/my-trips", label: t("nav.my_trips") || "My Trips" },
     { href: "/about", label: t("footer.about") },
     { href: "/blog", label: t("nav.blog") },
