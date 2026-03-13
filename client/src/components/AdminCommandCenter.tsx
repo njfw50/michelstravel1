@@ -6,7 +6,10 @@ import { format, formatDistanceToNowStrict } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useAdminCommandCenter, type AdminCommandCenterData } from "@/hooks/use-admin";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -34,6 +37,21 @@ interface AdminMessage {
   senderName?: string | null;
   content: string;
   createdAt: string;
+}
+
+interface QuickDealDraft {
+  origin: string;
+  destination: string;
+  originCity: string;
+  destinationCity: string;
+  departureDate: string;
+  returnDate: string;
+  price: string;
+  currency: string;
+  airline: string;
+  cabinClass: string;
+  headline: string;
+  description: string;
 }
 
 function formatCurrency(amount: number, currency = "USD") {
@@ -113,12 +131,54 @@ function QueueCard({
   );
 }
 
+function buildQuickDealDraft(route: { route: string; routeKey: string }): QuickDealDraft {
+  const [origin = "", destination = ""] = route.routeKey.split("-");
+  return {
+    origin,
+    destination,
+    originCity: "",
+    destinationCity: "",
+    departureDate: "",
+    returnDate: "",
+    price: "",
+    currency: "USD",
+    airline: "",
+    cabinClass: "economy",
+    headline: `Special fares for ${route.route}`,
+    description: `Demand is strong for ${route.route}. Publish this featured fare and direct travelers to Michels Travel for human support.`,
+  };
+}
+
+const replyMacros = [
+  {
+    label: "Acknowledge",
+    create: (name?: string | null) =>
+      `Hello${name ? ` ${name}` : ""}, thank you for contacting Michels Travel. I am reviewing your request now and I will stay with you until we have a clear solution.`,
+  },
+  {
+    label: "Call Offer",
+    create: () =>
+      "If you prefer, I can continue this by phone and guide everything step by step. Send me the best number and time, or call our team directly for immediate help.",
+  },
+  {
+    label: "Payment Follow-up",
+    create: () =>
+      "I am checking your reservation and payment status now. Please keep this conversation open and avoid creating a second booking until I confirm the next safe step.",
+  },
+  {
+    label: "Senior Support",
+    create: () =>
+      "If this booking is for an older traveler or you want a simpler guided process, we can handle it slowly and clearly together, including a phone-assisted checkout.",
+  },
+];
+
 export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSettings }: AdminCommandCenterProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data, isLoading, isError, error } = useAdminCommandCenter();
   const [selectedThreadId, setSelectedThreadId] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [dealDraft, setDealDraft] = useState<QuickDealDraft | null>(null);
 
   const { data: threads = [] } = useQuery<AdminThread[]>({
     queryKey: ["/api/admin/messenger/threads"],
@@ -244,6 +304,33 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
     },
   });
 
+  const createDealMutation = useMutation({
+    mutationFn: async (payload: QuickDealDraft) => {
+      const response = await apiRequest("POST", "/api/admin/featured-deals", {
+        ...payload,
+        price: payload.price || undefined,
+        isActive: true,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      setDealDraft(null);
+      invalidateMissionControl();
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/featured-deals"] });
+      toast({
+        title: "Featured deal created",
+        description: "The growth launchpad sent a new offer to your deal catalog.",
+      });
+    },
+    onError: (mutationError: Error) => {
+      toast({
+        title: "Unable to create featured deal",
+        description: mutationError.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const selectedThread = useMemo(
     () => threads.find((thread) => thread.id === selectedThreadId) || null,
     [selectedThreadId, threads],
@@ -296,6 +383,33 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
       case "open-settings":
         onOpenSettings();
         break;
+    }
+  };
+
+  const openDealLaunchpad = (route: { route: string; routeKey: string }) => {
+    setDealDraft(buildQuickDealDraft(route));
+  };
+
+  const copyCampaignBrief = async (route: { route: string; searches: number; bookings: number }) => {
+    const brief = [
+      `Campaign angle for ${route.route}.`,
+      `${route.searches} searches and ${route.bookings} bookings already show live demand.`,
+      "Lead with personal support, safer booking guidance and fast human follow-up.",
+      "Push to site search, live help and senior support mode.",
+    ].join(" ");
+
+    try {
+      await navigator.clipboard.writeText(brief);
+      toast({
+        title: "Campaign brief copied",
+        description: `Growth brief for ${route.route} is ready to paste into marketing notes.`,
+      });
+    } catch {
+      toast({
+        title: "Clipboard unavailable",
+        description: "Could not copy the campaign brief from this browser session.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -553,6 +667,16 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                             {formatCurrency(route.revenue)}
                           </div>
                         </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Button size="sm" variant="outline" className="gap-2" onClick={() => openDealLaunchpad(route)}>
+                            <Sparkles className="h-4 w-4" />
+                            Launch deal
+                          </Button>
+                          <Button size="sm" variant="outline" className="gap-2" onClick={() => copyCampaignBrief(route)}>
+                            <Copy className="h-4 w-4" />
+                            Copy brief
+                          </Button>
+                        </div>
                       </div>
                     ))
                   )}
@@ -622,7 +746,340 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
             </CardContent>
           </Card>
         </div>
+        <div className="space-y-6">
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-gray-900">Service Radar</CardTitle>
+              <CardDescription>
+                Human assistance, live queue and escalation recovery in one place.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.16em] text-gray-500">Live requests</p>
+                    <p className="mt-1 text-2xl font-bold text-gray-900">{data.counters.liveRequests}</p>
+                  </div>
+                  <Button size="sm" className="gap-2" onClick={onOpenLiveDesk}>
+                    <MessageSquare className="h-4 w-4" />
+                    Open desk
+                  </Button>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {data.liveRequests.length === 0 ? (
+                    <p className="text-sm text-gray-500">No live requests in queue.</p>
+                  ) : (
+                    data.liveRequests.map((session) => (
+                      <div key={session.id} className="rounded-2xl border border-white bg-white p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">
+                              {session.customerName || session.customerEmail || `Visitor ${session.id}`}
+                            </p>
+                            <p className="mt-1 text-xs text-gray-500">
+                              {session.language?.toUpperCase() || "PT"} · {formatMoment(session.createdAt)}
+                            </p>
+                          </div>
+                          <Badge variant="outline">{session.status}</Badge>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-2"
+                            disabled={acceptLiveMutation.isPending}
+                            onClick={() => acceptLiveMutation.mutate(session.id)}
+                          >
+                            {acceptLiveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                            Accept
+                          </Button>
+                          <Button size="sm" variant="outline" className="gap-2" onClick={onOpenLiveDesk}>
+                            <ExternalLink className="h-4 w-4" />
+                            Open desk
+                          </Button>
+                          {session.customerPhone && (
+                            <Button size="sm" variant="outline" className="gap-2" onClick={() => openPhone(session.customerPhone)}>
+                              <Phone className="h-4 w-4" />
+                              Call
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.16em] text-gray-500">Service rescue</p>
+                    <p className="mt-1 text-2xl font-bold text-gray-900">{data.counters.openEscalations}</p>
+                  </div>
+                  <div className="text-right text-xs text-gray-500">
+                    {data.counters.activeLiveSessions} active live session{data.counters.activeLiveSessions === 1 ? "" : "s"}
+                  </div>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {data.escalations.length === 0 ? (
+                    <p className="text-sm text-gray-500">No open escalations.</p>
+                  ) : (
+                    data.escalations.map((escalation) => (
+                      <div key={escalation.id} className="rounded-2xl border border-white bg-white p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">{escalation.reason}</p>
+                            <p className="mt-1 text-xs text-gray-500">
+                              {escalation.type} · {formatMoment(escalation.createdAt)}
+                            </p>
+                            {escalation.summary && <p className="mt-2 text-sm text-gray-600">{escalation.summary}</p>}
+                          </div>
+                          <Badge className="border border-red-200 bg-red-50 text-red-700">{escalation.status}</Badge>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {escalation.customerPhone && (
+                            <Button size="sm" variant="outline" className="gap-2" onClick={() => openPhone(escalation.customerPhone)}>
+                              <Phone className="h-4 w-4" />
+                              Call
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-2"
+                            disabled={resolveEscalationMutation.isPending}
+                            onClick={() => resolveEscalationMutation.mutate(escalation.id)}
+                          >
+                            {resolveEscalationMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                            Resolve
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <div>
+                <CardTitle className="text-gray-900">Client Inbox Relay</CardTitle>
+                <CardDescription>
+                  Reply with macros, empathy and fast escalation without leaving the dashboard.
+                </CardDescription>
+              </div>
+              <Badge className="border border-blue-200 bg-blue-50 text-blue-700">{data.counters.unreadInboxMessages} unread</Badge>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 lg:grid-cols-[220px,1fr]">
+                <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
+                  {threads.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
+                      No customer threads yet.
+                    </div>
+                  ) : (
+                    threads.slice(0, 12).map((thread) => {
+                      const unreadCount = Number(thread.unreadCount || 0);
+                      const isActive = thread.id === selectedThreadId;
+                      return (
+                        <button
+                          key={thread.id}
+                          type="button"
+                          onClick={() => setSelectedThreadId(thread.id)}
+                          className={`w-full rounded-2xl border p-3 text-left transition-colors ${
+                            isActive
+                              ? "border-blue-300 bg-blue-50"
+                              : "border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50/50"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="line-clamp-2 text-sm font-semibold text-gray-900">{thread.subject}</p>
+                            {unreadCount > 0 && (
+                              <Badge className="border border-amber-200 bg-amber-50 text-amber-700">{unreadCount}</Badge>
+                            )}
+                          </div>
+                          <p className="mt-1 text-xs text-gray-500">
+                            {thread.userName || thread.userEmail || `User ${thread.userId}`}
+                          </p>
+                          <p className="mt-2 text-[11px] uppercase tracking-[0.14em] text-gray-400">
+                            {thread.status} · {formatMoment(thread.lastMessageAt)}
+                          </p>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+
+                <div className="rounded-[24px] border border-gray-200 bg-gray-50 p-4">
+                  {!selectedThread ? (
+                    <div className="flex min-h-[360px] items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white text-sm text-gray-500">
+                      Select a thread to start replying.
+                    </div>
+                  ) : (
+                    <div className="flex min-h-[360px] flex-col gap-4">
+                      <div className="rounded-2xl border border-white bg-white p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">{selectedThread.subject}</p>
+                            <p className="mt-1 text-xs text-gray-500">
+                              {selectedThread.userName || selectedThread.userEmail || `User ${selectedThread.userId}`}
+                            </p>
+                          </div>
+                          {selectedThread.userEmail && (
+                            <Button size="sm" variant="outline" onClick={() => openEmail(selectedThread.userEmail)}>
+                              <Mail className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="max-h-[220px] flex-1 space-y-3 overflow-y-auto rounded-2xl border border-white bg-white p-4">
+                        {threadMessages.length === 0 ? (
+                          <p className="text-sm text-gray-500">No messages loaded yet.</p>
+                        ) : (
+                          threadMessages.map((message) => {
+                            const isAdmin = message.senderRole === "admin";
+                            return (
+                              <div key={message.id} className={`flex ${isAdmin ? "justify-end" : "justify-start"}`}>
+                                <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${
+                                  isAdmin
+                                    ? "rounded-br-md bg-blue-600 text-white"
+                                    : "rounded-bl-md bg-gray-100 text-gray-900"
+                                }`}>
+                                  <p className="whitespace-pre-wrap">{message.content}</p>
+                                  <p className={`mt-2 text-[11px] ${isAdmin ? "text-blue-100" : "text-gray-500"}`}>
+                                    {format(new Date(message.createdAt), "MM/dd HH:mm")}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+
+                      <div className="rounded-2xl border border-white bg-white p-3">
+                        <div className="mb-3 flex flex-wrap gap-2">
+                          {replyMacros.map((macro) => (
+                            <Button
+                              key={macro.label}
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="rounded-full"
+                              onClick={() => setReplyText(macro.create(selectedThread.userName))}
+                            >
+                              {macro.label}
+                            </Button>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <Input
+                            value={replyText}
+                            onChange={(event) => setReplyText(event.target.value)}
+                            placeholder="Reply as Michels Travel..."
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter" && !event.shiftKey && replyText.trim() && selectedThreadId) {
+                                event.preventDefault();
+                                replyMutation.mutate({ threadId: selectedThreadId, content: replyText.trim() });
+                              }
+                            }}
+                          />
+                          <Button
+                            className="gap-2"
+                            disabled={!replyText.trim() || !selectedThreadId || replyMutation.isPending}
+                            onClick={() => {
+                              if (!selectedThreadId || !replyText.trim()) return;
+                              replyMutation.mutate({ threadId: selectedThreadId, content: replyText.trim() });
+                            }}
+                          >
+                            {replyMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                            Send
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
+
+      <Dialog open={Boolean(dealDraft)} onOpenChange={(open) => { if (!open) setDealDraft(null); }}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Growth Launchpad</DialogTitle>
+            <DialogDescription>
+              Publish a featured deal directly from live demand on the site.
+            </DialogDescription>
+          </DialogHeader>
+
+          {dealDraft && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Origin</Label>
+                  <Input value={dealDraft.origin} onChange={(event) => setDealDraft((current) => current ? { ...current, origin: event.target.value.toUpperCase() } : current)} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Destination</Label>
+                  <Input value={dealDraft.destination} onChange={(event) => setDealDraft((current) => current ? { ...current, destination: event.target.value.toUpperCase() } : current)} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Origin city</Label>
+                  <Input value={dealDraft.originCity} onChange={(event) => setDealDraft((current) => current ? { ...current, originCity: event.target.value } : current)} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Destination city</Label>
+                  <Input value={dealDraft.destinationCity} onChange={(event) => setDealDraft((current) => current ? { ...current, destinationCity: event.target.value } : current)} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Price</Label>
+                  <Input value={dealDraft.price} placeholder="599.00" onChange={(event) => setDealDraft((current) => current ? { ...current, price: event.target.value } : current)} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Currency</Label>
+                  <Input value={dealDraft.currency} onChange={(event) => setDealDraft((current) => current ? { ...current, currency: event.target.value.toUpperCase() } : current)} />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">Headline</Label>
+                <Input value={dealDraft.headline} onChange={(event) => setDealDraft((current) => current ? { ...current, headline: event.target.value } : current)} />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">Description</Label>
+                <Textarea
+                  rows={4}
+                  className="resize-none"
+                  value={dealDraft.description}
+                  onChange={(event) => setDealDraft((current) => current ? { ...current, description: event.target.value } : current)}
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDealDraft(null)}>Cancel</Button>
+            <Button
+              className="gap-2"
+              disabled={!dealDraft || !dealDraft.origin || !dealDraft.destination || createDealMutation.isPending}
+              onClick={() => {
+                if (!dealDraft) return;
+                createDealMutation.mutate(dealDraft);
+              }}
+            >
+              {createDealMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              Publish featured deal
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
