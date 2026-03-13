@@ -28,8 +28,9 @@ RUN npm install --legacy-peer-deps --omit=dev && \
 # Copy built artifacts from builder stage
 # dist/ contains index.mjs (server) and public/ (client assets)
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/migrations ./migrations
 
-# Expose port (Railway uses PORT env variable)
+# Expose the default application port
 EXPOSE 5000
 
 # Start the server

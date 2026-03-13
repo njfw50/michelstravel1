@@ -3,12 +3,12 @@ import { runMigrations } from 'stripe-replit-sync';
 import { registerRoutes } from "./routes";
 import { registerVoiceEscalationRoutes } from "./routes/voice_escalation";
 import { serveStatic } from "./static";
-import { storage } from "./storage";
 import { getStripeSync } from "./stripeClient";
 import { WebhookHandlers } from "./webhookHandlers";
 import { DuffelWebhookHandlers } from "./duffelWebhookHandlers";
 import { createServer } from "http";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
+import { runAppMigrations } from "./appMigrations";
 
 const app = express();
 const httpServer = createServer(app);
@@ -45,7 +45,7 @@ async function initStripe() {
 
     // Set up managed webhook
     console.log('Setting up managed webhook...');
-    const webhookBaseUrl = process.env.APP_URL || `https://${process.env.RAILWAY_PUBLIC_DOMAIN || 'localhost:5000'}`;
+    const webhookBaseUrl = (process.env.APP_URL || `http://127.0.0.1:${process.env.PORT || "5000"}`).replace(/\/$/, "");
     const webhookResult = await stripeSync.findOrCreateManagedWebhook(
       `${webhookBaseUrl}/api/stripe/webhook`);
     
@@ -70,9 +70,6 @@ async function initStripe() {
     // Don't throw error to allow app to start without Stripe if misconfigured
   }
 }
-
-// Initialize on startup
-initStripe().catch(console.error);
 
 // Register Stripe webhook route BEFORE express.json()
 // This is critical - webhook needs raw Buffer, not parsed JSON
@@ -194,6 +191,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  await runAppMigrations();
+  initStripe().catch(console.error);
+
   await setupAuth(app);
   registerAuthRoutes(app);
   registerRoutes(app);
@@ -219,10 +219,6 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || "5000", 10);
   httpServer.listen(
     {
@@ -234,4 +230,7 @@ app.use((req, res, next) => {
       log(`serving on port ${port}`);
     },
   );
-})();
+})().catch((error) => {
+  console.error("Server bootstrap failed:", error);
+  process.exit(1);
+});

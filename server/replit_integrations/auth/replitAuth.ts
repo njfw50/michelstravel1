@@ -1,7 +1,6 @@
 /**
- * auth.ts — JWT-based authentication (Railway-compatible)
- * Replaces the Replit OIDC integration with a standard
- * email/password + JWT session system.
+ * auth.ts — session-based authentication for standard Node hosts
+ * Uses email/password plus optional GitHub OAuth on top of Express sessions.
  */
 import passport from "passport";
 import { Strategy as GitHubStrategy, type Profile as GitHubProfile } from "passport-github2";

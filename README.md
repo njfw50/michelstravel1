@@ -10,7 +10,7 @@ Sistema de gestão de reservas e comissões de voos desenvolvido com React, Type
 - **ORM**: Drizzle
 - **Pagamentos**: Stripe
 - **IA**: OpenAI API (para chat, imagens e áudio)
-- **Autenticação**: JWT + Replit Auth
+- **Autenticação**: Email/senha + GitHub OAuth com sessões em PostgreSQL
 
 ## 📋 Pré-requisitos
 
@@ -139,16 +139,45 @@ michels-travel/
 
 ## 🌐 Deploy
 
-### Deploy no Replit
+### Deploy na Render
 
-O projeto está configurado para deploy automático no Replit. As variáveis de ambiente são gerenciadas através dos Secrets do Replit.
+O repositório já inclui [`render.yaml`](./render.yaml) para criar o Web Service na Render com:
 
-### Deploy em outros ambientes
+- `buildCommand`: `npm install --legacy-peer-deps && npm run build`
+- `startCommand`: `npm run start`
+- `healthCheckPath`: `/api/health`
+- domínio principal: `www.michelstravel.agency`
 
-1. Configure as variáveis de ambiente no seu provedor de hospedagem
-2. Execute `npm run build` para compilar o projeto
-3. Execute `npm run start` para iniciar o servidor
-4. Configure um proxy reverso (nginx/Apache) se necessário
+#### Variáveis obrigatórias na Render
+
+Configure no serviço da Render:
+
+- `DATABASE_URL`
+- `SESSION_SECRET`
+- `ADMIN_PASSWORD`
+- `GITHUB_CLIENT_ID`
+- `GITHUB_CLIENT_SECRET`
+- `STRIPE_LIVE_SECRET_KEY`
+- `STRIPE_LIVE_PUBLISHABLE_KEY`
+- `DUFFEL_LIVE_TOKEN`
+- `AI_INTEGRATIONS_OPENAI_API_KEY`
+
+Use [`.env.render`](./.env.render) como checklist. O arquivo [`.env.example`](./.env.example) continua sendo o template para desenvolvimento local.
+
+#### Domínio customizado
+
+Defina estes valores em produção:
+
+- `APP_URL=https://www.michelstravel.agency`
+- `GITHUB_CALLBACK_URL=https://www.michelstravel.agency/api/auth/github/callback`
+
+Depois conecte `www.michelstravel.agency` em **Render > Settings > Custom Domains** e crie os registros DNS pedidos pela própria Render no provedor do domínio.
+
+### Notas de produção
+
+- O aplicativo aplica automaticamente os arquivos SQL da pasta `migrations/` no startup.
+- Para desenvolvimento local, continue usando `npm run dev`.
+- Em produção, a Render fornece `PORT` automaticamente; não defina essa variável manualmente no serviço.
 
 ## 📄 Licença
 

@@ -2,11 +2,31 @@ import express, { type Express, type Request } from "express";
 import fs from "fs";
 import path from "path";
 
+const KNOWN_SITE_ORIGINS = [
+  "https://buyflights.net",
+  "https://www.michelstravel.agency",
+];
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function getPreferredOrigin(req: Request): string {
+  if (process.env.APP_URL) {
+    return process.env.APP_URL.replace(/\/$/, "");
+  }
+
+  const protocol = req.headers["x-forwarded-proto"] || req.protocol || "https";
+  const host = req.headers["x-forwarded-host"] || req.headers["host"] || req.hostname;
+  return `${protocol}://${host}`.replace(/\/$/, "");
+}
+
 function injectDynamicOrigin(html: string, req: Request): string {
-  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
-  const host = req.headers['x-forwarded-host'] || req.headers['host'] || req.hostname;
-  const origin = `${protocol}://${host}`;
-  return html.replace(/https:\/\/buyflights\.net/g, origin);
+  const origin = getPreferredOrigin(req);
+
+  return KNOWN_SITE_ORIGINS.reduce((updatedHtml, siteOrigin) => {
+    return updatedHtml.replace(new RegExp(escapeRegExp(siteOrigin), "g"), origin);
+  }, html);
 }
 
 export function serveStatic(app: Express) {
