@@ -7,7 +7,7 @@ interface SEOProps {
   type?: string;
   image?: string;
   noindex?: boolean;
-  structuredData?: Record<string, unknown>;
+  structuredData?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
 
 const BASE_URL = "https://www.michelstravel.agency";
@@ -16,7 +16,7 @@ const DEFAULT_IMAGE = `${BASE_URL}/images/og-cover.png`;
 
 export function SEO({
   title,
-  description = "Encontre passagens aéreas com os melhores preços. Compare voos de centenas de companhias e viaje pagando menos.",
+  description = "Compare tarifas aéreas, reserve com pagamento seguro e conte com suporte humano da Michels Travel para viajar com mais clareza.",
   path = "/",
   type = "website",
   image = DEFAULT_IMAGE,
@@ -25,8 +25,9 @@ export function SEO({
 }: SEOProps) {
   const fullTitle = title
     ? `${title} | ${SITE_NAME}`
-    : `${SITE_NAME} - Passagens Aéreas com os Melhores Preços | Opção Eficiente`;
+    : `${SITE_NAME} | Passagens aéreas com suporte profissional`;
   const url = `${BASE_URL}${path}`;
+  const schemaItems = Array.isArray(structuredData) ? structuredData : structuredData ? [structuredData] : [];
 
   return (
     <Helmet>
@@ -48,11 +49,11 @@ export function SEO({
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
 
-      {structuredData && (
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
+      {schemaItems.map((item, index) => (
+        <script key={`${type}-schema-${index}`} type="application/ld+json">
+          {JSON.stringify(item)}
         </script>
-      )}
+      ))}
     </Helmet>
   );
 }

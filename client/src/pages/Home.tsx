@@ -156,7 +156,7 @@ export default function Home() {
               className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/25 rounded-full px-5 py-2 mb-8 shadow-sm"
             >
               <Sparkles className="h-3.5 w-3.5 text-blue-300" />
-              <span className="text-xs font-semibold text-white/90 uppercase tracking-[0.15em]">{t("home.stats.secure")} &middot; {t("home.stats.support")}</span>
+              <span className="text-xs font-semibold text-white/90 uppercase tracking-[0.15em]">{t("home.badge")}</span>
             </motion.div>
 
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-extrabold text-white mb-6 leading-[0.93] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)]" data-testid="text-hero-title">

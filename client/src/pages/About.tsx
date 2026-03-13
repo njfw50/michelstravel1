@@ -13,16 +13,37 @@ export default function About() {
     <div className="min-h-screen">
       <SEO
         title="Sobre Nós"
-        description="Conheça a Michels Travel, agência de viagens registrada em New Jersey. Encontramos os melhores preços em passagens aéreas para você."
+        description="Conheça a Michels Travel, operação registrada em New Jersey com foco em passagens aéreas, atendimento humano e pagamento seguro."
         path="/about"
-        structuredData={{
-          "@context": "https://schema.org",
-          "@type": "BreadcrumbList",
-          "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.michelstravel.agency/" },
-          { "@type": "ListItem", "position": 2, "name": "Sobre Nós", "item": "https://www.michelstravel.agency/about" },
-          ],
-        }}
+        structuredData={[
+          {
+            "@context": "https://schema.org",
+            "@type": "AboutPage",
+            "name": "Sobre Nós | Michels Travel",
+            "url": "https://www.michelstravel.agency/about",
+            "description": "Página institucional da Michels Travel com informações sobre atendimento, operação e proposta de valor.",
+            "mainEntity": {
+              "@type": "TravelAgency",
+              "name": "Michels Travel",
+              "url": "https://www.michelstravel.agency",
+              "telephone": "+1-862-350-1161",
+              "email": "reservastrens@gmail.com",
+              "address": {
+                "@type": "PostalAddress",
+                "addressRegion": "NJ",
+                "addressCountry": "US"
+              }
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.michelstravel.agency/" },
+              { "@type": "ListItem", "position": 2, "name": "Sobre Nós", "item": "https://www.michelstravel.agency/about" }
+            ]
+          }
+        ]}
       />
       <div className="relative py-28 md:py-36 px-4 text-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-50 via-white to-white" />

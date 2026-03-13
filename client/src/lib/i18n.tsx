@@ -47,7 +47,7 @@ const translations: Record<Language, Record<string, string>> = {
     "login.github_email_required": "Seu GitHub precisa ter um email principal verificado para continuar.",
     "login.github_not_configured": "O login com GitHub ainda nao esta configurado.",
     "login.github_oauth_failed": "Falha no login com GitHub. Tente novamente.",
-    "footer.slogan": "Opção Eficiente. Sua companheira confiável para encontrar as melhores ofertas de voos em todo o mundo.",
+    "footer.slogan": "Passagens aéreas com atendimento humano, pagamento seguro e suporte claro do início ao fim.",
     "footer.company": "Empresa",
     "footer.about": "Sobre Nós",
     "footer.careers": "Carreiras",
@@ -60,15 +60,20 @@ const translations: Record<Language, Record<string, string>> = {
     "footer.subscribe": "Receba ofertas exclusivas.",
     "footer.email_placeholder": "Endereço de e-mail",
     "footer.go": "Ir",
+    "footer.contact_title": "Contato direto",
+    "footer.contact_desc": "Fale com a Michels Travel por telefone, email ou mensagem para dúvidas sobre voos, reservas e documentos.",
+    "footer.contact_cta": "Falar com a equipe",
+    "footer.phone_label": "Telefone",
+    "footer.email_label": "Email",
     "footer.rights": "Todos os direitos reservados.",
 
     // Home
-    "home.badge": "Legal em NJ, USA • Segurança e Confiabilidade",
-    "home.title.1": "Opção Eficiente",
-    "home.title.2": "Para Viajar",
-    "home.subtitle": "Descubra os melhores destinos com a Michels Travel. Compare preços, reserve com segurança e viaje com tranquilidade.",
-    "home.trust.title": "Por Que Escolher a Michels Travel?",
-    "home.trust.subtitle": "Nós tornamos sua viagem simples e segura. Veja por que somos a escolha de confiança.",
+    "home.badge": "Tarifas globais • Atendimento humano • Pagamento seguro",
+    "home.title.1": "Passagens aéreas",
+    "home.title.2": "com suporte humano",
+    "home.subtitle": "Compare tarifas de centenas de companhias, reserve com segurança e conte com a Michels Travel quando precisar de orientação real.",
+    "home.trust.title": "Por que reservar com a Michels Travel",
+    "home.trust.subtitle": "Clareza na busca, segurança no pagamento e acompanhamento humano quando a viagem exige cuidado.",
     "home.trust.secure": "Reserva Segura",
     "home.trust.secure_desc": "Seus dados são protegidos com criptografia de nível empresarial e gateways de pagamento seguros.",
     "home.trust.instant": "Confirmação Imediata",
@@ -81,12 +86,12 @@ const translations: Record<Language, Record<string, string>> = {
     "home.popular.from": "Voos de",
     "home.popular.check_prices": "Ver Preços",
     "home.popular.searches": "buscas",
-    "home.catalog.title": "Catalogo de Ofertas",
-    "home.catalog.subtitle": "Ofertas em destaque atualizadas pela equipe Michels Travel",
-    "home.catalog.price_label": "Preco em destaque",
+    "home.catalog.title": "Ofertas em destaque",
+    "home.catalog.subtitle": "Seleção atualizada de tarifas e oportunidades acompanhadas pela equipe Michels Travel",
+    "home.catalog.price_label": "Valor de referência",
     "home.catalog.book": "Ver oferta",
-    "home.catalog.empty": "Estamos atualizando o catalogo de ofertas",
-    "home.catalog.empty_desc": "Assim que novas ofertas forem publicadas no admin, elas vao aparecer aqui automaticamente.",
+    "home.catalog.empty": "Novas ofertas estão a caminho",
+    "home.catalog.empty_desc": "Assim que nossa equipe publicar novas oportunidades, elas aparecerão aqui com datas e preços de referência.",
     "home.catalog.empty_cta": "Buscar voos",
 
     // Search Form
@@ -367,7 +372,7 @@ const translations: Record<Language, Record<string, string>> = {
     "blog.post_not_found_desc": "O artigo que você procura não está disponível.",
     "blog.back_to_guide": "Voltar ao Guia",
     "blog.cta_title": "Pronto para sua aventura?",
-    "blog.cta_desc": "Encontre os melhores preços em voos para o Brasil e reserve agora mesmo.",
+    "blog.cta_desc": "Pesquise tarifas para sua próxima viagem e reserve com apoio da equipe Michels Travel.",
     "blog.cta_button": "Pesquisar Voos",
 
     // Checkout
@@ -430,14 +435,14 @@ const translations: Record<Language, Record<string, string>> = {
     "scan.cancel": "Cancelar",
 
     // Footer Seals
-    "footer.seal_nj": "Registrada em New Jersey",
-    "footer.seal_nj_sub": "Empresa legalmente estabelecida nos EUA",
-    "footer.seal_iata": "Agente Credenciado IATA",
-    "footer.seal_iata_sub": "Acesso direto a tarifas de companhias aéreas",
-    "footer.seal_stripe": "Pagamentos via Stripe",
-    "footer.seal_stripe_sub": "Processamento seguro e certificado",
-    "footer.seal_ssl": "Conexão Protegida",
-    "footer.seal_ssl_sub": "Seus dados estão sempre protegidos",
+    "footer.seal_nj": "Operação registrada em New Jersey",
+    "footer.seal_nj_sub": "Atendimento para EUA, Brasil e rotas internacionais",
+    "footer.seal_iata": "Tarifas e emissões com suporte IATA",
+    "footer.seal_iata_sub": "Operação apoiada por agências credenciadas",
+    "footer.seal_stripe": "Pagamento processado com segurança",
+    "footer.seal_stripe_sub": "Checkout protegido via Stripe",
+    "footer.seal_ssl": "Conexão protegida",
+    "footer.seal_ssl_sub": "Criptografia ativa durante a navegação",
 
     // Stats
     "home.stats.airlines": "Companhias Aéreas",
@@ -447,7 +452,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // How It Works
     "home.how.title": "Como Funciona",
-    "home.how.subtitle": "Reservar seu voo nunca foi tão simples. Três passos e você está voando.",
+    "home.how.subtitle": "Um fluxo claro para pesquisar, comparar e reservar seu voo com segurança.",
     "home.how.step1_title": "Pesquise Seu Voo",
     "home.how.step1_desc": "Digite sua origem, destino e datas. Nosso sistema compara centenas de companhias aéreas em tempo real para encontrar as melhores opções e preços.",
     "home.how.step2_title": "Escolha e Pague",
@@ -457,7 +462,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Testimonials
     "home.testimonials.title": "O Que Nossos Clientes Dizem",
-    "home.testimonials.subtitle": "Milhares de viajantes confiam na Michels Travel para suas viagens.",
+    "home.testimonials.subtitle": "Relatos de clientes que buscaram preço, suporte e mais tranquilidade para viajar.",
     "home.testimonials.t1_name": "Ana Carolina S.",
     "home.testimonials.t1_loc": "Newark, NJ",
     "home.testimonials.t1_text": "Encontrei uma passagem para o Brasil muito mais barata do que nos outros sites. O processo foi super rápido e recebi meu bilhete na hora. Recomendo demais!",
@@ -469,9 +474,9 @@ const translations: Record<Language, Record<string, string>> = {
     "home.testimonials.t3_text": "Reservei voos para toda a família para Lisboa e foi tudo perfeito. O scanner de documento ajudou muito a não errar os dados. Experiência incrível!",
 
     // CTA
-    "home.cta.title": "Sua Próxima Aventura Começa Aqui",
-    "home.cta.subtitle": "Compare preços, escolha o melhor voo e viaje com a tranquilidade de quem reservou com a Michels Travel.",
-    "home.cta.button": "Buscar Voos Agora",
+    "home.cta.title": "Planeje seu próximo voo com mais clareza",
+    "home.cta.subtitle": "Pesquise tarifas, compare opções e reserve com o suporte da Michels Travel quando precisar.",
+    "home.cta.button": "Buscar passagens",
 
     // About Page
     "about.title": "Quem Somos",
@@ -729,7 +734,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     "home.assistant.label": "ASSISTENTE VIRTUAL",
     "home.assistant.title": "Precisa de ajuda? Fale com a Mia",
-    "home.assistant.desc": "Nossa assistente virtual com inteligência artificial está disponível 24 horas por dia, 7 dias por semana. Tire dúvidas sobre voos, reservas, bagagens, documentos e muito mais.",
+    "home.assistant.desc": "Nossa assistente virtual ajuda com buscas, bagagem, documentos e dúvidas da reserva antes e durante o atendimento humano.",
     "home.assistant.feature1": "Respostas instantâneas sobre voos e reservas",
     "home.assistant.feature2": "Ajuda com bagagens, documentos e vistos",
     "home.assistant.feature3": "Suporte em Português, Inglês e Espanhol",
@@ -787,7 +792,7 @@ const translations: Record<Language, Record<string, string>> = {
     "login.github_email_required": "Your GitHub account must have a verified primary email to continue.",
     "login.github_not_configured": "GitHub sign-in is not configured yet.",
     "login.github_oauth_failed": "GitHub sign-in failed. Please try again.",
-    "footer.slogan": "Efficient Option. Your trusted companion for finding the best flight deals worldwide.",
+    "footer.slogan": "Airfare search with human support, secure checkout, and clearer travel guidance from start to finish.",
     "footer.company": "Company",
     "footer.about": "About Us",
     "footer.careers": "Careers",
@@ -800,15 +805,20 @@ const translations: Record<Language, Record<string, string>> = {
     "footer.subscribe": "Subscribe for exclusive deals.",
     "footer.email_placeholder": "Email address",
     "footer.go": "Go",
+    "footer.contact_title": "Direct contact",
+    "footer.contact_desc": "Reach Michels Travel by phone, email, or message for help with flights, bookings, and travel documents.",
+    "footer.contact_cta": "Talk to the team",
+    "footer.phone_label": "Phone",
+    "footer.email_label": "Email",
     "footer.rights": "All rights reserved.",
 
     // Home
-    "home.badge": "Legal in NJ, USA • Safety & Reliability",
-    "home.title.1": "Efficient Option",
-    "home.title.2": "To Travel",
-    "home.subtitle": "Discover the best destinations with Michels Travel. Compare prices, book securely, and travel with peace of mind.",
-    "home.trust.title": "Why Choose Michels Travel?",
-    "home.trust.subtitle": "We make your travel simple and safe. See why we are the trusted choice.",
+    "home.badge": "Global fares • Human support • Secure checkout",
+    "home.title.1": "Airfare deals",
+    "home.title.2": "with human support",
+    "home.subtitle": "Compare fares across hundreds of airlines, book securely, and rely on Michels Travel when you need real guidance.",
+    "home.trust.title": "Why book with Michels Travel",
+    "home.trust.subtitle": "Clearer search, safer checkout, and human follow-through when travel needs more care.",
     "home.trust.secure": "Secure Booking",
     "home.trust.secure_desc": "Your data is protected with enterprise-grade encryption and secure payment gateways.",
     "home.trust.instant": "Instant Confirmation",
@@ -821,12 +831,12 @@ const translations: Record<Language, Record<string, string>> = {
     "home.popular.from": "Flights from",
     "home.popular.check_prices": "Check Prices",
     "home.popular.searches": "searches",
-    "home.catalog.title": "Deals Catalog",
-    "home.catalog.subtitle": "Featured offers updated by the Michels Travel team",
-    "home.catalog.price_label": "Featured price",
+    "home.catalog.title": "Featured fares",
+    "home.catalog.subtitle": "A curated selection of price-led opportunities reviewed by the Michels Travel team",
+    "home.catalog.price_label": "Reference fare",
     "home.catalog.book": "View offer",
-    "home.catalog.empty": "We are updating the deals catalog",
-    "home.catalog.empty_desc": "As soon as new offers are published in admin, they will appear here automatically.",
+    "home.catalog.empty": "Fresh fare highlights are on the way",
+    "home.catalog.empty_desc": "As soon as our team publishes new opportunities, they will appear here with dates and reference pricing.",
     "home.catalog.empty_cta": "Search flights",
 
     // Search Form
@@ -1107,7 +1117,7 @@ const translations: Record<Language, Record<string, string>> = {
     "blog.post_not_found_desc": "The article you're looking for is not available.",
     "blog.back_to_guide": "Back to Guide",
     "blog.cta_title": "Ready for your adventure?",
-    "blog.cta_desc": "Find the best prices on flights to Brazil and book now.",
+    "blog.cta_desc": "Search fares for your next trip and book with support from the Michels Travel team.",
     "blog.cta_button": "Search Flights",
 
     // Checkout
@@ -1170,14 +1180,14 @@ const translations: Record<Language, Record<string, string>> = {
     "scan.cancel": "Cancel",
 
     // Footer Seals
-    "footer.seal_nj": "Registered in New Jersey",
-    "footer.seal_nj_sub": "Legally established business in the USA",
-    "footer.seal_iata": "IATA Accredited Agent",
-    "footer.seal_iata_sub": "Direct access to airline fares",
-    "footer.seal_stripe": "Payments via Stripe",
-    "footer.seal_stripe_sub": "Certified secure processing",
-    "footer.seal_ssl": "Protected Connection",
-    "footer.seal_ssl_sub": "Your data is always protected",
+    "footer.seal_nj": "Operation registered in New Jersey",
+    "footer.seal_nj_sub": "Support for US, Brazil, and international routes",
+    "footer.seal_iata": "Fares and ticketing with IATA-backed support",
+    "footer.seal_iata_sub": "Operations supported by accredited agencies",
+    "footer.seal_stripe": "Secure payment processing",
+    "footer.seal_stripe_sub": "Protected checkout via Stripe",
+    "footer.seal_ssl": "Protected connection",
+    "footer.seal_ssl_sub": "Encryption active during your session",
 
     // Stats
     "home.stats.airlines": "Airlines",
@@ -1187,7 +1197,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // How It Works
     "home.how.title": "How It Works",
-    "home.how.subtitle": "Booking your flight has never been this easy. Three steps and you're flying.",
+    "home.how.subtitle": "A clear path to search, compare, and book your flight with confidence.",
     "home.how.step1_title": "Search Your Flight",
     "home.how.step1_desc": "Enter your origin, destination, and dates. Our system compares hundreds of airlines in real time to find the best options and prices.",
     "home.how.step2_title": "Choose and Pay",
@@ -1197,7 +1207,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Testimonials
     "home.testimonials.title": "What Our Customers Say",
-    "home.testimonials.subtitle": "Thousands of travelers trust Michels Travel for their trips.",
+    "home.testimonials.subtitle": "Feedback from travelers who wanted better pricing, real support, and a calmer booking process.",
     "home.testimonials.t1_name": "Ana Carolina S.",
     "home.testimonials.t1_loc": "Newark, NJ",
     "home.testimonials.t1_text": "I found a ticket to Brazil way cheaper than on other sites. The process was super fast and I got my ticket instantly. Highly recommend!",
@@ -1209,9 +1219,9 @@ const translations: Record<Language, Record<string, string>> = {
     "home.testimonials.t3_text": "I booked flights for the whole family to Lisbon and everything was perfect. The document scanner really helped avoid data entry mistakes. Amazing experience!",
 
     // CTA
-    "home.cta.title": "Your Next Adventure Starts Here",
-    "home.cta.subtitle": "Compare prices, choose the best flight, and travel with the peace of mind of booking with Michels Travel.",
-    "home.cta.button": "Search Flights Now",
+    "home.cta.title": "Plan your next flight with more clarity",
+    "home.cta.subtitle": "Search fares, compare options, and book with Michels Travel support whenever you need it.",
+    "home.cta.button": "Search airfares",
 
     // About Page
     "about.title": "About Us",
@@ -1469,7 +1479,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     "home.assistant.label": "VIRTUAL ASSISTANT",
     "home.assistant.title": "Need help? Talk to Mia",
-    "home.assistant.desc": "Our AI-powered virtual assistant is available 24/7. Get answers about flights, bookings, baggage, travel documents, and much more.",
+    "home.assistant.desc": "Our virtual assistant helps with fares, baggage, documents, and booking questions any time you need direction.",
     "home.assistant.feature1": "Instant answers about flights and bookings",
     "home.assistant.feature2": "Help with baggage, documents, and visas",
     "home.assistant.feature3": "Support in Portuguese, English, and Spanish",
@@ -1527,7 +1537,7 @@ const translations: Record<Language, Record<string, string>> = {
     "login.github_email_required": "Tu GitHub debe tener un email principal verificado para continuar.",
     "login.github_not_configured": "El inicio de sesion con GitHub aun no esta configurado.",
     "login.github_oauth_failed": "Fallo el inicio de sesion con GitHub. Intentalo de nuevo.",
-    "footer.slogan": "Opción Eficiente. Su compañero confiable para encontrar las mejores ofertas de vuelos en todo el mundo.",
+    "footer.slogan": "Búsqueda de tarifas aéreas con apoyo humano, pago seguro y una orientación más clara de principio a fin.",
     "footer.company": "Empresa",
     "footer.about": "Sobre Nosotros",
     "footer.careers": "Carreras",
@@ -1540,15 +1550,20 @@ const translations: Record<Language, Record<string, string>> = {
     "footer.subscribe": "Suscríbase para ofertas exclusivas.",
     "footer.email_placeholder": "Dirección de correo",
     "footer.go": "Ir",
+    "footer.contact_title": "Contacto directo",
+    "footer.contact_desc": "Hable con Michels Travel por teléfono, correo o mensaje para dudas sobre vuelos, reservas y documentos.",
+    "footer.contact_cta": "Hablar con el equipo",
+    "footer.phone_label": "Teléfono",
+    "footer.email_label": "Correo",
     "footer.rights": "Todos los derechos reservados.",
 
     // Home
-    "home.badge": "Legal en NJ, USA • Seguridad y Confiabilidad",
-    "home.title.1": "Opción Eficiente",
-    "home.title.2": "Para Viajar",
-    "home.subtitle": "Descubra los mejores destinos con Michels Travel. Compare precios, reserve con seguridad y viaje con tranquilidad.",
-    "home.trust.title": "¿Por Qué Elegir Michels Travel?",
-    "home.trust.subtitle": "Hacemos su viaje simple y seguro. Vea por qué somos la elección confiable.",
+    "home.badge": "Tarifas globales • Apoyo humano • Pago seguro",
+    "home.title.1": "Pasajes aéreos",
+    "home.title.2": "con apoyo humano",
+    "home.subtitle": "Compare tarifas de cientos de aerolíneas, reserve con seguridad y cuente con Michels Travel cuando necesite orientación real.",
+    "home.trust.title": "Por qué reservar con Michels Travel",
+    "home.trust.subtitle": "Claridad en la búsqueda, seguridad en el pago y acompañamiento humano cuando el viaje necesita más cuidado.",
     "home.trust.secure": "Reserva Segura",
     "home.trust.secure_desc": "Sus datos están protegidos con encriptación empresarial y pasarelas de pago seguras.",
     "home.trust.instant": "Confirmación Inmediata",
@@ -1561,12 +1576,12 @@ const translations: Record<Language, Record<string, string>> = {
     "home.popular.from": "Vuelos desde",
     "home.popular.check_prices": "Ver Precios",
     "home.popular.searches": "búsquedas",
-    "home.catalog.title": "Catalogo de Ofertas",
-    "home.catalog.subtitle": "Ofertas destacadas actualizadas por el equipo de Michels Travel",
-    "home.catalog.price_label": "Precio destacado",
+    "home.catalog.title": "Ofertas destacadas",
+    "home.catalog.subtitle": "Selección actualizada de tarifas y oportunidades acompañadas por el equipo de Michels Travel",
+    "home.catalog.price_label": "Tarifa de referencia",
     "home.catalog.book": "Ver oferta",
-    "home.catalog.empty": "Estamos actualizando el catalogo de ofertas",
-    "home.catalog.empty_desc": "Apenas se publiquen nuevas ofertas en el admin, apareceran aqui automaticamente.",
+    "home.catalog.empty": "Nuevas ofertas están en camino",
+    "home.catalog.empty_desc": "Cuando nuestro equipo publique nuevas oportunidades, aparecerán aquí con fechas y precios de referencia.",
     "home.catalog.empty_cta": "Buscar vuelos",
 
     // Search Form
@@ -1847,7 +1862,7 @@ const translations: Record<Language, Record<string, string>> = {
     "blog.post_not_found_desc": "El artículo que busca no está disponible.",
     "blog.back_to_guide": "Volver a la Guía",
     "blog.cta_title": "¿Listo para su aventura?",
-    "blog.cta_desc": "Encuentre los mejores precios en vuelos a Brasil y reserve ahora.",
+    "blog.cta_desc": "Busque tarifas para su próximo viaje y reserve con el apoyo del equipo de Michels Travel.",
     "blog.cta_button": "Buscar Vuelos",
 
     // Checkout
@@ -1910,14 +1925,14 @@ const translations: Record<Language, Record<string, string>> = {
     "scan.cancel": "Cancelar",
 
     // Footer Seals
-    "footer.seal_nj": "Registrada en New Jersey",
-    "footer.seal_nj_sub": "Empresa legalmente establecida en EE.UU.",
-    "footer.seal_iata": "Agente Acreditado IATA",
-    "footer.seal_iata_sub": "Acceso directo a tarifas de aerolíneas",
-    "footer.seal_stripe": "Pagos vía Stripe",
-    "footer.seal_stripe_sub": "Procesamiento seguro y certificado",
-    "footer.seal_ssl": "Conexión Protegida",
-    "footer.seal_ssl_sub": "Sus datos están siempre protegidos",
+    "footer.seal_nj": "Operación registrada en New Jersey",
+    "footer.seal_nj_sub": "Atención para EE.UU., Brasil y rutas internacionales",
+    "footer.seal_iata": "Tarifas y emisiones con respaldo IATA",
+    "footer.seal_iata_sub": "Operación apoyada por agencias acreditadas",
+    "footer.seal_stripe": "Pago procesado con seguridad",
+    "footer.seal_stripe_sub": "Checkout protegido con Stripe",
+    "footer.seal_ssl": "Conexión protegida",
+    "footer.seal_ssl_sub": "Cifrado activo durante la navegación",
 
     // Stats
     "home.stats.airlines": "Aerolíneas",
@@ -1927,7 +1942,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // How It Works
     "home.how.title": "Cómo Funciona",
-    "home.how.subtitle": "Reservar su vuelo nunca fue tan simple. Tres pasos y estará volando.",
+    "home.how.subtitle": "Un flujo claro para buscar, comparar y reservar su vuelo con seguridad.",
     "home.how.step1_title": "Busque Su Vuelo",
     "home.how.step1_desc": "Ingrese su origen, destino y fechas. Nuestro sistema compara cientos de aerolíneas en tiempo real para encontrar las mejores opciones y precios.",
     "home.how.step2_title": "Elija y Pague",
@@ -1937,7 +1952,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Testimonials
     "home.testimonials.title": "Lo Que Dicen Nuestros Clientes",
-    "home.testimonials.subtitle": "Miles de viajeros confían en Michels Travel para sus viajes.",
+    "home.testimonials.subtitle": "Opiniones de viajeros que buscaban mejor precio, apoyo real y más tranquilidad para viajar.",
     "home.testimonials.t1_name": "Ana Carolina S.",
     "home.testimonials.t1_loc": "Newark, NJ",
     "home.testimonials.t1_text": "Encontré un pasaje a Brasil mucho más barato que en otros sitios. El proceso fue super rápido y recibí mi boleto al instante. Lo recomiendo mucho!",
@@ -1949,9 +1964,9 @@ const translations: Record<Language, Record<string, string>> = {
     "home.testimonials.t3_text": "Reservé vuelos para toda la familia a Lisboa y todo salió perfecto. El escáner de documentos ayudó mucho a no cometer errores. Experiencia increíble!",
 
     // CTA
-    "home.cta.title": "Su Próxima Aventura Empieza Aquí",
-    "home.cta.subtitle": "Compare precios, elija el mejor vuelo y viaje con la tranquilidad de haber reservado con Michels Travel.",
-    "home.cta.button": "Buscar Vuelos Ahora",
+    "home.cta.title": "Planifique su próximo vuelo con más claridad",
+    "home.cta.subtitle": "Busque tarifas, compare opciones y reserve con el apoyo de Michels Travel cuando lo necesite.",
+    "home.cta.button": "Buscar pasajes",
 
     // About Page
     "about.title": "Quiénes Somos",
@@ -2209,7 +2224,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     "home.assistant.label": "ASISTENTE VIRTUAL",
     "home.assistant.title": "\u00bfNecesitas ayuda? Habla con Mia",
-    "home.assistant.desc": "Nuestra asistente virtual con inteligencia artificial est\u00e1 disponible las 24 horas del d\u00eda, los 7 d\u00edas de la semana. Resuelve dudas sobre vuelos, reservas, equipaje, documentos y mucho m\u00e1s.",
+    "home.assistant.desc": "Nuestra asistente virtual ayuda con tarifas, equipaje, documentos y dudas de la reserva siempre que necesite orientación.",
     "home.assistant.feature1": "Respuestas instant\u00e1neas sobre vuelos y reservas",
     "home.assistant.feature2": "Ayuda con equipaje, documentos y visas",
     "home.assistant.feature3": "Soporte en Portugu\u00e9s, Ingl\u00e9s y Espa\u00f1ol",

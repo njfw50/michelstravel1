@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { User, LogOut, Menu, X, Shield, ShieldCheck, Lock, Award, Building2, Plane, Briefcase, MessageSquare, Globe, Check } from "lucide-react";
+import { User, LogOut, Menu, X, Shield, ShieldCheck, Lock, Award, Building2, Briefcase, MessageSquare, Globe, Check, Mail, Phone } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,9 +18,9 @@ import { closeLoginDialog, getLoginDialogEventName, openLoginDialog } from "@/li
 import logo from "@assets/LOGO_1770751298475.png";
 
 const LANG_OPTIONS = [
-  { code: "pt" as const, label: "Portugues", flag: "PT" },
+  { code: "pt" as const, label: "Português", flag: "PT" },
   { code: "en" as const, label: "English", flag: "EN" },
-  { code: "es" as const, label: "Espanol", flag: "ES" },
+  { code: "es" as const, label: "Español", flag: "ES" },
 ];
 
 function LanguageSwitcher({ variant = "navbar" }: { variant?: "navbar" | "footer" }) {
@@ -82,6 +82,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const { t } = useI18n();
+  const isHome = location === "/";
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -139,7 +140,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen flex flex-col bg-background font-body selection:bg-blue-500/20 selection:text-blue-900">
       <header className={cn(
         "fixed top-0 z-50 w-full transition-all duration-500",
-        scrolled
+        scrolled || !isHome
           ? "bg-white/97 backdrop-blur-xl border-b border-gray-200/70 shadow-[0_2px_20px_-4px_hsl(213_90%_50%/0.08)]"
           : "bg-transparent border-b border-transparent"
       )}>
@@ -374,16 +375,52 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
 
               <div className="md:col-span-4">
-                <h4 className="font-bold text-gray-900 text-xs mb-5 uppercase tracking-[0.15em]">{t("footer.newsletter")}</h4>
-                <p className="text-sm text-gray-500 mb-4">{t("footer.subscribe")}</p>
-                <div className="flex gap-2">
-                  <input 
-                    type="email" 
-                    placeholder={t("footer.email_placeholder")}
-                    className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm w-full focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 text-gray-900 placeholder:text-gray-400 transition-all outline-none"
-                    data-testid="input-newsletter-email"
-                  />
-                  <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-5 font-bold shadow-sm shadow-blue-500/20 transition-all" data-testid="button-newsletter">{t("footer.go")}</Button>
+                <h4 className="font-bold text-gray-900 text-xs mb-5 uppercase tracking-[0.15em]">{t("footer.contact_title")}</h4>
+                <p className="text-sm text-gray-500 mb-5 max-w-sm">{t("footer.contact_desc")}</p>
+                <div className="space-y-3">
+                  <a
+                    href="tel:+18623501161"
+                    className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 hover:border-blue-200 hover:bg-blue-50/40 transition-colors duration-200"
+                  >
+                    <div className="h-9 w-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <Phone className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <span className="block text-xs uppercase tracking-[0.14em] text-gray-400 font-semibold">{t("footer.phone_label")}</span>
+                      <span className="font-semibold">+1 (862) 350-1161</span>
+                    </div>
+                  </a>
+                  <a
+                    href="mailto:reservastrens@gmail.com"
+                    className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 hover:border-blue-200 hover:bg-blue-50/40 transition-colors duration-200"
+                  >
+                    <div className="h-9 w-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                      <Mail className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <span className="block text-xs uppercase tracking-[0.14em] text-gray-400 font-semibold">{t("footer.email_label")}</span>
+                      <span className="font-semibold">reservastrens@gmail.com</span>
+                    </div>
+                  </a>
+                </div>
+                <div className="pt-5">
+                  {user ? (
+                    <Link href="/messages">
+                      <Button className="rounded-xl bg-blue-500 hover:bg-blue-600 text-white shadow-sm shadow-blue-500/20" data-testid="button-footer-contact">
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        {t("footer.contact_cta")}
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button
+                      onClick={() => openLoginDialog()}
+                      className="rounded-xl bg-blue-500 hover:bg-blue-600 text-white shadow-sm shadow-blue-500/20"
+                      data-testid="button-footer-contact"
+                    >
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      {t("footer.contact_cta")}
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
