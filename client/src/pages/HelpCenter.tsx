@@ -296,8 +296,8 @@ export default function HelpCenter() {
                     <Mail className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-xs font-medium">Email</p>
-                      <a href="mailto:reservastrens@gmail.com" className="text-xs text-blue-600 hover:underline" data-testid="link-contact-email">
-                        reservastrens@gmail.com
+                      <a href="mailto:contact@michelstravel.agency" className="text-xs text-blue-600 hover:underline" data-testid="link-contact-email">
+                        contact@michelstravel.agency
                       </a>
                     </div>
                   </div>

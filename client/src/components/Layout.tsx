@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n";
 import { LoginDialog } from "@/components/LoginDialog";
 import { closeLoginDialog, getLoginDialogEventName, openLoginDialog } from "@/lib/auth-utils";
+import { AGENCY_EMAIL, AGENCY_PHONE_DISPLAY, AGENCY_PHONE_TEL } from "@/lib/contact";
 import logo from "@assets/LOGO_1770751298475.png";
 
 const LANG_OPTIONS = [
@@ -83,7 +84,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [scrolled, setScrolled] = useState(false);
   const { t, language } = useI18n();
   const isHome = location === "/";
-  const easyModeLabel = language === "en" ? "Easy Mode" : language === "es" ? "Modo Fácil" : "Modo Fácil";
+  const easyModeLabel = language === "en" ? "Senior Support" : language === "es" ? "Atencion Senior" : "Atendimento Senior";
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -132,7 +133,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const navLinks = [
     { href: "/", label: t("nav.flights") },
-    { href: "/easy", label: easyModeLabel },
+    { href: "/senior", label: easyModeLabel },
     { href: "/my-trips", label: t("nav.my_trips") || "My Trips" },
     { href: "/about", label: t("footer.about") },
     { href: "/blog", label: t("nav.blog") },
@@ -381,7 +382,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <p className="text-sm text-gray-500 mb-5 max-w-sm">{t("footer.contact_desc")}</p>
                 <div className="space-y-3">
                   <a
-                    href="tel:+18623501161"
+                    href={`tel:${AGENCY_PHONE_TEL}`}
                     className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 hover:border-blue-200 hover:bg-blue-50/40 transition-colors duration-200"
                   >
                     <div className="h-9 w-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -389,11 +390,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     </div>
                     <div>
                       <span className="block text-xs uppercase tracking-[0.14em] text-gray-400 font-semibold">{t("footer.phone_label")}</span>
-                      <span className="font-semibold">+1 (862) 350-1161</span>
+                      <span className="font-semibold">{AGENCY_PHONE_DISPLAY}</span>
                     </div>
                   </a>
                   <a
-                    href="mailto:reservastrens@gmail.com"
+                    href={`mailto:${AGENCY_EMAIL}`}
                     className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 hover:border-blue-200 hover:bg-blue-50/40 transition-colors duration-200"
                   >
                     <div className="h-9 w-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -401,7 +402,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     </div>
                     <div>
                       <span className="block text-xs uppercase tracking-[0.14em] text-gray-400 font-semibold">{t("footer.email_label")}</span>
-                      <span className="font-semibold">reservastrens@gmail.com</span>
+                      <span className="font-semibold">{AGENCY_EMAIL}</span>
                     </div>
                   </a>
                 </div>

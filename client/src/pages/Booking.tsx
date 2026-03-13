@@ -27,6 +27,7 @@ import { ScanDocumentDialog } from "@/components/ScanDocumentDialog";
 import BaggageSelector from "@/components/BaggageSelector";
 import PaymentForm from "@/components/PaymentForm";
 import type { FlightOffer } from "@shared/schema";
+import { AGENCY_PHONE_DISPLAY, AGENCY_PHONE_TEL } from "@/lib/contact";
 
 const passengerSchema = z.object({
   title: z.enum(["mr", "mrs", "ms", "miss", "dr"]).default("mr"),
@@ -672,29 +673,29 @@ export default function Booking() {
   const totalPassengers = numAdults + numChildren + numInfants;
   const easyModeCopy = language === "en"
     ? {
-        badge: "Easy Mode support",
-        title: "You can finish this booking step by step.",
-        description: "If any field feels confusing, call the team or open the chat before paying.",
-        call: "Call now",
+        badge: "Senior support",
+        title: "You can finish this booking online, or call and close by phone.",
+        description: `If any field feels confusing, keep going calmly or call ${AGENCY_PHONE_DISPLAY} before paying.`,
+        call: `Call ${AGENCY_PHONE_DISPLAY}`,
         assistant: "Open chat",
-        back: "Back to Easy Mode",
+        back: "Back to Senior Support",
       }
     : language === "es"
       ? {
-          badge: "Apoyo del Modo Fácil",
-          title: "Puede terminar esta reserva paso a paso.",
-          description: "Si algún campo parece confuso, llame al equipo o abra el chat antes de pagar.",
-          call: "Llamar ahora",
+          badge: "Atencion senior",
+          title: "Puede terminar esta reserva en el sitio o llamar y cerrar por telefono.",
+          description: `Si algun campo parece confuso, siga con calma o llame al ${AGENCY_PHONE_DISPLAY} antes de pagar.`,
+          call: `Llamar al ${AGENCY_PHONE_DISPLAY}`,
           assistant: "Abrir chat",
-          back: "Volver al Modo Fácil",
+          back: "Volver a Atencion Senior",
         }
       : {
-          badge: "Apoio do Modo Fácil",
-          title: "Você pode concluir esta reserva passo a passo.",
-          description: "Se algum campo parecer confuso, ligue para a equipe ou abra o chat antes de pagar.",
-          call: "Ligar agora",
+          badge: "Atendimento senior",
+          title: "Voce pode concluir esta reserva no site ou ligar e fechar por telefone.",
+          description: `Se algum campo parecer confuso, siga com calma ou ligue para ${AGENCY_PHONE_DISPLAY} antes de pagar.`,
+          call: `Ligar para ${AGENCY_PHONE_DISPLAY}`,
           assistant: "Abrir chat",
-          back: "Voltar ao Modo Fácil",
+          back: "Voltar ao Atendimento Senior",
         };
   const openAssistant = () => {
     const chatButton = document.querySelector('[data-testid="button-chatbot-toggle"]') as HTMLButtonElement | null;
@@ -1026,7 +1027,7 @@ export default function Booking() {
 
               <div className="flex flex-wrap gap-3">
                 <Button asChild className="rounded-full bg-blue-600 hover:bg-blue-700 text-white" data-testid="button-easy-mode-call-booking">
-                  <a href="tel:+18623501161">
+                  <a href={`tel:${AGENCY_PHONE_TEL}`}>
                     <PhoneCall className="mr-2 h-4 w-4" />
                     {easyModeCopy.call}
                   </a>
@@ -1035,7 +1036,7 @@ export default function Booking() {
                   <MessageCircle className="mr-2 h-4 w-4" />
                   {easyModeCopy.assistant}
                 </Button>
-                <Button variant="ghost" onClick={() => setLocation("/easy")} className="rounded-full text-blue-700 hover:bg-blue-50" data-testid="button-easy-mode-back-booking">
+                <Button variant="ghost" onClick={() => setLocation("/senior")} className="rounded-full text-blue-700 hover:bg-blue-50" data-testid="button-easy-mode-back-booking">
                   {easyModeCopy.back}
                 </Button>
               </div>

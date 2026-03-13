@@ -644,8 +644,8 @@ export default function CheckoutSuccess() {
                 <div className="space-y-1 text-sm">
                   <div className="flex items-center gap-2 text-blue-700">
                     <Mail className="h-3.5 w-3.5" />
-                    <a href="mailto:reservastrens@gmail.com" className="underline" data-testid="link-agency-email">
-                      reservastrens@gmail.com
+                    <a href="mailto:contact@michelstravel.agency" className="underline" data-testid="link-agency-email">
+                      contact@michelstravel.agency
                     </a>
                   </div>
                   <div className="flex items-center gap-2 text-blue-700">

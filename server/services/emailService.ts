@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 
 const AGENCY_NAME = "Michels Travel";
-const AGENCY_EMAIL = "reservastrens@gmail.com";
+const AGENCY_EMAIL = "contact@michelstravel.agency";
 const AGENCY_PHONE = "+1 (862) 350-1161";
 
 function getTransporter() {

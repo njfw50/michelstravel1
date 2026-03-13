@@ -625,7 +625,7 @@ export default function MyTrips() {
                 </div>
                 <div>
                   <div className="text-xs text-gray-500">Email</div>
-                  <a href="mailto:reservastrens@gmail.com" className="text-sm font-medium text-blue-600 hover:underline" data-testid="link-contact-email">reservastrens@gmail.com</a>
+                  <a href="mailto:contact@michelstravel.agency" className="text-sm font-medium text-blue-600 hover:underline" data-testid="link-contact-email">contact@michelstravel.agency</a>
                 </div>
               </div>
               <div className="flex items-center gap-3">

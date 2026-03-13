@@ -13,6 +13,7 @@ import { SEO } from "@/components/SEO";
 import { Link } from "wouter";
 import { format, parseISO } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
+import { AGENCY_PHONE_DISPLAY, AGENCY_PHONE_TEL } from "@/lib/contact";
 import {
   Sheet,
   SheetContent,
@@ -190,29 +191,29 @@ export default function SearchResults() {
   const isEasyMode = searchParams.get("ui") === "easy";
   const easyModeCopy = language === "en"
     ? {
-        badge: "Easy Mode active",
-        title: "Review the flights calmly.",
-        description: "If you want help comparing options, call the team or open the chat before you continue.",
-        call: "Call now",
+        badge: "Senior support active",
+        title: "Review the flights calmly, or call and finish by phone.",
+        description: `If comparing options feels difficult, keep going online or call ${AGENCY_PHONE_DISPLAY} now and our team can continue with you.`,
+        call: `Call ${AGENCY_PHONE_DISPLAY}`,
         assistant: "Open chat",
-        back: "Back to Easy Mode",
+        back: "Back to Senior Support",
       }
     : language === "es"
       ? {
-          badge: "Modo Fácil activo",
-          title: "Revise los vuelos con calma.",
-          description: "Si quiere ayuda para comparar opciones, llame al equipo o abra el chat antes de continuar.",
-          call: "Llamar ahora",
+          badge: "Atencion senior activa",
+          title: "Revise los vuelos con calma, o llame y cierre por telefono.",
+          description: `Si comparar opciones parece dificil, siga en el sitio o llame ahora al ${AGENCY_PHONE_DISPLAY} y nuestro equipo continua con usted.`,
+          call: `Llamar al ${AGENCY_PHONE_DISPLAY}`,
           assistant: "Abrir chat",
-          back: "Volver al Modo Fácil",
+          back: "Volver a Atencion Senior",
         }
       : {
-          badge: "Modo Fácil ativo",
-          title: "Revise os voos com calma.",
-          description: "Se quiser ajuda para comparar opções, ligue para a equipe ou abra o chat antes de continuar.",
-          call: "Ligar agora",
+          badge: "Atendimento senior ativo",
+          title: "Revise os voos com calma, ou ligue e feche por telefone.",
+          description: `Se comparar opcoes parecer dificil, siga no site ou ligue agora para ${AGENCY_PHONE_DISPLAY} e nossa equipe continua com voce.`,
+          call: `Ligar para ${AGENCY_PHONE_DISPLAY}`,
           assistant: "Abrir chat",
-          back: "Voltar ao Modo Fácil",
+          back: "Voltar ao Atendimento Senior",
         };
 
   const isMultiCity = tripType === 'multi-city' && legsRaw;
@@ -724,7 +725,7 @@ export default function SearchResults() {
 
               <div className="flex flex-wrap gap-3">
                 <Button asChild className="rounded-full bg-blue-600 hover:bg-blue-700 text-white" data-testid="button-easy-mode-call-results">
-                  <a href="tel:+18623501161">
+                  <a href={`tel:${AGENCY_PHONE_TEL}`}>
                     <PhoneCall className="mr-2 h-4 w-4" />
                     {easyModeCopy.call}
                   </a>
@@ -733,7 +734,7 @@ export default function SearchResults() {
                   <MessageCircle className="mr-2 h-4 w-4" />
                   {easyModeCopy.assistant}
                 </Button>
-                <Link href="/easy">
+                <Link href="/senior">
                   <Button variant="ghost" className="rounded-full text-blue-700 hover:bg-blue-50" data-testid="button-easy-mode-back-results">
                     {easyModeCopy.back}
                   </Button>

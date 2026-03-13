@@ -1680,7 +1680,7 @@ Sitemap: ${SITE_URL}/sitemap.xml
 
 ABOUT THE COMPANY:
 - Flight booking website: www.michelstravel.agency (this is our flight search and booking platform — always direct customers here for flights)
-- Contact email: reservastrens@gmail.com
+- Contact email: contact@michelstravel.agency
 - Phone: +1 (862) 350-1161
 - Location: New Jersey, USA
 - Services: Flight search and booking with competitive prices worldwide

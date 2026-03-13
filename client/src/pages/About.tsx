@@ -27,7 +27,7 @@ export default function About() {
               "name": "Michels Travel",
               "url": "https://www.michelstravel.agency",
               "telephone": "+1-862-350-1161",
-              "email": "reservastrens@gmail.com",
+              "email": "contact@michelstravel.agency",
               "address": {
                 "@type": "PostalAddress",
                 "addressRegion": "NJ",

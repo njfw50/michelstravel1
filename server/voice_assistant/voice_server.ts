@@ -43,7 +43,7 @@ Always be professional, friendly, and patient. Speak clearly in Portuguese or En
 
 Contact information:
 - Company: Michels Travel
-- Email: reservastrens@gmail.com
+- Email: contact@michelstravel.agency
 - Phone: +1 (862) 350-1161
 - Location: New Jersey, USA`;
 

@@ -81,7 +81,7 @@ export class StripeService {
             { name: 'Route', value: `${metadata.origin || ''} → ${metadata.destination || ''}` },
             { name: 'Departure Date', value: metadata.departureDate || 'N/A' },
           ].concat(metadata.returnDate ? [{ name: 'Return Date', value: metadata.returnDate }] : []),
-          footer: 'Thank you for choosing Michels Travel. Have a great flight! For support, contact us at reservastrens@gmail.com or +1 (862) 350-1161',
+          footer: 'Thank you for choosing Michels Travel. Have a great flight! For support, contact us at contact@michelstravel.agency or +1 (862) 350-1161',
           metadata: {
             bookingId: String(metadata.bookingId),
             referenceCode: metadata.referenceCode || '',

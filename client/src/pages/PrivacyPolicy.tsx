@@ -159,7 +159,7 @@ export default function PrivacyPolicy() {
           <p>{c.s10p1}</p>
           <div className="mt-2 font-medium text-gray-700 space-y-1">
             <p>Michels Travel</p>
-            <p>reservastrens@gmail.com</p>
+            <p>contact@michelstravel.agency</p>
             <p>+1 (862) 350-1161</p>
             <p>New Jersey, USA</p>
           </div>

@@ -11,22 +11,30 @@ import { LocationSearch } from "@/components/LocationSearch";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
+import { AGENCY_PHONE_DISPLAY, AGENCY_PHONE_TEL } from "@/lib/contact";
 
 type EasyLanguage = "pt" | "en" | "es";
 type TripType = "round-trip" | "one-way";
 
 const COPY: Record<EasyLanguage, Record<string, string>> = {
   pt: {
-    seo_title: "Modo Fácil",
-    seo_desc: "Tela simplificada da Michels Travel para quem prefere comprar passagens com mais calma, letras maiores e apoio humano visível.",
-    badge: "Tela simplificada",
-    title: "Comprar sua passagem com calma e segurança",
-    subtitle: "Criamos esta tela para quem prefere um caminho mais simples, com letras maiores, menos opções por vez e ajuda humana sempre visível.",
+    seo_title: "Atendimento Senior",
+    seo_desc: "Fluxo simplificado da Michels Travel para idosos e clientes que preferem comprar com mais calma, letras maiores e ajuda humana visivel.",
+    badge: "Atendimento senior",
+    title: "Comprar sua passagem com calma, ajuda e letras maiores",
+    subtitle: `Este caminho foi preparado para idosos e clientes que preferem menos pressa. Voce pode fechar a compra no site ou ligar para ${AGENCY_PHONE_DISPLAY}.`,
     call: "Ligar agora",
     chat: "Falar com a Mia",
-    trust: "Nada é cobrado agora. Primeiro você escolhe o voo e revisa tudo com calma.",
-    section_title: "Preencha só o essencial",
-    section_subtitle: "Você escolhe origem, destino, data e quantidade de pessoas. O restante vem depois, passo a passo.",
+    trust: `Nada e cobrado agora. Primeiro voce escolhe o voo e revisa tudo com calma. Se preferir, nossa equipe continua com voce pelo telefone ${AGENCY_PHONE_DISPLAY}.`,
+    section_title: "Escolha o jeito que fica melhor para voce",
+    section_subtitle: "Se quiser, voce pode seguir no site com o fluxo facil. Se preferir, pode ligar para nossa equipe e concluir por telefone.",
+    path_site: "1. Continuar pelo fluxo facil",
+    path_site_desc: "Preencha origem, destino, data e veja os voos com calma.",
+    path_call: "2. Ligar para a Michels Travel",
+    path_call_desc: `Fale com a equipe no numero ${AGENCY_PHONE_DISPLAY} para tirar duvidas ou fechar sua viagem.`,
+    continue_label: "Continuar no site",
+    phone_label: "Telefone direto",
+    direct_call: `Ligar para ${AGENCY_PHONE_DISPLAY}`,
     step_1: "1. Escolha de onde sai",
     step_2: "2. Escolha para onde vai",
     step_3: "3. Escolha a data",
@@ -49,7 +57,7 @@ const COPY: Record<EasyLanguage, Record<string, string>> = {
     route_3: "Newark para Orlando",
     route_4: "Miami para Lisboa",
     helper_title: "Se preferir, nós ajudamos ao vivo",
-    helper_desc: "Você pode ligar, abrir o chat ou pedir ajuda antes de finalizar a compra.",
+    helper_desc: `Voce pode ligar, abrir o chat ou pedir ajuda antes de finalizar a compra. O telefone direto desta trilha e ${AGENCY_PHONE_DISPLAY}.`,
     helper_item_1: "Letras maiores e visual mais limpo",
     helper_item_2: "Menos opções por tela",
     helper_item_3: "Suporte humano visível o tempo todo",
@@ -59,16 +67,23 @@ const COPY: Record<EasyLanguage, Record<string, string>> = {
     choose_date: "Escolher data",
   },
   en: {
-    seo_title: "Easy Mode",
-    seo_desc: "Simplified Michels Travel screen for people who want larger text, fewer choices at a time, and visible human support.",
-    badge: "Simplified screen",
-    title: "Buy your flight with more calm and confidence",
-    subtitle: "This screen is designed for travelers who prefer a clearer path, larger text, fewer choices at a time, and human help always within reach.",
+    seo_title: "Senior Support",
+    seo_desc: "Simplified Michels Travel flow for older travelers and anyone who wants larger text, fewer choices, and visible human support.",
+    badge: "Senior support",
+    title: "Buy your flight with more calm, help, and larger text",
+    subtitle: `This path is designed for older travelers and anyone who prefers less pressure. You can finish online or call ${AGENCY_PHONE_DISPLAY}.`,
     call: "Call now",
     chat: "Talk to Mia",
-    trust: "Nothing is charged now. First you choose a flight and review everything calmly.",
-    section_title: "Fill in only the essentials",
-    section_subtitle: "Choose your origin, destination, date, and number of travelers. Everything else comes later, step by step.",
+    trust: `Nothing is charged now. First you choose a flight and review everything calmly. If you prefer, our team can continue with you by phone at ${AGENCY_PHONE_DISPLAY}.`,
+    section_title: "Choose the path that feels best for you",
+    section_subtitle: "You can keep going on the site with the easy flow, or call our team and finish the trip by phone.",
+    path_site: "1. Continue with the easy flow",
+    path_site_desc: "Choose origin, destination, date, and review flights calmly.",
+    path_call: "2. Call Michels Travel",
+    path_call_desc: `Talk to our team at ${AGENCY_PHONE_DISPLAY} to ask questions or finish your trip.`,
+    continue_label: "Continue online",
+    phone_label: "Direct phone",
+    direct_call: `Call ${AGENCY_PHONE_DISPLAY}`,
     step_1: "1. Choose where you leave from",
     step_2: "2. Choose where you are going",
     step_3: "3. Choose your date",
@@ -91,7 +106,7 @@ const COPY: Record<EasyLanguage, Record<string, string>> = {
     route_3: "Newark to Orlando",
     route_4: "Miami to Lisbon",
     helper_title: "If you prefer, we can help live",
-    helper_desc: "You can call, open the chat, or ask for help before finishing the purchase.",
+    helper_desc: `You can call, open the chat, or ask for help before finishing the purchase. The direct phone for this path is ${AGENCY_PHONE_DISPLAY}.`,
     helper_item_1: "Larger text and cleaner visuals",
     helper_item_2: "Fewer choices per screen",
     helper_item_3: "Human support visible all the time",
@@ -101,16 +116,23 @@ const COPY: Record<EasyLanguage, Record<string, string>> = {
     choose_date: "Choose date",
   },
   es: {
-    seo_title: "Modo Fácil",
-    seo_desc: "Pantalla simplificada de Michels Travel para quienes prefieren texto más grande, menos opciones por vez y apoyo humano visible.",
-    badge: "Pantalla simplificada",
-    title: "Compre su vuelo con más calma y seguridad",
-    subtitle: "Esta pantalla fue creada para quien prefiere un camino más claro, texto más grande, menos opciones por vez y ayuda humana siempre visible.",
+    seo_title: "Atencion Senior",
+    seo_desc: "Flujo simplificado de Michels Travel para personas mayores y viajeros que prefieren texto mas grande, menos opciones y apoyo humano visible.",
+    badge: "Atencion senior",
+    title: "Compre su vuelo con mas calma, ayuda y texto mas grande",
+    subtitle: `Esta ruta fue creada para personas mayores y clientes que prefieren menos presion. Puede cerrar en el sitio o llamar al ${AGENCY_PHONE_DISPLAY}.`,
     call: "Llamar ahora",
     chat: "Hablar con Mia",
-    trust: "No se cobra nada ahora. Primero elige el vuelo y revisa todo con calma.",
-    section_title: "Complete solo lo esencial",
-    section_subtitle: "Elija origen, destino, fecha y número de personas. Todo lo demás viene después, paso a paso.",
+    trust: `No se cobra nada ahora. Primero elige el vuelo y revisa todo con calma. Si prefiere, nuestro equipo puede continuar con usted por telefono en ${AGENCY_PHONE_DISPLAY}.`,
+    section_title: "Elija el camino que le quede mejor",
+    section_subtitle: "Puede seguir en el sitio con el flujo facil o llamar a nuestro equipo y terminar el viaje por telefono.",
+    path_site: "1. Continuar con el flujo facil",
+    path_site_desc: "Elija origen, destino, fecha y revise los vuelos con calma.",
+    path_call: "2. Llamar a Michels Travel",
+    path_call_desc: `Hable con nuestro equipo al ${AGENCY_PHONE_DISPLAY} para resolver dudas o cerrar su viaje.`,
+    continue_label: "Continuar en el sitio",
+    phone_label: "Telefono directo",
+    direct_call: `Llamar al ${AGENCY_PHONE_DISPLAY}`,
     step_1: "1. Elija desde dónde sale",
     step_2: "2. Elija a dónde va",
     step_3: "3. Elija la fecha",
@@ -133,7 +155,7 @@ const COPY: Record<EasyLanguage, Record<string, string>> = {
     route_3: "Newark a Orlando",
     route_4: "Miami a Lisboa",
     helper_title: "Si prefiere, le ayudamos en vivo",
-    helper_desc: "Puede llamar, abrir el chat o pedir ayuda antes de terminar la compra.",
+    helper_desc: `Puede llamar, abrir el chat o pedir ayuda antes de terminar la compra. El telefono directo de esta ruta es ${AGENCY_PHONE_DISPLAY}.`,
     helper_item_1: "Texto más grande y visual más limpio",
     helper_item_2: "Menos opciones por pantalla",
     helper_item_3: "Apoyo humano visible todo el tiempo",
@@ -200,7 +222,7 @@ export default function EasyBooking() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.95),_rgba(241,245,249,0.96)_40%,_rgba(226,232,240,0.95)_100%)]">
-      <SEO title={copy.seo_title} description={copy.seo_desc} path="/easy" />
+      <SEO title={copy.seo_title} description={copy.seo_desc} path="/senior" />
 
       <section className="relative overflow-hidden border-b border-slate-200">
         <div className="absolute inset-0 opacity-60">
@@ -223,9 +245,9 @@ export default function EasyBooking() {
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild size="lg" className="min-h-14 rounded-2xl px-6 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white">
-                <a href="tel:+18623501161">
+                <a href={`tel:${AGENCY_PHONE_TEL}`}>
                   <PhoneCall className="h-5 w-5" />
-                  {copy.call}
+                  {copy.direct_call}
                 </a>
               </Button>
               <Button size="lg" variant="outline" onClick={openAssistant} className="min-h-14 rounded-2xl px-6 text-base font-bold border-slate-300 bg-white/90 text-slate-800">
@@ -250,6 +272,18 @@ export default function EasyBooking() {
                 <div>
                   <h2 className="text-2xl md:text-3xl font-display font-extrabold text-slate-950">{copy.section_title}</h2>
                   <p className="mt-3 text-base md:text-lg text-slate-600 leading-relaxed">{copy.section_subtitle}</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="rounded-[24px] border border-blue-200 bg-blue-50/80 p-5">
+                    <p className="text-sm font-semibold tracking-[0.08em] text-blue-700">{copy.path_site}</p>
+                    <p className="mt-2 text-base leading-relaxed text-slate-700">{copy.path_site_desc}</p>
+                  </div>
+                  <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-5">
+                    <p className="text-sm font-semibold tracking-[0.08em] text-emerald-700">{copy.path_call}</p>
+                    <p className="mt-2 text-base leading-relaxed text-slate-700">{copy.path_call_desc}</p>
+                    <p className="mt-3 text-lg font-extrabold text-emerald-900">{AGENCY_PHONE_DISPLAY}</p>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -403,13 +437,13 @@ export default function EasyBooking() {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button onClick={handleSearch} className="min-h-16 flex-1 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-lg font-extrabold">
                     <Search className="h-5 w-5" />
-                    {copy.search}
+                    {copy.continue_label}
                     <ArrowRight className="h-5 w-5" />
                   </Button>
                   <Button asChild variant="outline" className="min-h-16 rounded-2xl border-slate-300 bg-white text-slate-800 text-lg font-bold">
-                    <a href="tel:+18623501161">
+                    <a href={`tel:${AGENCY_PHONE_TEL}`}>
                       <PhoneCall className="h-5 w-5" />
-                      {copy.call}
+                      {copy.direct_call}
                     </a>
                   </Button>
                 </div>

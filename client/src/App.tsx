@@ -81,6 +81,7 @@ function Router() {
 
       <Route path="/" component={() => <Layout><Home /></Layout>} />
       <Route path="/easy" component={() => <Layout><EasyBooking /></Layout>} />
+      <Route path="/senior" component={() => <Layout><EasyBooking /></Layout>} />
       <Route path="/search" component={() => <Layout><SearchResults /></Layout>} />
       <Route path="/book/:id" component={() => <Layout><Booking /></Layout>} />
       

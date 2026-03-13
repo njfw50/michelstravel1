@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
 import { SEO } from "@/components/SEO";
+import { AGENCY_PHONE_DISPLAY, AGENCY_PHONE_TEL } from "@/lib/contact";
 
 import airplaneDestination from "@/assets/images/airplane-destination.jpg";
 import airplaneLightHero from "@/assets/images/airplane-light-hero.png";
@@ -79,40 +80,40 @@ export default function Home() {
   const locale = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
   const easyModeContent = language === "en"
     ? {
-        badge: "Help for a calmer booking",
-        title: "Need a simpler screen to buy your flight?",
-        description: "Open Easy Mode for larger text, fewer choices at a time, and visible support by phone or chat.",
-        primary: "Open Easy Mode",
-        secondary: "Call the team",
+        badge: "Senior support",
+        title: "Automatic booking stays on. Senior support gets its own path.",
+        description: `Travelers who want the regular automatic flow can keep using the main search. Older travelers can open a dedicated path and either finish online or call ${AGENCY_PHONE_DISPLAY}.`,
+        primary: "Open Senior Support",
+        secondary: AGENCY_PHONE_DISPLAY,
         features: [
           "Larger text and clearer buttons",
           "Less information per step",
-          "Human support always nearby",
+          "Finish online or by phone",
         ],
       }
     : language === "es"
       ? {
-          badge: "Ayuda para comprar con calma",
-          title: "¿Necesita una pantalla más simple para comprar su vuelo?",
-          description: "Abra el Modo Fácil para ver texto más grande, menos opciones por vez y apoyo visible por teléfono o chat.",
-          primary: "Abrir Modo Fácil",
-          secondary: "Llamar al equipo",
+          badge: "Atencion senior",
+          title: "El flujo automatico sigue igual. La atencion senior tiene su propia ruta.",
+          description: `Quien prefiera el flujo automatico puede seguir usando la busqueda principal. Las personas mayores pueden abrir una ruta dedicada y cerrar en el sitio o llamar al ${AGENCY_PHONE_DISPLAY}.`,
+          primary: "Abrir Atencion Senior",
+          secondary: AGENCY_PHONE_DISPLAY,
           features: [
             "Texto más grande y botones más claros",
             "Menos información por paso",
-            "Apoyo humano siempre cerca",
+            "Cierre en el sitio o por telefono",
           ],
         }
       : {
-          badge: "Ajuda para comprar com calma",
-          title: "Precisa de uma tela mais simples para comprar sua passagem?",
-          description: "Abra o Modo Fácil para ver letras maiores, menos opções por vez e apoio visível por telefone ou chat.",
-          primary: "Abrir Modo Fácil",
-          secondary: "Ligar para a equipe",
+          badge: "Atendimento senior",
+          title: "O fluxo automatico continua igual. O atendimento senior ganhou uma rota propria.",
+          description: `Quem quiser o fluxo automatico pode seguir pela busca principal. Para idosos, agora existe uma rota dedicada para fechar no site ou ligar para ${AGENCY_PHONE_DISPLAY}.`,
+          primary: "Abrir Atendimento Senior",
+          secondary: AGENCY_PHONE_DISPLAY,
           features: [
             "Letras maiores e botões mais claros",
             "Menos informação por etapa",
-            "Suporte humano sempre por perto",
+            "Fechamento no site ou por telefone",
           ],
         };
 
@@ -289,7 +290,7 @@ export default function Home() {
 
                 <div className="mt-7 flex flex-wrap gap-3">
                   <Button
-                    onClick={() => setLocation("/easy")}
+                    onClick={() => setLocation("/senior")}
                     className="rounded-full px-7 py-6 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
                     data-testid="button-open-easy-mode"
                   >
@@ -301,7 +302,7 @@ export default function Home() {
                     variant="outline"
                     className="rounded-full px-7 py-6 text-base font-bold border-slate-300 bg-white/90 text-slate-800"
                   >
-                    <a href="tel:+18623501161">
+                    <a href={`tel:${AGENCY_PHONE_TEL}`}>
                       <PhoneCall className="mr-2 h-5 w-5" />
                       {easyModeContent.secondary}
                     </a>
