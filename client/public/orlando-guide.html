@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guia Orlando Disney e Universal | Michels Travel</title>
+  <meta
+    name="description"
+    content="Guia pratico de Orlando com foco em Disney e Universal: melhor epoca, divisao de parques, hospedagem, transporte e roteiro de 7 dias."
+  />
+  <meta
+    name="keywords"
+    content="orlando, disney, universal, guia orlando, viagem disney, viagem universal, parques em orlando, michels travel"
+  />
+  <link rel="canonical" href="https://www.michelstravel.agency/orlando-guide.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Guia Orlando Disney e Universal | Michels Travel" />
+  <meta
+    property="og:description"
+    content="Planeje sua viagem para Orlando com um guia pratico de Disney e Universal."
+  />
+  <meta property="og:url" content="https://www.michelstravel.agency/orlando-guide.html" />
+  <meta
+    property="og:image"
+    content="https://images.unsplash.com/photo-1513883049090-d0b7439799bf?auto=format&fit=crop&w=1400&q=80"
+  />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Outfit:wght@500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: rgba(255, 255, 255, 0.88);
+      --surface-strong: #ffffff;
+      --text: #0f172a;
+      --muted: #5b6b82;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --accent: #0ea5e9;
+      --accent-soft: rgba(14, 165, 233, 0.12);
+      --border: rgba(148, 163, 184, 0.24);
+      --shadow: 0 24px 70px rgba(15, 23, 42, 0.14);
+      --radius-xl: 32px;
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --font-display: "Outfit", sans-serif;
+      --font-body: "DM Sans", sans-serif;
+      --max: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: var(--font-body);
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.16), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.14), transparent 28%),
+        var(--bg);
+      line-height: 1.6;
+    }
+
+    img {
+      display: block;
+      width: 100%;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(calc(100% - 32px), var(--max));
+      margin: 0 auto;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      backdrop-filter: blur(18px);
+      background: rgba(244, 247, 251, 0.82);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+    }
+
+    .header-inner {
+      width: min(calc(100% - 32px), var(--max));
+      margin: 0 auto;
+      min-height: 78px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      box-shadow: 0 12px 28px rgba(37, 99, 235, 0.28);
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .nav a {
+      padding: 10px 14px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.68);
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 18px;
+      border-radius: 999px;
+      font-weight: 700;
+      transition: transform 0.16s ease, background 0.16s ease, color 0.16s ease;
+    }
+
+    .button-primary {
+      color: white;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      box-shadow: 0 18px 35px rgba(37, 99, 235, 0.22);
+    }
+
+    .button-secondary {
+      color: var(--text);
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+    }
+
+    .hero {
+      padding: 40px 0 28px;
+    }
+
+    .hero-shell {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .hero-copy,
+    .hero-panel {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .hero-copy {
+      position: relative;
+      padding: 38px;
+      background:
+        linear-gradient(160deg, rgba(15, 23, 42, 0.88), rgba(29, 78, 216, 0.86)),
+        url("https://images.unsplash.com/photo-1513883049090-d0b7439799bf?auto=format&fit=crop&w=1600&q=80") center/cover;
+      color: white;
+      min-height: 540px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      margin: 18px 0 14px;
+      font-family: var(--font-display);
+      font-size: clamp(2.7rem, 5.4vw, 5rem);
+      line-height: 0.96;
+      letter-spacing: -0.05em;
+      max-width: 11ch;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 56ch;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.06rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .hero-panel {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(236, 246, 255, 0.96));
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .panel-card {
+      padding: 22px;
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .panel-card h2,
+    .section-title,
+    .card-title,
+    .plan-title,
+    .timeline-day {
+      font-family: var(--font-display);
+      letter-spacing: -0.03em;
+    }
+
+    .panel-card h2 {
+      margin: 0 0 10px;
+      font-size: 1.4rem;
+    }
+
+    .panel-card p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .badge {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: var(--accent-soft);
+      color: #075985;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    section {
+      padding: 26px 0;
+    }
+
+    .section-head {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .section-head p {
+      margin: 0;
+      max-width: 64ch;
+      color: var(--muted);
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1;
+    }
+
+    .stats-grid,
+    .parks-grid,
+    .plan-grid,
+    .timing-grid,
+    .timeline {
+      display: grid;
+      gap: 18px;
+    }
+
+    .stats-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .stat-card,
+    .park-card,
+    .plan-card,
+    .timing-card,
+    .timeline-card,
+    .cta {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.88);
+      box-shadow: 0 16px 42px rgba(15, 23, 42, 0.08);
+    }
+
+    .stat-card {
+      padding: 22px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      margin-top: 8px;
+      font-size: 1.55rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .parks-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .park-card {
+      overflow: hidden;
+    }
+
+    .park-visual {
+      aspect-ratio: 16 / 10;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .park-body {
+      padding: 24px;
+    }
+
+    .park-type {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.1);
+      color: var(--primary-dark);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .card-title {
+      margin: 0 0 10px;
+      font-size: 1.7rem;
+    }
+
+    .park-body p,
+    .plan-card p,
+    .timing-card p,
+    .timeline-card p,
+    .cta p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .tag {
+      padding: 9px 12px;
+      border-radius: 12px;
+      background: #eff6ff;
+      color: #1e40af;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .plan-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .plan-card {
+      padding: 24px;
+    }
+
+    .plan-index {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      font-weight: 800;
+      margin-bottom: 18px;
+    }
+
+    .plan-title {
+      margin: 0 0 10px;
+      font-size: 1.35rem;
+    }
+
+    .timeline {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .timeline-card {
+      padding: 22px;
+    }
+
+    .timeline-day {
+      margin: 0 0 8px;
+      font-size: 1.2rem;
+    }
+
+    .timing-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .timing-card {
+      padding: 24px;
+    }
+
+    .cta {
+      padding: 34px;
+      text-align: center;
+      background:
+        linear-gradient(160deg, rgba(37, 99, 235, 0.08), rgba(14, 165, 233, 0.08)),
+        rgba(255, 255, 255, 0.92);
+    }
+
+    .cta h2 {
+      margin: 0 0 10px;
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4vw, 2.7rem);
+      letter-spacing: -0.04em;
+    }
+
+    .cta-actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .site-footer {
+      padding: 34px 0 48px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    .site-footer a {
+      color: var(--primary-dark);
+      font-weight: 700;
+    }
+
+    @media (max-width: 1080px) {
+      .hero-shell,
+      .stats-grid,
+      .parks-grid,
+      .plan-grid,
+      .timeline,
+      .timing-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .header-inner {
+        min-height: auto;
+        padding: 18px 0;
+        flex-direction: column;
+      }
+
+      .hero-copy {
+        padding: 28px;
+        min-height: 460px;
+      }
+
+      .hero-panel,
+      .stat-card,
+      .park-body,
+      .plan-card,
+      .timing-card,
+      .timeline-card,
+      .cta {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/">
+        <span class="brand-mark">MT</span>
+        <span>Michels Travel</span>
+      </a>
+      <nav class="nav">
+        <a href="#disney">Disney</a>
+        <a href="#universal">Universal</a>
+        <a href="#roteiro">Roteiro</a>
+        <a href="#epoca">Melhor Epoca</a>
+        <a href="usa-guide.html">Guia EUA</a>
+      </nav>
+      <a class="button button-primary" href="/">Buscar Voos</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-shell">
+        <div class="hero-copy">
+          <span class="eyebrow">Disney + Universal</span>
+          <h1>Guia Orlando para viajar melhor</h1>
+          <p>
+            Planeje uma viagem mais eficiente para Orlando com foco em parques,
+            descanso, hotel e deslocamento. Este guia foi pensado para familias,
+            casais e grupos que querem combinar Disney e Universal sem cair em
+            correria desnecessaria.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="/">Pesquisar voos</a>
+            <a class="button button-secondary" href="#roteiro">Ver roteiro de 7 dias</a>
+          </div>
+        </div>
+
+        <aside class="hero-panel">
+          <div class="panel-card">
+            <h2>O que vale decidir primeiro</h2>
+            <p>
+              Antes de fechar hotel e ingressos, defina quantos dias serao
+              realmente dedicados aos parques e se o grupo quer um ritmo forte ou
+              uma viagem mais leve.
+            </p>
+            <div class="badge-row">
+              <span class="badge">Hotel perto da Disney</span>
+              <span class="badge">Dias extras para descanso</span>
+              <span class="badge">Universal com estrategia</span>
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <h2>Para quem este guia funciona melhor</h2>
+            <p>
+              Viajantes saindo do Brasil ou dos EUA que querem comparar voos,
+              hospedagem e parques de forma mais inteligente e com menos custo
+              desperdicado.
+            </p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow" style="background: rgba(37, 99, 235, 0.08); color: var(--primary-dark); border: none;">Resumo rapido</span>
+          <h2 class="section-title">O basico de Orlando antes de comprar</h2>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Base ideal</div>
+            <div class="stat-value">7 a 9 dias</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Melhor combinacao</div>
+            <div class="stat-value">Disney + Universal</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Transporte</div>
+            <div class="stat-value">Carro ou app</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Alta demanda</div>
+            <div class="stat-value">Julho e dezembro</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="disney">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow" style="background: rgba(37, 99, 235, 0.08); color: var(--primary-dark); border: none;">Disney</span>
+          <h2 class="section-title">Quando a Disney entra como prioridade</h2>
+          <p>
+            Disney costuma fazer mais sentido para quem quer experiencia imersiva,
+            personagens, refeicoes tematicas e dias de parque mais distribuídos.
+            O erro mais comum e tentar empilhar tudo em pouco tempo.
+          </p>
+        </div>
+
+        <div class="parks-grid">
+          <article class="park-card">
+            <div
+              class="park-visual"
+              style="background-image: linear-gradient(rgba(15, 23, 42, 0.08), rgba(15, 23, 42, 0.18)), url('https://images.unsplash.com/photo-1513883049090-d0b7439799bf?auto=format&fit=crop&w=1400&q=80');"
+            ></div>
+            <div class="park-body">
+              <span class="park-type">Planejamento</span>
+              <h3 class="card-title">Monte a Disney por energia, nao por ansiedade</h3>
+              <p>
+                Quem vai com criancas pequenas ou quer mais conforto deve alternar
+                parques fortes com dias leves. Hotel com boa logistica e margem
+                para refeicoes reservadas faz muita diferenca.
+              </p>
+              <div class="tag-list">
+                <span class="tag">Magic Kingdom</span>
+                <span class="tag">Epcot</span>
+                <span class="tag">Resorts Disney</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="park-card">
+            <div
+              class="park-visual"
+              style="background-image: linear-gradient(rgba(15, 23, 42, 0.08), rgba(15, 23, 42, 0.18)), url('https://images.unsplash.com/photo-1460881680858-30d872d5b530?auto=format&fit=crop&w=1400&q=80');"
+            ></div>
+            <div class="park-body">
+              <span class="park-type">Custo total</span>
+              <h3 class="card-title">Nao olhe so ingresso, olhe o conjunto</h3>
+              <p>
+                Na Disney, o valor da viagem depende do pacote completo: hotel,
+                parque, alimentacao, transporte e bagagem. Comparar tudo junto
+                evita economias falsas.
+              </p>
+              <div class="tag-list">
+                <span class="tag">Hotel + parque</span>
+                <span class="tag">Restaurantes</span>
+                <span class="tag">Dias de descanso</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="universal">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow" style="background: rgba(14, 165, 233, 0.12); color: #0369a1; border: none;">Universal</span>
+          <h2 class="section-title">Quando a Universal pede um plano diferente</h2>
+          <p>
+            Universal favorece um ritmo mais direto, com foco em simuladores,
+            franquias famosas e otimizacao de tempo. Em datas cheias, avaliar
+            acesso expresso pode mudar totalmente a experiencia.
+          </p>
+        </div>
+
+        <div class="parks-grid">
+          <article class="park-card">
+            <div
+              class="park-visual"
+              style="background-image: linear-gradient(rgba(15, 23, 42, 0.08), rgba(15, 23, 42, 0.18)), url('https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1400&q=80');"
+            ></div>
+            <div class="park-body">
+              <span class="park-type">Execucao</span>
+              <h3 class="card-title">Universal funciona melhor com decisao clara</h3>
+              <p>
+                Se o grupo quer adrenalina e ritmo intenso, vale concentrar os
+                dias da Universal com estrategia de horario e pausas curtas. Sem
+                isso, o cansaço derruba o aproveitamento.
+              </p>
+              <div class="tag-list">
+                <span class="tag">Islands of Adventure</span>
+                <span class="tag">Universal Studios</span>
+                <span class="tag">CityWalk</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="park-card">
+            <div
+              class="park-visual"
+              style="background-image: linear-gradient(rgba(15, 23, 42, 0.08), rgba(15, 23, 42, 0.18)), url('https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?auto=format&fit=crop&w=1400&q=80');"
+            ></div>
+            <div class="park-body">
+              <span class="park-type">Decisao pratica</span>
+              <h3 class="card-title">Express vale quando o calendario esta apertado</h3>
+              <p>
+                Em periodos cheios ou viagens curtas, pagar mais pode economizar
+                horas. Em semanas tranquilas, esse valor pode render melhor em
+                hotel, alimentacao ou mais um dia em Orlando.
+              </p>
+              <div class="tag-list">
+                <span class="tag">Express Pass</span>
+                <span class="tag">Data de viagem</span>
+                <span class="tag">Ritmo do grupo</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="roteiro">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow" style="background: rgba(37, 99, 235, 0.08); color: var(--primary-dark); border: none;">Roteiro</span>
+          <h2 class="section-title">Como distribuir Orlando sem esmagar a viagem</h2>
+          <p>
+            O melhor roteiro nao e o que coloca o maior numero de parques. E o
+            que preserva energia, reduz transporte improdutivo e combina compras,
+            descanso e parque do jeito certo.
+          </p>
+        </div>
+
+        <div class="plan-grid">
+          <article class="plan-card">
+            <div class="plan-index">1</div>
+            <h3 class="plan-title">Chegada inteligente</h3>
+            <p>
+              Use o primeiro dia para check-in, supermercado, descanso e ajuste
+              do fuso. Entrar em parque logo na chegada costuma desperdiçar o dia.
+            </p>
+          </article>
+
+          <article class="plan-card">
+            <div class="plan-index">2</div>
+            <h3 class="plan-title">Parques fortes em blocos</h3>
+            <p>
+              Agrupe Disney e Universal de acordo com o perfil do grupo, mas
+              sempre intercale com um periodo de recuperacao.
+            </p>
+          </article>
+
+          <article class="plan-card">
+            <div class="plan-index">3</div>
+            <h3 class="plan-title">Compras e pausas contam</h3>
+            <p>
+              Outlet, farmacia, supermercado e refeicoes fora dos parques precisam
+              existir no planejamento. Ignorar isso desmonta o cronograma.
+            </p>
+          </article>
+        </div>
+
+        <div class="timeline" style="margin-top: 18px;">
+          <article class="timeline-card">
+            <h3 class="timeline-day">Dia 1</h3>
+            <p>Chegada, hotel, descanso e compras basicas.</p>
+          </article>
+          <article class="timeline-card">
+            <h3 class="timeline-day">Dia 2</h3>
+            <p>Disney prioritario com horario de entrada bem definido.</p>
+          </article>
+          <article class="timeline-card">
+            <h3 class="timeline-day">Dia 3</h3>
+            <p>Segundo parque Disney ou dia parcial com refeicao reservada.</p>
+          </article>
+          <article class="timeline-card">
+            <h3 class="timeline-day">Dia 4</h3>
+            <p>Descanso, piscina, outlet ou Disney Springs.</p>
+          </article>
+          <article class="timeline-card">
+            <h3 class="timeline-day">Dia 5</h3>
+            <p>Universal com foco nas principais atracoes.</p>
+          </article>
+          <article class="timeline-card">
+            <h3 class="timeline-day">Dia 6</h3>
+            <p>Segundo parque Universal ou repeticao de favoritos.</p>
+          </article>
+          <article class="timeline-card">
+            <h3 class="timeline-day">Dia 7</h3>
+            <p>Reserva para compras finais, retorno ou parque extra.</p>
+          </article>
+          <article class="timeline-card">
+            <h3 class="timeline-day">Dia extra</h3>
+            <p>Perfeito para viagens em familia que precisam de ritmo mais leve.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="epoca">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow" style="background: rgba(14, 165, 233, 0.12); color: #0369a1; border: none;">Melhor epoca</span>
+          <h2 class="section-title">Quando Orlando costuma render melhor</h2>
+          <p>
+            Julho, feriados americanos e dezembro elevam filas e custo total. Em
+            janelas intermediarias, a viagem tende a ser mais equilibrada e com
+            menos pressao no dia a dia.
+          </p>
+        </div>
+
+        <div class="timing-grid">
+          <article class="timing-card">
+            <h3 class="card-title">Melhores meses para equilibrio</h3>
+            <p>
+              Fevereiro, maio, setembro e inicio de novembro costumam oferecer uma
+              combinacao melhor de clima, fila e custo. Ainda assim, eventos
+              especiais e feriados precisam ser checados antes da compra.
+            </p>
+          </article>
+
+          <article class="timing-card">
+            <h3 class="card-title">Quando redobrar o planejamento</h3>
+            <p>
+              Junho, julho, Natal, Ano Novo e spring break exigem reserva mais
+              cedo, hotel melhor localizado e um plano de parques menos apertado.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="cta">
+          <h2>Pronto para montar sua viagem a Orlando?</h2>
+          <p>
+            Compare voos, organize hotel e monte um roteiro mais eficiente com a
+            Michels Travel.
+          </p>
+          <div class="cta-actions">
+            <a class="button button-primary" href="/">Buscar voos para Orlando</a>
+            <a class="button button-secondary" href="usa-guide.html">Abrir Guia EUA</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p><strong>Michels Travel</strong> — conteudo atualizado para Disney e Universal em Orlando.</p>
+      <p>© 2026 Michels Travel. Todos os direitos reservados. <a href="/">Voltar ao site</a></p>
+    </div>
+  </footer>
+</body>
+</html>

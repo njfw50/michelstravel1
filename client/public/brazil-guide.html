@@ -3,777 +3,138 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Guia de Viagem — Rio de Janeiro &amp; São Paulo | Michels Travel</title>
-  <meta name="description" content="Guia completo de viagem para Rio de Janeiro e São Paulo: atrações, gastronomia, transporte, dicas práticas e os melhores voos." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <title>Guia Atualizado | Michels Travel</title>
+  <meta
+    http-equiv="refresh"
+    content="0; url=https://www.michelstravel.agency/orlando-guide.html"
+  />
+  <meta
+    name="description"
+    content="Este guia foi atualizado. Agora voce encontra nosso conteudo de Disney e Universal em Orlando em uma nova pagina."
+  />
+  <link rel="canonical" href="https://www.michelstravel.agency/orlando-guide.html" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    /* ── DESIGN TOKENS (flight-commission-hub) ── */
     :root {
-      --background:    hsl(220, 20%, 97%);
-      --foreground:    hsl(220, 25%, 12%);
-      --card:          #ffffff;
-      --card-border:   hsl(220, 15%, 90%);
-      --primary:       hsl(213, 90%, 50%);
-      --primary-dark:  hsl(213, 90%, 38%);
-      --primary-light: hsl(213, 85%, 95%);
-      --muted:         hsl(220, 15%, 94%);
-      --muted-fg:      hsl(220, 10%, 45%);
-      --accent:        hsl(213, 85%, 95%);
-      --accent-fg:     hsl(213, 90%, 35%);
-      --radius:        0.75rem;
-      --font-display:  'Outfit', sans-serif;
-      --font-body:     'DM Sans', sans-serif;
-      --shadow-sm:     0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
-      --shadow-md:     0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
-      --shadow-lg:     0 10px 40px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06);
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --border: #dbe5f1;
+      --shadow: 0 18px 48px rgba(15, 23, 42, 0.12);
+      --radius: 24px;
+      --font: "DM Sans", Arial, sans-serif;
     }
 
-    html { scroll-behavior: smooth; }
+    * { box-sizing: border-box; }
 
     body {
-      font-family: var(--font-body);
-      color: var(--foreground);
-      background: var(--background);
-      line-height: 1.6;
-      font-size: 16px;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    h1, h2, h3, h4, h5, h6 {
-      font-family: var(--font-display);
-      letter-spacing: -0.02em;
-    }
-
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(23,28,43,0.15); border-radius: 999px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(23,28,43,0.25); }
-
-    /* ── HEADER ── */
-    .site-header {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      width: 100%;
-      background: rgba(255,255,255,0.95);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--card-border);
-      box-shadow: var(--shadow-sm);
-    }
-    .header-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 1.5rem;
-      height: 72px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1.5rem;
-    }
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      text-decoration: none;
-    }
-    .logo-icon {
-      width: 36px;
-      height: 36px;
-      background: var(--primary);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 1.1rem;
-    }
-    .logo-text {
-      font-family: var(--font-display);
-      font-size: 1.15rem;
-      font-weight: 800;
-      color: var(--foreground);
-      letter-spacing: -0.03em;
-    }
-    .logo-text span { color: var(--primary); }
-    .header-nav {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      list-style: none;
-    }
-    .header-nav a {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.45rem 0.85rem;
-      border-radius: 8px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--muted-fg);
-      text-decoration: none;
-      transition: background 0.15s, color 0.15s;
-    }
-    .header-nav a:hover { background: var(--muted); color: var(--foreground); }
-    .btn-primary {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      background: var(--primary);
-      color: white;
-      font-family: var(--font-body);
-      font-size: 0.875rem;
-      font-weight: 600;
-      padding: 0.5rem 1.1rem;
-      border-radius: 8px;
-      text-decoration: none;
-      border: none;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.15s;
-      white-space: nowrap;
-    }
-    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
-    @media (max-width: 768px) { .header-nav { display: none; } }
-
-    /* ── HERO ── */
-    .hero {
-      position: relative;
-      min-height: clamp(380px, 55vw, 560px);
-      display: flex;
-      align-items: flex-end;
-      overflow: hidden;
-    }
-    .hero-img {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 30%;
-      transform: scale(1.05);
-    }
-    .hero-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        to bottom,
-        hsl(220,25%,12%,0.55) 0%,
-        hsl(213,90%,20%,0.30) 50%,
-        hsl(220,20%,97%,0.95) 100%
-      );
-    }
-    .hero-content {
-      position: relative;
-      z-index: 2;
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2.5rem 1.5rem;
-    }
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.2);
-      color: rgba(255,255,255,0.92);
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 0.35rem 0.9rem;
-      border-radius: 999px;
-      margin-bottom: 1rem;
-    }
-    .hero h1 {
-      font-size: clamp(2rem, 6vw, 3.8rem);
-      font-weight: 800;
-      line-height: 0.95;
-      letter-spacing: -0.03em;
-      color: white;
-      text-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      margin-bottom: 0.75rem;
-    }
-    .hero h1 span { color: hsl(213, 85%, 75%); }
-    .hero p {
-      font-size: clamp(0.95rem, 2vw, 1.1rem);
-      color: rgba(255,255,255,0.78);
-      font-weight: 500;
-      max-width: 560px;
-      line-height: 1.65;
-    }
-
-    /* ── LAYOUT ── */
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
-    section { padding: 3.5rem 0; }
-    section:nth-child(even) { background: var(--card); }
-
-    /* ── SECTION HEADER ── */
-    .section-header { margin-bottom: 2rem; }
-    .section-eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--primary);
-      background: var(--primary-light);
-      padding: 0.3rem 0.75rem;
-      border-radius: 999px;
-      margin-bottom: 0.6rem;
-    }
-    .section-title {
-      font-size: clamp(1.5rem, 3vw, 2.2rem);
-      font-weight: 800;
-      color: var(--foreground);
-      line-height: 1.2;
-      margin-bottom: 0.5rem;
-    }
-    .section-desc {
-      font-size: 0.975rem;
-      color: var(--muted-fg);
-      max-width: 560px;
-      line-height: 1.65;
-    }
-
-    /* ── CITY INTRO ── */
-    .city-intro {
+      margin: 0;
+      min-height: 100vh;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2.5rem;
-      align-items: center;
-      margin-bottom: 2.5rem;
+      place-items: center;
+      padding: 24px;
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.16), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.12), transparent 30%),
+        var(--bg);
     }
-    @media (max-width: 768px) {
-      .city-intro { grid-template-columns: 1fr; }
-    }
-    .city-intro-img {
+
+    .card {
+      width: min(720px, 100%);
+      background: var(--card);
+      border: 1px solid var(--border);
       border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: var(--shadow-lg);
-      height: 280px;
+      box-shadow: var(--shadow);
+      padding: 40px;
     }
-    .city-intro-img img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .city-intro-info {}
-    .city-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.72rem;
+
+    .eyebrow {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.1);
+      color: var(--primary-dark);
+      font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      padding: 0.3rem 0.75rem;
-      border-radius: 999px;
-      margin-bottom: 0.75rem;
     }
-    .label-rio { background: #fee2e2; color: #b91c1c; }
-    .label-sp  { background: var(--primary-light); color: var(--primary-dark); }
-    .city-intro h2 {
-      font-size: clamp(1.6rem, 4vw, 2.4rem);
-      font-weight: 800;
-      color: var(--foreground);
-      line-height: 1.15;
-      margin-bottom: 0.6rem;
+
+    h1 {
+      margin: 18px 0 14px;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1;
+      letter-spacing: -0.04em;
     }
-    .city-intro p {
-      font-size: 0.95rem;
-      color: var(--muted-fg);
+
+    p {
+      margin: 0 0 18px;
+      font-size: 1.05rem;
       line-height: 1.7;
-      margin-bottom: 1.25rem;
+      color: var(--muted);
     }
-    .city-stats {
+
+    .actions {
       display: flex;
-      gap: 1.5rem;
       flex-wrap: wrap;
-      padding: 1rem 1.25rem;
-      background: var(--background);
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius);
-    }
-    .stat-item { text-align: center; }
-    .stat-value {
-      font-family: var(--font-display);
-      font-size: 1.2rem;
-      font-weight: 800;
-      color: var(--primary);
-      display: block;
-    }
-    .stat-label { font-size: 0.7rem; color: var(--muted-fg); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
-
-    /* ── ATTRACTIONS ── */
-    .attractions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
-      gap: 1.1rem;
-      margin-bottom: 2.5rem;
-    }
-    .attraction-card {
-      background: var(--card);
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: var(--shadow-sm);
-      transition: box-shadow 0.25s ease, transform 0.25s ease;
-    }
-    .attraction-card:hover {
-      box-shadow: var(--shadow-lg);
-      transform: translateY(-3px);
-    }
-    .attraction-img {
-      height: 150px;
-      overflow: hidden;
-    }
-    .attraction-img img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.4s ease;
-    }
-    .attraction-card:hover .attraction-img img { transform: scale(1.07); }
-    .attraction-body { padding: 1rem 1.1rem 1.1rem; }
-    .attraction-name {
-      font-family: var(--font-display);
-      font-size: 0.975rem;
-      font-weight: 700;
-      color: var(--foreground);
-      margin-bottom: 0.3rem;
-    }
-    .attraction-desc {
-      font-size: 0.83rem;
-      color: var(--muted-fg);
-      line-height: 1.6;
-      margin-bottom: 0.6rem;
-    }
-    .attraction-tip {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.4rem;
-      background: var(--primary-light);
-      border-radius: 8px;
-      padding: 0.45rem 0.65rem;
-      font-size: 0.78rem;
-      color: var(--accent-fg);
-      font-weight: 500;
+      gap: 12px;
+      margin-top: 28px;
     }
 
-    /* ── FOOD GRID ── */
-    .food-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
-      gap: 1rem;
-      margin-bottom: 2.5rem;
-    }
-    .food-card {
-      background: var(--card);
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius);
-      padding: 1.2rem;
-      box-shadow: var(--shadow-sm);
-      text-align: center;
-      border-top: 3px solid var(--primary);
-      transition: box-shadow 0.2s;
-    }
-    .food-card:hover { box-shadow: var(--shadow-md); }
-    .food-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-    .food-name {
-      font-family: var(--font-display);
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--foreground);
-      margin-bottom: 0.3rem;
-    }
-    .food-desc { font-size: 0.8rem; color: var(--muted-fg); line-height: 1.55; }
-
-    /* ── PRACTICAL GRID ── */
-    .practical-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
-      gap: 1rem;
-    }
-    .practical-card {
-      background: var(--card);
-      border: 1px solid var(--card-border);
-      border-left: 4px solid var(--primary);
-      border-radius: var(--radius);
-      padding: 1.3rem;
-      box-shadow: var(--shadow-sm);
-      transition: box-shadow 0.2s;
-    }
-    .practical-card:hover { box-shadow: var(--shadow-md); }
-    .practical-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
-    .practical-title {
-      font-family: var(--font-display);
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--foreground);
-      margin-bottom: 0.35rem;
-    }
-    .practical-text { font-size: 0.85rem; color: var(--muted-fg); line-height: 1.65; }
-
-    /* ── SUBSECTION DIVIDER ── */
-    .subsection-title {
-      font-family: var(--font-display);
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: var(--foreground);
-      margin-bottom: 0.4rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid var(--primary-light);
-    }
-    .subsection-wrapper { margin-bottom: 2.5rem; }
-
-    /* ── CTA ── */
-    .cta-section {
-      background: linear-gradient(135deg, hsl(220,25%,12%) 0%, hsl(213,90%,25%) 100%);
-      padding: 4rem 1.5rem;
-      text-align: center;
-    }
-    .cta-section h2 {
-      font-family: var(--font-display);
-      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
-      font-weight: 800;
-      color: white;
-      margin-bottom: 0.6rem;
-      letter-spacing: -0.02em;
-    }
-    .cta-section p {
-      font-size: 1rem;
-      color: rgba(255,255,255,0.75);
-      max-width: 480px;
-      margin: 0 auto 2rem;
-      line-height: 1.65;
-    }
-    .cta-buttons {
-      display: flex;
-      gap: 0.75rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    .btn-cta-primary {
+    .button {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 18px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 700;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .button-primary {
       background: var(--primary);
       color: white;
-      font-family: var(--font-body);
-      font-size: 0.95rem;
-      font-weight: 700;
-      padding: 0.75rem 1.75rem;
-      border-radius: 10px;
-      text-decoration: none;
-      transition: background 0.15s, transform 0.15s;
     }
-    .btn-cta-primary:hover { background: hsl(213,90%,42%); transform: translateY(-2px); }
-    .btn-cta-outline {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: rgba(255,255,255,0.12);
-      color: white;
-      font-family: var(--font-body);
-      font-size: 0.95rem;
-      font-weight: 600;
-      padding: 0.75rem 1.75rem;
-      border-radius: 10px;
-      text-decoration: none;
-      border: 1.5px solid rgba(255,255,255,0.25);
-      transition: background 0.15s;
-    }
-    .btn-cta-outline:hover { background: rgba(255,255,255,0.2); }
 
-    /* ── FOOTER ── */
-    .site-footer {
-      background: var(--foreground);
-      color: rgba(255,255,255,0.6);
-      padding: 2.5rem 1.5rem;
-      text-align: center;
-      font-size: 0.875rem;
+    .button-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
     }
-    .site-footer strong { color: white; }
-    .site-footer a { color: var(--primary); text-decoration: none; }
-    .site-footer a:hover { text-decoration: underline; }
+
+    .button-secondary {
+      border: 1px solid var(--border);
+      color: var(--text);
+      background: #f8fbff;
+    }
+
+    .button-secondary:hover {
+      background: #eef5ff;
+      transform: translateY(-1px);
+    }
   </style>
 </head>
 <body>
-
-<!-- HEADER -->
-<header class="site-header">
-  <div class="header-inner">
-    <a href="#" class="logo">
-      <div class="logo-icon">✈</div>
-      <span class="logo-text">Michels<span>Travel</span></span>
-    </a>
-    <nav>
-      <ul class="header-nav">
-        <li><a href="#rio">Rio de Janeiro</a></li>
-        <li><a href="#sao-paulo">São Paulo</a></li>
-        <li><a href="#gastronomia">Gastronomia</a></li>
-        <li><a href="usa-guide.html">Guia EUA</a></li>
-      </ul>
-    </nav>
-    <a href="#" class="btn-primary">✈ Buscar Voos</a>
-  </div>
-</header>
-
-<!-- HERO -->
-<section class="hero">
-  <img class="hero-img" src="images/rio.jpg" alt="Cristo Redentor e Copacabana no Rio de Janeiro" loading="eager" />
-  <div class="hero-overlay"></div>
-  <div class="hero-content">
-    <div class="hero-badge">🇧🇷 Guia de Viagem</div>
-    <h1>Rio de Janeiro<br><span>&amp; São Paulo</span></h1>
-    <p>Duas cidades únicas, dois universos de experiências. Descubra o melhor do Brasil com dicas de atrações, gastronomia, transporte e os melhores voos.</p>
-  </div>
-</section>
-
-<!-- RIO DE JANEIRO -->
-<section id="rio">
-  <div class="container">
-
-    <div class="city-intro">
-      <div class="city-intro-img">
-        <img src="images/rio-sugarloaf.jpg" alt="Pão de Açúcar no Rio de Janeiro" loading="lazy" />
-      </div>
-      <div class="city-intro-info">
-        <span class="city-label label-rio">🏖 Rio de Janeiro</span>
-        <h2>A Cidade Maravilhosa</h2>
-        <p>O Rio de Janeiro é um dos destinos mais icônicos do mundo. Com praias lendárias, o Cristo Redentor, o Pão de Açúcar e uma cultura vibrante que pulsa no samba, no futebol e na alegria do povo carioca, a cidade encanta qualquer viajante.</p>
-        <div class="city-stats">
-          <div class="stat-item">
-            <span class="stat-value">6,7 mi</span>
-            <span class="stat-label">Habitantes</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">25°C</span>
-            <span class="stat-label">Temp. Média</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">BRL</span>
-            <span class="stat-label">Moeda</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">GIG/SDU</span>
-            <span class="stat-label">Aeroportos</span>
-          </div>
-        </div>
-      </div>
+  <main class="card">
+    <span class="eyebrow">Guia Atualizado</span>
+    <h1>O conteudo mudou para Orlando</h1>
+    <p>
+      O antigo guia foi substituido por um guia focado em Disney e Universal.
+      Se voce nao for redirecionado automaticamente, use os botoes abaixo.
+    </p>
+    <div class="actions">
+      <a class="button button-primary" href="/orlando-guide.html">Abrir Guia de Orlando</a>
+      <a class="button button-secondary" href="/">Voltar ao site</a>
     </div>
+  </main>
 
-    <div class="subsection-wrapper">
-      <div class="subsection-title">Atrações Imperdíveis</div>
-      <div class="attractions-grid">
-        <div class="attraction-card">
-          <div class="attraction-img"><img src="images/rio.jpg" alt="Cristo Redentor" loading="lazy" /></div>
-          <div class="attraction-body">
-            <div class="attraction-name">Cristo Redentor</div>
-            <p class="attraction-desc">Uma das Sete Maravilhas do Mundo Moderno. A estátua de 38 metros no topo do Corcovado oferece uma vista de 360° absolutamente deslumbrante da cidade.</p>
-            <div class="attraction-tip">💡 Vá cedo pela manhã para evitar filas e aproveitar o céu limpo.</div>
-          </div>
-        </div>
-        <div class="attraction-card">
-          <div class="attraction-img"><img src="images/rio-sugarloaf.jpg" alt="Pão de Açúcar" loading="lazy" /></div>
-          <div class="attraction-body">
-            <div class="attraction-name">Pão de Açúcar</div>
-            <p class="attraction-desc">O bondinho que sobe até o topo do Pão de Açúcar oferece uma das vistas mais espetaculares do mundo, especialmente ao entardecer com a Baía de Guanabara ao fundo.</p>
-            <div class="attraction-tip">💡 O pôr do sol visto do Pão de Açúcar é inesquecível. Chegue 1h antes.</div>
-          </div>
-        </div>
-        <div class="attraction-card">
-          <div class="attraction-img"><img src="images/rio.jpg" alt="Copacabana e Ipanema" loading="lazy" style="object-position:bottom;" /></div>
-          <div class="attraction-body">
-            <div class="attraction-name">Copacabana &amp; Ipanema</div>
-            <p class="attraction-desc">As praias mais famosas do Brasil. Copacabana tem 4 km de extensão e uma energia inconfundível. Ipanema é mais sofisticada e abriga o famoso Posto 9.</p>
-            <div class="attraction-tip">💡 Evite deixar pertences de valor na praia. Use apenas o necessário.</div>
-          </div>
-        </div>
-        <div class="attraction-card">
-          <div class="attraction-img"><img src="images/rio.jpg" alt="Santa Teresa e Lapa" loading="lazy" /></div>
-          <div class="attraction-body">
-            <div class="attraction-name">Santa Teresa &amp; Lapa</div>
-            <p class="attraction-desc">O bairro boêmio de Santa Teresa e a Lapa, com seus arcos e vida noturna, são o epicentro do samba carioca. Uma experiência cultural única no Rio.</p>
-            <div class="attraction-tip">💡 Visite a Lapa às sextas ou sábados para a melhor experiência de samba.</div>
-          </div>
-        </div>
-        <div class="attraction-card">
-          <div class="attraction-img"><img src="images/rio.jpg" alt="Maracanã" loading="lazy" /></div>
-          <div class="attraction-body">
-            <div class="attraction-name">Maracanã</div>
-            <p class="attraction-desc">O templo do futebol brasileiro. Assistir a um jogo no Maracanã é uma experiência cultural única, com a paixão e a energia do torcedor carioca.</p>
-            <div class="attraction-tip">💡 Compre ingressos com antecedência pelo site oficial para jogos grandes.</div>
-          </div>
-        </div>
-        <div class="attraction-card">
-          <div class="attraction-img"><img src="images/rio.jpg" alt="Jardim Botânico" loading="lazy" /></div>
-          <div class="attraction-body">
-            <div class="attraction-name">Jardim Botânico &amp; Floresta da Tijuca</div>
-            <p class="attraction-desc">O Jardim Botânico, fundado em 1808, é um oásis de 137 hectares. A Floresta da Tijuca é a maior floresta urbana do mundo, com trilhas e cachoeiras.</p>
-            <div class="attraction-tip">💡 A trilha para a Pedra da Gávea oferece uma das melhores vistas do Rio.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="subsection-wrapper" id="gastronomia">
-      <div class="subsection-title">Gastronomia Carioca</div>
-      <div class="food-grid">
-        <div class="food-card"><div class="food-icon">🍖</div><div class="food-name">Feijoada</div><p class="food-desc">O prato mais emblemático do Brasil. Servida às quartas e sábados nos melhores restaurantes cariocas.</p></div>
-        <div class="food-card"><div class="food-icon">🥩</div><div class="food-name">Churrasco</div><p class="food-desc">Cortes nobres grelhados na brasa. As churrascarias cariocas são referência nacional em qualidade.</p></div>
-        <div class="food-card"><div class="food-icon">🥤</div><div class="food-name">Açaí na Tigela</div><p class="food-desc">O lanche favorito dos cariocas após a praia. Servido gelado com granola, banana e mel.</p></div>
-        <div class="food-card"><div class="food-icon">🍹</div><div class="food-name">Caipirinha</div><p class="food-desc">O coquetel nacional brasileiro. Feita com cachaça, limão, açúcar e gelo. Perfeita para o calor carioca.</p></div>
-        <div class="food-card"><div class="food-icon">🥐</div><div class="food-name">Pão de Queijo</div><p class="food-desc">Bolinho de queijo minas assado, crocante por fora e macio por dentro. Imperdível no café da manhã.</p></div>
-      </div>
-    </div>
-
-    <div class="subsection-title" style="margin-bottom:1.25rem;">Dicas Práticas</div>
-    <div class="practical-grid">
-      <div class="practical-card"><div class="practical-icon">🚇</div><div class="practical-title">Como se Locomover</div><p class="practical-text">O metrô cobre as principais áreas turísticas. Uber é seguro e acessível. Evite táxis não credenciados. O VLT conecta o Centro ao Porto Maravilha.</p></div>
-      <div class="practical-card"><div class="practical-icon">🔒</div><div class="practical-title">Segurança</div><p class="practical-text">Evite exibir celulares e joias em locais movimentados. Prefira as áreas turísticas consolidadas e consulte recomendações de segurança atualizadas antes de visitar.</p></div>
-      <div class="practical-card"><div class="practical-icon">🌤</div><div class="practical-title">Melhor Época</div><p class="practical-text">Abril a junho e agosto a outubro oferecem clima agradável com menos chuva. O Carnaval (fevereiro/março) é a experiência máxima — reserve com muita antecedência.</p></div>
-      <div class="practical-card"><div class="practical-icon">✈️</div><div class="practical-title">Como Chegar</div><p class="practical-text">O Aeroporto Internacional Galeão (GIG) recebe voos internacionais. O Santos Dumont (SDU) é mais central e atende voos domésticos, especialmente a ponte aérea com São Paulo.</p></div>
-    </div>
-
-  </div>
-</section>
-
-<!-- SÃO PAULO -->
-<section id="sao-paulo">
-  <div class="container">
-
-    <div class="city-intro">
-      <div class="city-intro-img">
-        <img src="images/sao-paulo.jpg" alt="Skyline de São Paulo com o Parque Ibirapuera" loading="lazy" />
-      </div>
-      <div class="city-intro-info">
-        <span class="city-label label-sp">🏙 São Paulo</span>
-        <h2>A Maior Metrópole<br>da América do Sul</h2>
-        <p>São Paulo é o coração econômico e cultural do Brasil. Com mais de 12 milhões de habitantes, a cidade oferece gastronomia de nível mundial, museus de excelência, vida noturna incomparável e uma diversidade cultural única no continente.</p>
-        <div class="city-stats">
-          <div class="stat-item">
-            <span class="stat-value">12,3 mi</span>
-            <span class="stat-label">Habitantes</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">19°C</span>
-            <span class="stat-label">Temp. Média</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">BRL</span>
-            <span class="stat-label">Moeda</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">GRU/CGH</span>
-            <span class="stat-label">Aeroportos</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="subsection-wrapper">
-      <div class="subsection-title">Atrações Imperdíveis</div>
-      <div class="attractions-grid">
-        <div class="attraction-card">
-          <div class="attraction-img"><img src="images/ibirapuera.jpg" alt="Parque Ibirapuera" loading="lazy" /></div>
-          <div class="attraction-body">
-            <div class="attraction-name">Parque Ibirapuera</div>
-            <p class="attraction-desc">O pulmão verde de São Paulo. Projetado por Oscar Niemeyer, o parque abriga o MAM, o Museu Afro Brasil, o Planetário e é o espaço de lazer favorito dos paulistanos.</p>
-            <div class="attraction-tip">💡 Aos domingos, a ciclovia da Av. Paulista é fechada para carros — perfeita para caminhar.</div>
-          </div>
-        </div>
-        <div class="attraction-card">
-          <div class="attraction-img"><img src="images/sao-paulo.jpg" alt="Avenida Paulista" loading="lazy" /></div>
-          <div class="attraction-body">
-            <div class="attraction-name">Avenida Paulista &amp; MASP</div>
-            <p class="attraction-desc">O coração de São Paulo. A Paulista concentra o MASP — um dos maiores museus de arte da América Latina — e uma energia urbana única que representa a essência da cidade.</p>
-            <div class="attraction-tip">💡 O MASP oferece entrada gratuita às terças-feiras. Chegue cedo para evitar filas.</div>
-          </div>
-        </div>
-        <div class="attraction-card">
-          <div class="attraction-img"><img src="images/sao-paulo.jpg" alt="Bairro da Liberdade" loading="lazy" /></div>
-          <div class="attraction-body">
-            <div class="attraction-name">Bairro da Liberdade</div>
-            <p class="attraction-desc">O maior bairro japonês fora do Japão. A Liberdade encanta com sua arquitetura oriental, restaurantes asiáticos e a famosa Feira da Liberdade aos domingos.</p>
-            <div class="attraction-tip">💡 A Feira da Liberdade aos domingos é um dos programas mais charmosos da cidade.</div>
-          </div>
-        </div>
-        <div class="attraction-card">
-          <div class="attraction-img"><img src="images/sao-paulo.jpg" alt="Pinacoteca do Estado" loading="lazy" /></div>
-          <div class="attraction-body">
-            <div class="attraction-name">Pinacoteca do Estado</div>
-            <p class="attraction-desc">Um dos museus mais importantes do Brasil, com um acervo de mais de 10.000 obras de arte brasileira. O edifício histórico reformado por Paulo Mendes da Rocha é uma obra de arte.</p>
-            <div class="attraction-tip">💡 O jardim interno da Pinacoteca é um dos espaços mais bonitos e tranquilos da cidade.</div>
-          </div>
-        </div>
-        <div class="attraction-card">
-          <div class="attraction-img"><img src="images/ibirapuera.jpg" alt="Vila Madalena e Beco do Batman" loading="lazy" /></div>
-          <div class="attraction-body">
-            <div class="attraction-name">Vila Madalena &amp; Beco do Batman</div>
-            <p class="attraction-desc">O bairro mais boêmio de São Paulo. O Beco do Batman é um corredor de grafites de renome internacional. A Vila Madalena concentra os melhores bares e galerias de arte.</p>
-            <div class="attraction-tip">💡 O Beco do Batman é mais fotogênico durante o dia, com boa iluminação natural.</div>
-          </div>
-        </div>
-        <div class="attraction-card">
-          <div class="attraction-img"><img src="images/sao-paulo.jpg" alt="Mercadão Municipal" loading="lazy" /></div>
-          <div class="attraction-body">
-            <div class="attraction-name">Mercadão Municipal</div>
-            <p class="attraction-desc">O Mercado Municipal Paulistano é um templo da gastronomia. Fundado em 1933, abriga centenas de bancas com produtos frescos e o famoso sanduíche de mortadela.</p>
-            <div class="attraction-tip">💡 O sanduíche de mortadela do Mercadão é uma experiência gastronômica obrigatória.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="subsection-wrapper">
-      <div class="subsection-title">Gastronomia Paulistana</div>
-      <div class="food-grid">
-        <div class="food-card"><div class="food-icon">🥩</div><div class="food-name">Sanduíche de Mortadela</div><p class="food-desc">O símbolo gastronômico do Mercadão. Uma fatia generosa de mortadela italiana em pão francês.</p></div>
-        <div class="food-card"><div class="food-icon">🍣</div><div class="food-name">Culinária Japonesa</div><p class="food-desc">SP tem a maior colônia japonesa fora do Japão. Os restaurantes de sushi e ramen são de nível mundial.</p></div>
-        <div class="food-card"><div class="food-icon">🍕</div><div class="food-name">Pizza Paulistana</div><p class="food-desc">São Paulo tem a maior comunidade italiana fora da Itália. A pizza paulistana é reconhecida como uma das melhores do mundo.</p></div>
-        <div class="food-card"><div class="food-icon">☕</div><div class="food-name">Café Especial</div><p class="food-desc">A cena de cafés especiais de SP é uma das mais sofisticadas do Brasil, com grãos de origem única e métodos artesanais.</p></div>
-        <div class="food-card"><div class="food-icon">🍻</div><div class="food-name">Bares e Botequins</div><p class="food-desc">A vida noturna paulistana é inigualável. De botequins tradicionais a bares sofisticados, há opções para todos os gostos.</p></div>
-      </div>
-    </div>
-
-    <div class="subsection-title" style="margin-bottom:1.25rem;">Dicas Práticas</div>
-    <div class="practical-grid">
-      <div class="practical-card"><div class="practical-icon">🚇</div><div class="practical-title">Como se Locomover</div><p class="practical-text">O metrô é a forma mais eficiente de se deslocar. Evite dirigir nos horários de pico. Uber e 99 são amplamente utilizados e seguros para deslocamentos noturnos.</p></div>
-      <div class="practical-card"><div class="practical-icon">🌧</div><div class="practical-title">Clima</div><p class="practical-text">SP tem clima subtropical com chuvas frequentes no verão (dezembro–março). Sempre leve um guarda-chuva. O inverno (junho–agosto) é seco e pode ser frio à noite.</p></div>
-      <div class="practical-card"><div class="practical-icon">🎭</div><div class="practical-title">Cultura e Eventos</div><p class="practical-text">SP é a capital cultural do Brasil. A Virada Cultural (maio), a SP Arte e a São Paulo Fashion Week são eventos de projeção internacional que atraem visitantes do mundo todo.</p></div>
-      <div class="practical-card"><div class="practical-icon">✈️</div><div class="practical-title">Como Chegar</div><p class="practical-text">O Aeroporto de Guarulhos (GRU) é o maior do Brasil e recebe voos de todo o mundo. O Aeroporto de Congonhas (CGH) é mais central e atende voos domésticos.</p></div>
-    </div>
-
-  </div>
-</section>
-
-<!-- CTA -->
-<section class="cta-section">
-  <div style="max-width:1200px; margin:0 auto;">
-    <h2>Pronto para Conhecer o Brasil?</h2>
-    <p>Reserve seu voo agora e garanta as melhores tarifas para Rio de Janeiro e São Paulo pela Michels Travel.</p>
-    <div class="cta-buttons">
-      <a href="#" class="btn-cta-primary">✈ Buscar Voos para o Rio</a>
-      <a href="#" class="btn-cta-primary" style="background:hsl(213,90%,42%);">✈ Buscar Voos para SP</a>
-      <a href="usa-guide.html" class="btn-cta-outline">🇺🇸 Ver Guia EUA</a>
-    </div>
-  </div>
-</section>
-
-<!-- FOOTER -->
-<footer class="site-footer">
-  <p><strong>Michels Travel</strong> — Seu parceiro de viagens de confiança</p>
-  <p style="margin-top:0.5rem;">© 2026 Michels Travel. Todos os direitos reservados. | <a href="usa-guide.html">Guia Cidades dos EUA</a></p>
-</footer>
-
+  <script>
+    window.location.replace("/orlando-guide.html");
+  </script>
 </body>
 </html>
