@@ -1,5 +1,5 @@
 import { FlightSearchForm } from "@/components/FlightSearchForm";
-import { usePopularFlights, useAirlines, useFeaturedAirports } from "@/hooks/use-flights";
+import { usePopularFlights, useAirlines, useFeaturedAirports, useFeaturedDeals, type PublicFeaturedDeal } from "@/hooks/use-flights";
 import { FlightBoard } from "@/components/FlightBoard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -68,12 +68,66 @@ export default function Home() {
   const { data: popularFlights, isLoading: popularLoading } = usePopularFlights();
   const { data: airlines, isLoading: airlinesLoading } = useAirlines(40);
   const { data: airports, isLoading: airportsLoading } = useFeaturedAirports();
+  const { data: featuredDeals, isLoading: dealsLoading } = useFeaturedDeals();
   const [_, setLocation] = useLocation();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
   const topAirlines = airlines?.filter(a => a.logoSymbolUrl && a.iataCode) || [];
   const airlineCount = airlines?.length || 0;
   const airportCount = airports?.length || 0;
+  const catalogDeals = featuredDeals?.slice(0, 6) || [];
+  const locale = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
+
+  const formatDealDate = (date: string) => {
+    if (!date) return "";
+    const parsed = new Date(`${date}T12:00:00`);
+    if (Number.isNaN(parsed.getTime())) return date;
+
+    return new Intl.DateTimeFormat(locale, {
+      day: "2-digit",
+      month: "short",
+    }).format(parsed);
+  };
+
+  const formatDealPrice = (value: number | null, currency: string) => {
+    if (value === null || Number.isNaN(value)) return null;
+
+    try {
+      return new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency: currency || "USD",
+        maximumFractionDigits: 2,
+      }).format(value);
+    } catch {
+      return `${currency || "USD"} ${value.toFixed(2)}`;
+    }
+  };
+
+  const openDealSearch = (deal: PublicFeaturedDeal) => {
+    const departureDate = deal.departure_date || (() => {
+      const fallback = new Date();
+      fallback.setDate(fallback.getDate() + 14);
+      return fallback.toISOString().split("T")[0];
+    })();
+
+    const searchParams = new URLSearchParams({
+      origin: deal.origin,
+      destination: deal.destination,
+      date: departureDate,
+      passengers: "1",
+      adults: "1",
+      children: "0",
+      infants: "0",
+      cabinClass: deal.cabin_class || "economy",
+      tripType: deal.return_date ? "round-trip" : "one-way",
+    });
+
+    if (deal.return_date) {
+      searchParams.set("returnDate", deal.return_date);
+    }
+
+    setLocation(`/search?${searchParams.toString()}`);
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -354,6 +408,182 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      <section className="py-24 md:py-32 section-light" data-testid="section-featured-catalog">
+        <div className="container mx-auto px-4 md:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex justify-between items-end mb-12 flex-wrap gap-4"
+          >
+            <div>
+              <span className="section-eyebrow">{t("home.catalog.title")}</span>
+              <h2 className="text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-2">
+                {t("home.catalog.subtitle")}
+              </h2>
+            </div>
+
+            <Badge className="rounded-full px-4 py-2 bg-white text-blue-700 border border-blue-100 shadow-sm">
+              <TrendingUp className="h-3.5 w-3.5 mr-2" />
+              {catalogDeals.length > 0 ? `${catalogDeals.length} ${t("home.trending")}` : "Michels Travel"}
+            </Badge>
+          </motion.div>
+
+          {dealsLoading && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <Card key={index} className="overflow-hidden border border-gray-200 bg-white">
+                  <div className="h-52 bg-gradient-to-br from-blue-100 via-slate-100 to-white animate-pulse" />
+                  <CardContent className="p-6 space-y-4">
+                    <div className="h-5 w-28 rounded bg-gray-100 animate-pulse" />
+                    <div className="h-8 w-3/4 rounded bg-gray-100 animate-pulse" />
+                    <div className="h-4 w-full rounded bg-gray-100 animate-pulse" />
+                    <div className="h-4 w-5/6 rounded bg-gray-100 animate-pulse" />
+                    <div className="h-11 w-full rounded-xl bg-gray-100 animate-pulse" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {!dealsLoading && catalogDeals.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {catalogDeals.map((deal, index) => {
+                const coverImage = DESTINATION_IMAGES[deal.destination] || DESTINATION_IMAGES[deal.origin];
+                const formattedPrice = formatDealPrice(deal.price_value, deal.currency);
+
+                return (
+                  <motion.div
+                    key={deal.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.08 }}
+                  >
+                    <Card className="overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col">
+                      <div className="relative h-56 overflow-hidden">
+                        {coverImage ? (
+                          <img
+                            src={coverImage}
+                            alt={deal.destination_city}
+                            className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-blue-300 via-sky-100 to-white" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/20 to-transparent" />
+                        <div className="absolute top-4 left-4 flex gap-2 flex-wrap">
+                          <Badge className="bg-white/90 text-gray-900 hover:bg-white border-0">
+                            {deal.airline || "Michels Travel"}
+                          </Badge>
+                          <Badge variant="secondary" className="bg-blue-500/90 text-white border-0 capitalize">
+                            {deal.cabin_class.replace("_", " ")}
+                          </Badge>
+                        </div>
+                        <div className="absolute bottom-4 left-4 right-4">
+                          <div className="flex items-center gap-2 text-white/80 text-xs uppercase tracking-[0.18em] mb-2">
+                            <MapPin className="h-3.5 w-3.5" />
+                            {deal.origin} <ArrowRight className="h-3.5 w-3.5" /> {deal.destination}
+                          </div>
+                          <h3 className="text-2xl font-display font-bold text-white leading-tight">
+                            {deal.destination_city || deal.destination}
+                          </h3>
+                        </div>
+                      </div>
+
+                      <CardContent className="p-6 flex flex-col flex-1">
+                        <div className="mb-5">
+                          <p className="text-sm font-semibold text-blue-600 mb-2">{deal.headline}</p>
+                          <p className="text-sm text-gray-500 leading-relaxed">
+                            {deal.description}
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                          <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
+                            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400 block mb-2">
+                              {deal.origin_city || deal.origin}
+                            </span>
+                            <span className="text-sm font-bold text-gray-900">
+                              {formatDealDate(deal.departure_date)}
+                            </span>
+                          </div>
+                          <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
+                            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400 block mb-2">
+                              {deal.return_date ? (deal.destination_city || deal.destination) : deal.destination}
+                            </span>
+                            <span className="text-sm font-bold text-gray-900">
+                              {deal.return_date ? formatDealDate(deal.return_date) : t("search.one_way")}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="mt-auto">
+                          <div className="flex items-end justify-between gap-4 mb-5">
+                            <div>
+                              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400 block mb-1">
+                                {t("home.catalog.price_label")}
+                              </span>
+                              <span className="text-3xl font-display font-extrabold text-gray-900">
+                                {formattedPrice || deal.price}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-emerald-600 font-semibold">
+                              <CheckCircle2 className="h-4 w-4" />
+                              {deal.airline || "Michels Travel"}
+                            </div>
+                          </div>
+
+                          <Button
+                            className="w-full rounded-xl h-12"
+                            onClick={() => openDealSearch(deal)}
+                            data-testid={`button-featured-deal-${deal.id}`}
+                          >
+                            {t("home.catalog.book")}
+                            <ChevronRight className="h-4 w-4 ml-1" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+
+          {!dealsLoading && catalogDeals.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="max-w-3xl mx-auto"
+            >
+              <Card className="border border-dashed border-blue-200 bg-white/90 shadow-sm">
+                <CardContent className="p-10 md:p-14 text-center">
+                  <div className="h-16 w-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-6">
+                    <Clock className="h-7 w-7" />
+                  </div>
+                  <h3 className="text-2xl font-display font-bold text-gray-900 mb-3">
+                    {t("home.catalog.empty")}
+                  </h3>
+                  <p className="text-gray-500 leading-relaxed mb-8">
+                    {t("home.catalog.empty_desc")}
+                  </p>
+                  <Button
+                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                    className="rounded-full px-8"
+                    data-testid="button-featured-catalog-empty-cta"
+                  >
+                    {t("home.catalog.empty_cta")}
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </div>
+      </section>
 
       <FlightBoard />
 

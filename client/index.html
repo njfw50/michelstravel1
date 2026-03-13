@@ -15,21 +15,21 @@
     <meta name="robots" content="index, follow" />
     <meta name="googlebot" content="index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1" />
 
-    <link rel="canonical" href="https://buyflights.net/" />
+    <link rel="canonical" href="https://www.michelstravel.agency/" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#0074DE" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Atendimento" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Michels Travel" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Michels Travel" />
     <meta property="og:title" content="Michels Travel - Passagens Aéreas com os Melhores Preços" />
     <meta property="og:description" content="Encontre passagens aéreas com os melhores preços. Compare voos de centenas de companhias e viaje pagando menos." />
-    <meta property="og:url" content="https://buyflights.net/" />
-    <meta property="og:image" content="https://buyflights.net/images/og-cover.png" />
+    <meta property="og:url" content="https://www.michelstravel.agency/" />
+    <meta property="og:image" content="https://www.michelstravel.agency/images/og-cover.png" />
     <meta property="og:image:width" content="1024" />
     <meta property="og:image:height" content="576" />
     <meta property="og:image:type" content="image/png" />
@@ -40,12 +40,9 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Michels Travel - Passagens Aéreas com os Melhores Preços" />
     <meta name="twitter:description" content="Encontre passagens aéreas com os melhores preços. Compare voos de centenas de companhias e viaje pagando menos." />
-    <meta name="twitter:image" content="https://buyflights.net/images/og-cover.png" />
+    <meta name="twitter:image" content="https://www.michelstravel.agency/images/og-cover.png" />
 
-    <meta name="theme-color" content="#0074DE" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Michels Travel" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -56,10 +53,10 @@
       "@context": "https://schema.org",
       "@type": "TravelAgency",
       "name": "Michels Travel",
-      "alternateName": ["Opção Eficiente", "Buy Flights"],
-      "url": "https://buyflights.net",
-      "logo": "https://buyflights.net/favicon.png",
-      "image": "https://buyflights.net/images/og-cover.png",
+      "alternateName": ["Opção Eficiente", "www.michelstravel.agency"],
+      "url": "https://www.michelstravel.agency",
+      "logo": "https://www.michelstravel.agency/favicon.png",
+      "image": "https://www.michelstravel.agency/images/og-cover.png",
       "description": "Agência de viagens especializada em passagens aéreas com os melhores preços. Compare voos de centenas de companhias aéreas e encontre as melhores ofertas para seu destino.",
       "email": "reservastrens@gmail.com",
       "telephone": "+1-862-350-1161",
@@ -108,14 +105,14 @@
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "Michels Travel",
-      "alternateName": "Buy Flights",
-      "url": "https://buyflights.net",
+      "alternateName": "www.michelstravel.agency",
+      "url": "https://www.michelstravel.agency",
       "description": "Compare e compre passagens aéreas com os melhores preços. Voos nacionais e internacionais.",
       "potentialAction": {
         "@type": "SearchAction",
         "target": {
           "@type": "EntryPoint",
-          "urlTemplate": "https://buyflights.net/search?origin={origin}&destination={destination}"
+          "urlTemplate": "https://www.michelstravel.agency/search?origin={origin}&destination={destination}"
         },
         "query-input": "required name=origin required name=destination"
       },
@@ -123,10 +120,10 @@
       "publisher": {
         "@type": "Organization",
         "name": "Michels Travel",
-        "url": "https://buyflights.net",
+        "url": "https://www.michelstravel.agency",
         "logo": {
           "@type": "ImageObject",
-          "url": "https://buyflights.net/favicon.png"
+          "url": "https://www.michelstravel.agency/favicon.png"
         },
         "contactPoint": {
           "@type": "ContactPoint",
@@ -141,80 +138,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- Manual Preamble Injection for Vite React HMR -->
-    <script type="module">
-      import RefreshRuntime from "/@react-refresh"
-      RefreshRuntime.injectIntoGlobalHook(window)
-      window.$RefreshReg$ = () => {}
-      window.$RefreshSig$ = () => (type) => type
-      window.__vite_plugin_react_preamble_installed__ = true
-    </script>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      (function() {
-        function removeExternal(el) {
-          if (!el || el.id === 'root') return;
-          el.style.setProperty('display', 'none', 'important');
-          el.style.setProperty('visibility', 'hidden', 'important');
-          el.style.setProperty('opacity', '0', 'important');
-          el.style.setProperty('pointer-events', 'none', 'important');
-          el.style.setProperty('width', '0', 'important');
-          el.style.setProperty('height', '0', 'important');
-          el.style.setProperty('position', 'absolute', 'important');
-          el.style.setProperty('left', '-9999px', 'important');
-          try { el.remove(); } catch(e) {}
-        }
-        function isExtWidget(el) {
-          if (!el || el.nodeType !== 1) return false;
-          var tag = el.tagName ? el.tagName.toLowerCase() : '';
-          var id = (el.id || '').toLowerCase();
-          var cls = (typeof el.className === 'string' ? el.className : '').toLowerCase();
-          var src = el.src ? el.src.toLowerCase() : '';
-          if (id.indexOf('replit') !== -1) return true;
-          if (cls.indexOf('replit') !== -1) return true;
-          if (tag === 'iframe' && (src.indexOf('replit') !== -1 || src.indexOf('pid-') !== -1)) return true;
-          if (el.hasAttribute && el.hasAttribute('data-replit-feedback')) return true;
-          if (el.parentNode === document.body && el.id !== 'root' && tag !== 'script' && tag !== 'link' && tag !== 'style' && tag !== 'meta') {
-            var style = window.getComputedStyle ? window.getComputedStyle(el) : null;
-            if (style && (style.position === 'fixed' || style.position === 'absolute') && style.zIndex > 999) {
-              var rect = el.getBoundingClientRect();
-              if (rect.bottom > window.innerHeight - 120 && rect.right > window.innerWidth - 200) {
-                return true;
-              }
-            }
-          }
-          return false;
-        }
-        function sweep() {
-          var children = document.body ? document.body.children : [];
-          for (var i = children.length - 1; i >= 0; i--) {
-            var c = children[i];
-            if (isExtWidget(c)) removeExternal(c);
-          }
-          var iframes = document.querySelectorAll('iframe');
-          for (var j = 0; j < iframes.length; j++) {
-            if (isExtWidget(iframes[j])) removeExternal(iframes[j]);
-          }
-        }
-        var obs = new MutationObserver(function(mutations) {
-          for (var i = 0; i < mutations.length; i++) {
-            var added = mutations[i].addedNodes;
-            for (var j = 0; j < added.length; j++) {
-              if (isExtWidget(added[j])) removeExternal(added[j]);
-            }
-          }
-        });
-        if (document.body) {
-          obs.observe(document.body, { childList: true, subtree: true });
-        } else {
-          document.addEventListener('DOMContentLoaded', function() {
-            obs.observe(document.body, { childList: true, subtree: true });
-          });
-        }
-        setInterval(sweep, 1000);
-        document.addEventListener('DOMContentLoaded', sweep);
-        window.addEventListener('load', sweep);
-      })();
-    </script>
   </body>
 </html>

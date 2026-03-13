@@ -4,6 +4,7 @@
  * email/password + JWT session system.
  */
 import passport from "passport";
+import { Strategy as GitHubStrategy, type Profile as GitHubProfile } from "passport-github2";
 import { Strategy as LocalStrategy } from "passport-local";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -13,6 +14,64 @@ import { authStorage } from "./storage";
 import { db } from "../../db";
 import { users } from "@shared/models/auth";
 import { eq } from "drizzle-orm";
+
+interface GitHubEmail {
+  value?: string;
+  verified?: boolean;
+  primary?: boolean;
+}
+
+function isGitHubEmail(value: unknown): value is GitHubEmail {
+  return typeof value === "object" && value !== null;
+}
+
+function getVerifiedGitHubEmail(profile: GitHubProfile): string | null {
+  const emails = Array.isArray(profile.emails)
+    ? (profile.emails as GitHubEmail[]).filter(isGitHubEmail)
+    : [];
+
+  const primaryVerified = emails.find((email) => email.primary && email.verified && email.value);
+  if (primaryVerified?.value) {
+    return primaryVerified.value.toLowerCase();
+  }
+
+  const fallbackVerified = emails.find((email) => email.verified && email.value);
+  if (fallbackVerified?.value) {
+    return fallbackVerified.value.toLowerCase();
+  }
+
+  return null;
+}
+
+function splitGitHubName(profile: GitHubProfile): { firstName: string | null; lastName: string | null } {
+  const rawName = profile.displayName?.trim() || profile.username?.trim() || "";
+  if (!rawName) {
+    return { firstName: null, lastName: null };
+  }
+
+  const parts = rawName.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) {
+    return { firstName: parts[0], lastName: null };
+  }
+
+  return {
+    firstName: parts[0] || null,
+    lastName: parts.slice(1).join(" ") || null,
+  };
+}
+
+function getGitHubProfileImage(profile: GitHubProfile): string | null {
+  const photo = Array.isArray(profile.photos) ? profile.photos[0]?.value : null;
+  return photo || null;
+}
+
+export function isGitHubAuthConfigured(): boolean {
+  return Boolean(
+    process.env.GITHUB_CLIENT_ID &&
+      process.env.GITHUB_CLIENT_SECRET &&
+      process.env.GITHUB_CALLBACK_URL
+  );
+}
 
 // ── Session setup ────────────────────────────────────────────
 export function getSession() {
@@ -73,6 +132,100 @@ passport.use(
     }
   )
 );
+
+if (isGitHubAuthConfigured()) {
+  passport.use(
+    new GitHubStrategy(
+      {
+        clientID: process.env.GITHUB_CLIENT_ID!,
+        clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+        callbackURL: process.env.GITHUB_CALLBACK_URL!,
+        scope: ["user:email"],
+        userAgent: "www.michelstravel.agency",
+        allRawEmails: true,
+      },
+      async (
+        _accessToken: string,
+        _refreshToken: string,
+        profile: GitHubProfile,
+        done: (err: Error | null, user?: unknown, info?: { message?: string }) => void
+      ) => {
+        try {
+          const githubId = profile.id;
+          const githubUsername = profile.username || null;
+          const email = getVerifiedGitHubEmail(profile);
+
+          if (!email) {
+            return done(null, false, { message: "github_email_required" });
+          }
+
+          const { firstName, lastName } = splitGitHubName(profile);
+          const profileImageUrl = getGitHubProfileImage(profile);
+
+          const [existingByGitHubId] = await db
+            .select()
+            .from(users)
+            .where(eq(users.githubId, githubId));
+
+          if (existingByGitHubId) {
+            const [updatedByGitHubId] = await db
+              .update(users)
+              .set({
+                email: existingByGitHubId.email || email,
+                githubUsername,
+                profileImageUrl: existingByGitHubId.profileImageUrl || profileImageUrl,
+                firstName: existingByGitHubId.firstName || firstName,
+                lastName: existingByGitHubId.lastName || lastName,
+                updatedAt: new Date(),
+              })
+              .where(eq(users.id, existingByGitHubId.id))
+              .returning();
+
+            return done(null, updatedByGitHubId);
+          }
+
+          const [existingByEmail] = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, email));
+
+          if (existingByEmail) {
+            const [linkedUser] = await db
+              .update(users)
+              .set({
+                githubId,
+                githubUsername,
+                profileImageUrl: existingByEmail.profileImageUrl || profileImageUrl,
+                firstName: existingByEmail.firstName || firstName,
+                lastName: existingByEmail.lastName || lastName,
+                updatedAt: new Date(),
+              })
+              .where(eq(users.id, existingByEmail.id))
+              .returning();
+
+            return done(null, linkedUser);
+          }
+
+          const [newUser] = await db
+            .insert(users)
+            .values({
+              email,
+              firstName,
+              lastName,
+              profileImageUrl,
+              githubId,
+              githubUsername,
+            } as typeof users.$inferInsert)
+            .returning();
+
+          return done(null, newUser);
+        } catch (err) {
+          return done(err as Error);
+        }
+      }
+    )
+  );
+}
 
 passport.serializeUser((user: any, cb) => cb(null, user.id));
 passport.deserializeUser(async (id: string, cb) => {

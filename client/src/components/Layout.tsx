@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n";
 import { LoginDialog } from "@/components/LoginDialog";
+import { closeLoginDialog, getLoginDialogEventName, openLoginDialog } from "@/lib/auth-utils";
 import logo from "@assets/LOGO_1770751298475.png";
 
 const LANG_OPTIONS = [
@@ -77,6 +78,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [location, setLocation] = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const { t } = useI18n();
@@ -86,6 +88,41 @@ export function Layout({ children }: { children: React.ReactNode }) {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    const syncFromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      const nextAuthError = params.get("authError");
+      const shouldOpen = params.get("login") === "true" || Boolean(nextAuthError);
+
+      setAuthError(nextAuthError);
+      setLoginDialogOpen(shouldOpen);
+    };
+
+    const handleOpenLoginDialog = (event: Event) => {
+      const detail = (event as CustomEvent<{ authError?: string | null }>).detail;
+      setAuthError(detail?.authError || null);
+      setLoginDialogOpen(true);
+    };
+
+    syncFromUrl();
+    window.addEventListener(getLoginDialogEventName(), handleOpenLoginDialog as EventListener);
+    window.addEventListener("popstate", syncFromUrl);
+
+    return () => {
+      window.removeEventListener(getLoginDialogEventName(), handleOpenLoginDialog as EventListener);
+      window.removeEventListener("popstate", syncFromUrl);
+    };
+  }, []);
+
+  const handleLoginDialogChange = (open: boolean) => {
+    setLoginDialogOpen(open);
+
+    if (!open) {
+      setAuthError(null);
+      closeLoginDialog();
+    }
+  };
 
   const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
     queryKey: ["/api/admin/check"],
@@ -204,7 +241,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </>
               ) : (
                 <Button 
-                  onClick={() => setLoginDialogOpen(true)}
+                  onClick={() => openLoginDialog()}
                   className="rounded-full px-6 font-bold shadow-md shadow-blue-500/25 transition-all duration-200 text-sm bg-blue-500 hover:bg-blue-600 hover:-translate-y-0.5 text-white"
                   data-testid="button-signin"
                 >
@@ -284,7 +321,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </>
                 ) : (
                   <Button 
-                    onClick={() => { setIsMobileMenuOpen(false); setLoginDialogOpen(true); }}
+                    onClick={() => { setIsMobileMenuOpen(false); openLoginDialog(); }}
                     className="w-full justify-center bg-blue-500 text-white rounded-xl"
                   >
                     {t("nav.signin")}
@@ -296,7 +333,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         )}
       </AnimatePresence>
 
-      <LoginDialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen} />
+      <LoginDialog open={loginDialogOpen} onOpenChange={handleLoginDialogChange} authError={authError} />
 
       <main className="flex-1 pt-20">
         {children}

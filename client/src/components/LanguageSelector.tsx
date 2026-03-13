@@ -50,7 +50,7 @@ export function LanguageSelector() {
                     transition={{ delay: 0.35, duration: 0.4 }}
                   >
                     <h1 className="text-3xl font-display font-bold text-white mb-2 tracking-tight" data-testid="text-welcome-title">
-                      BuyFlights.net
+                      www.michelstravel.agency
                     </h1>
                     <div className="w-12 h-0.5 bg-white/40 mx-auto mb-4 rounded-full" />
                     <p className="text-blue-100 text-sm font-medium tracking-wide uppercase" data-testid="text-welcome-subtitle">
@@ -173,7 +173,7 @@ export function LanguageSelector() {
               </div>
 
               <div className="p-4 bg-gray-50 text-center border-t border-gray-200">
-                <p className="text-xs text-gray-400 font-medium tracking-widest uppercase">BuyFlights.net - Michels Travel</p>
+                <p className="text-xs text-gray-400 font-medium tracking-widest uppercase">www.michelstravel.agency - Michels Travel</p>
               </div>
             </motion.div>
           )}

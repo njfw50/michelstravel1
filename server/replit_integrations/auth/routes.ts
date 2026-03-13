@@ -2,12 +2,21 @@ import type { Express } from "express";
 import passport from "passport";
 import bcrypt from "bcryptjs";
 import { authStorage } from "./storage";
-import { isAuthenticated } from "./replitAuth";
+import { isAuthenticated, isGitHubAuthConfigured } from "./replitAuth";
 import { db } from "../../db";
 import { users } from "@shared/models/auth";
 import { eq } from "drizzle-orm";
 
 export function registerAuthRoutes(app: Express): void {
+  const loginRedirect = (authError?: string) => {
+    const params = new URLSearchParams();
+    params.set("login", "true");
+    if (authError) {
+      params.set("authError", authError);
+    }
+    return `/?${params.toString()}`;
+  };
+
   // ── GET current user ───────────────────────────────────────
   app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
@@ -75,7 +84,43 @@ export function registerAuthRoutes(app: Express): void {
 
   // ── GET /api/login (redirect for legacy compatibility) ─────
   app.get("/api/login", (req, res) => {
-    res.redirect("/?login=true");
+    res.redirect(loginRedirect());
+  });
+
+  // ── GET /api/auth/github ───────────────────────────────────
+  app.get("/api/auth/github", (req, res, next) => {
+    if (!isGitHubAuthConfigured()) {
+      return res.redirect(loginRedirect("github_not_configured"));
+    }
+
+    passport.authenticate("github", { scope: ["user:email"] })(req, res, next);
+  });
+
+  // ── GET /api/auth/github/callback ──────────────────────────
+  app.get("/api/auth/github/callback", (req, res, next) => {
+    if (!isGitHubAuthConfigured()) {
+      return res.redirect(loginRedirect("github_not_configured"));
+    }
+
+    passport.authenticate("github", (err: any, user: any, info: { message?: string } | undefined) => {
+      if (err) {
+        console.error("GitHub auth error:", err);
+        return res.redirect(loginRedirect("github_oauth_failed"));
+      }
+
+      if (!user) {
+        return res.redirect(loginRedirect(info?.message || "github_oauth_failed"));
+      }
+
+      req.login(user, (loginErr: unknown) => {
+        if (loginErr) {
+          console.error("GitHub login session error:", loginErr);
+          return res.redirect(loginRedirect("github_oauth_failed"));
+        }
+
+        return res.redirect("/");
+      });
+    })(req, res, next);
   });
 
   // ── GET /api/logout ────────────────────────────────────────

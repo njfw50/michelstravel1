@@ -41,6 +41,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { Booking } from "@shared/schema";
 import { SEO } from "@/components/SEO";
+import { openLoginDialog } from "@/lib/auth-utils";
 
 function formatDuration(duration: string) {
   if (!duration) return "";
@@ -541,7 +542,7 @@ export default function MyTrips() {
                   <p className="text-sm text-gray-500 mt-1">{t("trips.login_desc") || "Sign in to see all your bookings in one place, track flight status, and access your complete travel history."}</p>
                 </div>
                 <Button
-                  onClick={() => { window.location.href = "/api/login"; }}
+                  onClick={() => openLoginDialog()}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
                   data-testid="button-login-from-trips"
                 >

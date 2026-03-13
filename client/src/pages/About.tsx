@@ -19,8 +19,8 @@ export default function About() {
           "@context": "https://schema.org",
           "@type": "BreadcrumbList",
           "itemListElement": [
-            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://buyflights.net/" },
-            { "@type": "ListItem", "position": 2, "name": "Sobre Nós", "item": "https://buyflights.net/about" },
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.michelstravel.agency/" },
+          { "@type": "ListItem", "position": 2, "name": "Sobre Nós", "item": "https://www.michelstravel.agency/about" },
           ],
         }}
       />

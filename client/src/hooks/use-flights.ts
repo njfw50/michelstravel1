@@ -29,6 +29,32 @@ interface DuffelAircraft {
   iataCode: string | null;
 }
 
+export interface PublicFeaturedDeal {
+  id: number;
+  origin: string;
+  origin_city: string;
+  destination: string;
+  destination_city: string;
+  departure_date: string;
+  return_date: string;
+  price: string;
+  price_value: number | null;
+  currency: string;
+  airline: string;
+  cabin_class: string;
+  headline: string;
+  description: string;
+  booking_url: string;
+  created_at: string;
+}
+
+interface PublicFeaturedDealsResponse {
+  deals: PublicFeaturedDeal[];
+  count: number;
+  site: string;
+  generated_at: string;
+}
+
 export function useFlightSearch(params: Partial<FlightSearchParams> & { legs?: string }) {
   const isEnabled = !!(params.origin && params.destination && params.date);
 
@@ -97,6 +123,19 @@ export function useFeaturedAirports() {
       return res.json();
     },
     staleTime: 1000 * 60 * 60,
+  });
+}
+
+export function useFeaturedDeals() {
+  return useQuery<PublicFeaturedDeal[]>({
+    queryKey: ["/api/public/flight-deals"],
+    queryFn: async () => {
+      const res = await fetch("/api/public/flight-deals", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch featured deals");
+      const data = (await res.json()) as PublicFeaturedDealsResponse;
+      return data.deals || [];
+    },
+    staleTime: 1000 * 60 * 10,
   });
 }
 

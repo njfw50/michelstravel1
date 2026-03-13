@@ -1555,7 +1555,7 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  const SITE_URL = "https://buyflights.net";
+  const SITE_URL = "https://www.michelstravel.agency";
 
   app.get('/robots.txt', (_req, res) => {
     res.type('text/plain');
@@ -1637,12 +1637,12 @@ Sitemap: ${SITE_URL}/sitemap.xml
   const CHATBOT_SYSTEM_PROMPT = `You are the friendly customer support assistant for Michels Travel ("Opção Eficiente"), a flight booking agency based in New Jersey, USA. Your name is Mia.
 
 ABOUT THE COMPANY:
-- Flight booking website: buyflights.net (this is our flight search and booking platform — always direct customers here for flights)
+- Flight booking website: www.michelstravel.agency (this is our flight search and booking platform — always direct customers here for flights)
 - Contact email: reservastrens@gmail.com
 - Phone: +1 (862) 350-1161
 - Location: New Jersey, USA
 - Services: Flight search and booking with competitive prices worldwide
-- IMPORTANT: Never mention or recommend "michelstravel.com" — our flight booking site is buyflights.net
+- IMPORTANT: Never mention or recommend any old or incorrect domains — our flight booking site is www.michelstravel.agency
 - Payment: Secure credit card payment via Stripe (card details entered directly on our site)
 - Languages: Portuguese, English, Spanish
 
@@ -3256,7 +3256,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
   app.get('/api/public/flight-deals', async (_req, res) => {
     try {
       const deals = await storage.getFeaturedDeals(true);
-      const siteUrl = 'https://buyflights.net';
+      const siteUrl = 'https://www.michelstravel.agency';
 
       const formatted = deals.map(deal => ({
         id: deal.id,

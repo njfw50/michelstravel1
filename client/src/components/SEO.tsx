@@ -10,7 +10,7 @@ interface SEOProps {
   structuredData?: Record<string, unknown>;
 }
 
-const BASE_URL = "https://buyflights.net";
+const BASE_URL = "https://www.michelstravel.agency";
 const SITE_NAME = "Michels Travel";
 const DEFAULT_IMAGE = `${BASE_URL}/images/og-cover.png`;
 

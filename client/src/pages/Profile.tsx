@@ -23,6 +23,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { SEO } from "@/components/SEO";
+import { openLoginDialog } from "@/lib/auth-utils";
 
 interface ProfileData {
   id: string;
@@ -118,7 +119,7 @@ export default function Profile() {
               <p className="text-sm text-gray-500 mt-1">{t("profile.login_required_desc") || "You need to be logged in to view and edit your profile."}</p>
             </div>
             <Button
-              onClick={() => { window.location.href = "/api/login"; }}
+              onClick={() => openLoginDialog()}
               className="bg-blue-600 text-white font-bold"
               data-testid="button-login-from-profile"
             >

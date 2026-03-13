@@ -59,21 +59,21 @@ export default function BlogPost() {
           "@type": "Article",
           "headline": post?.title,
           "description": post?.excerpt,
-          "image": post?.coverImage || "https://buyflights.net/images/og-cover.png",
+        "image": post?.coverImage || "https://www.michelstravel.agency/images/og-cover.png",
           "author": { "@type": "Organization", "name": "Michels Travel" },
           "publisher": {
             "@type": "Organization",
             "name": "Michels Travel",
-            "logo": { "@type": "ImageObject", "url": "https://buyflights.net/favicon.png" },
+          "logo": { "@type": "ImageObject", "url": "https://www.michelstravel.agency/favicon.png" },
           },
           "datePublished": post?.createdAt,
-          "mainEntityOfPage": `https://buyflights.net/blog/${post?.slug}`,
+        "mainEntityOfPage": `https://www.michelstravel.agency/blog/${post?.slug}`,
           "breadcrumb": {
             "@type": "BreadcrumbList",
             "itemListElement": [
-              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://buyflights.net/" },
-              { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://buyflights.net/blog" },
-              { "@type": "ListItem", "position": 3, "name": post?.title, "item": `https://buyflights.net/blog/${post?.slug}` },
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.michelstravel.agency/" },
+        { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://www.michelstravel.agency/blog" },
+        { "@type": "ListItem", "position": 3, "name": post?.title, "item": `https://www.michelstravel.agency/blog/${post?.slug}` },
             ],
           },
         }}

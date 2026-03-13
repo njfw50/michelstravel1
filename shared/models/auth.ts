@@ -21,6 +21,8 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   phone: varchar("phone"),
   profileImageUrl: varchar("profile_image_url"),
+  githubId: varchar("github_id").unique(),
+  githubUsername: varchar("github_username"),
   passwordHash: varchar("password_hash"),
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
