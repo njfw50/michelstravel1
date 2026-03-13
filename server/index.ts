@@ -9,6 +9,7 @@ import { DuffelWebhookHandlers } from "./duffelWebhookHandlers";
 import { createServer } from "http";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 import { runAppMigrations } from "./appMigrations";
+import { ensureDefaultBlogPosts } from "./blogSeed";
 
 const app = express();
 const httpServer = createServer(app);
@@ -192,6 +193,7 @@ app.use((req, res, next) => {
 
 (async () => {
   await runAppMigrations();
+  await ensureDefaultBlogPosts();
   initStripe().catch(console.error);
 
   await setupAuth(app);
