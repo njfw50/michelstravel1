@@ -8,7 +8,6 @@ import { flightSearches, bookings, siteSettings, conversations, messages, insert
 import { users } from "@shared/models/auth";
 import { desc, eq, and, gt } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import OpenAI from "openai";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.SESSION_SECRET!;
@@ -24,6 +23,16 @@ function generateReferenceCode(): string {
 }
 import { searchFlights, getFlight, searchPlaces, getAirlines, getAirports, getAircraft, initializeReferenceData, isTestMode, activeTokenIsTest, hasLiveToken, hasTestToken, setTestModeCache, clearReferenceDataCache, loadTestModeSetting, ensureTestModeLoaded, refreshOffer } from "./services/duffel";
 import { sendBookingConfirmationEmail, sendChatEscalationEmail } from "./services/emailService";
+import { getChatbotAiClient, getChatbotAiStatus } from "./services/chatbotAi";
+import {
+  buildAgentLookupSummary,
+  buildAgentSearchSummary,
+  buildBasicChatResponse,
+  buildBookingNotFoundMessage,
+  buildSearchErrorMessage,
+  normalizeChatLanguage,
+  parseAgentFallbackRequest,
+} from "./services/chatbotFallback";
 
 async function getCommissionRate(): Promise<number> {
   const settings = await storage.getSiteSettings();
@@ -1629,10 +1638,43 @@ Sitemap: ${SITE_URL}/sitemap.xml
 
   // === AI CHATBOT ROUTES ===
 
-  const chatbotOpenai = new OpenAI({
-    apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-  });
+  const chatbotAi = getChatbotAiClient();
+  const chatbotAiStatus = getChatbotAiStatus();
+
+  const writeChatEvent = (res: Response, payload: Record<string, unknown>) => {
+    res.write(`data: ${JSON.stringify(payload)}\n\n`);
+    if (typeof (res as any).flush === "function") {
+      (res as any).flush();
+    }
+  };
+
+  const getConversationLanguage = async (sessionId: number) => {
+    const [conversation] = await db
+      .select({ language: conversations.language })
+      .from(conversations)
+      .where(eq(conversations.id, sessionId))
+      .limit(1);
+
+    return normalizeChatLanguage(conversation?.language);
+  };
+
+  const markConversationEscalated = async (sessionId: number) => {
+    await db
+      .update(conversations)
+      .set({ escalated: true, escalatedAt: new Date() })
+      .where(eq(conversations.id, sessionId));
+
+    const allMsgs = await db
+      .select()
+      .from(messages)
+      .where(eq(messages.conversationId, sessionId))
+      .orderBy(messages.createdAt);
+
+    const chatLog = allMsgs.map((message) => `[${message.role}]: ${message.content}`).join("\n\n");
+    sendChatEscalationEmail(sessionId, chatLog).catch((err) =>
+      console.error("Failed to send escalation email:", err),
+    );
+  };
 
   const CHATBOT_SYSTEM_PROMPT = `You are the friendly customer support assistant for Michels Travel ("Opção Eficiente"), a flight booking agency based in New Jersey, USA. Your name is Mia.
 
@@ -1704,6 +1746,10 @@ BOOKING LOOKUP:
     }
   ];
 
+  app.get('/api/chatbot/status', (_req, res) => {
+    res.json(chatbotAiStatus);
+  });
+
   app.post('/api/chatbot/session', async (req, res) => {
     try {
       const { visitorId, language } = req.body;
@@ -1738,6 +1784,8 @@ BOOKING LOOKUP:
         .where(eq(messages.conversationId, sessionId))
         .orderBy(messages.createdAt);
 
+      const sessionLanguage = await getConversationLanguage(sessionId);
+
       const chatHistory: { role: "system" | "user" | "assistant"; content: string }[] = [
         { role: "system", content: CHATBOT_SYSTEM_PROMPT },
         ...existingMessages.map(m => ({
@@ -1758,9 +1806,32 @@ BOOKING LOOKUP:
 
       let fullResponse = "";
 
+      if (!chatbotAi.client) {
+        const fallback = buildBasicChatResponse(content, sessionLanguage);
+        fullResponse = fallback.message;
+
+        if (fullResponse && !clientDisconnected) {
+          writeChatEvent(res, { content: fullResponse });
+        }
+
+        await db.insert(messages).values({
+          conversationId: sessionId,
+          role: "assistant",
+          content: fullResponse,
+        });
+
+        if (fallback.escalate) {
+          await markConversationEscalated(sessionId);
+        }
+
+        writeChatEvent(res, { done: true, escalated: fallback.escalate });
+        res.end();
+        return;
+      }
+
       try {
-        const completion = await chatbotOpenai.chat.completions.create({
-          model: "gpt-4o-mini",
+        const completion = await chatbotAi.client.chat.completions.create({
+          model: chatbotAi.primaryModel!,
           messages: chatHistory,
           tools: CHATBOT_TOOLS,
           max_tokens: 512,
@@ -1803,8 +1874,8 @@ BOOKING LOOKUP:
                     content: `[Function called: lookup_booking] Booking found: ${JSON.stringify(bookingInfo)}`,
                   });
 
-                  const followUp = await chatbotOpenai.chat.completions.create({
-                    model: "gpt-4o-mini",
+                  const followUp = await chatbotAi.client.chat.completions.create({
+                    model: chatbotAi.primaryModel!,
                     messages: [
                       ...chatHistory,
                       { role: "user" as const, content: `Based on the booking data above, write a helpful summary for the customer. Share status, flight details, ticket status, and airline reference if available. Respond in the same language the customer has been using. Do NOT share any internal IDs, prices, or email addresses.` },
@@ -1817,8 +1888,8 @@ BOOKING LOOKUP:
                     role: "assistant",
                     content: `[Function called: lookup_booking] No booking found with reference "${args.reference}" and email "${args.email}".`,
                   });
-                  const followUp = await chatbotOpenai.chat.completions.create({
-                    model: "gpt-4o-mini",
+                  const followUp = await chatbotAi.client.chat.completions.create({
+                    model: chatbotAi.primaryModel!,
                     messages: [
                       ...chatHistory,
                       { role: "user" as const, content: `The booking was not found. Let the customer know politely and suggest they double-check their reference code (starts with MT-) and email. Respond in the same language they've been using.` },
@@ -1829,7 +1900,7 @@ BOOKING LOOKUP:
                 }
               } catch (lookupErr: any) {
                 console.error("Booking lookup error in chatbot:", lookupErr?.message);
-                fullResponse = "I tried to look up your booking but encountered a technical issue. Please try the booking lookup on the 'My Trips' page, or I can connect you with a human agent.";
+                fullResponse = buildBasicChatResponse(content, sessionLanguage).message;
               }
             } else {
               fullResponse = choice.message.content || "I need both your reference code (starts with MT-) and your email address to look up your booking.";
@@ -1841,15 +1912,15 @@ BOOKING LOOKUP:
       } catch (modelError: any) {
         console.error("Primary model failed, trying fallback:", modelError.message);
         try {
-          const fallback = await chatbotOpenai.chat.completions.create({
-            model: "gpt-5-nano",
+          const fallback = await chatbotAi.client.chat.completions.create({
+            model: chatbotAi.fallbackModel!,
             messages: chatHistory,
             max_tokens: 512,
           });
           fullResponse = fallback.choices[0]?.message?.content || "";
         } catch (fallbackError: any) {
           console.error("Fallback model also failed:", fallbackError.message);
-          fullResponse = "Desculpe, estou com dificuldades técnicas no momento. Por favor, tente novamente em alguns instantes ou envie uma mensagem pela seção 'Mensagens' no menu do site.";
+          fullResponse = buildBasicChatResponse(content, sessionLanguage).message;
         }
       }
 
@@ -1866,21 +1937,10 @@ BOOKING LOOKUP:
 
       const shouldEscalate = fullResponse.trimStart().startsWith("[ESCALATE]");
       if (shouldEscalate) {
-        await db.update(conversations)
-          .set({ escalated: true, escalatedAt: new Date() })
-          .where(eq(conversations.id, sessionId));
-
-        const allMsgs = await db.select().from(messages)
-          .where(eq(messages.conversationId, sessionId))
-          .orderBy(messages.createdAt);
-        const chatLog = allMsgs.map(m => `[${m.role}]: ${m.content}`).join("\n\n");
-        sendChatEscalationEmail(sessionId, chatLog).catch(err => 
-          console.error("Failed to send escalation email:", err)
-        );
+        await markConversationEscalated(sessionId);
       }
 
-      res.write(`data: ${JSON.stringify({ done: true, escalated: shouldEscalate })}\n\n`);
-      if (typeof (res as any).flush === "function") (res as any).flush();
+      writeChatEvent(res, { done: true, escalated: shouldEscalate });
       res.end();
     } catch (error) {
       console.error('Chatbot message error:', error);
@@ -2018,6 +2078,160 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
     }
   ];
 
+  const handleAgentFallbackRequest = async (
+    res: Response,
+    sessionId: number,
+    content: string,
+    language: "pt" | "en" | "es",
+  ) => {
+    const action = parseAgentFallbackRequest(content, language);
+
+    if (action.type === "search_flights") {
+      writeChatEvent(res, { content: "🔍 ", type: "text" });
+
+      const searchNotice =
+        language === "en"
+          ? `Searching flights from ${action.args.origin} to ${action.args.destination}...`
+          : language === "es"
+            ? `Buscando vuelos de ${action.args.origin} a ${action.args.destination}...`
+            : `Buscando voos de ${action.args.origin} para ${action.args.destination}...`;
+
+      writeChatEvent(res, { content: searchNotice, type: "text" });
+
+      try {
+        const flights = await searchFlights({
+          origin: action.args.origin,
+          destination: action.args.destination,
+          date: action.args.date,
+          returnDate: action.args.returnDate,
+          adults: action.args.adults,
+          cabinClass: action.args.cabinClass,
+          passengers: action.args.adults,
+        });
+
+        const chatMarkupRate = await getCommissionRate();
+        const topFlights = flights.slice(0, 5).map((flight) => ({
+          id: flight.id,
+          airline: flight.airline,
+          flightNumber: flight.flightNumber,
+          departureTime: flight.departureTime,
+          arrivalTime: flight.arrivalTime,
+          duration: flight.duration,
+          price: parseFloat((flight.price * (1 + chatMarkupRate)).toFixed(2)),
+          currency: flight.currency,
+          stops: flight.stops,
+          logoUrl: flight.logoUrl,
+          originCode: flight.originCode || action.args.origin,
+          destinationCode: flight.destinationCode || action.args.destination,
+          originCity: flight.originCity,
+          destinationCity: flight.destinationCity,
+        }));
+
+        if (topFlights.length > 0) {
+          writeChatEvent(res, { flights: topFlights, type: "flights" });
+        }
+
+        const summary = buildAgentSearchSummary(
+          language,
+          topFlights,
+          action.args.origin,
+          action.args.destination,
+          action.args.date,
+        );
+
+        writeChatEvent(res, { content: summary, type: "text" });
+
+        await db.insert(messages).values({
+          conversationId: sessionId,
+          role: "assistant",
+          content: `[AGENT-FALLBACK: Searched ${action.args.origin}→${action.args.destination} on ${action.args.date}]\n${summary}`,
+        });
+      } catch (searchError) {
+        console.error("Fallback flight search error:", searchError);
+        const errorMessage = buildSearchErrorMessage(language);
+        writeChatEvent(res, { content: errorMessage, type: "text" });
+
+        await db.insert(messages).values({
+          conversationId: sessionId,
+          role: "assistant",
+          content: errorMessage,
+        });
+      }
+
+      writeChatEvent(res, { done: true, escalated: false });
+      res.end();
+      return;
+    }
+
+    if (action.type === "lookup_booking") {
+      try {
+        const booking = await storage.getBookingByReferenceAndEmail(action.args.reference, action.args.email);
+        if (!booking) {
+          const notFoundMessage = buildBookingNotFoundMessage(language, action.args.reference);
+          writeChatEvent(res, { content: notFoundMessage, type: "text" });
+
+          await db.insert(messages).values({
+            conversationId: sessionId,
+            role: "assistant",
+            content: notFoundMessage,
+          });
+        } else {
+          const flightData = booking.flightData as any;
+          const passengerDetails = Array.isArray(booking.passengerDetails) ? booking.passengerDetails : [];
+          const summary = buildAgentLookupSummary(language, {
+            referenceCode: booking.referenceCode,
+            status: booking.status,
+            ticketStatus: (booking as any).ticketStatus || "pending",
+            airlineReference: (booking as any).duffelBookingReference || null,
+            airline: flightData?.airline || null,
+            origin: flightData?.origin || flightData?.originCode || null,
+            destination: flightData?.destination || flightData?.destinationCode || null,
+            departureDate: flightData?.departureTime || null,
+            passengerCount: passengerDetails.length,
+          });
+
+          writeChatEvent(res, { content: summary, type: "text" });
+
+          await db.insert(messages).values({
+            conversationId: sessionId,
+            role: "assistant",
+            content: `[AGENT-FALLBACK: Looked up booking ${action.args.reference}]\n${summary}`,
+          });
+        }
+      } catch (lookupError: any) {
+        console.error("Fallback booking lookup error:", lookupError?.message);
+        const errorMessage = buildBasicChatResponse(content, language).message;
+        writeChatEvent(res, { content: errorMessage, type: "text" });
+
+        await db.insert(messages).values({
+          conversationId: sessionId,
+          role: "assistant",
+          content: errorMessage,
+        });
+      }
+
+      writeChatEvent(res, { done: true, escalated: false });
+      res.end();
+      return;
+    }
+
+    const shouldEscalate = action.type === "escalate";
+    writeChatEvent(res, { content: action.message, type: "text" });
+
+    await db.insert(messages).values({
+      conversationId: sessionId,
+      role: "assistant",
+      content: action.message,
+    });
+
+    if (shouldEscalate) {
+      await markConversationEscalated(sessionId);
+    }
+
+    writeChatEvent(res, { done: true, escalated: shouldEscalate });
+    res.end();
+  };
+
   app.post('/api/chatbot/agent-message', async (req, res) => {
     try {
       const { sessionId, content } = req.body;
@@ -2034,6 +2248,8 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
       const existingMessages = await db.select().from(messages)
         .where(eq(messages.conversationId, sessionId))
         .orderBy(messages.createdAt);
+
+      const sessionLanguage = await getConversationLanguage(sessionId);
 
       const chatHistory: { role: "system" | "user" | "assistant"; content: string }[] = [
         { role: "system", content: AGENT_SYSTEM_PROMPT },
@@ -2053,12 +2269,24 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
       let clientDisconnected = false;
       req.on("close", () => { clientDisconnected = true; });
 
-      const initialResponse = await chatbotOpenai.chat.completions.create({
-        model: "gpt-5-nano",
-        messages: chatHistory,
-        tools: AGENT_TOOLS,
-        max_completion_tokens: 512,
-      });
+      if (!chatbotAi.client) {
+        await handleAgentFallbackRequest(res, sessionId, content, sessionLanguage);
+        return;
+      }
+
+      let initialResponse;
+      try {
+        initialResponse = await chatbotAi.client.chat.completions.create({
+          model: chatbotAi.agentModel!,
+          messages: chatHistory,
+          tools: AGENT_TOOLS,
+          max_completion_tokens: 512,
+        });
+      } catch (agentModelError) {
+        console.error("Primary agent model failed, using fallback rules:", agentModelError);
+        await handleAgentFallbackRequest(res, sessionId, content, sessionLanguage);
+        return;
+      }
 
       const choice = initialResponse.choices[0];
 
@@ -2124,8 +2352,8 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
               { role: "user" as const, content: `The search results are now displayed to the customer. Write a brief friendly summary message about the results found. Mention how many flights were found and the price range. Tell them they can click "Book" on any option. Respond in the same language the customer has been using.` },
             ];
 
-            const followUp = await chatbotOpenai.chat.completions.create({
-              model: "gpt-5-nano",
+            const followUp = await chatbotAi.client!.chat.completions.create({
+              model: chatbotAi.agentModel!,
               messages: followUpMessages,
               stream: true,
               max_completion_tokens: 256,
@@ -2208,8 +2436,8 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
                   content: `[Function called: lookup_booking] Booking found: ${JSON.stringify(bookingInfo)}`,
                 });
 
-                const followUp = await chatbotOpenai.chat.completions.create({
-                  model: "gpt-5-nano",
+                const followUp = await chatbotAi.client!.chat.completions.create({
+                  model: chatbotAi.agentModel!,
                   messages: [
                     ...chatHistory,
                     { role: "user" as const, content: `Present this booking information clearly. Include: status, ticket status, airline reference, passenger info, payment status, flight details. Do NOT share internal system IDs. Respond in the same language the customer has been using.` },
@@ -2336,8 +2564,8 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
                   content: `[Function called: cancel_booking] Booking ${booking.referenceCode} has been cancelled.${refundInfo}`,
                 });
 
-                const followUp = await chatbotOpenai.chat.completions.create({
-                  model: "gpt-5-nano",
+                const followUp = await chatbotAi.client!.chat.completions.create({
+                  model: chatbotAi.agentModel!,
                   messages: [
                     ...chatHistory,
                     { role: "user" as const, content: `Confirm the cancellation to the customer. Mention the reference code, and any refund info. Be empathetic. Respond in the same language they've been using.` },

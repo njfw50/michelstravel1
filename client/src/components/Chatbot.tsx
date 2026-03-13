@@ -33,6 +33,16 @@ interface ChatMessage {
   flights?: FlightResult[];
 }
 
+interface ChatbotStatus {
+  provider: "openai" | "gemini" | "none";
+  available: boolean;
+  agentMode: "ai" | "basic";
+  label: string;
+  primaryModel: string | null;
+  fallbackModel: string | null;
+  agentModel: string | null;
+}
+
 export function Chatbot() {
   const { t, language } = useI18n();
   const [, navigate] = useLocation();
@@ -44,6 +54,7 @@ export function Chatbot() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [escalated, setEscalated] = useState(false);
   const [agentMode, setAgentMode] = useState(false);
+  const [status, setStatus] = useState<ChatbotStatus | null>(null);
   const [showPulse, setShowPulse] = useState(true);
   const [lastAdminMsgId, setLastAdminMsgId] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -63,6 +74,21 @@ export function Chatbot() {
       inputRef.current.focus();
     }
   }, [isOpen]);
+
+  const loadStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/chatbot/status");
+      if (!res.ok) return;
+      const data = (await res.json()) as ChatbotStatus;
+      setStatus(data);
+    } catch {
+      // keep widget usable even if status check fails
+    }
+  }, []);
+
+  useEffect(() => {
+    loadStatus();
+  }, [loadStatus]);
 
   useEffect(() => {
     if (escalated && sessionId && isOpen) {
@@ -152,6 +178,9 @@ export function Chatbot() {
   const handleOpen = async () => {
     setIsOpen(true);
     setShowPulse(false);
+    if (!status) {
+      void loadStatus();
+    }
     if (!sessionId) {
       const id = await createSession();
       if (id && chatMessages.length === 0) {
@@ -366,6 +395,24 @@ export function Chatbot() {
     }
   };
 
+  const providerLabel =
+    status?.provider === "gemini"
+      ? "Gemini"
+      : status?.provider === "openai"
+        ? "OpenAI"
+        : language === "pt"
+          ? "Modo básico"
+          : language === "es"
+            ? "Modo básico"
+            : "Basic mode";
+
+  const basicModeHint =
+    language === "pt"
+      ? "Modo básico ativo: para busca automática, envie origem, destino e data. Ex: GRU para MCO em 2026-06-15."
+      : language === "es"
+        ? "Modo básico activo: para búsqueda automática, envía origen, destino y fecha. Ej: GRU a MCO el 2026-06-15."
+        : "Basic mode is active: for automatic search, send origin, destination, and date. Example: GRU to MCO on 2026-06-15.";
+
   const renderFlightCard = (flight: FlightResult) => (
     <div
       key={flight.id}
@@ -434,7 +481,12 @@ export function Chatbot() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold leading-tight">Mia</p>
-                    <p className="text-[11px] leading-tight opacity-80">{t("chatbot.subtitle")}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[11px] leading-tight opacity-80">{t("chatbot.subtitle")}</p>
+                      <Badge className="bg-white/15 text-white border-white/15 hover:bg-white/15">
+                        {providerLabel}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
                 <Button
@@ -509,6 +561,11 @@ export function Chatbot() {
               </div>
 
               <div className="border-t p-3">
+                {agentMode && status?.agentMode === "basic" && (
+                  <div className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
+                    {basicModeHint}
+                  </div>
+                )}
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <button
                     onClick={() => setAgentMode(!agentMode)}
@@ -573,7 +630,7 @@ export function Chatbot() {
                   </Button>
                 </div>
                 <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
-                  {t("chatbot.powered_by")}
+                  {t("chatbot.powered_by")} • {providerLabel}
                 </p>
               </div>
             </Card>
