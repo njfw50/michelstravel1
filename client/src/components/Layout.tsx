@@ -147,14 +147,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
           ? "bg-white/97 backdrop-blur-xl border-b border-gray-200/70 shadow-[0_2px_20px_-4px_hsl(213_90%_50%/0.08)]"
           : "bg-transparent border-b border-transparent"
       )}>
-        <div className="container mx-auto px-4 md:px-6 h-20 flex items-center justify-between gap-4">
+        <div className="container mx-auto px-4 md:px-6 h-20 md:h-24 flex items-center justify-between gap-4">
           <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-3 group">
-              <img 
-                src={logo} 
-                alt="Michels Travel" 
-                className="h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-              />
+            <Link href="/" className="flex items-center gap-4 group">
+              <div className="brand-mark-shell brand-mark-shell--header">
+                <img 
+                  src={logo} 
+                  alt="Michels Travel" 
+                  className="transition-transform duration-300 group-hover:scale-[1.04]"
+                />
+              </div>
             </Link>
 
             <nav className="hidden md:flex items-center gap-0.5">
@@ -339,7 +341,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <LoginDialog open={loginDialogOpen} onOpenChange={handleLoginDialogChange} authError={authError} />
 
-      <main className="flex-1 pt-20">
+      <main className="flex-1 pt-20 md:pt-24">
         {children}
       </main>
 
@@ -349,11 +351,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
               <div className="md:col-span-4">
                 <div className="flex items-center gap-2 mb-5">
-                  <img 
-                    src={logo} 
-                    alt="Michels Travel" 
-                    className="h-12 w-auto object-contain"
-                  />
+                  <div className="brand-mark-shell brand-mark-shell--footer">
+                    <img 
+                      src={logo} 
+                      alt="Michels Travel" 
+                    />
+                  </div>
                 </div>
                 <p className="text-sm leading-relaxed text-gray-500 max-w-xs">
                   {t("footer.slogan")}

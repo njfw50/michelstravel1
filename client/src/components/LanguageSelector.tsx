@@ -36,14 +36,17 @@ export function LanguageSelector() {
                   <div className="absolute top-12 right-16 w-12 h-12 border border-white/20 rounded-full" />
                 </div>
                 <div className="relative z-10">
-                  <motion.img
-                    src={logo}
-                    alt="Michels Travel"
-                    className="h-20 w-auto mx-auto mb-6 object-contain drop-shadow-lg"
+                  <motion.div
+                    className="brand-mark-shell brand-mark-shell--welcome mx-auto mb-6"
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.4 }}
-                  />
+                  >
+                    <img
+                      src={logo}
+                      alt="Michels Travel"
+                    />
+                  </motion.div>
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -108,11 +111,12 @@ export function LanguageSelector() {
               className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-200"
             >
               <div className="bg-blue-50 p-8 text-center border-b border-gray-200">
-                <img
-                  src={logo}
-                  alt="Michels Travel"
-                  className="h-16 w-auto mx-auto mb-6 object-contain"
-                />
+                <div className="brand-mark-shell brand-mark-shell--selector mx-auto mb-6">
+                  <img
+                    src={logo}
+                    alt="Michels Travel"
+                  />
+                </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2 font-display tracking-wide" data-testid="text-language-title">Selecione seu idioma</h2>
                 <p className="text-gray-500 text-sm">Por favor, selecione seu idioma para continuar.</p>
                 <p className="text-gray-500 text-sm">Please select your language to continue.</p>
