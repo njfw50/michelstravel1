@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Line, ComposedChart } from 'recharts';
 import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare, AlertTriangle, CheckCircle2, XCircle, Lock, Phone, Megaphone, Plus, Trash2, ExternalLink, Copy, Search, RefreshCw, ChevronDown, ChevronUp, Calendar, MapPin, ArrowRightLeft } from "lucide-react";
 import { VoiceEscalations } from "@/components/VoiceEscalations";
+import { AdminCommandCenter } from "@/components/AdminCommandCenter";
 import { useI18n } from "@/lib/i18n";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -815,6 +816,7 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [expandedBookingId, setExpandedBookingId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<"command" | "overview" | "bookings" | "settings">("command");
 
   const { data: adminCheck, isLoading: adminCheckLoading } = useQuery<{ isAdmin: boolean }>({
     queryKey: ["/api/admin/check"],
@@ -847,6 +849,17 @@ export default function AdminDashboard() {
       credentials: "include",
     });
     queryClient.invalidateQueries({ queryKey: ["/api/admin/check"] });
+  };
+
+  const openBookingsView = (options?: { status?: string; search?: string; bookingId?: number }) => {
+    setActiveTab("bookings");
+    setStatusFilter(options?.status ?? "all");
+    setSearchQuery(options?.search ?? "");
+    setExpandedBookingId(options?.bookingId ?? null);
+  };
+
+  const openSettingsView = () => {
+    setActiveTab("settings");
   };
 
   if (adminCheckLoading) {
@@ -910,12 +923,21 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 max-w-md" data-testid="tabs-admin-nav">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "command" | "overview" | "bookings" | "settings")} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 max-w-xl" data-testid="tabs-admin-nav">
+            <TabsTrigger value="command" data-testid="tab-command">Command Center</TabsTrigger>
             <TabsTrigger value="overview" data-testid="tab-overview">Visao Geral</TabsTrigger>
             <TabsTrigger value="bookings" data-testid="tab-bookings">Reservas</TabsTrigger>
             <TabsTrigger value="settings" data-testid="tab-settings">Configuracoes</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="command" className="space-y-6 mt-6">
+            <AdminCommandCenter
+              onOpenLiveDesk={() => setLocation("/admin/live-chat")}
+              onOpenBookings={openBookingsView}
+              onOpenSettings={openSettingsView}
+            />
+          </TabsContent>
 
           <TabsContent value="overview" className="space-y-6 mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

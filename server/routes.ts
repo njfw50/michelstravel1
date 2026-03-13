@@ -1287,6 +1287,337 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.get('/api/admin/command-center', requireAdmin, async (_req, res) => {
+    try {
+      const [
+        allBookings,
+        searchRows,
+        liveRequests,
+        activeLiveSessions,
+        inboxThreads,
+        unreadInboxCount,
+        escalations,
+        deals,
+        publishedPosts,
+        settings,
+      ] = await Promise.all([
+        db.select().from(bookings).orderBy(desc(bookings.createdAt)),
+        db.select().from(flightSearches).limit(1000),
+        storage.getLiveSessionRequests(),
+        storage.getActiveLiveSessions(),
+        storage.getAllInternalThreads(),
+        storage.getUnreadCountForAdmin(),
+        storage.getAllVoiceEscalations(),
+        storage.getFeaturedDeals(),
+        storage.getBlogPosts(),
+        storage.getSiteSettings(),
+      ]);
+
+      const numberValue = (value: unknown) => Number(value || 0);
+      const normalizeRoute = (origin?: string | null, destination?: string | null) => {
+        if (!origin || !destination) return null;
+        return `${origin}`.trim().toUpperCase() + "-" + `${destination}`.trim().toUpperCase();
+      };
+      const describeRoute = (routeKey: string) => routeKey.replace("-", " → ");
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const last7Days = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const last30Days = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      const todayBookings = allBookings.filter((booking) => booking.createdAt && new Date(booking.createdAt) >= today);
+      const weekBookings = allBookings.filter((booking) => booking.createdAt && new Date(booking.createdAt) >= last7Days);
+      const monthSearches = searchRows.filter((search) => search.lastSearchedAt && new Date(search.lastSearchedAt) >= last30Days);
+      const todaySearches = searchRows.filter((search) => search.lastSearchedAt && new Date(search.lastSearchedAt) >= today);
+
+      const revenueToday = todayBookings.reduce((sum, booking) => sum + numberValue(booking.totalPrice), 0);
+      const revenue7Days = weekBookings.reduce((sum, booking) => sum + numberValue(booking.totalPrice), 0);
+      const avgBookingValue = allBookings.length > 0
+        ? Math.round((allBookings.reduce((sum, booking) => sum + numberValue(booking.totalPrice), 0) / allBookings.length) * 100) / 100
+        : 0;
+
+      const pendingBookings = allBookings.filter((booking) => ["pending", "payment_pending"].includes(booking.status || ""));
+      const ticketIssueBookings = allBookings.filter((booking) =>
+        ["failed", "cancelled", "schedule_changed"].includes((booking.ticketStatus || "").toLowerCase())
+      );
+      const confirmationBacklog = allBookings.filter((booking) =>
+        ["confirmed", "completed"].includes(booking.status || "") && !booking.confirmationEmailSent
+      );
+      const atRiskRevenue = [...pendingBookings, ...ticketIssueBookings].reduce((sum, booking) => sum + numberValue(booking.totalPrice), 0);
+
+      const routeDemand = new Map<string, {
+        route: string;
+        searches: number;
+        bookings: number;
+        revenue: number;
+        isPromoted: boolean;
+      }>();
+
+      for (const search of monthSearches) {
+        const routeKey = normalizeRoute(search.origin, search.destination);
+        if (!routeKey) continue;
+        const existing = routeDemand.get(routeKey) || {
+          route: describeRoute(routeKey),
+          searches: 0,
+          bookings: 0,
+          revenue: 0,
+          isPromoted: false,
+        };
+        existing.searches += search.searchCount || 1;
+        routeDemand.set(routeKey, existing);
+      }
+
+      for (const booking of allBookings) {
+        const flightData = booking.flightData as any;
+        const routeKey = normalizeRoute(flightData?.origin, flightData?.destination);
+        if (!routeKey) continue;
+        const existing = routeDemand.get(routeKey) || {
+          route: describeRoute(routeKey),
+          searches: 0,
+          bookings: 0,
+          revenue: 0,
+          isPromoted: false,
+        };
+        existing.bookings += 1;
+        existing.revenue += numberValue(booking.totalPrice);
+        routeDemand.set(routeKey, existing);
+      }
+
+      const promotedRoutes = new Set(
+        deals
+          .filter((deal) => deal.isActive)
+          .map((deal) => normalizeRoute(deal.origin, deal.destination))
+          .filter((route): route is string => Boolean(route))
+      );
+
+      const demandRoutes = Array.from(routeDemand.entries())
+        .map(([routeKey, entry]) => ({
+          ...entry,
+          routeKey,
+          isPromoted: promotedRoutes.has(routeKey),
+        }))
+        .sort((left, right) => {
+          const leftScore = (left.searches * 2) + left.bookings;
+          const rightScore = (right.searches * 2) + right.bookings;
+          return rightScore - leftScore;
+        });
+
+      const opportunityRoutes = demandRoutes.filter((route) => !route.isPromoted).slice(0, 5);
+
+      const urgentBookings = allBookings
+        .map((booking) => {
+          const flightData = booking.flightData as any;
+          const createdAt = booking.createdAt ? new Date(booking.createdAt) : null;
+          const ageHours = createdAt ? Math.max(0, (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60)) : 0;
+          const ticketStatus = (booking.ticketStatus || "pending").toLowerCase();
+          let urgency = 0;
+          let reason = "Needs review";
+
+          if (ticketStatus === "failed") {
+            urgency = 100;
+            reason = "Ticketing failed";
+          } else if (ticketStatus === "cancelled") {
+            urgency = 95;
+            reason = "Ticket cancelled";
+          } else if (ticketStatus === "schedule_changed") {
+            urgency = 88;
+            reason = "Airline schedule changed";
+          } else if (booking.status === "payment_pending") {
+            urgency = 76;
+            reason = "Payment follow-up needed";
+          } else if (booking.status === "pending") {
+            urgency = ageHours >= 12 ? 72 : 58;
+            reason = ageHours >= 12 ? "Pending for more than 12h" : "Pending confirmation";
+          } else if (["confirmed", "completed"].includes(booking.status || "") && !booking.confirmationEmailSent) {
+            urgency = 52;
+            reason = "Confirmation email still pending";
+          }
+
+          if (numberValue(booking.totalPrice) >= 1200) {
+            urgency += 6;
+          }
+
+          return {
+            id: booking.id,
+            referenceCode: booking.referenceCode,
+            contactEmail: booking.contactEmail,
+            contactPhone: booking.contactPhone,
+            route: normalizeRoute(flightData?.origin, flightData?.destination)
+              ? describeRoute(normalizeRoute(flightData?.origin, flightData?.destination)!)
+              : "Route pending",
+            status: booking.status || "pending",
+            ticketStatus: booking.ticketStatus || "pending",
+            totalPrice: numberValue(booking.totalPrice),
+            currency: booking.currency || "USD",
+            urgency,
+            reason,
+            createdAt: booking.createdAt,
+          };
+        })
+        .filter((booking) => booking.urgency >= 52)
+        .sort((left, right) => right.urgency - left.urgency || right.totalPrice - left.totalPrice)
+        .slice(0, 6);
+
+      const openEscalations = escalations.filter((escalation) => escalation.status !== "resolved");
+      const inboxPriorityThreads = inboxThreads
+        .filter((thread) => thread.status === "open" || Number(thread.unreadCount || 0) > 0)
+        .sort((left, right) => Number(right.unreadCount || 0) - Number(left.unreadCount || 0))
+        .slice(0, 8)
+        .map((thread) => ({
+          id: thread.id,
+          subject: thread.subject,
+          status: thread.status,
+          userName: thread.userName || null,
+          userEmail: thread.userEmail || null,
+          unreadCount: Number(thread.unreadCount || 0),
+          lastMessageAt: thread.lastMessageAt,
+        }));
+
+      const recentWins = allBookings
+        .filter((booking) =>
+          ["confirmed", "completed"].includes(booking.status || "") &&
+          booking.createdAt &&
+          new Date(booking.createdAt) >= last30Days
+        )
+        .sort((left, right) => numberValue(right.totalPrice) - numberValue(left.totalPrice))
+        .slice(0, 4)
+        .map((booking) => {
+          const flightData = booking.flightData as any;
+          const routeKey = normalizeRoute(flightData?.origin, flightData?.destination);
+          return {
+            id: booking.id,
+            referenceCode: booking.referenceCode,
+            contactEmail: booking.contactEmail,
+            route: routeKey ? describeRoute(routeKey) : "Route pending",
+            totalPrice: numberValue(booking.totalPrice),
+            currency: booking.currency || "USD",
+            createdAt: booking.createdAt,
+          };
+        });
+
+      const recommendedActions: Array<{
+        id: string;
+        level: "critical" | "attention" | "growth";
+        title: string;
+        description: string;
+        action: "open-live-chat" | "open-bookings" | "focus-inbox" | "open-settings";
+        actionLabel: string;
+      }> = [];
+
+      if (liveRequests.length > 0) {
+        recommendedActions.push({
+          id: "live-queue",
+          level: "critical",
+          title: "Live help queue waiting",
+          description: `${liveRequests.length} traveler${liveRequests.length === 1 ? "" : "s"} asked for a human agent right now.`,
+          action: "open-live-chat",
+          actionLabel: "Open live desk",
+        });
+      }
+
+      if (urgentBookings.length > 0) {
+        recommendedActions.push({
+          id: "booking-risk",
+          level: "critical",
+          title: "Revenue rescue board is active",
+          description: `${urgentBookings.length} booking${urgentBookings.length === 1 ? "" : "s"} need attention and $${atRiskRevenue.toFixed(2)} is exposed.`,
+          action: "open-bookings",
+          actionLabel: "Review bookings",
+        });
+      }
+
+      if (unreadInboxCount > 0) {
+        recommendedActions.push({
+          id: "inbox-backlog",
+          level: "attention",
+          title: "Customers are waiting in inbox",
+          description: `${unreadInboxCount} unread message${unreadInboxCount === 1 ? "" : "s"} need a response.`,
+          action: "focus-inbox",
+          actionLabel: "Reply now",
+        });
+      }
+
+      if (opportunityRoutes.length > 0) {
+        recommendedActions.push({
+          id: "demand-gap",
+          level: "growth",
+          title: "Search demand is not promoted yet",
+          description: `${opportunityRoutes[0].route} is getting attention without an active deal or dedicated push.`,
+          action: "open-settings",
+          actionLabel: "Open growth controls",
+        });
+      }
+
+      const activeDealsCount = deals.filter((deal) => deal.isActive).length;
+      const healthPenalty =
+        (liveRequests.length * 12) +
+        (openEscalations.length * 10) +
+        (urgentBookings.length * 7) +
+        Math.min(unreadInboxCount * 2, 12);
+      const healthScore = Math.max(24, 100 - healthPenalty);
+      const healthLevel = healthScore >= 82 ? "strong" : healthScore >= 62 ? "watch" : "critical";
+
+      const shiftBriefLines = [
+        `Mission status: ${healthLevel}.`,
+        `Today there were ${todayBookings.length} booking${todayBookings.length === 1 ? "" : "s"} worth $${revenueToday.toFixed(2)} and ${todaySearches.length} search${todaySearches.length === 1 ? "" : "es"}.`,
+        `${pendingBookings.length} pending booking${pendingBookings.length === 1 ? "" : "s"}, ${ticketIssueBookings.length} with ticket issues, ${liveRequests.length} live request${liveRequests.length === 1 ? "" : "s"}, ${openEscalations.length} open escalation${openEscalations.length === 1 ? "" : "s"}.`,
+        `${unreadInboxCount} unread inbox message${unreadInboxCount === 1 ? "" : "s"} and ${activeLiveSessions.length} active live session${activeLiveSessions.length === 1 ? "" : "s"}.`,
+        opportunityRoutes.length > 0
+          ? `Growth gap: ${opportunityRoutes[0].route} is being searched but is not promoted yet.`
+          : `Growth is covered by ${activeDealsCount} active deal${activeDealsCount === 1 ? "" : "s"} and ${publishedPosts.length} published guide post${publishedPosts.length === 1 ? "" : "s"}.`,
+      ];
+
+      res.json({
+        generatedAt: now.toISOString(),
+        health: {
+          score: healthScore,
+          level: healthLevel,
+          headline: healthLevel === "strong"
+            ? "Operation stable and ready to scale"
+            : healthLevel === "watch"
+              ? "Some queues need attention"
+              : "Immediate service recovery recommended",
+          summary: shiftBriefLines[1],
+        },
+        mission: {
+          siteName: settings?.siteName || "Michels Travel",
+          testMode: settings?.testMode ?? true,
+        },
+        counters: {
+          pendingBookings: pendingBookings.length,
+          ticketIssues: ticketIssueBookings.length,
+          confirmationBacklog: confirmationBacklog.length,
+          liveRequests: liveRequests.length,
+          activeLiveSessions: activeLiveSessions.length,
+          openEscalations: openEscalations.length,
+          unreadInboxMessages: unreadInboxCount,
+          openInboxThreads: inboxPriorityThreads.length,
+          activeDeals: activeDealsCount,
+          publishedPosts: publishedPosts.length,
+          todayBookings: todayBookings.length,
+          todaySearches: todaySearches.length,
+        },
+        revenue: {
+          today: Math.round(revenueToday * 100) / 100,
+          last7Days: Math.round(revenue7Days * 100) / 100,
+          atRisk: Math.round(atRiskRevenue * 100) / 100,
+          avgBookingValue,
+        },
+        urgentBookings,
+        liveRequests: liveRequests.slice(0, 6),
+        activeLiveSessions: activeLiveSessions.slice(0, 6),
+        inboxThreads: inboxPriorityThreads,
+        escalations: openEscalations.slice(0, 6),
+        opportunityRoutes,
+        recentWins,
+        recommendedActions,
+        shiftBrief: shiftBriefLines.join(" "),
+      });
+    } catch (error) {
+      console.error("Admin command center error:", error);
+      res.status(500).json({ error: "Failed to build admin command center" });
+    }
+  });
+
   // Get Admin Settings
   app.get('/api/admin/settings', requireAdmin, async (req, res) => {
     const settings = await storage.getSiteSettings();
@@ -2179,8 +2510,8 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
           const flightData = booking.flightData as any;
           const passengerDetails = Array.isArray(booking.passengerDetails) ? booking.passengerDetails : [];
           const summary = buildAgentLookupSummary(language, {
-            referenceCode: booking.referenceCode,
-            status: booking.status,
+            referenceCode: booking.referenceCode || "MT-PENDING",
+            status: booking.status || "pending",
             ticketStatus: (booking as any).ticketStatus || "pending",
             airlineReference: (booking as any).duffelBookingReference || null,
             airline: flightData?.airline || null,
