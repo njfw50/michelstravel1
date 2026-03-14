@@ -15,6 +15,10 @@ import { AGENCY_PHONE_DISPLAY, AGENCY_PHONE_TEL } from "@/lib/contact";
 
 type EasyLanguage = "pt" | "en" | "es";
 type TripType = "round-trip" | "one-way";
+type SeniorPriority = "comfort" | "fastest" | "balanced" | "cheapest";
+type SeniorConnections = "none" | "one" | "any";
+type SeniorBags = "checked" | "carry" | "flexible";
+type SeniorTime = "day" | "any";
 
 const COPY: Record<EasyLanguage, Record<string, string>> = {
   pt: {
@@ -215,10 +219,157 @@ export default function EasyBooking() {
   const [departureDate, setDepartureDate] = useState<Date | undefined>();
   const [returnDate, setReturnDate] = useState<Date | undefined>();
   const [adults, setAdults] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [priority, setPriority] = useState<SeniorPriority>("comfort");
+  const [connections, setConnections] = useState<SeniorConnections>("one");
+  const [bags, setBags] = useState<SeniorBags>("flexible");
+  const [timePreference, setTimePreference] = useState<SeniorTime>("day");
+
+  const wizardCopy = currentLanguage === "en"
+    ? {
+        progress: "Calm planning",
+        next: "Continue",
+        back: "Go back",
+        searchNow: "See calmer flights",
+        routeTitle: "First, where are you leaving from and where do you want to go?",
+        routeDesc: "Only answer this part now. We keep the rest for the next step.",
+        dateTitle: "Now choose the date and how many people are traveling.",
+        dateDesc: "One calm decision at a time.",
+        priorityTitle: "What matters most for this trip?",
+        priorityDesc: "This answer changes which flights appear first.",
+        connectionTitle: "How many connections feel acceptable?",
+        connectionDesc: "For older travelers, less connection usually means less fatigue.",
+        bagTitle: "Let us finish with baggage and schedule.",
+        bagDesc: "We use this to avoid showing options that may create surprise later.",
+        summaryTitle: "Your answers so far",
+        summaryEmpty: "As you answer each question, the trip summary appears here.",
+        priorityComfort: "More comfort",
+        priorityFastest: "Less travel time",
+        priorityBalanced: "Balance price and comfort",
+        priorityCheapest: "Lower price",
+        connectionsNone: "Avoid connections",
+        connectionsOne: "At most 1 connection",
+        connectionsAny: "Any connection if needed",
+        bagsChecked: "Need checked bag",
+        bagsCarry: "Need carry-on",
+        bagsFlexible: "Baggage can vary",
+        timeDay: "Avoid very late hours",
+        timeAny: "Any schedule",
+        bagNote: "We will put calmer flights first and leave the rest hidden unless you ask to see more.",
+      }
+    : currentLanguage === "es"
+      ? {
+          progress: "Planificacion tranquila",
+          next: "Continuar",
+          back: "Volver",
+          searchNow: "Ver vuelos mas tranquilos",
+          routeTitle: "Primero, digame desde donde sale y a donde quiere ir.",
+          routeDesc: "Solo responda esta parte ahora. Dejamos el resto para el siguiente paso.",
+          dateTitle: "Ahora elija la fecha y cuantas personas van a viajar.",
+          dateDesc: "Una decision tranquila por vez.",
+          priorityTitle: "Que es lo mas importante para este viaje?",
+          priorityDesc: "Esta respuesta cambia cuales vuelos aparecen primero.",
+          connectionTitle: "Cuantas conexiones se sienten aceptables?",
+          connectionDesc: "Para personas mayores, menos conexiones normalmente significa menos cansancio.",
+          bagTitle: "Terminemos con equipaje y horario.",
+          bagDesc: "Usamos esto para no mostrar opciones que puedan traer sorpresa despues.",
+          summaryTitle: "Sus respuestas hasta ahora",
+          summaryEmpty: "A medida que responda cada pregunta, el resumen del viaje aparece aqui.",
+          priorityComfort: "Mas comodidad",
+          priorityFastest: "Menos tiempo total",
+          priorityBalanced: "Equilibrio entre precio y comodidad",
+          priorityCheapest: "Menor precio",
+          connectionsNone: "Evitar conexiones",
+          connectionsOne: "Maximo 1 conexion",
+          connectionsAny: "Cualquier conexion si hace falta",
+          bagsChecked: "Necesita maleta facturada",
+          bagsCarry: "Necesita equipaje de mano",
+          bagsFlexible: "El equipaje puede variar",
+          timeDay: "Evitar horas muy tarde",
+          timeAny: "Cualquier horario",
+          bagNote: "Pondremos primero los vuelos mas tranquilos y dejaremos el resto escondido hasta que usted quiera verlo.",
+        }
+      : {
+          progress: "Planejamento tranquilo",
+          next: "Continuar",
+          back: "Voltar",
+          searchNow: "Ver voos mais tranquilos",
+          routeTitle: "Primeiro, me diga de onde voce sai e para onde quer ir.",
+          routeDesc: "Responda so esta parte agora. O resto fica para a proxima etapa.",
+          dateTitle: "Agora escolha a data e quantas pessoas vao viajar.",
+          dateDesc: "Uma decisao tranquila por vez.",
+          priorityTitle: "O que e mais importante para esta viagem?",
+          priorityDesc: "Essa resposta muda quais voos aparecem primeiro.",
+          connectionTitle: "Quantas conexoes parecem aceitaveis?",
+          connectionDesc: "Para idosos, menos conexao normalmente significa menos cansaco.",
+          bagTitle: "Vamos terminar com bagagem e horario.",
+          bagDesc: "Usamos isso para nao mostrar opcoes que podem trazer surpresa depois.",
+          summaryTitle: "Suas respostas ate aqui",
+          summaryEmpty: "Conforme voce responde cada pergunta, o resumo da viagem aparece aqui.",
+          priorityComfort: "Mais conforto",
+          priorityFastest: "Menor tempo total",
+          priorityBalanced: "Equilibrio entre preco e conforto",
+          priorityCheapest: "Menor preco",
+          connectionsNone: "Evitar conexoes",
+          connectionsOne: "No maximo 1 conexao",
+          connectionsAny: "Qualquer conexao se precisar",
+          bagsChecked: "Precisa de mala despachada",
+          bagsCarry: "Precisa de bagagem de mao",
+          bagsFlexible: "A bagagem pode variar",
+          timeDay: "Evitar horario muito tarde",
+          timeAny: "Qualquer horario",
+          bagNote: "Vamos colocar primeiro os voos mais tranquilos e deixar o restante escondido ate voce pedir para ver mais.",
+        };
 
   const openAssistant = () => {
     const chatButton = document.querySelector('[data-testid="button-chatbot-toggle"]') as HTMLButtonElement | null;
     chatButton?.click();
+  };
+
+  const summaryItems = [
+    { label: copy.origin, value: origin || "" },
+    { label: copy.destination, value: destination || "" },
+    { label: copy.departure, value: departureDate ? format(departureDate, "dd MMM yyyy") : "" },
+    { label: copy.return, value: tripType === "round-trip" && returnDate ? format(returnDate, "dd MMM yyyy") : tripType === "one-way" ? copy.one_way : "" },
+    { label: wizardCopy.priorityTitle, value: priority === "fastest" ? wizardCopy.priorityFastest : priority === "balanced" ? wizardCopy.priorityBalanced : priority === "cheapest" ? wizardCopy.priorityCheapest : wizardCopy.priorityComfort },
+    { label: wizardCopy.connectionTitle, value: connections === "none" ? wizardCopy.connectionsNone : connections === "any" ? wizardCopy.connectionsAny : wizardCopy.connectionsOne },
+    { label: wizardCopy.bagTitle, value: bags === "checked" ? wizardCopy.bagsChecked : bags === "carry" ? wizardCopy.bagsCarry : wizardCopy.bagsFlexible },
+    { label: copy.travelers, value: `${adults} ${adults === 1 ? copy.traveler_one : copy.traveler_many}` },
+  ].filter((item) => item.value);
+
+  const validateStep = (step: number) => {
+    if (step === 0 && (!origin || !destination)) {
+      toast({
+        title: copy.missing_title,
+        description: currentLanguage === "en"
+          ? "Choose origin and destination to continue."
+          : currentLanguage === "es"
+            ? "Elija origen y destino para continuar."
+            : "Escolha origem e destino para continuar.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (step === 1 && (!departureDate || (tripType === "round-trip" && !returnDate))) {
+      toast({
+        title: copy.missing_title,
+        description: currentLanguage === "en"
+          ? "Choose the date to continue."
+          : currentLanguage === "es"
+            ? "Elija la fecha para continuar."
+            : "Escolha a data para continuar.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const goNext = () => {
+    if (!validateStep(currentStep)) return;
+    setCurrentStep((value) => Math.min(value + 1, 4));
   };
 
   const handleSearch = () => {
@@ -241,6 +392,10 @@ export default function EasyBooking() {
       infants: "0",
       cabinClass: "economy",
       ui: "easy",
+      seniorPriority: priority,
+      seniorConnections: connections,
+      seniorBags: bags,
+      seniorTime: timePreference,
     });
 
     if (tripType === "round-trip" && returnDate) {
@@ -300,71 +455,60 @@ export default function EasyBooking() {
             <Card className="rounded-[28px] border border-slate-200 bg-white shadow-[0_20px_80px_-30px_rgba(15,23,42,0.28)]">
               <CardContent className="p-6 md:p-8 space-y-8">
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-display font-extrabold text-slate-950">{copy.section_title}</h2>
-                  <p className="mt-3 text-base md:text-lg text-slate-600 leading-relaxed">{copy.section_subtitle}</p>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
+                    <HeartHandshake className="h-4 w-4" />
+                    {wizardCopy.progress}
+                  </span>
+                  <h2 className="mt-4 text-2xl md:text-3xl font-display font-extrabold text-slate-950">
+                    {currentStep === 0
+                      ? wizardCopy.routeTitle
+                      : currentStep === 1
+                        ? wizardCopy.dateTitle
+                        : currentStep === 2
+                          ? wizardCopy.priorityTitle
+                          : currentStep === 3
+                            ? wizardCopy.connectionTitle
+                            : wizardCopy.bagTitle}
+                  </h2>
+                  <p className="mt-3 text-base md:text-lg text-slate-600 leading-relaxed">
+                    {currentStep === 0
+                      ? wizardCopy.routeDesc
+                      : currentStep === 1
+                        ? wizardCopy.dateDesc
+                        : currentStep === 2
+                          ? wizardCopy.priorityDesc
+                          : currentStep === 3
+                            ? wizardCopy.connectionDesc
+                            : wizardCopy.bagDesc}
+                  </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="rounded-[24px] border border-blue-200 bg-blue-50/80 p-5">
-                    <p className="text-sm font-semibold tracking-[0.08em] text-blue-700">{copy.path_site}</p>
-                    <p className="mt-2 text-base leading-relaxed text-slate-700">{copy.path_site_desc}</p>
-                  </div>
-                  <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-5">
-                    <p className="text-sm font-semibold tracking-[0.08em] text-emerald-700">{copy.path_call}</p>
-                    <p className="mt-2 text-base leading-relaxed text-slate-700">{copy.path_call_desc}</p>
-                    <p className="mt-3 text-lg font-extrabold text-emerald-900">{AGENCY_PHONE_DISPLAY}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[copy.step_1, copy.step_2, copy.step_3, copy.step_4].map((step) => (
-                    <div key={step} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-base font-semibold text-slate-700">
-                      {step}
+                <div className="flex flex-wrap items-center gap-3">
+                  {[0, 1, 2, 3, 4].map((step) => (
+                    <div
+                      key={step}
+                      className={cn(
+                        "flex h-11 w-11 items-center justify-center rounded-full border text-sm font-extrabold",
+                        currentStep === step
+                          ? "border-blue-600 bg-blue-600 text-white"
+                          : currentStep > step
+                            ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                            : "border-slate-200 bg-slate-50 text-slate-400",
+                      )}
+                    >
+                      {step + 1}
                     </div>
                   ))}
                 </div>
 
-                <div className="rounded-[28px] border border-amber-200 bg-[linear-gradient(180deg,rgba(255,251,235,1),rgba(255,255,255,0.98))] p-5 md:p-6 shadow-[0_20px_60px_-40px_rgba(217,119,6,0.5)]">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 shrink-0">
-                      <Luggage className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-display font-extrabold text-slate-950">{copy.baggage_title}</h3>
-                      <p className="mt-2 text-base leading-relaxed text-slate-600">{copy.baggage_desc}</p>
-                    </div>
+                {currentStep === 4 && (
+                  <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 px-5 py-5 shadow-[0_20px_60px_-42px_rgba(16,185,129,0.35)]">
+                    <p className="text-sm font-semibold leading-relaxed text-emerald-950">{wizardCopy.bagNote}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-emerald-900">{copy.baggage_support}</p>
                   </div>
+                )}
 
-                  <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="rounded-2xl border border-amber-100 bg-white px-4 py-4">
-                      <div className="flex items-center gap-2">
-                        <BriefcaseBusiness className="h-5 w-5 text-amber-700" />
-                        <p className="text-base font-bold text-slate-950">{copy.baggage_personal_title}</p>
-                      </div>
-                      <p className="mt-2 text-sm leading-relaxed text-slate-600">{copy.baggage_personal_desc}</p>
-                    </div>
-                    <div className="rounded-2xl border border-blue-100 bg-blue-50/70 px-4 py-4">
-                      <div className="flex items-center gap-2">
-                        <Package className="h-5 w-5 text-blue-700" />
-                        <p className="text-base font-bold text-slate-950">{copy.baggage_carry_title}</p>
-                      </div>
-                      <p className="mt-2 text-sm leading-relaxed text-slate-600">{copy.baggage_carry_desc}</p>
-                    </div>
-                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 px-4 py-4">
-                      <div className="flex items-center gap-2">
-                        <Luggage className="h-5 w-5 text-emerald-700" />
-                        <p className="text-base font-bold text-slate-950">{copy.baggage_checked_title}</p>
-                      </div>
-                      <p className="mt-2 text-sm leading-relaxed text-slate-600">{copy.baggage_checked_desc}</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4">
-                    <p className="text-sm font-semibold leading-relaxed text-amber-950">{copy.baggage_note}</p>
-                    <p className="mt-2 text-sm leading-relaxed text-amber-900">{copy.baggage_support}</p>
-                  </div>
-                </div>
-
+                {currentStep === 1 && (
                 <div className="flex flex-wrap gap-3">
                   <button
                     type="button"
@@ -387,7 +531,9 @@ export default function EasyBooking() {
                     {copy.one_way}
                   </button>
                 </div>
+                )}
 
+                {currentStep === 0 && (
                 <div className="grid grid-cols-1 gap-5">
                   <LocationSearch
                     label={copy.origin}
@@ -404,7 +550,9 @@ export default function EasyBooking() {
                     size="large"
                   />
                 </div>
+                )}
 
+                {currentStep === 1 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-2">
                     <label className="block pl-1 text-sm font-semibold tracking-[0.08em] text-slate-600">{copy.departure}</label>
@@ -454,7 +602,9 @@ export default function EasyBooking() {
                     </Popover>
                   </div>
                 </div>
+                )}
 
+                {currentStep === 1 && (
                 <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5 md:p-6">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
@@ -485,7 +635,9 @@ export default function EasyBooking() {
                     </div>
                   </div>
                 </div>
+                )}
 
+                {currentStep === 0 && (
                 <div className="space-y-3">
                   <p className="text-sm font-semibold tracking-[0.08em] text-slate-600">{copy.quick_routes}</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -504,13 +656,118 @@ export default function EasyBooking() {
                     ))}
                   </div>
                 </div>
+                )}
+
+                {currentStep === 2 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {[
+                      { value: "comfort", label: wizardCopy.priorityComfort },
+                      { value: "fastest", label: wizardCopy.priorityFastest },
+                      { value: "balanced", label: wizardCopy.priorityBalanced },
+                      { value: "cheapest", label: wizardCopy.priorityCheapest },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setPriority(option.value as SeniorPriority)}
+                        className={cn(
+                          "rounded-[24px] border px-5 py-5 text-left text-base font-bold transition-all",
+                          priority === option.value ? "border-blue-500 bg-blue-50 text-blue-900 shadow-[0_20px_60px_-42px_rgba(37,99,235,0.42)]" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50/70",
+                        )}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {currentStep === 3 && (
+                  <div className="grid grid-cols-1 gap-3">
+                    {[
+                      { value: "none", label: wizardCopy.connectionsNone },
+                      { value: "one", label: wizardCopy.connectionsOne },
+                      { value: "any", label: wizardCopy.connectionsAny },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setConnections(option.value as SeniorConnections)}
+                        className={cn(
+                          "rounded-[24px] border px-5 py-5 text-left text-base font-bold transition-all",
+                          connections === option.value ? "border-blue-500 bg-blue-50 text-blue-900 shadow-[0_20px_60px_-42px_rgba(37,99,235,0.42)]" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50/70",
+                        )}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {currentStep === 4 && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {[
+                        { value: "checked", label: wizardCopy.bagsChecked },
+                        { value: "carry", label: wizardCopy.bagsCarry },
+                        { value: "flexible", label: wizardCopy.bagsFlexible },
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setBags(option.value as SeniorBags)}
+                          className={cn(
+                            "rounded-[24px] border px-5 py-5 text-left text-base font-bold transition-all",
+                            bags === option.value ? "border-blue-500 bg-blue-50 text-blue-900 shadow-[0_20px_60px_-42px_rgba(37,99,235,0.42)]" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50/70",
+                          )}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {[
+                        { value: "day", label: wizardCopy.timeDay },
+                        { value: "any", label: wizardCopy.timeAny },
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setTimePreference(option.value as SeniorTime)}
+                          className={cn(
+                            "rounded-[24px] border px-5 py-5 text-left text-base font-bold transition-all",
+                            timePreference === option.value ? "border-blue-500 bg-blue-50 text-blue-900 shadow-[0_20px_60px_-42px_rgba(37,99,235,0.42)]" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50/70",
+                          )}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Button onClick={handleSearch} className="min-h-16 flex-1 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-lg font-extrabold">
-                    <Search className="h-5 w-5" />
-                    {copy.continue_label}
-                    <ArrowRight className="h-5 w-5" />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setCurrentStep((value) => Math.max(0, value - 1))}
+                    disabled={currentStep === 0}
+                    className="min-h-16 rounded-2xl border-slate-300 bg-white text-slate-800 text-lg font-bold"
+                  >
+                    {wizardCopy.back}
                   </Button>
+                  {currentStep < 4 ? (
+                    <Button onClick={goNext} className="min-h-16 flex-1 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-lg font-extrabold">
+                      {wizardCopy.next}
+                      <ArrowRight className="h-5 w-5" />
+                    </Button>
+                  ) : (
+                    <Button onClick={handleSearch} className="min-h-16 flex-1 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-lg font-extrabold">
+                      <Search className="h-5 w-5" />
+                      {wizardCopy.searchNow}
+                      <ArrowRight className="h-5 w-5" />
+                    </Button>
+                  )}
                   <Button asChild variant="outline" className="min-h-16 rounded-2xl border-slate-300 bg-white text-slate-800 text-lg font-bold">
                     <a href={`tel:${AGENCY_PHONE_TEL}`}>
                       <PhoneCall className="h-5 w-5" />
@@ -545,16 +802,20 @@ export default function EasyBooking() {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-[28px] border border-emerald-200 bg-emerald-50">
+              <Card className="rounded-[28px] border border-slate-200 bg-white">
                 <CardContent className="p-6 md:p-7">
-                  <div className="flex items-start gap-3">
-                    <ShieldCheck className="h-6 w-6 shrink-0 text-emerald-600 mt-0.5" />
-                    <div>
-                      <h3 className="text-xl font-display font-extrabold text-emerald-950">Michels Travel</h3>
-                      <p className="mt-2 text-sm leading-relaxed text-emerald-900">
-                        {copy.trust}
-                      </p>
-                    </div>
+                  <h3 className="text-xl font-display font-extrabold text-slate-950">{wizardCopy.summaryTitle}</h3>
+                  <div className="mt-4 space-y-3">
+                    {summaryItems.length > 0 ? summaryItems.map((item) => (
+                      <div key={`${item.label}-${item.value}`} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">{item.label}</p>
+                        <p className="mt-2 text-sm font-semibold leading-relaxed text-slate-900">{item.value}</p>
+                      </div>
+                    )) : (
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-relaxed text-slate-500">
+                        {wizardCopy.summaryEmpty}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

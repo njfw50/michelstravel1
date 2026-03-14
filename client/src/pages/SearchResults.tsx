@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { FlightSearchForm } from "@/components/FlightSearchForm";
 import { FlightCard } from "@/components/FlightCard";
 import FlightBaggageHighlights from "@/components/FlightBaggageHighlights";
+import SeniorFlightOptionCard from "@/components/SeniorFlightOptionCard";
 import { useFlightSearch, type FlightSearchQuery } from "@/hooks/use-flights";
 import { Loader2, Filter, AlertCircle, Plane, X, Sun, Sunrise, Sunset, Moon, Globe, BarChart3, Armchair, Sparkles, CheckCircle2, Clock, ArrowRight, PhoneCall, HeartHandshake, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,14 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import type { FlightOffer, FlightSlice } from "@shared/schema";
+import {
+  buildSeniorRecommendations,
+  type SeniorBagPreference,
+  type SeniorConnectionPreference,
+  type SeniorPreferences,
+  type SeniorPriority,
+  type SeniorTimePreference,
+} from "@/lib/senior-flight";
 
 type SortOption = "cheapest" | "fastest" | "best";
 type DepartureTime = "morning" | "afternoon" | "evening" | "night";
@@ -190,31 +199,98 @@ export default function SearchResults() {
   const tripType = searchParams.get('tripType');
   const legsRaw = searchParams.get('legs');
   const isEasyMode = searchParams.get("ui") === "easy";
+  const seniorPriority = (searchParams.get("seniorPriority") || "comfort") as SeniorPriority;
+  const seniorConnections = (searchParams.get("seniorConnections") || "one") as SeniorConnectionPreference;
+  const seniorBags = (searchParams.get("seniorBags") || "flexible") as SeniorBagPreference;
+  const seniorTime = (searchParams.get("seniorTime") || "day") as SeniorTimePreference;
   const easyModeCopy = language === "en"
     ? {
         badge: "Senior support active",
-        title: "Review the flights calmly, or call and finish by phone.",
-        description: `If comparing options feels difficult, keep going online or call ${AGENCY_PHONE_DISPLAY} now and our team can continue with you.`,
+        title: "We reduced the options and put calmer flights first.",
+        description: `These recommendations give more weight to shorter trips, fewer connections, and less tiring schedules. If you want, call ${AGENCY_PHONE_DISPLAY} and we continue with you.`,
         call: `Call ${AGENCY_PHONE_DISPLAY}`,
         assistant: "Open chat",
         back: "Back to Senior Support",
+        summaryTitle: "Your preferences",
+        summaryPriority: "What matters most",
+        summaryConnections: "Connections",
+        summaryBags: "Baggage",
+        summaryTime: "Schedule",
+        showMore: "See more options",
+        hideMore: "Hide extra options",
+        extraTitle: "Other flights for this route",
+        fallback: "We did not find enough flights inside your preferred connection limit, so we kept the calmest available options.",
+        priorityComfort: "More comfort",
+        priorityFastest: "Less travel time",
+        priorityBalanced: "Balance price and comfort",
+        priorityCheapest: "Lower price inside your profile",
+        connectionsNone: "Avoid connections",
+        connectionsOne: "At most 1 connection",
+        connectionsAny: "Any connection if needed",
+        bagsChecked: "Need checked bag",
+        bagsCarry: "Need carry-on",
+        bagsFlexible: "Baggage can vary",
+        timeDay: "Avoid very late hours",
+        timeAny: "Any schedule",
       }
     : language === "es"
       ? {
           badge: "Atencion senior activa",
-          title: "Revise los vuelos con calma, o llame y cierre por telefono.",
-          description: `Si comparar opciones parece dificil, siga en el sitio o llame ahora al ${AGENCY_PHONE_DISPLAY} y nuestro equipo continua con usted.`,
+          title: "Reducimos las opciones y pusimos primero los vuelos mas tranquilos.",
+          description: `Estas recomendaciones dan mas peso a menos conexiones, menos tiempo total y horarios menos cansadores. Si quiere, llame al ${AGENCY_PHONE_DISPLAY} y seguimos con usted.`,
           call: `Llamar al ${AGENCY_PHONE_DISPLAY}`,
           assistant: "Abrir chat",
           back: "Volver a Atencion Senior",
+          summaryTitle: "Sus preferencias",
+          summaryPriority: "Lo mas importante",
+          summaryConnections: "Conexiones",
+          summaryBags: "Equipaje",
+          summaryTime: "Horario",
+          showMore: "Ver mas opciones",
+          hideMore: "Ocultar opciones extra",
+          extraTitle: "Otros vuelos para esta ruta",
+          fallback: "No encontramos suficientes vuelos dentro de su limite de conexiones, asi que mantuvimos las opciones mas tranquilas disponibles.",
+          priorityComfort: "Mas comodidad",
+          priorityFastest: "Menos tiempo total",
+          priorityBalanced: "Equilibrio entre precio y comodidad",
+          priorityCheapest: "Menor precio dentro de su perfil",
+          connectionsNone: "Evitar conexiones",
+          connectionsOne: "Maximo 1 conexion",
+          connectionsAny: "Cualquier conexion si hace falta",
+          bagsChecked: "Necesita maleta facturada",
+          bagsCarry: "Necesita equipaje de mano",
+          bagsFlexible: "El equipaje puede variar",
+          timeDay: "Evitar horas muy tarde",
+          timeAny: "Cualquier horario",
         }
       : {
           badge: "Atendimento senior ativo",
-          title: "Revise os voos com calma, ou ligue e feche por telefone.",
-          description: `Se comparar opcoes parecer dificil, siga no site ou ligue agora para ${AGENCY_PHONE_DISPLAY} e nossa equipe continua com voce.`,
+          title: "Reduzimos as opcoes e colocamos primeiro os voos mais tranquilos.",
+          description: `Essas recomendacoes dao mais peso a menos conexoes, menos tempo total e horarios menos cansativos. Se preferir, ligue agora para ${AGENCY_PHONE_DISPLAY} e seguimos com voce.`,
           call: `Ligar para ${AGENCY_PHONE_DISPLAY}`,
           assistant: "Abrir chat",
           back: "Voltar ao Atendimento Senior",
+          summaryTitle: "Suas preferencias",
+          summaryPriority: "O mais importante",
+          summaryConnections: "Conexoes",
+          summaryBags: "Bagagem",
+          summaryTime: "Horario",
+          showMore: "Ver mais opcoes",
+          hideMore: "Esconder opcoes extras",
+          extraTitle: "Outros voos para esta rota",
+          fallback: "Nao encontramos voos suficientes dentro do seu limite de conexoes, entao mantivemos as opcoes mais tranquilas disponiveis.",
+          priorityComfort: "Mais conforto",
+          priorityFastest: "Menor tempo total",
+          priorityBalanced: "Equilibrio entre preco e conforto",
+          priorityCheapest: "Menor preco dentro do seu perfil",
+          connectionsNone: "Evitar conexoes",
+          connectionsOne: "No maximo 1 conexao",
+          connectionsAny: "Qualquer conexao se precisar",
+          bagsChecked: "Precisa de mala despachada",
+          bagsCarry: "Precisa de bagagem de mao",
+          bagsFlexible: "A bagagem pode variar",
+          timeDay: "Evitar horario muito tarde",
+          timeAny: "Qualquer horario",
         };
 
   const isMultiCity = tripType === 'multi-city' && legsRaw;
@@ -251,6 +327,7 @@ export default function SearchResults() {
   const searchKey = `${params.origin}-${params.destination}-${params.date}-${(params as any).returnDate || ''}-${params.passengers}-${params.adults}-${params.children}-${params.infants}-${params.cabinClass}-${(params as any).tripType || ''}-${(params as any).legs || ''}`;
   const [showAnimation, setShowAnimation] = useState(true);
   const [lastSearchKey, setLastSearchKey] = useState(searchKey);
+  const [showEasyExtraOptions, setShowEasyExtraOptions] = useState(false);
 
   useEffect(() => {
     if (searchKey !== lastSearchKey) {
@@ -315,6 +392,7 @@ export default function SearchResults() {
       setVisibleOneWayCount(FLIGHTS_PER_PAGE);
       setVisibleOutboundCount(FLIGHTS_PER_PAGE);
       setVisibleReturnCount(FLIGHTS_PER_PAGE);
+      setShowEasyExtraOptions(false);
     }
   }, [searchKey, lastSearchKey]);
 
@@ -556,6 +634,196 @@ export default function SearchResults() {
       maximumFractionDigits: 0,
     }).format(amount);
   };
+
+  const easyPreferences: SeniorPreferences = {
+    priority: ["comfort", "fastest", "balanced", "cheapest"].includes(seniorPriority) ? seniorPriority : "comfort",
+    connections: ["none", "one", "any"].includes(seniorConnections) ? seniorConnections : "one",
+    bags: ["checked", "carry", "flexible"].includes(seniorBags) ? seniorBags : "flexible",
+    time: ["day", "any"].includes(seniorTime) ? seniorTime : "day",
+  };
+
+  const easyPreferenceItems = [
+    {
+      label: easyModeCopy.summaryPriority,
+      value: easyPreferences.priority === "fastest"
+        ? easyModeCopy.priorityFastest
+        : easyPreferences.priority === "balanced"
+          ? easyModeCopy.priorityBalanced
+          : easyPreferences.priority === "cheapest"
+            ? easyModeCopy.priorityCheapest
+            : easyModeCopy.priorityComfort,
+    },
+    {
+      label: easyModeCopy.summaryConnections,
+      value: easyPreferences.connections === "none"
+        ? easyModeCopy.connectionsNone
+        : easyPreferences.connections === "any"
+          ? easyModeCopy.connectionsAny
+          : easyModeCopy.connectionsOne,
+    },
+    {
+      label: easyModeCopy.summaryBags,
+      value: easyPreferences.bags === "checked"
+        ? easyModeCopy.bagsChecked
+        : easyPreferences.bags === "carry"
+          ? easyModeCopy.bagsCarry
+          : easyModeCopy.bagsFlexible,
+    },
+    {
+      label: easyModeCopy.summaryTime,
+      value: easyPreferences.time === "day" ? easyModeCopy.timeDay : easyModeCopy.timeAny,
+    },
+  ];
+
+  const easyRecommendations = useMemo(
+    () => buildSeniorRecommendations(flights || [], easyPreferences),
+    [flights, easyPreferences],
+  );
+
+  const easyDefaultSort = easyPreferences.priority === "fastest" ? "fastest" : easyPreferences.priority === "cheapest" ? "cheapest" : "best";
+
+  if (isEasyMode) {
+    return (
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.98),_rgba(241,245,249,0.98)_36%,_rgba(226,232,240,0.96)_100%)] pb-20">
+        <SEO title="Resultados Senior" description="Voos organizados com menos informacao irrelevante e mais foco em conforto, conexoes e clareza." path="/search" noindex={true} />
+
+        <section className="border-b border-slate-200 bg-white/90 backdrop-blur">
+          <div className="container mx-auto max-w-6xl px-4 py-8 md:py-10">
+            <div className="rounded-[32px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_55%,rgba(219,234,254,0.96))] p-6 shadow-[0_24px_80px_-48px_rgba(37,99,235,0.42)] md:p-7">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                <div className="max-w-3xl">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
+                    <HeartHandshake className="h-4 w-4" />
+                    {easyModeCopy.badge}
+                  </span>
+                  <h1 className="mt-4 text-3xl font-display font-extrabold text-slate-950 md:text-4xl">
+                    {easyModeCopy.title}
+                  </h1>
+                  <p className="mt-3 text-base leading-relaxed text-slate-600 md:text-lg">
+                    {easyModeCopy.description}
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <div className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
+                      {params.origin} - {params.destination}
+                    </div>
+                    <div className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
+                      {params.date ? format(parseISO(params.date), "dd MMM yyyy") : ""}
+                      {(params as any).returnDate ? ` - ${format(parseISO((params as any).returnDate), "dd MMM yyyy")}` : ""}
+                    </div>
+                    <div className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
+                      {params.passengers || "1"} {Number(params.passengers || "1") === 1 ? "viajante" : "viajantes"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  <Button asChild className="rounded-full bg-blue-600 text-white hover:bg-blue-700" data-testid="button-easy-mode-call-results">
+                    <a href={`tel:${AGENCY_PHONE_TEL}`}>
+                      <PhoneCall className="mr-2 h-4 w-4" />
+                      {easyModeCopy.call}
+                    </a>
+                  </Button>
+                  <Button variant="outline" onClick={openAssistant} className="rounded-full border-slate-300 bg-white text-slate-800" data-testid="button-easy-mode-chat-results">
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    {easyModeCopy.assistant}
+                  </Button>
+                  <Link href="/senior">
+                    <Button variant="ghost" className="rounded-full text-blue-700 hover:bg-blue-50" data-testid="button-easy-mode-back-results">
+                      {easyModeCopy.back}
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="container mx-auto mt-8 max-w-6xl px-4">
+          <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+            <Card className="h-fit rounded-[30px] border border-slate-200 bg-white shadow-[0_20px_70px_-42px_rgba(15,23,42,0.24)]">
+              <div className="p-5 md:p-6">
+                <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-slate-500">{easyModeCopy.summaryTitle}</p>
+                <div className="mt-5 space-y-3">
+                  {easyPreferenceItems.map((item) => (
+                    <div key={item.label} className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-4">
+                      <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">{item.label}</p>
+                      <p className="mt-2 text-base font-semibold leading-relaxed text-slate-900">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+                {easyRecommendations.fallbackApplied && (
+                  <div className="mt-4 rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-4 text-sm font-medium leading-relaxed text-amber-900">
+                    {easyModeCopy.fallback}
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            <div className="space-y-5">
+              {isSearching && <FlightSearchAnimation t={t} />}
+
+              {error && !isSearching && (
+                <div className="flex flex-col items-center justify-center rounded-[28px] border border-red-200 bg-red-50 py-20 text-red-600">
+                  <AlertCircle className="mb-4 h-10 w-10" />
+                  <p className="font-medium">{t("results.error") || "Failed to load flights."}</p>
+                </div>
+              )}
+
+              {!isSearching && !error && flights?.length === 0 && (
+                <div className="flex flex-col items-center justify-center rounded-[28px] border border-slate-200 bg-white py-20 text-center shadow-sm">
+                  <Plane className="mb-4 h-10 w-10 text-slate-300" />
+                  <h2 className="text-xl font-bold text-slate-950">{t("results.no_flights") || "No flights found"}</h2>
+                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-500">{t("results.no_flights_desc") || "Try adjusting your search."}</p>
+                </div>
+              )}
+
+              {!isSearching && !error && easyRecommendations.recommendations.length > 0 && (
+                <>
+                  {easyRecommendations.recommendations.map((item) => (
+                    <SeniorFlightOptionCard
+                      key={`${item.kind}-${item.flight.id}`}
+                      flight={item.flight}
+                      insight={item.insight}
+                      kind={item.kind}
+                    />
+                  ))}
+
+                  <div className="rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_20px_70px_-42px_rgba(15,23,42,0.22)]">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <h2 className="text-xl font-extrabold text-slate-950">{easyModeCopy.extraTitle}</h2>
+                        <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                          {showEasyExtraOptions
+                            ? `${Math.min(easyRecommendations.rankedFlights.length, 6)} opcoes extras visiveis`
+                            : `${easyRecommendations.rankedFlights.length} opcoes encontradas, mas escondidas para nao cansar a comparacao.`}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowEasyExtraOptions((value) => !value)}
+                        className="rounded-full border-slate-300 bg-white text-slate-800"
+                        data-testid="button-toggle-easy-extra-options"
+                      >
+                        {showEasyExtraOptions ? easyModeCopy.hideMore : easyModeCopy.showMore}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {showEasyExtraOptions && (
+                    <div className="space-y-4">
+                      {easyRecommendations.rankedFlights.slice(0, 6).map((item) => (
+                        <FlightCard key={`easy-extra-${item.flight.id}`} flight={item.flight} simplified />
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const filterPanel = (
     <div className="space-y-6">
