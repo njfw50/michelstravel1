@@ -20,6 +20,7 @@ import {
   buildWhatsAppHref,
   buildWhatsAppMessage,
 } from "@/lib/contact";
+import { openChatbotAssistant } from "@/lib/chatbot";
 import {
   Sheet,
   SheetContent,
@@ -211,9 +212,9 @@ export default function SearchResults() {
     ? {
         badge: "Senior support active",
         title: "We reduced the options and put calmer flights first.",
-        description: `These recommendations give more weight to shorter trips, fewer connections, and less tiring schedules. If you want, continue with our team on WhatsApp at ${AGENCY_WHATSAPP_DISPLAY}.`,
+        description: `Mia can help you compare these flights step by step. These recommendations give more weight to shorter trips, fewer connections, and calmer schedules. WhatsApp at ${AGENCY_WHATSAPP_DISPLAY} stays available if you want a human.`,
         call: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
-        assistant: "Send question on WhatsApp",
+        assistant: "Talk to Mia",
         back: "Back to Senior Support",
         summaryTitle: "Your preferences",
         summaryPriority: "What matters most",
@@ -241,9 +242,9 @@ export default function SearchResults() {
       ? {
           badge: "Atencion senior activa",
           title: "Reducimos las opciones y pusimos primero los vuelos mas tranquilos.",
-          description: `Estas recomendaciones dan mas peso a menos conexiones, menos tiempo total y horarios menos cansadores. Si quiere, siga con nuestro equipo por WhatsApp al ${AGENCY_WHATSAPP_DISPLAY}.`,
+          description: `Mia puede ayudarle a comparar estos vuelos paso a paso. Estas recomendaciones dan mas peso a menos conexiones, menos tiempo total y horarios menos cansadores. WhatsApp al ${AGENCY_WHATSAPP_DISPLAY} sigue disponible si prefiere un humano.`,
           call: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
-          assistant: "Enviar duda por WhatsApp",
+          assistant: "Hablar con Mia",
           back: "Volver a Atencion Senior",
           summaryTitle: "Sus preferencias",
           summaryPriority: "Lo mas importante",
@@ -270,9 +271,9 @@ export default function SearchResults() {
       : {
           badge: "Atendimento senior ativo",
           title: "Reduzimos as opcoes e colocamos primeiro os voos mais tranquilos.",
-          description: `Essas recomendacoes dao mais peso a menos conexoes, menos tempo total e horarios menos cansativos. Se preferir, siga com a nossa equipe no WhatsApp ${AGENCY_WHATSAPP_DISPLAY}.`,
+          description: `A Mia pode ajudar voce a comparar estes voos passo a passo. Essas recomendacoes dao mais peso a menos conexoes, menos tempo total e horarios menos cansativos. O WhatsApp ${AGENCY_WHATSAPP_DISPLAY} continua disponivel se voce quiser um humano.`,
           call: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
-          assistant: "Enviar duvida por WhatsApp",
+          assistant: "Falar com a Mia",
           back: "Voltar ao Atendimento Senior",
           summaryTitle: "Suas preferencias",
           summaryPriority: "O mais importante",
@@ -371,6 +372,30 @@ export default function SearchResults() {
       ],
     }),
   );
+  const openAssistant = useCallback(() => {
+    const routeLabel =
+      language === "en"
+        ? `${params.origin} to ${params.destination}`
+        : language === "es"
+          ? `${params.origin} a ${params.destination}`
+          : `${params.origin} para ${params.destination}`;
+    const tripSummary = [
+      routeLabel,
+      params.date,
+      (params as any).returnDate ? `${language === "en" ? "return" : language === "es" ? "vuelta" : "volta"} ${(params as any).returnDate}` : null,
+    ]
+      .filter(Boolean)
+      .join(", ");
+
+    const starter =
+      language === "en"
+        ? `Mia, help me compare the calmest flight options for ${tripSummary}.`
+        : language === "es"
+          ? `Mia, ayúdeme a comparar las opciones de vuelo mas tranquilas para ${tripSummary}.`
+          : `Mia, me ajude a comparar as opcoes de voo mais tranquilas para ${tripSummary}.`;
+
+    openChatbotAssistant({ message: starter, autoSend: true });
+  }, [language, params]);
 
   const defaultValues = {
     origin: params.origin ?? "",
@@ -746,11 +771,9 @@ export default function SearchResults() {
                       {easyModeCopy.call}
                     </a>
                   </Button>
-                  <Button asChild variant="outline" className="rounded-full border-slate-300 bg-white text-slate-800" data-testid="button-easy-mode-chat-results">
-                    <a href={whatsAppHref} target="_blank" rel="noreferrer">
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      {easyModeCopy.assistant}
-                    </a>
+                  <Button variant="outline" onClick={openAssistant} className="rounded-full border-slate-300 bg-white text-slate-800" data-testid="button-easy-mode-chat-results">
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    {easyModeCopy.assistant}
                   </Button>
                   <Link href="/senior">
                     <Button variant="ghost" className="rounded-full text-blue-700 hover:bg-blue-50" data-testid="button-easy-mode-back-results">
@@ -1028,11 +1051,9 @@ export default function SearchResults() {
                     {easyModeCopy.call}
                   </a>
                 </Button>
-                <Button asChild variant="outline" className="rounded-full border-slate-300 bg-white text-slate-800" data-testid="button-easy-mode-chat-results">
-                  <a href={whatsAppHref} target="_blank" rel="noreferrer">
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    {easyModeCopy.assistant}
-                  </a>
+                <Button variant="outline" onClick={openAssistant} className="rounded-full border-slate-300 bg-white text-slate-800" data-testid="button-easy-mode-chat-results">
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  {easyModeCopy.assistant}
                 </Button>
                 <Link href="/senior">
                   <Button variant="ghost" className="rounded-full text-blue-700 hover:bg-blue-50" data-testid="button-easy-mode-back-results">

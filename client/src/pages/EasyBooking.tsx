@@ -16,6 +16,7 @@ import {
   buildWhatsAppHref,
   buildWhatsAppMessage,
 } from "@/lib/contact";
+import { openChatbotAssistant } from "@/lib/chatbot";
 
 type EasyLanguage = "pt" | "en" | "es";
 type TripType = "round-trip" | "one-way";
@@ -30,12 +31,12 @@ const COPY: Record<EasyLanguage, Record<string, string>> = {
     seo_desc: "Fluxo simplificado da Michels Travel para idosos e clientes que preferem comprar com mais calma, letras maiores e ajuda humana visivel.",
     badge: "Atendimento senior",
     title: "Comprar sua passagem com calma, ajuda e letras maiores",
-    subtitle: `Este caminho foi preparado para idosos e clientes que preferem menos pressa. Voce pode fechar a compra no site ou falar com a equipe pelo WhatsApp ${AGENCY_WHATSAPP_DISPLAY}.`,
+    subtitle: `Este caminho foi preparado para idosos e clientes que preferem menos pressa. A Mia pode acompanhar sua escolha com calma, e o WhatsApp ${AGENCY_WHATSAPP_DISPLAY} continua disponivel quando voce quiser falar com um humano.`,
     call: "Abrir WhatsApp",
-    chat: "Continuar aqui",
-    trust: `Nada e cobrado agora. Primeiro voce escolhe o voo e revisa tudo com calma. Se preferir, nossa equipe continua com voce pelo WhatsApp ${AGENCY_WHATSAPP_DISPLAY}.`,
+    chat: "Falar com a Mia",
+    trust: `Nada e cobrado agora. Primeiro voce escolhe o voo e revisa tudo com calma. Se quiser, a Mia explica cada passo e a equipe humana continua com voce pelo WhatsApp ${AGENCY_WHATSAPP_DISPLAY}.`,
     section_title: "Escolha o jeito que fica melhor para voce",
-    section_subtitle: "Se quiser, voce pode seguir no site com o fluxo facil. Se preferir, pode chamar nossa equipe no WhatsApp e continuar por la.",
+    section_subtitle: "Se quiser, voce pode seguir no site com o fluxo facil, abrir a Mia para comparar com ajuda, ou chamar nossa equipe no WhatsApp.",
     path_site: "1. Continuar pelo fluxo facil",
     path_site_desc: "Preencha origem, destino, data e veja os voos com calma.",
     path_call: "2. Falar com a Michels Travel no WhatsApp",
@@ -65,10 +66,10 @@ const COPY: Record<EasyLanguage, Record<string, string>> = {
     route_3: "Newark para Orlando",
     route_4: "Miami para Lisboa",
     helper_title: "Se preferir, nós ajudamos ao vivo",
-    helper_desc: `Voce pode abrir o WhatsApp ou pedir ajuda antes de finalizar a compra. O contato direto desta trilha e ${AGENCY_WHATSAPP_DISPLAY}.`,
+    helper_desc: `A Mia pode ajudar voce a comparar voos, conexoes e bagagem antes de finalizar a compra. Se preferir falar com um humano, o contato direto desta trilha e ${AGENCY_WHATSAPP_DISPLAY}.`,
     helper_item_1: "Letras maiores e visual mais limpo",
     helper_item_2: "Menos opções por tela",
-    helper_item_3: "Suporte humano visível o tempo todo",
+    helper_item_3: "Mia visivel o tempo todo, com apoio humano quando precisar",
     helper_item_4: "Busca com foco em clareza, não em pressa",
     baggage_title: "Bagagem explicada de forma facil",
     baggage_desc: "Antes de ver os voos, entenda assim: uma bolsa pequena quase sempre vai com voce, a bagagem de mao depende da tarifa e a mala despachada pode ou nao estar incluida.",
@@ -89,12 +90,12 @@ const COPY: Record<EasyLanguage, Record<string, string>> = {
     seo_desc: "Simplified Michels Travel flow for older travelers and anyone who wants larger text, fewer choices, and visible human support.",
     badge: "Senior support",
     title: "Buy your flight with more calm, help, and larger text",
-    subtitle: `This path is designed for older travelers and anyone who prefers less pressure. You can finish online or talk to our team on WhatsApp at ${AGENCY_WHATSAPP_DISPLAY}.`,
+    subtitle: `This path is designed for older travelers and anyone who prefers less pressure. Mia can guide the choice calmly, and WhatsApp at ${AGENCY_WHATSAPP_DISPLAY} stays available whenever you want a human.`,
     call: "Open WhatsApp",
-    chat: "Continue here",
-    trust: `Nothing is charged now. First you choose a flight and review everything calmly. If you prefer, our team can continue with you on WhatsApp at ${AGENCY_WHATSAPP_DISPLAY}.`,
+    chat: "Talk to Mia",
+    trust: `Nothing is charged now. First you choose a flight and review everything calmly. If you want, Mia explains each step and our team can continue with you on WhatsApp at ${AGENCY_WHATSAPP_DISPLAY}.`,
     section_title: "Choose the path that feels best for you",
-    section_subtitle: "You can keep going on the site with the easy flow, or talk to our team on WhatsApp and continue there.",
+    section_subtitle: "You can keep going on the site with the easy flow, open Mia for guided help, or talk to our team on WhatsApp.",
     path_site: "1. Continue with the easy flow",
     path_site_desc: "Choose origin, destination, date, and review flights calmly.",
     path_call: "2. Talk to Michels Travel on WhatsApp",
@@ -124,10 +125,10 @@ const COPY: Record<EasyLanguage, Record<string, string>> = {
     route_3: "Newark to Orlando",
     route_4: "Miami to Lisbon",
     helper_title: "If you prefer, we can help live",
-    helper_desc: `You can open WhatsApp or ask for help before finishing the purchase. The direct contact for this path is ${AGENCY_WHATSAPP_DISPLAY}.`,
+    helper_desc: `Mia can help you compare flights, connections, and baggage before finishing the purchase. If you prefer a human, the direct contact for this path is ${AGENCY_WHATSAPP_DISPLAY}.`,
     helper_item_1: "Larger text and cleaner visuals",
     helper_item_2: "Fewer choices per screen",
-    helper_item_3: "Human support visible all the time",
+    helper_item_3: "Mia visible all the time, with human backup when needed",
     helper_item_4: "Search focused on clarity, not pressure",
     baggage_title: "Baggage explained the easy way",
     baggage_desc: "Before looking at flights, think about baggage like this: a small personal item usually goes with you, carry-on depends on the fare, and checked baggage may or may not be included.",
@@ -148,12 +149,12 @@ const COPY: Record<EasyLanguage, Record<string, string>> = {
     seo_desc: "Flujo simplificado de Michels Travel para personas mayores y viajeros que prefieren texto mas grande, menos opciones y apoyo humano visible.",
     badge: "Atencion senior",
     title: "Compre su vuelo con mas calma, ayuda y texto mas grande",
-    subtitle: `Esta ruta fue creada para personas mayores y clientes que prefieren menos presion. Puede cerrar en el sitio o hablar con el equipo por WhatsApp al ${AGENCY_WHATSAPP_DISPLAY}.`,
+    subtitle: `Esta ruta fue creada para personas mayores y clientes que prefieren menos presion. Mia puede acompanar su eleccion con calma, y WhatsApp al ${AGENCY_WHATSAPP_DISPLAY} sigue disponible cuando quiera un humano.`,
     call: "Abrir WhatsApp",
-    chat: "Continuar aqui",
-    trust: `No se cobra nada ahora. Primero elige el vuelo y revisa todo con calma. Si prefiere, nuestro equipo puede continuar con usted por WhatsApp en ${AGENCY_WHATSAPP_DISPLAY}.`,
+    chat: "Hablar con Mia",
+    trust: `No se cobra nada ahora. Primero elige el vuelo y revisa todo con calma. Si quiere, Mia explica cada paso y nuestro equipo puede continuar con usted por WhatsApp en ${AGENCY_WHATSAPP_DISPLAY}.`,
     section_title: "Elija el camino que le quede mejor",
-    section_subtitle: "Puede seguir en el sitio con el flujo facil o hablar con nuestro equipo por WhatsApp y continuar por alli.",
+    section_subtitle: "Puede seguir en el sitio con el flujo facil, abrir a Mia para recibir ayuda guiada, o hablar con nuestro equipo por WhatsApp.",
     path_site: "1. Continuar con el flujo facil",
     path_site_desc: "Elija origen, destino, fecha y revise los vuelos con calma.",
     path_call: "2. Hablar con Michels Travel por WhatsApp",
@@ -183,10 +184,10 @@ const COPY: Record<EasyLanguage, Record<string, string>> = {
     route_3: "Newark a Orlando",
     route_4: "Miami a Lisboa",
     helper_title: "Si prefiere, le ayudamos en vivo",
-    helper_desc: `Puede abrir WhatsApp o pedir ayuda antes de terminar la compra. El contacto directo de esta ruta es ${AGENCY_WHATSAPP_DISPLAY}.`,
+    helper_desc: `Mia puede ayudarle a comparar vuelos, conexiones y equipaje antes de terminar la compra. Si prefiere un humano, el contacto directo de esta ruta es ${AGENCY_WHATSAPP_DISPLAY}.`,
     helper_item_1: "Texto más grande y visual más limpio",
     helper_item_2: "Menos opciones por pantalla",
-    helper_item_3: "Apoyo humano visible todo el tiempo",
+    helper_item_3: "Mia visible todo el tiempo, con apoyo humano cuando haga falta",
     helper_item_4: "Búsqueda enfocada en claridad, no en presión",
     baggage_title: "Equipaje explicado de forma facil",
     baggage_desc: "Antes de ver los vuelos, piense en el equipaje asi: un articulo pequeno normalmente va con usted, el equipaje de mano depende de la tarifa y la maleta facturada puede estar incluida o no.",
@@ -343,6 +344,25 @@ export default function EasyBooking() {
     document.getElementById("senior-planner")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const openAssistant = () => {
+    const tripSummary = [
+      origin ? `${currentLanguage === "en" ? "from" : currentLanguage === "es" ? "desde" : "saindo de"} ${origin}` : null,
+      destination ? `${currentLanguage === "en" ? "to" : currentLanguage === "es" ? "hacia" : "para"} ${destination}` : null,
+      departureDate ? format(departureDate, "yyyy-MM-dd") : null,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    const starter =
+      currentLanguage === "en"
+        ? `Mia, help me plan a calm senior trip ${tripSummary || "with step-by-step guidance"}.`
+        : currentLanguage === "es"
+          ? `Mia, ayúdeme a planear un viaje senior con calma ${tripSummary || "con orientacion paso a paso"}.`
+          : `Mia, me ajude a planejar uma viagem senior com calma ${tripSummary || "com orientacao passo a passo"}.`;
+
+    openChatbotAssistant({ message: starter, autoSend: true });
+  };
+
   const summaryItems = [
     { label: copy.origin, value: origin || "" },
     { label: copy.destination, value: destination || "" },
@@ -446,15 +466,18 @@ export default function EasyBooking() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="min-h-14 rounded-2xl px-6 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white">
+              <Button size="lg" onClick={openAssistant} className="min-h-14 rounded-2xl px-6 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white">
+                <MessageCircle className="h-5 w-5" />
+                {copy.chat}
+              </Button>
+              <Button asChild size="lg" variant="outline" className="min-h-14 rounded-2xl px-6 text-base font-bold border-slate-300 bg-white/90 text-slate-800">
                 <a href={whatsAppHref} target="_blank" rel="noreferrer">
                   <MessageCircle className="h-5 w-5" />
                   {copy.direct_call}
                 </a>
               </Button>
-              <Button size="lg" variant="outline" onClick={goToPlanner} className="min-h-14 rounded-2xl px-6 text-base font-bold border-slate-300 bg-white/90 text-slate-800">
-                <ArrowRight className="h-5 w-5" />
-                {copy.chat}
+              <Button size="lg" variant="ghost" onClick={goToPlanner} className="min-h-14 rounded-2xl px-4 text-base font-bold text-blue-700 hover:bg-blue-50">
+                {currentLanguage === "en" ? "Answer the questions below" : currentLanguage === "es" ? "Responder las preguntas abajo" : "Responder as perguntas abaixo"}
               </Button>
             </div>
 

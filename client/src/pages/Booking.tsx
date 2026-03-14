@@ -36,6 +36,7 @@ import {
   buildWhatsAppHref,
   buildWhatsAppMessage,
 } from "@/lib/contact";
+import { openChatbotAssistant } from "@/lib/chatbot";
 
 const passengerSchema = z.object({
   title: z.enum(["mr", "mrs", "ms", "miss", "dr"]).default("mr"),
@@ -925,27 +926,27 @@ export default function Booking() {
   const easyModeCopy = language === "en"
     ? {
         badge: "Senior support",
-        title: "You can finish this booking online, or continue with our team on WhatsApp.",
-        description: `If any field feels confusing, keep going calmly or talk to our team on WhatsApp at ${AGENCY_WHATSAPP_DISPLAY} before paying.`,
+        title: "Mia can stay with you while you finish this booking.",
+        description: `If any field feels confusing, open Mia for calm guidance before paying. WhatsApp at ${AGENCY_WHATSAPP_DISPLAY} stays available if you prefer a human.`,
         call: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
-        assistant: "Send question on WhatsApp",
+        assistant: "Talk to Mia",
         back: "Back to Senior Support",
       }
     : language === "es"
       ? {
           badge: "Atencion senior",
-          title: "Puede terminar esta reserva en el sitio o continuar con nuestro equipo por WhatsApp.",
-          description: `Si algun campo parece confuso, siga con calma o hable con nuestro equipo por WhatsApp al ${AGENCY_WHATSAPP_DISPLAY} antes de pagar.`,
+          title: "Mia puede acompanarle mientras termina esta reserva.",
+          description: `Si algun campo parece confuso, abra Mia para recibir ayuda tranquila antes de pagar. WhatsApp al ${AGENCY_WHATSAPP_DISPLAY} sigue disponible si prefiere un humano.`,
           call: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
-          assistant: "Enviar duda por WhatsApp",
+          assistant: "Hablar con Mia",
           back: "Volver a Atencion Senior",
         }
       : {
           badge: "Atendimento senior",
-          title: "Voce pode concluir esta reserva no site ou continuar com a nossa equipe no WhatsApp.",
-          description: `Se algum campo parecer confuso, siga com calma ou fale com a nossa equipe no WhatsApp ${AGENCY_WHATSAPP_DISPLAY} antes de pagar.`,
+          title: "A Mia pode ficar com voce enquanto voce conclui esta reserva.",
+          description: `Se algum campo parecer confuso, abra a Mia para receber ajuda calma antes de pagar. O WhatsApp ${AGENCY_WHATSAPP_DISPLAY} continua disponivel se voce preferir um humano.`,
           call: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
-          assistant: "Enviar duvida por WhatsApp",
+          assistant: "Falar com a Mia",
           back: "Voltar ao Atendimento Senior",
         };
   const whatsAppHref = buildWhatsAppHref(
@@ -970,6 +971,24 @@ export default function Booking() {
       ],
     }),
   );
+  const openAssistant = useCallback(() => {
+    const tripSummary = [
+      flight?.originCode ? `${flight.originCode}` : null,
+      flight?.destinationCode ? `${flight.destinationCode}` : null,
+      flight?.departureTime ? format(parseISO(flight.departureTime), "yyyy-MM-dd HH:mm") : null,
+    ]
+      .filter(Boolean)
+      .join(" - ");
+
+    const starter =
+      language === "en"
+        ? `Mia, help me review this booking calmly before payment: ${tripSummary}.`
+        : language === "es"
+          ? `Mia, ayúdeme a revisar esta reserva con calma antes del pago: ${tripSummary}.`
+          : `Mia, me ajude a revisar esta reserva com calma antes do pagamento: ${tripSummary}.`;
+
+    openChatbotAssistant({ message: starter, autoSend: true });
+  }, [flight?.departureTime, flight?.destinationCode, flight?.originCode, language]);
 
   const buildDefaultPassengers = () => {
     const pax: any[] = [];
@@ -1301,11 +1320,9 @@ export default function Booking() {
                     {easyModeCopy.call}
                   </a>
                 </Button>
-                <Button asChild variant="outline" className="rounded-full border-slate-300 bg-white text-slate-800" data-testid="button-easy-mode-chat-booking">
-                  <a href={whatsAppHref} target="_blank" rel="noreferrer">
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    {easyModeCopy.assistant}
-                  </a>
+                <Button variant="outline" onClick={openAssistant} className="rounded-full border-slate-300 bg-white text-slate-800" data-testid="button-easy-mode-chat-booking">
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  {easyModeCopy.assistant}
                 </Button>
                 <Button variant="ghost" onClick={() => setLocation("/senior")} className="rounded-full text-blue-700 hover:bg-blue-50" data-testid="button-easy-mode-back-booking">
                   {easyModeCopy.back}

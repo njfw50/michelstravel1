@@ -45,11 +45,17 @@ interface ChatbotStatus {
   agentModel: string | null;
 }
 
+type ChatbotOpenRequest = {
+  message?: string;
+  autoSend?: boolean;
+};
+
 export function Chatbot() {
   const { t, language } = useI18n();
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [sessionId, setSessionId] = useState<number | null>(null);
+  const [requestingLive, setRequestingLive] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -58,6 +64,7 @@ export function Chatbot() {
   const [status, setStatus] = useState<ChatbotStatus | null>(null);
   const [showPulse, setShowPulse] = useState(true);
   const [lastAdminMsgId, setLastAdminMsgId] = useState(0);
+  const [pendingStarter, setPendingStarter] = useState<ChatbotOpenRequest | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -125,7 +132,7 @@ export function Chatbot() {
     };
   }, [escalated, sessionId, isOpen, lastAdminMsgId]);
 
-  const createSession = async () => {
+  const createSession = useCallback(async () => {
     try {
       let visitorId = localStorage.getItem("michels-chatbot-visitor");
       if (!visitorId) {
@@ -145,7 +152,7 @@ export function Chatbot() {
       console.error("Failed to create chat session:", error);
       return null;
     }
-  };
+  }, [language]);
 
   const requestContext = useMemo(
     () => buildLiveSessionRequestContext(location, window.location.search),
@@ -157,7 +164,7 @@ export function Chatbot() {
   );
   const isSeniorContext = isSeniorServiceMode(requestContext.serviceMode);
 
-  const handleRequestLiveSession = useCallback(() => {
+  const openWhatsAppEscalation = useCallback(() => {
     const latestUserMessage = [...chatMessages].reverse().find((msg) => msg.role === "user")?.content;
     const context = requestContext.contextSnapshot;
     const href = buildWhatsAppHref(
@@ -186,27 +193,57 @@ export function Chatbot() {
     );
 
     window.open(href, "_blank", "noopener,noreferrer");
-    setIsOpen(false);
   }, [chatMessages, isSeniorContext, language, requestContext]);
 
-  const handleOpen = async () => {
+  const handleRequestLiveSession = async () => {
+    setRequestingLive(true);
+    try {
+      let visitorId = localStorage.getItem("michels-chatbot-visitor");
+      if (!visitorId) {
+        visitorId = Math.random().toString(36).substring(2, 12);
+        localStorage.setItem("michels-chatbot-visitor", visitorId);
+      }
+      const res = await fetch("/api/live-sessions/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          visitorId,
+          language: language || "pt",
+          conversationId: sessionId,
+          ...requestContext,
+        }),
+      });
+      const data = await res.json();
+      if (data.id) {
+        setIsOpen(false);
+        navigate(`/live/${data.id}?token=${encodeURIComponent(data.accessToken)}`);
+      }
+    } catch (error) {
+      console.error("Failed to request live session:", error);
+    } finally {
+      setRequestingLive(false);
+    }
+  };
+
+  const handleOpen = useCallback(async () => {
     setIsOpen(true);
     setShowPulse(false);
     if (!status) {
       void loadStatus();
     }
-    if (!sessionId) {
-      const id = await createSession();
-      if (id && chatMessages.length === 0) {
-        const greeting = getGreeting();
-        setChatMessages([{
-          id: -1,
-          role: "assistant",
-          content: greeting,
-        }]);
-      }
+    if (sessionId) return sessionId;
+
+    const id = await createSession();
+    if (id && chatMessages.length === 0) {
+      const greeting = getGreeting();
+      setChatMessages([{
+        id: -1,
+        role: "assistant",
+        content: greeting,
+      }]);
     }
-  };
+    return id;
+  }, [chatMessages.length, createSession, loadStatus, sessionId, status]);
 
   const getGreeting = () => {
     if (language === "en") {
@@ -217,8 +254,9 @@ export function Chatbot() {
     return "Ol\u00e1! Eu sou a Mia, sua assistente de viagens na Michels Travel. Como posso te ajudar hoje? Posso ajudar com busca de voos, reservas, d\u00favidas sobre bagagem e muito mais!";
   };
 
-  const sendMessage = async () => {
-    if (!input.trim() || isStreaming) return;
+  const sendMessage = useCallback(async (overrideContent?: string) => {
+    const messageContent = (overrideContent ?? input).trim();
+    if (!messageContent || isStreaming) return;
 
     let currentSessionId = sessionId;
     if (!currentSessionId) {
@@ -229,7 +267,7 @@ export function Chatbot() {
     const userMessage: ChatMessage = {
       id: Date.now(),
       role: "user",
-      content: input.trim(),
+      content: messageContent,
     };
 
     setChatMessages(prev => [...prev, userMessage]);
@@ -348,19 +386,67 @@ export function Chatbot() {
     } finally {
       setIsStreaming(false);
     }
-  };
+  }, [createSession, input, isStreaming, sessionId, t, agentMode]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      void sendMessage();
     }
   };
 
-  const handleAgentMode = useCallback(() => {
-    if (isStreaming) return;
-    handleRequestLiveSession();
-  }, [handleRequestLiveSession, isStreaming]);
+  useEffect(() => {
+    const handleExternalOpen = (event: Event) => {
+      const detail = (event as CustomEvent<ChatbotOpenRequest>).detail;
+      if (detail?.message) {
+        if (detail.autoSend) {
+          setPendingStarter(detail);
+        } else {
+          setInput(detail.message);
+        }
+      }
+      void handleOpen();
+    };
+
+    window.addEventListener("michels:open-chatbot", handleExternalOpen);
+    return () => window.removeEventListener("michels:open-chatbot", handleExternalOpen);
+  }, [handleOpen]);
+
+  useEffect(() => {
+    if (!pendingStarter?.message || !pendingStarter.autoSend) return;
+    if (!isOpen || !sessionId || isStreaming) return;
+
+    void sendMessage(pendingStarter.message);
+    setPendingStarter(null);
+  }, [isOpen, isStreaming, pendingStarter, sendMessage, sessionId]);
+
+  const handleAgentMode = async () => {
+    if (escalated || isStreaming) return;
+
+    let currentSessionId = sessionId;
+    if (!currentSessionId) {
+      currentSessionId = await createSession();
+      if (!currentSessionId) return;
+    }
+
+    setEscalated(true);
+
+    setChatMessages(prev => [...prev, {
+      id: Date.now(),
+      role: "assistant",
+      content: t("chatbot.agent_mode_confirm"),
+    }]);
+
+    try {
+      await fetch("/api/chatbot/escalate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: currentSessionId }),
+      });
+    } catch (error) {
+      console.error("Escalation error:", error);
+    }
+  };
 
   const formatContent = (content: string) => {
     return content.replace(/\[ESCALATE\]/gi, "").replace(/\[AGENT:.*?\]/g, "").trim();
@@ -406,20 +492,46 @@ export function Chatbot() {
 
   const liveHelpLabel = isSeniorContext
     ? language === "pt"
-      ? "Especialista senior no WhatsApp"
+      ? "Especialista senior"
       : language === "es"
-        ? "Especialista senior por WhatsApp"
-        : "Senior specialist on WhatsApp"
+        ? "Especialista senior"
+        : "Senior specialist"
     : language === "pt"
-      ? "Ajuda no WhatsApp"
+      ? "Atendimento ao vivo"
       : language === "es"
-        ? "Ayuda por WhatsApp"
-        : "WhatsApp help";
+        ? "Atencion en vivo"
+        : "Live help";
+  const whatsappLabel = language === "pt"
+    ? "WhatsApp"
+    : language === "es"
+      ? "WhatsApp"
+      : "WhatsApp";
   const seniorHint = language === "pt"
     ? "Modo senior ativo: atendimento mais calmo, com menos ruido e explicacao passo a passo."
     : language === "es"
       ? "Modo senior activo: apoyo mas calmado, con menos ruido y explicacion paso a paso."
       : "Senior mode is active: calmer support with less noise and step-by-step guidance.";
+  const quickPrompts = useMemo(
+    () =>
+      language === "en"
+        ? [
+            "Find flights from Newark to Sao Paulo",
+            "Explain baggage in simple terms",
+            isSeniorContext ? "I want calmer flight options" : "I need help choosing the best option",
+          ]
+        : language === "es"
+          ? [
+              "Buscar vuelos de Newark a Sao Paulo",
+              "Explicar equipaje de forma simple",
+              isSeniorContext ? "Quiero opciones de vuelo mas tranquilas" : "Necesito ayuda para elegir la mejor opcion",
+            ]
+          : [
+              "Buscar voos de Newark para Sao Paulo",
+              "Explicar bagagem de forma simples",
+              isSeniorContext ? "Quero opcoes de voo mais tranquilas" : "Preciso de ajuda para escolher a melhor opcao",
+            ],
+    [isSeniorContext, language],
+  );
 
   const renderFlightCard = (flight: FlightResult) => (
     <div
@@ -480,6 +592,7 @@ export function Chatbot() {
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
             className="fixed bottom-20 right-4 z-[9999] w-[360px] max-w-[calc(100vw-2rem)]"
+            data-testid="chatbot-panel"
           >
             <Card className="flex flex-col overflow-hidden shadow-xl border border-border/50">
               <div className={`flex items-center justify-between gap-2 px-4 py-3 ${theme.headerClass}`}>
@@ -584,6 +697,25 @@ export function Chatbot() {
                     {basicModeHint}
                   </div>
                 )}
+                {chatMessages.length <= 1 && !isStreaming && (
+                  <div className="mb-3">
+                    <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                      {language === "en" ? "Quick start" : language === "es" ? "Inicio rapido" : "Inicio rapido"}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {quickPrompts.map((prompt) => (
+                        <button
+                          key={prompt}
+                          type="button"
+                          onClick={() => void sendMessage(prompt)}
+                          className={`rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors ${isSeniorContext ? "border-amber-200 bg-amber-50 text-amber-900 hover:bg-amber-100" : "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"}`}
+                        >
+                          {prompt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <button
                     onClick={() => setAgentMode(!agentMode)}
@@ -603,11 +735,20 @@ export function Chatbot() {
                   <div className="flex items-center gap-3 flex-wrap">
                     <button
                       onClick={handleRequestLiveSession}
+                      disabled={requestingLive}
                       className={`flex items-center gap-1 text-[11px] font-medium transition-colors ${isSeniorContext ? "text-amber-700 hover:text-amber-900" : "text-[#0074DE] hover:text-[#005bb5]"}`}
                       data-testid="button-chatbot-live-session"
                     >
-                      <MonitorPlay className="h-3.5 w-3.5" />
+                      {requestingLive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MonitorPlay className="h-3.5 w-3.5" />}
                       <span>{liveHelpLabel}</span>
+                    </button>
+                    <button
+                      onClick={openWhatsAppEscalation}
+                      className={`flex items-center gap-1 text-[11px] font-medium transition-colors ${isSeniorContext ? "text-amber-700 hover:text-amber-900" : "text-[#0074DE] hover:text-[#005bb5]"}`}
+                      data-testid="button-chatbot-whatsapp"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      <span>{whatsappLabel}</span>
                     </button>
                     {!escalated && (
                       <button
@@ -635,7 +776,7 @@ export function Chatbot() {
                   />
                   <Button
                     size="icon"
-                    onClick={sendMessage}
+                    onClick={() => void sendMessage()}
                     disabled={!input.trim() || isStreaming}
                     data-testid="button-chatbot-send"
                   >
@@ -656,9 +797,10 @@ export function Chatbot() {
       </AnimatePresence>
 
       <button
-        onClick={isOpen ? () => setIsOpen(false) : handleRequestLiveSession}
+        onClick={isOpen ? () => setIsOpen(false) : handleOpen}
         className={`fixed bottom-4 right-4 z-[9999] flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105 active:scale-95 ${isSeniorContext ? "bg-amber-600 hover:bg-amber-700" : "bg-[#0074DE]"}`}
         data-testid="button-chatbot-toggle"
+        aria-expanded={isOpen}
       >
         {isOpen ? (
           <X className="h-6 w-6" />

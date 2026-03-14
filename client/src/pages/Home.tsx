@@ -14,6 +14,7 @@ import {
   buildWhatsAppHref,
   buildWhatsAppMessage,
 } from "@/lib/contact";
+import { openChatbotAssistant } from "@/lib/chatbot";
 
 import airplaneDestination from "@/assets/images/airplane-destination.jpg";
 import airplaneLightHero from "@/assets/images/airplane-light-hero.png";
@@ -86,38 +87,38 @@ export default function Home() {
       ? {
         badge: "Senior support",
         title: "Prefer to book with more time and less pressure?",
-        description: `If you want larger text, simpler steps, and clear human support, open the senior path or talk to us on WhatsApp at ${AGENCY_WHATSAPP_DISPLAY}.`,
+        description: `If you want larger text, simpler steps, and Mia guiding you calmly, open the senior path. WhatsApp at ${AGENCY_WHATSAPP_DISPLAY} stays available when you want a human.`,
         primary: "Open Senior Support",
-        secondary: "Talk on WhatsApp",
+        secondary: "Talk to Mia",
         features: [
           "Larger text and clearer buttons",
           "Less information on each step",
-          "Book online or continue on WhatsApp",
+          "Mia in the site, human backup on WhatsApp",
         ],
       }
     : language === "es"
       ? {
           badge: "Atención senior",
           title: "¿Prefiere reservar con más calma y menos presión?",
-          description: `Si quiere texto más grande, pasos más simples y apoyo humano claro, abra la ruta senior o escribanos por WhatsApp al ${AGENCY_WHATSAPP_DISPLAY}.`,
+          description: `Si quiere texto más grande, pasos más simples y a Mia guiando con calma, abra la ruta senior. WhatsApp al ${AGENCY_WHATSAPP_DISPLAY} sigue disponible cuando quiera un humano.`,
           primary: "Abrir atención senior",
-          secondary: "Hablar por WhatsApp",
+          secondary: "Hablar con Mia",
           features: [
             "Texto más grande y botones más claros",
             "Menos información en cada paso",
-            "Reserve en el sitio o siga por WhatsApp",
+            "Mia en el sitio y respaldo humano por WhatsApp",
           ],
         }
       : {
           badge: "Atendimento senior",
           title: "Prefere reservar com mais calma e menos pressão?",
-          description: `Se voce quer letras maiores, etapas mais simples e ajuda humana visivel, abra o caminho senior ou fale por WhatsApp no ${AGENCY_WHATSAPP_DISPLAY}.`,
+          description: `Se voce quer letras maiores, etapas mais simples e a Mia guiando com calma, abra o caminho senior. O WhatsApp ${AGENCY_WHATSAPP_DISPLAY} continua disponivel quando voce quiser um humano.`,
           primary: "Abrir Atendimento Senior",
-          secondary: "Falar no WhatsApp",
+          secondary: "Falar com a Mia",
           features: [
             "Letras maiores e botões mais claros",
             "Menos informação em cada etapa",
-            "Reserve no site ou siga pelo WhatsApp",
+            "Mia no site e apoio humano pelo WhatsApp",
           ],
         };
 
@@ -144,15 +145,6 @@ export default function Home() {
           secondary: "Voos Newark-Brasil",
           contact: "Falar no WhatsApp",
         };
-  const seniorWhatsAppHref = buildWhatsAppHref(
-    buildWhatsAppMessage({
-      language,
-      topic: language === "en" ? "Senior support" : language === "es" ? "Atencion senior" : "Atendimento senior",
-      details: [
-        language === "en" ? "Page: Home" : language === "es" ? "Pagina: Inicio" : "Pagina: Home",
-      ],
-    }),
-  );
   const newarkWhatsAppHref = buildWhatsAppHref(
     buildWhatsAppMessage({
       language,
@@ -212,6 +204,18 @@ export default function Home() {
     }
 
     setLocation(`/search?${searchParams.toString()}`);
+  };
+
+  const openSeniorAssistant = () => {
+    openChatbotAssistant({
+      message:
+        language === "en"
+          ? "Mia, help me choose flights with more calm and less pressure."
+          : language === "es"
+            ? "Mia, ayudeme a elegir vuelos con mas calma y menos presion."
+            : "Mia, me ajude a escolher voos com mais calma e menos pressao.",
+      autoSend: true,
+    });
   };
 
   return (
@@ -348,14 +352,12 @@ export default function Home() {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                   <Button
-                    asChild
                     variant="outline"
+                    onClick={openSeniorAssistant}
                     className="rounded-full px-7 py-6 text-base font-bold border-slate-300 bg-white/90 text-slate-800"
                   >
-                    <a href={seniorWhatsAppHref} target="_blank" rel="noreferrer">
-                      <MessageCircle className="mr-2 h-5 w-5" />
-                      {easyModeContent.secondary}
-                    </a>
+                    <MessageCircle className="mr-2 h-5 w-5" />
+                    {easyModeContent.secondary}
                   </Button>
                 </div>
               </div>
@@ -902,10 +904,17 @@ export default function Home() {
 
                   <Button
                     size="lg"
-                    onClick={() => {
-                      const chatBtn = document.querySelector('[data-testid="button-chatbot-toggle"]') as HTMLButtonElement;
-                      if (chatBtn) chatBtn.click();
-                    }}
+                    onClick={() =>
+                      openChatbotAssistant({
+                        message:
+                          language === "en"
+                            ? "Mia, help me start this trip with the right flight options."
+                            : language === "es"
+                              ? "Mia, ayudeme a empezar este viaje con las opciones de vuelo correctas."
+                              : "Mia, me ajude a comecar esta viagem com as opcoes de voo certas.",
+                        autoSend: true,
+                      })
+                    }
                     className="rounded-full bg-white text-[#0f2240] border-white shadow-lg shadow-black/20"
                     data-testid="button-open-assistant"
                   >
