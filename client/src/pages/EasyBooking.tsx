@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
-import { CalendarDays, CheckCircle2, ChevronDown, MessageCircle, PhoneCall, Search, ShieldCheck, UserRound, ArrowRight, HeartHandshake } from "lucide-react";
+import { CalendarDays, CheckCircle2, ChevronDown, MessageCircle, PhoneCall, Search, ShieldCheck, UserRound, ArrowRight, HeartHandshake, BriefcaseBusiness, Package, Luggage } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -62,6 +62,16 @@ const COPY: Record<EasyLanguage, Record<string, string>> = {
     helper_item_2: "Menos opções por tela",
     helper_item_3: "Suporte humano visível o tempo todo",
     helper_item_4: "Busca com foco em clareza, não em pressa",
+    baggage_title: "Bagagem explicada de forma facil",
+    baggage_desc: "Antes de ver os voos, entenda assim: uma bolsa pequena quase sempre vai com voce, a bagagem de mao depende da tarifa e a mala despachada pode ou nao estar incluida.",
+    baggage_personal_title: "Bolsa pequena ou mochila",
+    baggage_personal_desc: "Normalmente e o item que fica embaixo do assento. E a parte mais simples da viagem.",
+    baggage_carry_title: "Bagagem de mao",
+    baggage_carry_desc: "Nem toda tarifa inclui. Na proxima tela mostramos claramente se seu voo permite levar mala de mao na cabine.",
+    baggage_checked_title: "Mala despachada",
+    baggage_checked_desc: "E a mala que vai no bagageiro do aviao. Algumas tarifas incluem, outras cobram separado.",
+    baggage_note: "Quando houver bagagem extra, mostramos o preco por mala, para qual passageiro vale e se serve para ida, volta ou trecho especifico.",
+    baggage_support: `Se qualquer regra de bagagem parecer confusa, pare e fale com a equipe no ${AGENCY_PHONE_DISPLAY} antes de pagar.`,
     missing_title: "Faltam informações",
     missing_desc: "Escolha origem, destino e data para continuar.",
     choose_date: "Escolher data",
@@ -111,6 +121,16 @@ const COPY: Record<EasyLanguage, Record<string, string>> = {
     helper_item_2: "Fewer choices per screen",
     helper_item_3: "Human support visible all the time",
     helper_item_4: "Search focused on clarity, not pressure",
+    baggage_title: "Baggage explained the easy way",
+    baggage_desc: "Before looking at flights, think about baggage like this: a small personal item usually goes with you, carry-on depends on the fare, and checked baggage may or may not be included.",
+    baggage_personal_title: "Small bag or backpack",
+    baggage_personal_desc: "This is usually the item that stays under the seat. It is the simplest part of the trip.",
+    baggage_carry_title: "Carry-on bag",
+    baggage_carry_desc: "Not every fare includes it. On the next screen we show clearly whether your flight allows cabin baggage.",
+    baggage_checked_title: "Checked bag",
+    baggage_checked_desc: "This is the bag that goes in the aircraft hold. Some fares include it and others charge separately.",
+    baggage_note: "When extra baggage is available, we show the price per bag, which passenger it applies to, and whether it is for outbound, return, or a specific segment.",
+    baggage_support: `If any baggage rule feels confusing, stop and talk to our team at ${AGENCY_PHONE_DISPLAY} before paying.`,
     missing_title: "Information is missing",
     missing_desc: "Choose origin, destination, and date to continue.",
     choose_date: "Choose date",
@@ -160,6 +180,16 @@ const COPY: Record<EasyLanguage, Record<string, string>> = {
     helper_item_2: "Menos opciones por pantalla",
     helper_item_3: "Apoyo humano visible todo el tiempo",
     helper_item_4: "Búsqueda enfocada en claridad, no en presión",
+    baggage_title: "Equipaje explicado de forma facil",
+    baggage_desc: "Antes de ver los vuelos, piense en el equipaje asi: un articulo pequeno normalmente va con usted, el equipaje de mano depende de la tarifa y la maleta facturada puede estar incluida o no.",
+    baggage_personal_title: "Bolso pequeno o mochila",
+    baggage_personal_desc: "Normalmente es el articulo que queda debajo del asiento. Es la parte mas simple del viaje.",
+    baggage_carry_title: "Equipaje de mano",
+    baggage_carry_desc: "No todas las tarifas lo incluyen. En la siguiente pantalla mostramos claramente si su vuelo permite llevar maleta en cabina.",
+    baggage_checked_title: "Maleta facturada",
+    baggage_checked_desc: "Es la maleta que va en la bodega del avion. Algunas tarifas la incluyen y otras la cobran aparte.",
+    baggage_note: "Cuando exista equipaje extra, mostramos el precio por maleta, para que pasajero aplica y si sirve para ida, vuelta o un tramo especifico.",
+    baggage_support: `Si alguna regla de equipaje parece confusa, pare y hable con el equipo al ${AGENCY_PHONE_DISPLAY} antes de pagar.`,
     missing_title: "Faltan datos",
     missing_desc: "Elija origen, destino y fecha para continuar.",
     choose_date: "Elegir fecha",
@@ -292,6 +322,47 @@ export default function EasyBooking() {
                       {step}
                     </div>
                   ))}
+                </div>
+
+                <div className="rounded-[28px] border border-amber-200 bg-[linear-gradient(180deg,rgba(255,251,235,1),rgba(255,255,255,0.98))] p-5 md:p-6 shadow-[0_20px_60px_-40px_rgba(217,119,6,0.5)]">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 shrink-0">
+                      <Luggage className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-display font-extrabold text-slate-950">{copy.baggage_title}</h3>
+                      <p className="mt-2 text-base leading-relaxed text-slate-600">{copy.baggage_desc}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="rounded-2xl border border-amber-100 bg-white px-4 py-4">
+                      <div className="flex items-center gap-2">
+                        <BriefcaseBusiness className="h-5 w-5 text-amber-700" />
+                        <p className="text-base font-bold text-slate-950">{copy.baggage_personal_title}</p>
+                      </div>
+                      <p className="mt-2 text-sm leading-relaxed text-slate-600">{copy.baggage_personal_desc}</p>
+                    </div>
+                    <div className="rounded-2xl border border-blue-100 bg-blue-50/70 px-4 py-4">
+                      <div className="flex items-center gap-2">
+                        <Package className="h-5 w-5 text-blue-700" />
+                        <p className="text-base font-bold text-slate-950">{copy.baggage_carry_title}</p>
+                      </div>
+                      <p className="mt-2 text-sm leading-relaxed text-slate-600">{copy.baggage_carry_desc}</p>
+                    </div>
+                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 px-4 py-4">
+                      <div className="flex items-center gap-2">
+                        <Luggage className="h-5 w-5 text-emerald-700" />
+                        <p className="text-base font-bold text-slate-950">{copy.baggage_checked_title}</p>
+                      </div>
+                      <p className="mt-2 text-sm leading-relaxed text-slate-600">{copy.baggage_checked_desc}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4">
+                    <p className="text-sm font-semibold leading-relaxed text-amber-950">{copy.baggage_note}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-amber-900">{copy.baggage_support}</p>
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap gap-3">

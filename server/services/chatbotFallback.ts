@@ -156,12 +156,12 @@ function parseSlashDate(raw: string, language: SupportedChatLanguage): string | 
 }
 
 function extractDates(content: string, language: SupportedChatLanguage): string[] {
-  const isoDates = [...content.matchAll(/\b(20\d{2}-\d{2}-\d{2})\b/g)].map((match) => match[1]);
+  const isoDates = Array.from(content.matchAll(/\b(20\d{2}-\d{2}-\d{2})\b/g), (match) => match[1]);
   if (isoDates.length > 0) {
     return isoDates;
   }
 
-  const slashDates = [...content.matchAll(/\b(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)\b/g)]
+  const slashDates = Array.from(content.matchAll(/\b(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)\b/g))
     .map((match) => parseSlashDate(match[1], language))
     .filter((value): value is string => Boolean(value));
 
@@ -170,7 +170,7 @@ function extractDates(content: string, language: SupportedChatLanguage): string[
 
 function extractAirports(content: string): { origin?: string; destination?: string } {
   const upper = content.toUpperCase();
-  const iataCodes = [...upper.matchAll(/\b[A-Z]{3}\b/g)]
+  const iataCodes = Array.from(upper.matchAll(/\b[A-Z]{3}\b/g))
     .map((match) => match[0])
     .filter((code, index, all) => all.indexOf(code) === index);
 

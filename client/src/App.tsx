@@ -29,6 +29,8 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import BlogList from "@/pages/BlogList";
 import BlogPost from "@/pages/BlogPost";
 import About from "@/pages/About";
+import IronboundNewark from "@/pages/IronboundNewark";
+import BrazilFlightsNewark from "@/pages/BrazilFlightsNewark";
 
 import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import CheckoutCancel from "@/pages/CheckoutCancel";
@@ -86,6 +88,8 @@ function Router() {
       <Route path="/book/:id" component={() => <Layout><Booking /></Layout>} />
       
       <Route path="/about" component={() => <Layout><About /></Layout>} />
+      <Route path="/agencia-de-viagens-ironbound-newark" component={() => <Layout><IronboundNewark /></Layout>} />
+      <Route path="/passagens-para-o-brasil-saindo-de-newark" component={() => <Layout><BrazilFlightsNewark /></Layout>} />
       <Route path="/blog" component={() => <Layout><BlogList /></Layout>} />
       <Route path="/blog/:slug" component={() => <Layout><BlogPost /></Layout>} />
       

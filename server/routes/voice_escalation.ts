@@ -1,6 +1,11 @@
 import type { Express, Request, Response } from "express";
 import { storage } from "../storage";
 
+function parseRouteId(value: string | string[] | undefined): number {
+  const normalizedValue = Array.isArray(value) ? value[0] : value;
+  return Number.parseInt(normalizedValue ?? "", 10);
+}
+
 export function registerVoiceEscalationRoutes(app: Express) {
   // Handle escalation from voice assistant
   app.post("/api/voice/escalate", async (req: Request, res: Response) => {
@@ -76,7 +81,7 @@ export function registerVoiceEscalationRoutes(app: Express) {
       if (notes) updates.notes = notes;
       if (status === 'resolved') updates.resolvedAt = new Date();
       
-      const escalation = await storage.updateVoiceEscalation(parseInt(id), updates);
+      const escalation = await storage.updateVoiceEscalation(parseRouteId(id), updates);
       
       res.json(escalation);
     } catch (error: any) {

@@ -367,6 +367,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <h4 className="font-bold text-gray-900 text-xs mb-5 uppercase tracking-[0.15em]">{t("footer.company")}</h4>
                 <ul className="space-y-3 text-sm">
                   <li><Link href="/about" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.about")}</Link></li>
+                  <li><Link href="/agencia-de-viagens-ironbound-newark" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">Ironbound Newark</Link></li>
+                  <li><Link href="/passagens-para-o-brasil-saindo-de-newark" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">Brasil saindo de Newark</Link></li>
                   <li><Link href="/blog" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("nav.blog")}</Link></li>
                 </ul>
               </div>

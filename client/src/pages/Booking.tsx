@@ -1144,6 +1144,8 @@ export default function Booking() {
                   passengerCount={totalPassengers}
                   onBaggageSelected={setBaggageSelections}
                   includedBaggage={firstPaxBaggage}
+                  flight={flight}
+                  simplified={isEasyMode}
                 />
               )}
 

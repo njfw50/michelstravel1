@@ -260,7 +260,8 @@ export async function ensureDefaultBlogPosts() {
   let retiredCount = 0;
   const now = Date.now();
 
-  for (const [index, post] of managedBlogPosts.entries()) {
+  for (let index = 0; index < managedBlogPosts.length; index++) {
+    const post = managedBlogPosts[index];
     const createdAt = new Date(now - index * 60_000);
     const values = { ...post, createdAt };
     const existing = existingBySlug.get(post.slug);

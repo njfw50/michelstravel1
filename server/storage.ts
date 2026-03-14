@@ -21,6 +21,8 @@ import {
 // Import Auth Storage
 import { authStorage, type IAuthStorage } from "./replit_integrations/auth";
 
+type StorageInsertBooking = typeof bookings.$inferInsert;
+
 export interface IStorage extends IAuthStorage {
   // Flights
   createFlightSearch(search: InsertFlightSearch): Promise<FlightSearch>;
@@ -28,8 +30,8 @@ export interface IStorage extends IAuthStorage {
   getPopularDestinations(): Promise<FlightSearch[]>;
 
   // Bookings
-  createBooking(booking: InsertBooking): Promise<Booking>;
-  updateBooking(id: number, updates: Partial<InsertBooking>): Promise<Booking | undefined>;
+  createBooking(booking: StorageInsertBooking): Promise<Booking>;
+  updateBooking(id: number, updates: Partial<StorageInsertBooking>): Promise<Booking | undefined>;
   getBookings(userId?: string): Promise<Booking[]>;
   getBooking(id: number): Promise<Booking | undefined>;
   getBookingByReference(referenceCode: string): Promise<Booking | undefined>;
@@ -117,12 +119,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // --- Bookings ---
-  async createBooking(booking: InsertBooking): Promise<Booking> {
+  async createBooking(booking: StorageInsertBooking): Promise<Booking> {
     const [newBooking] = await db.insert(bookings).values(booking).returning();
     return newBooking;
   }
 
-  async updateBooking(id: number, updates: Partial<InsertBooking>): Promise<Booking | undefined> {
+  async updateBooking(id: number, updates: Partial<StorageInsertBooking>): Promise<Booking | undefined> {
     const [b] = await db.update(bookings).set(updates).where(eq(bookings.id, id)).returning();
     return b;
   }

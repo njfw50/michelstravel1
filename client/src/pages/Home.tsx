@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShieldCheck, Zap, Globe, ArrowRight, MapPin, Plane, Search, CreditCard, Ticket, Star, Clock, Headphones, Users, TrendingUp, ChevronRight, Sparkles, MessageCircle, CheckCircle2, Languages, UserCheck, PhoneCall, HeartHandshake } from "lucide-react";
 import { motion } from "framer-motion";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
 import { SEO } from "@/components/SEO";
 import { AGENCY_PHONE_DISPLAY, AGENCY_PHONE_TEL } from "@/lib/contact";
@@ -170,7 +170,11 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <SEO />
+      <SEO
+        title="Agência de viagens em Newark, NJ"
+        description="Atendimento em português para passagens aéreas em Newark, NJ, com foco em voos para o Brasil, suporte humano e ajuda clara para clientes de Ironbound e região."
+        path="/"
+      />
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 select-none">
           <img 
@@ -344,6 +348,52 @@ export default function Home() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="pb-6 md:pb-10">
+        <div className="container mx-auto px-4 md:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="overflow-hidden rounded-[32px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_58%,rgba(219,234,254,0.95))] p-7 shadow-[0_24px_70px_-44px_rgba(37,99,235,0.42)] md:p-9"
+          >
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div className="max-w-3xl">
+                <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-blue-700">
+                  <MapPin className="h-3.5 w-3.5" />
+                  Newark / Ironbound
+                </span>
+                <h2 className="mt-4 text-3xl font-extrabold text-slate-950 md:text-4xl">
+                  Procurando agência de viagens em Ironbound, Newark?
+                </h2>
+                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+                  Criamos uma página local para clientes de Newark que buscam voos para o Brasil, atendimento
+                  em português e suporte humano antes de fechar a passagem.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Link href="/agencia-de-viagens-ironbound-newark">
+                  <Button className="rounded-full bg-blue-600 px-6 py-6 text-base font-bold text-white hover:bg-blue-700">
+                    Ver página de Newark <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href="/passagens-para-o-brasil-saindo-de-newark">
+                  <Button variant="outline" className="rounded-full px-6 py-6 text-base font-bold border-blue-200 bg-white/90 text-slate-800">
+                    Brasil saindo de Newark <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                <a href={`tel:${AGENCY_PHONE_TEL}`}>
+                  <Button variant="outline" className="rounded-full px-6 py-6 text-base font-bold">
+                    <PhoneCall className="mr-2 h-4 w-4" />
+                    {AGENCY_PHONE_DISPLAY}
+                  </Button>
+                </a>
+              </div>
             </div>
           </motion.div>
         </div>

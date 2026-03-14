@@ -55,7 +55,12 @@ interface PublicFeaturedDealsResponse {
   generated_at: string;
 }
 
-export function useFlightSearch(params: Partial<FlightSearchParams> & { legs?: string }) {
+export type FlightSearchQuery = Omit<Partial<FlightSearchParams>, "legs"> & {
+  legs?: string;
+  tripType?: string;
+};
+
+export function useFlightSearch(params: FlightSearchQuery) {
   const isEnabled = !!(params.origin && params.destination && params.date);
 
   return useQuery({

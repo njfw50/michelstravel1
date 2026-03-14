@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 import { FlightSearchForm } from "@/components/FlightSearchForm";
 import { FlightCard } from "@/components/FlightCard";
-import { useFlightSearch } from "@/hooks/use-flights";
+import { useFlightSearch, type FlightSearchQuery } from "@/hooks/use-flights";
 import { Loader2, Filter, AlertCircle, Plane, X, Sun, Sunrise, Sunset, Moon, Globe, BarChart3, Armchair, Sparkles, CheckCircle2, Clock, ArrowRight, PhoneCall, HeartHandshake, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -222,7 +222,7 @@ export default function SearchResults() {
     if (isMultiCity) multiCityLegs = JSON.parse(legsRaw);
   } catch {}
 
-  const params = isMultiCity ? {
+  const params: FlightSearchQuery = isMultiCity ? {
     origin: multiCityLegs[0]?.origin || "",
     destination: multiCityLegs[0]?.destination || "",
     date: multiCityLegs[0]?.date || "",
@@ -272,10 +272,10 @@ export default function SearchResults() {
   };
 
   const defaultValues = {
-    origin: params.origin,
-    destination: params.destination,
+    origin: params.origin ?? "",
+    destination: params.destination ?? "",
     date: params.date ? new Date(params.date) : undefined,
-    passengers: params.passengers,
+    passengers: params.passengers ?? "1",
   };
 
   const [sortBy, setSortBy] = useState<SortOption>("cheapest");

@@ -40,7 +40,8 @@ export function FlightCard({ flight }: FlightCardProps) {
   const bookUrl = `/book/${flight.id}?${searchParams.toString()}`;
 
   // Check if we have slices (round trip) or single flight
-  const hasSlices = flight.slices && flight.slices.length > 0;
+  const slices = flight.slices ?? [];
+  const hasSlices = slices.length > 0;
 
   return (
     <Card data-testid={`flight-card-${flight.id}`} className="p-0 overflow-hidden border border-gray-200 shadow-sm hover:shadow-[0_8px_32px_-8px_hsl(213_90%_50%/0.18)] hover:border-blue-200 transition-all duration-300 group bg-white rounded-2xl hover:-translate-y-0.5">
@@ -78,7 +79,7 @@ export function FlightCard({ flight }: FlightCardProps) {
           {hasSlices ? (
             // Display slices separately for round trips
             <div className="space-y-4">
-              {flight.slices.map((slice, index) => {
+              {slices.map((slice, index) => {
                 const firstSegment = slice.segments[0];
                 const lastSegment = slice.segments[slice.segments.length - 1];
                 const sliceDuration = slice.duration.startsWith("P") ? formatDuration(slice.duration) : slice.duration;

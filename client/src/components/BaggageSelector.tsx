@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Luggage, Plus, Minus, Package, Check, ShieldCheck, Ruler } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import type { FlightOffer } from "@shared/schema";
+import BaggageInformationHub from "@/components/BaggageInformationHub";
 import personalItemImg from "@/assets/images/personal-item-backpack.png";
 
 interface BaggageService {
@@ -41,6 +43,8 @@ interface BaggageSelectorProps {
   onBaggageSelected: (selections: BaggageSelection[]) => void;
   passengerCount: number;
   includedBaggage?: { type: string; quantity: number }[];
+  flight?: FlightOffer | null;
+  simplified?: boolean;
 }
 
 export default function BaggageSelector({
@@ -48,8 +52,10 @@ export default function BaggageSelector({
   onBaggageSelected,
   passengerCount,
   includedBaggage = [],
+  flight,
+  simplified = false,
 }: BaggageSelectorProps) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
 
   const { data, isLoading, isError } = useQuery<BaggageServicesResponse>({
@@ -114,9 +120,14 @@ export default function BaggageSelector({
 
   const totalExtraCost = selections.reduce((sum, s) => sum + s.price, 0);
   const currency = baggageServices[0]?.totalCurrency || "USD";
+  const locale = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
+  const passengerIndexById = useMemo(
+    () => new Map((flight?.passengers || []).map((passenger, index) => [passenger.passengerId, index])),
+    [flight?.passengers],
+  );
 
   const formatPrice = (amount: number, cur: string) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: cur }).format(amount);
+    new Intl.NumberFormat(locale, { style: "currency", currency: cur }).format(amount);
 
   const tReplace = (key: string, replacements: Record<string, string | number>) => {
     let text = t(key);
@@ -132,6 +143,19 @@ export default function BaggageSelector({
   };
 
   const totalIncluded = includedBaggage.reduce((sum, b) => sum + b.quantity, 0);
+  const getEligiblePassengerIndexes = (service: BaggageService) => {
+    if (!service.passengerIds?.length) {
+      return Array.from({ length: passengerCount }, (_, index) => index);
+    }
+
+    const mappedIndexes = service.passengerIds
+      .map((passengerId) => passengerIndexById.get(passengerId))
+      .filter((value): value is number => value !== undefined);
+
+    return mappedIndexes.length > 0
+      ? mappedIndexes
+      : Array.from({ length: passengerCount }, (_, index) => index);
+  };
 
   if (isLoading) {
     return (
@@ -187,6 +211,12 @@ export default function BaggageSelector({
         </div>
       </CardHeader>
       <CardContent className="p-4 md:p-6 space-y-5">
+        <BaggageInformationHub
+          flight={flight}
+          services={baggageServices}
+          includedBaggage={includedBaggage}
+          simplified={simplified}
+        />
 
         <div
           className="rounded-xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/80 to-white p-4"
@@ -267,7 +297,7 @@ export default function BaggageSelector({
                     </div>
 
                     <div className="px-4 py-3 space-y-2.5">
-                      {Array.from({ length: passengerCount }).map((_, paxIdx) => {
+                      {getEligiblePassengerIndexes(service).map((paxIdx) => {
                         const key = getKey(service.id, paxIdx);
                         const qty = quantities[key] || 0;
                         return (

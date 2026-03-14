@@ -34,6 +34,11 @@ import {
   parseAgentFallbackRequest,
 } from "./services/chatbotFallback";
 
+function parseNumericRouteParam(value: string | string[] | undefined): number {
+  const normalizedValue = Array.isArray(value) ? value[0] : value;
+  return Number.parseInt(normalizedValue ?? "", 10);
+}
+
 async function getCommissionRate(): Promise<number> {
   const settings = await storage.getSiteSettings();
   return settings?.commissionPercentage ? parseFloat(settings.commissionPercentage) / 100 : 0.085;
@@ -3032,7 +3037,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
 
   app.post('/api/admin/chatbot/escalations/:id/resolve', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericRouteParam(req.params.id);
       await db.update(conversations)
         .set({ resolved: true })
         .where(eq(conversations.id, id));
@@ -3108,7 +3113,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
 
   app.get('/api/admin/chatbot/conversations/:id/messages', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericRouteParam(req.params.id);
       const msgs = await db.select().from(messages)
         .where(eq(messages.conversationId, id))
         .orderBy(messages.createdAt);
@@ -3162,7 +3167,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
     const user = req.user as any;
     if (!user?.claims?.sub) return res.status(401).json({ error: "Login required" });
     try {
-      const threadId = parseInt(req.params.id);
+      const threadId = parseNumericRouteParam(req.params.id);
       const thread = await storage.getInternalThread(threadId);
       if (!thread || thread.userId !== user.claims.sub) return res.status(404).json({ error: "Thread not found" });
       await storage.markMessagesRead(threadId, "user");
@@ -3178,7 +3183,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
     const user = req.user as any;
     if (!user?.claims?.sub) return res.status(401).json({ error: "Login required" });
     try {
-      const threadId = parseInt(req.params.id);
+      const threadId = parseNumericRouteParam(req.params.id);
       const thread = await storage.getInternalThread(threadId);
       if (!thread || thread.userId !== user.claims.sub) return res.status(404).json({ error: "Thread not found" });
       const { content } = req.body;
@@ -3225,7 +3230,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
 
   app.get('/api/admin/messenger/threads/:id/messages', requireAdmin, async (req, res) => {
     try {
-      const threadId = parseInt(req.params.id);
+      const threadId = parseNumericRouteParam(req.params.id);
       await storage.markMessagesRead(threadId, "admin");
       const msgs = await storage.getInternalMessages(threadId);
       res.json(msgs);
@@ -3237,7 +3242,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
 
   app.post('/api/admin/messenger/threads/:id/messages', requireAdmin, async (req, res) => {
     try {
-      const threadId = parseInt(req.params.id);
+      const threadId = parseNumericRouteParam(req.params.id);
       const { content } = req.body;
       if (!content?.trim()) return res.status(400).json({ error: "Message content required" });
       const msg = await storage.createInternalMessage({
@@ -3308,7 +3313,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
   // Client gets their session status and shared blocks (requires access token)
   app.get('/api/live-sessions/:id', async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericRouteParam(req.params.id);
       const token = req.query.token as string;
       if (!token) return res.status(401).json({ error: "Access token required" });
 
@@ -3334,7 +3339,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
 
   // Client SSE stream for real-time updates (requires access token)
   app.get('/api/live-sessions/:id/stream', async (req, res) => {
-    const id = parseInt(req.params.id);
+    const id = parseNumericRouteParam(req.params.id);
     const token = req.query.token as string;
     if (!token) { res.status(401).json({ error: "Access token required" }); return; }
     const session = await storage.getLiveSession(id);
@@ -3364,7 +3369,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
   // Client sends chat message (requires access token)
   app.post('/api/live-sessions/:id/messages', async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericRouteParam(req.params.id);
       const { content, role, token } = req.body;
       if (!content) return res.status(400).json({ error: "content required" });
       if (!token) return res.status(401).json({ error: "Access token required" });
@@ -3460,7 +3465,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
   // Admin gets full session detail (all blocks, not just shared)
   app.get('/api/live-sessions/admin/:id', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericRouteParam(req.params.id);
       const session = await storage.getLiveSession(id);
       if (!session) return res.status(404).json({ error: "Session not found" });
 
@@ -3482,7 +3487,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
   // Admin accepts a session request
   app.post('/api/live-sessions/admin/:id/accept', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericRouteParam(req.params.id);
       const session = await storage.updateLiveSessionStatus(id, "active");
       if (!session) return res.status(404).json({ error: "Session not found" });
       notifyLiveSessionClients(id, "session_update", { status: "active" });
@@ -3495,7 +3500,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
   // Admin closes a session
   app.post('/api/live-sessions/admin/:id/close', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericRouteParam(req.params.id);
       const session = await storage.updateLiveSessionStatus(id, "closed");
       if (!session) return res.status(404).json({ error: "Session not found" });
       notifyLiveSessionClients(id, "session_update", { status: "closed" });
@@ -3508,7 +3513,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
   // Admin creates/updates a block
   app.post('/api/live-sessions/admin/:id/blocks', requireAdmin, async (req, res) => {
     try {
-      const sessionId = parseInt(req.params.id);
+      const sessionId = parseNumericRouteParam(req.params.id);
       const { blockType, payload, shared, sortOrder } = req.body;
       if (!blockType || !payload) return res.status(400).json({ error: "blockType and payload required" });
 
@@ -3531,7 +3536,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
   // Admin toggles block visibility (share/unshare)
   app.patch('/api/live-sessions/admin/blocks/:blockId', requireAdmin, async (req, res) => {
     try {
-      const blockId = parseInt(req.params.blockId);
+      const blockId = parseNumericRouteParam(req.params.blockId);
       const { shared, payload } = req.body;
       const updates: any = {};
       if (shared !== undefined) updates.shared = shared;
@@ -3550,7 +3555,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
   // Admin deletes a block
   app.delete('/api/live-sessions/admin/blocks/:blockId', requireAdmin, async (req, res) => {
     try {
-      const blockId = parseInt(req.params.blockId);
+      const blockId = parseNumericRouteParam(req.params.blockId);
       await storage.deleteLiveSessionBlock(blockId);
       res.json({ success: true });
     } catch (error) {
@@ -3561,7 +3566,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
   // Admin sends a chat message
   app.post('/api/live-sessions/admin/:id/messages', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericRouteParam(req.params.id);
       const { content } = req.body;
       if (!content) return res.status(400).json({ error: "content required" });
 
@@ -3582,7 +3587,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
   // Admin approves a flight for booking (sets the offer to proceed with)
   app.post('/api/live-sessions/admin/:id/approve-flight', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericRouteParam(req.params.id);
       const { offerId, flightData } = req.body;
       if (!offerId || !flightData) return res.status(400).json({ error: "offerId and flightData required" });
 
@@ -3606,7 +3611,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
   // Admin requests documents from customer
   app.post('/api/live-sessions/admin/:id/request-documents', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericRouteParam(req.params.id);
       const session = await storage.updateLiveSession(id, {
         bookingStatus: "documents_requested",
       });
@@ -3625,7 +3630,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
   // Customer submits documents (name, email, phone, passenger info)
   app.post('/api/live-sessions/:id/submit-documents', async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericRouteParam(req.params.id);
       const token = req.query.token as string;
       if (!token) return res.status(401).json({ error: "Access token required" });
 
@@ -3676,7 +3681,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
   // Admin creates the booking on behalf of the customer
   app.post('/api/live-sessions/admin/:id/create-booking', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericRouteParam(req.params.id);
       const session = await storage.getLiveSession(id);
       if (!session) return res.status(404).json({ error: "Session not found" });
       if (session.bookingStatus !== "documents_submitted") {
@@ -3686,6 +3691,9 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
       const flightData = session.approvedFlightData as any;
       const docs = session.submittedDocuments as any;
       if (!flightData || !docs) return res.status(400).json({ error: "Missing flight or document data" });
+      if (!session.customerEmail) {
+        return res.status(400).json({ error: "Customer email is required before creating a booking" });
+      }
 
       const referenceCode = `MT-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
@@ -3697,19 +3705,16 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
       const booking = await storage.createBooking({
         referenceCode,
         userId: null as any,
-        offerId: session.approvedOfferId!,
         status: "pending",
+        flightData,
+        passengerDetails: docs.passengers,
         totalPrice: totalPrice.toFixed(2),
         currency: flightData.currency || "USD",
         commissionAmount: commissionAmount.toFixed(2),
-        basePrice: basePrice.toFixed(2),
-        passengers: docs.passengers,
-        flightDetails: flightData,
         contactEmail: session.customerEmail,
         contactPhone: session.customerPhone,
-        paymentIntentId: null as any,
+        stripePaymentIntentId: null,
         duffelOrderId: null as any,
-        stripeSessionId: null as any,
       });
 
       await storage.updateLiveSession(id, {
@@ -3732,7 +3737,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
   // Admin marks booking as payment pending (manual/external payment)
   app.post('/api/live-sessions/admin/:id/payment-status', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericRouteParam(req.params.id);
       const { status } = req.body;
       if (!["payment_pending", "confirmed"].includes(status)) {
         return res.status(400).json({ error: "Invalid status" });
@@ -3758,7 +3763,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
 
   app.post('/api/live-sessions/admin/:id/reset-booking', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericRouteParam(req.params.id);
       const session = await storage.getLiveSession(id);
       if (!session) return res.status(404).json({ error: "Session not found" });
 
@@ -3785,7 +3790,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
   // Get booking status for client side
   app.get('/api/live-sessions/:id/booking-status', async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericRouteParam(req.params.id);
       const token = req.query.token as string;
       if (!token) return res.status(401).json({ error: "Access token required" });
 
@@ -3874,7 +3879,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
 
   app.patch('/api/admin/featured-deals/:id', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericRouteParam(req.params.id);
       const partial = insertFeaturedDealSchema.partial().safeParse(req.body);
       if (!partial.success) {
         return res.status(400).json({ error: 'Invalid data', details: partial.error.flatten() });
@@ -3889,7 +3894,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
 
   app.delete('/api/admin/featured-deals/:id', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseNumericRouteParam(req.params.id);
       await storage.deleteFeaturedDeal(id);
       res.json({ success: true });
     } catch (error) {
