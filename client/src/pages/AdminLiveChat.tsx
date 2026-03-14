@@ -49,7 +49,11 @@ import {
 import { useLocation } from "wouter";
 import { useDebounce } from "@/hooks/use-debounce";
 import type { FlightOffer } from "@shared/schema";
-import { buildSeniorRecommendations, type SeniorRecommendationKind } from "@/lib/senior-flight";
+import {
+  buildSeniorRecommendations,
+  type SeniorPreferences,
+  type SeniorRecommendationKind,
+} from "@/lib/senior-flight";
 import {
   buildSeniorAgentTips,
   buildSeniorQuickReplies,
@@ -283,6 +287,43 @@ interface SearchLeg {
   date: string;
 }
 
+const defaultSeniorPreferences: SeniorPreferences = {
+  priority: "comfort",
+  connections: "one",
+  bags: "checked",
+  time: "day",
+};
+
+const seniorPriorityLabels: Record<SeniorPreferences["priority"], string> = {
+  comfort: "Menos cansaco",
+  fastest: "Menos tempo total",
+  balanced: "Equilibrio",
+  cheapest: "Menor preco",
+};
+
+const seniorConnectionLabels: Record<SeniorPreferences["connections"], string> = {
+  none: "Sem conexao",
+  one: "No maximo 1 conexao",
+  any: "Pode comparar tudo",
+};
+
+const seniorBagLabels: Record<SeniorPreferences["bags"], string> = {
+  checked: "Com mala despachada",
+  carry: "Com bagagem de mao",
+  flexible: "Bagagem flexivel",
+};
+
+const seniorTimeLabels: Record<SeniorPreferences["time"], string> = {
+  day: "Evitar madrugada",
+  any: "Qualquer horario",
+};
+
+function getTripTypeLabel(tripType: "round_trip" | "one_way" | "multi_city") {
+  if (tripType === "one_way") return "Somente ida";
+  if (tripType === "multi_city") return "Multi-cidades";
+  return "Ida e volta";
+}
+
 function LiveSalesPanel() {
   const [requests, setRequests] = useState<LiveSessionRequest[]>([]);
   const [activeSessions, setActiveSessions] = useState<LiveSessionActive[]>([]);
@@ -298,6 +339,8 @@ function LiveSalesPanel() {
   const [searchReturnDate, setSearchReturnDate] = useState("");
   const [searchPassengers, setSearchPassengers] = useState("1");
   const [searchCabinClass, setSearchCabinClass] = useState("economy");
+  const [workspaceModeOverride, setWorkspaceModeOverride] = useState<"standard" | "senior">("standard");
+  const [manualSeniorPreferences, setManualSeniorPreferences] = useState<SeniorPreferences>(defaultSeniorPreferences);
   const [multiCityLegs, setMultiCityLegs] = useState<SearchLeg[]>([
     { origin: "", destination: "", date: "" },
     { origin: "", destination: "", date: "" },
@@ -323,21 +366,51 @@ function LiveSalesPanel() {
   const prefilledSessionRef = useRef<number | null>(null);
 
   const selectedSession = sessionDetail?.session;
-  const sessionMode = selectedSession?.serviceMode || "standard";
+  const effectiveServiceMode = selectedSession?.serviceMode === "senior" ? "senior" : selectedSession?.serviceMode === "standard" ? "standard" : workspaceModeOverride;
   const sessionContext = (selectedSession?.contextSnapshot || null) as LiveSessionContextSnapshot | null;
-  const isSeniorLead = isSeniorServiceMode(sessionMode);
-  const sessionTheme = getLiveSessionTheme(sessionMode);
+  const isSeniorLead = isSeniorServiceMode(effectiveServiceMode);
+  const sessionTheme = getLiveSessionTheme(effectiveServiceMode);
   const seniorPreferences = useMemo(
-    () => getSeniorPreferencesFromContext(sessionContext),
-    [sessionContext],
+    () => (selectedSession ? getSeniorPreferencesFromContext(sessionContext) : manualSeniorPreferences),
+    [manualSeniorPreferences, selectedSession, sessionContext],
   );
   const sessionSummaryItems = useMemo(
-    () => buildSeniorSessionSummary(sessionContext),
-    [sessionContext],
+    () => {
+      if (selectedSession) {
+        return buildSeniorSessionSummary(sessionContext);
+      }
+
+      if (!isSeniorLead) {
+        return [];
+      }
+
+      const routeValue = tripType === "multi_city"
+        ? `${multiCityLegs.filter((leg) => leg.origin && leg.destination).length || 0} trechos montados`
+        : searchOrigin && searchDestination
+          ? `${searchOrigin} -> ${searchDestination}`
+          : "Defina origem e destino";
+
+      return [
+        { label: "Viagem", value: getTripTypeLabel(tripType) },
+        { label: "Rota", value: routeValue },
+        { label: "Prioridade", value: seniorPriorityLabels[seniorPreferences.priority] },
+        { label: "Filtro senior", value: seniorConnectionLabels[seniorPreferences.connections] },
+      ];
+    },
+    [isSeniorLead, multiCityLegs, searchDestination, searchOrigin, selectedSession, seniorPreferences.connections, seniorPreferences.priority, sessionContext, tripType],
   );
   const seniorAgentTips = useMemo(
-    () => (isSeniorLead ? buildSeniorAgentTips(sessionContext) : []),
-    [isSeniorLead, sessionContext],
+    () => {
+      if (!isSeniorLead) return [];
+      if (selectedSession) return buildSeniorAgentTips(sessionContext);
+
+      return [
+        "Comece recomendando 3 opcoes: a mais calma, a mais rapida e a mais economica dentro do perfil.",
+        "Explique conexao, tempo de espera e bagagem antes de falar em tarifa e regras finas.",
+        "Evite jogar muitos filtros na frente. Primeiro oriente, depois abra os detalhes.",
+      ];
+    },
+    [isSeniorLead, selectedSession, sessionContext],
   );
   const seniorQuickReplies = useMemo(
     () => (isSeniorLead ? buildSeniorQuickReplies(sessionContext) : []),
@@ -358,6 +431,7 @@ function LiveSalesPanel() {
     });
     return next;
   }, [seniorFlightRanking]);
+  const showSeniorWorkspacePreview = isSeniorLead && !selectedSessionId;
 
   const updateMultiLeg = (index: number, field: keyof SearchLeg, value: string) => {
     setMultiCityLegs((prev) => prev.map((leg, i) => i === index ? { ...leg, [field]: value } : leg));
@@ -571,7 +645,7 @@ function LiveSalesPanel() {
       } else {
         const clientPrice = getFlightPrice(flight);
         const flightForClient = { ...flight, price: clientPrice };
-        const guidance = buildSharedFlightGuidance(flightForClient, sessionMode, sessionContext);
+        const guidance = buildSharedFlightGuidance(flightForClient, effectiveServiceMode, sessionContext);
         const res = await adminFetch(`/api/live-sessions/admin/${selectedSessionId}/blocks`, {
           method: "POST",
           body: JSON.stringify({
@@ -600,7 +674,7 @@ function LiveSalesPanel() {
     if (!blockId) return;
     const clientPrice = getFlightPrice(flight);
     const flightForClient = { ...flight, price: clientPrice };
-    const guidance = buildSharedFlightGuidance(flightForClient, sessionMode, sessionContext);
+    const guidance = buildSharedFlightGuidance(flightForClient, effectiveServiceMode, sessionContext);
     try {
       await adminFetch(`/api/live-sessions/admin/blocks/${blockId}`, {
         method: "PATCH",
@@ -876,13 +950,13 @@ function LiveSalesPanel() {
       )}
 
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
-        <div className={`flex items-center gap-2 px-3 py-2 flex-shrink-0 ${selectedSessionId ? sessionTheme.headerClass : "border-b border-border bg-[#0074DE] text-white"}`}>
+        <div className={`flex items-center gap-2 px-3 py-2 flex-shrink-0 ${isSeniorLead ? sessionTheme.headerClass : "border-b border-border bg-[#0074DE] text-white"}`}>
           {!sessionsPanelOpen && (
             <Button
               size="icon"
               variant="ghost"
               onClick={() => setSessionsPanelOpen(true)}
-              className={selectedSessionId && isSeniorLead ? "text-amber-950 hover:bg-amber-100/70 flex-shrink-0" : "text-white no-default-hover-elevate flex-shrink-0"}
+              className={isSeniorLead ? "text-amber-950 hover:bg-amber-100/70 flex-shrink-0" : "text-white no-default-hover-elevate flex-shrink-0"}
               data-testid="button-open-sessions-panel"
             >
               <PanelLeftOpen className="h-4 w-4" />
@@ -918,7 +992,50 @@ function LiveSalesPanel() {
 
         <div className="flex-1 overflow-y-auto min-h-0">
           <div className="p-3 border-b space-y-2">
-            {selectedSessionId && selectedSession && (
+            <div className={`rounded-2xl border p-3 ${isSeniorLead ? "border-amber-200 bg-amber-50/80" : "border-slate-200 bg-slate-50"}`}>
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Modo do workspace</p>
+                  <h2 className="mt-1 text-base font-bold text-slate-900">
+                    {isSeniorLead ? "Venda assistida para senior" : "Workspace padrao de vendas"}
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-600">
+                    {isSeniorLead
+                      ? selectedSessionId
+                        ? "Esse lead sera lido com prioridade para menos cansaco, menos ruido e explicacao mais humana."
+                        : "Ative este modo para testar o buscador senior mesmo sem sessao ativa."
+                      : "Buscador tradicional da equipe com leitura comercial padrao."}
+                  </p>
+                </div>
+
+                {!selectedSessionId && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={workspaceModeOverride === "standard" ? "default" : "outline"}
+                      onClick={() => setWorkspaceModeOverride("standard")}
+                      className={workspaceModeOverride === "standard" ? "bg-[#0074DE] hover:bg-[#005bb5] text-white" : ""}
+                      data-testid="button-workspace-standard"
+                    >
+                      Padrao
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={workspaceModeOverride === "senior" ? "default" : "outline"}
+                      onClick={() => setWorkspaceModeOverride("senior")}
+                      className={workspaceModeOverride === "senior" ? "bg-amber-600 hover:bg-amber-700 text-white" : "border-amber-200 text-amber-900 hover:bg-amber-50"}
+                      data-testid="button-workspace-senior"
+                    >
+                      Senior
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {(selectedSessionId && selectedSession) || showSeniorWorkspacePreview ? (
               <div className={`rounded-2xl p-4 ${sessionTheme.softPanelClass}`}>
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   <div>
@@ -927,9 +1044,9 @@ function LiveSalesPanel() {
                         {isSeniorLead ? "Lead senior" : "Lead padrao"}
                       </Badge>
                       <Badge variant="outline" className="text-[11px]">
-                        {formatLiveSessionEntryPoint(selectedSession.entryPoint)}
+                        {selectedSession ? formatLiveSessionEntryPoint(selectedSession.entryPoint) : "Teste interno do senior"}
                       </Badge>
-                      {selectedSession.language && (
+                      {selectedSession?.language && (
                         <Badge variant="outline" className="text-[11px]">
                           {selectedSession.language.toUpperCase()}
                         </Badge>
@@ -964,6 +1081,116 @@ function LiveSalesPanel() {
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            ) : null}
+
+            {isSeniorLead && (
+              <div className="rounded-2xl border border-amber-200 bg-white p-4">
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-700">Criterios do senior</p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      O buscador passa a priorizar conforto, menos conexao, horario mais tranquilo e bagagem adequada antes do menor preco puro.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Prioridade</label>
+                      <Select
+                        value={seniorPreferences.priority}
+                        onValueChange={(value) =>
+                          !selectedSession && setManualSeniorPreferences((prev) => ({ ...prev, priority: value as SeniorPreferences["priority"] }))
+                        }
+                        disabled={!!selectedSession}
+                      >
+                        <SelectTrigger className="h-9 text-sm border-amber-200">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="comfort">Menos cansaco</SelectItem>
+                          <SelectItem value="fastest">Menos tempo total</SelectItem>
+                          <SelectItem value="balanced">Equilibrio</SelectItem>
+                          <SelectItem value="cheapest">Menor preco</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Conexao</label>
+                      <Select
+                        value={seniorPreferences.connections}
+                        onValueChange={(value) =>
+                          !selectedSession && setManualSeniorPreferences((prev) => ({ ...prev, connections: value as SeniorPreferences["connections"] }))
+                        }
+                        disabled={!!selectedSession}
+                      >
+                        <SelectTrigger className="h-9 text-sm border-amber-200">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Sem conexao</SelectItem>
+                          <SelectItem value="one">No maximo 1 conexao</SelectItem>
+                          <SelectItem value="any">Pode comparar tudo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Bagagem</label>
+                      <Select
+                        value={seniorPreferences.bags}
+                        onValueChange={(value) =>
+                          !selectedSession && setManualSeniorPreferences((prev) => ({ ...prev, bags: value as SeniorPreferences["bags"] }))
+                        }
+                        disabled={!!selectedSession}
+                      >
+                        <SelectTrigger className="h-9 text-sm border-amber-200">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="checked">Com mala despachada</SelectItem>
+                          <SelectItem value="carry">Com bagagem de mao</SelectItem>
+                          <SelectItem value="flexible">Bagagem flexivel</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Horario</label>
+                      <Select
+                        value={seniorPreferences.time}
+                        onValueChange={(value) =>
+                          !selectedSession && setManualSeniorPreferences((prev) => ({ ...prev, time: value as SeniorPreferences["time"] }))
+                        }
+                        disabled={!!selectedSession}
+                      >
+                        <SelectTrigger className="h-9 text-sm border-amber-200">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="day">Evitar madrugada</SelectItem>
+                          <SelectItem value="any">Qualquer horario</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Badge className="bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
+                      {seniorPriorityLabels[seniorPreferences.priority]}
+                    </Badge>
+                    <Badge className="bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
+                      {seniorConnectionLabels[seniorPreferences.connections]}
+                    </Badge>
+                    <Badge className="bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
+                      {seniorBagLabels[seniorPreferences.bags]}
+                    </Badge>
+                    <Badge className="bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
+                      {seniorTimeLabels[seniorPreferences.time]}
+                    </Badge>
+                  </div>
                 </div>
               </div>
             )}
@@ -1091,7 +1318,7 @@ function LiveSalesPanel() {
             <Button
               onClick={handleSearchFlights}
               disabled={(!canSearchStandard && !canSearchMultiCity) || searchingFlights}
-              className="w-full"
+              className={`w-full ${isSeniorLead ? "bg-amber-600 hover:bg-amber-700 text-white" : ""}`}
               data-testid="button-search-flights"
             >
               {searchingFlights ? (
@@ -1099,7 +1326,7 @@ function LiveSalesPanel() {
               ) : (
                 <Search className="h-4 w-4 mr-2" />
               )}
-              Buscar Voos
+              {isSeniorLead ? "Buscar opcoes mais calmas" : "Buscar Voos"}
             </Button>
           </div>
 
@@ -1264,9 +1491,13 @@ function LiveSalesPanel() {
 
           {!searchingFlights && flightResults.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <Search className="h-10 w-10 mb-3 opacity-20" />
-              <p className="text-sm">Busque voos acima</p>
-              <p className="text-xs mt-1">Resultados aparecem aqui</p>
+              <Search className={`h-10 w-10 mb-3 opacity-30 ${isSeniorLead ? "text-amber-500" : ""}`} />
+              <p className="text-sm">{isSeniorLead ? "Monte a recomendacao senior acima" : "Busque voos acima"}</p>
+              <p className="text-xs mt-1">
+                {isSeniorLead
+                  ? "A leitura vai priorizar menos cansaco, conexao mais segura e explicacao mais simples."
+                  : "Resultados aparecem aqui"}
+              </p>
             </div>
           )}
         </div>
