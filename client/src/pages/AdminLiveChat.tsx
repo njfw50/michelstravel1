@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card } from "@/components/ui/card";
@@ -48,6 +48,20 @@ import {
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useDebounce } from "@/hooks/use-debounce";
+import type { FlightOffer } from "@shared/schema";
+import { buildSeniorRecommendations, type SeniorRecommendationKind } from "@/lib/senior-flight";
+import {
+  buildSeniorAgentTips,
+  buildSeniorQuickReplies,
+  buildSeniorSessionSummary,
+  buildSharedFlightGuidance,
+  formatLiveSessionEntryPoint,
+  getLiveSessionTheme,
+  getSeniorPreferencesFromContext,
+  getSeniorRecommendationLabel,
+  isSeniorServiceMode,
+  type LiveSessionContextSnapshot,
+} from "@/lib/live-session-context";
 
 interface PlaceResult {
   id: string;
@@ -195,6 +209,9 @@ interface LiveSessionRequest {
   conversationId: number | null;
   visitorId: string | null;
   language: string | null;
+  serviceMode?: string | null;
+  entryPoint?: string | null;
+  contextSnapshot?: LiveSessionContextSnapshot | null;
   status: string;
   createdAt: string;
 }
@@ -204,6 +221,9 @@ interface LiveSessionActive {
   conversationId: number | null;
   visitorId: string | null;
   language: string | null;
+  serviceMode?: string | null;
+  entryPoint?: string | null;
+  contextSnapshot?: LiveSessionContextSnapshot | null;
   status: string;
   createdAt: string;
 }
@@ -217,6 +237,17 @@ interface LiveMessage {
 }
 
 interface LiveSessionDetail {
+  session: {
+    id: number;
+    visitorId: string | null;
+    language: string | null;
+    serviceMode?: string | null;
+    entryPoint?: string | null;
+    contextSnapshot?: LiveSessionContextSnapshot | null;
+    status: string;
+    referenceCode?: string | null;
+    createdAt?: string;
+  };
   id: number;
   status: string;
   visitorId: string | null;
@@ -233,23 +264,7 @@ interface LiveBlock {
   sortOrder: number;
 }
 
-interface FlightResult {
-  id: string;
-  airline: string;
-  flightNumber: string;
-  departureTime: string;
-  arrivalTime: string;
-  duration: string;
-  price: number;
-  currency: string;
-  stops: number;
-  logoUrl?: string | null;
-  originCity?: string | null;
-  destinationCity?: string | null;
-  originCode?: string | null;
-  destinationCode?: string | null;
-  cabinClass?: string | null;
-}
+type FlightResult = FlightOffer;
 
 function adminFetch(url: string, options: RequestInit = {}) {
   return fetch(url, {
@@ -305,6 +320,44 @@ function LiveSalesPanel() {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const liveMsgEndRef = useRef<HTMLDivElement>(null);
+  const prefilledSessionRef = useRef<number | null>(null);
+
+  const selectedSession = sessionDetail?.session;
+  const sessionMode = selectedSession?.serviceMode || "standard";
+  const sessionContext = (selectedSession?.contextSnapshot || null) as LiveSessionContextSnapshot | null;
+  const isSeniorLead = isSeniorServiceMode(sessionMode);
+  const sessionTheme = getLiveSessionTheme(sessionMode);
+  const seniorPreferences = useMemo(
+    () => getSeniorPreferencesFromContext(sessionContext),
+    [sessionContext],
+  );
+  const sessionSummaryItems = useMemo(
+    () => buildSeniorSessionSummary(sessionContext),
+    [sessionContext],
+  );
+  const seniorAgentTips = useMemo(
+    () => (isSeniorLead ? buildSeniorAgentTips(sessionContext) : []),
+    [isSeniorLead, sessionContext],
+  );
+  const seniorQuickReplies = useMemo(
+    () => (isSeniorLead ? buildSeniorQuickReplies(sessionContext) : []),
+    [isSeniorLead, sessionContext],
+  );
+  const seniorFlightRanking = useMemo(
+    () => (isSeniorLead ? buildSeniorRecommendations(flightResults, seniorPreferences) : null),
+    [flightResults, isSeniorLead, seniorPreferences],
+  );
+  const orderedFlightResults = useMemo(
+    () => (seniorFlightRanking ? seniorFlightRanking.rankedFlights.map((item) => item.flight) : flightResults),
+    [flightResults, seniorFlightRanking],
+  );
+  const recommendationMap = useMemo(() => {
+    const next = new Map<string, { kind: SeniorRecommendationKind; reasonLine: string }>();
+    seniorFlightRanking?.recommendations.forEach((item) => {
+      next.set(item.flight.id, { kind: item.kind, reasonLine: item.insight.reasonLine });
+    });
+    return next;
+  }, [seniorFlightRanking]);
 
   const updateMultiLeg = (index: number, field: keyof SearchLeg, value: string) => {
     setMultiCityLegs((prev) => prev.map((leg, i) => i === index ? { ...leg, [field]: value } : leg));
@@ -371,6 +424,29 @@ function LiveSalesPanel() {
       return () => clearInterval(interval);
     }
   }, [selectedSessionId, fetchSessionDetail]);
+
+  useEffect(() => {
+    if (!selectedSessionId || prefilledSessionRef.current === selectedSessionId || !sessionContext) {
+      return;
+    }
+
+    if (sessionContext.tripType === "multi-city") {
+      setTripType("multi_city");
+    } else if (sessionContext.tripType === "one-way") {
+      setTripType("one_way");
+    } else {
+      setTripType("round_trip");
+    }
+
+    if (sessionContext.origin) setSearchOrigin(sessionContext.origin);
+    if (sessionContext.destination) setSearchDestination(sessionContext.destination);
+    if (sessionContext.date) setSearchDate(sessionContext.date);
+    if (sessionContext.returnDate) setSearchReturnDate(sessionContext.returnDate);
+    if (sessionContext.passengers) setSearchPassengers(sessionContext.passengers);
+    if (sessionContext.cabinClass) setSearchCabinClass(sessionContext.cabinClass);
+
+    prefilledSessionRef.current = selectedSessionId;
+  }, [selectedSessionId, sessionContext]);
 
   useEffect(() => {
     liveMsgEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -495,6 +571,7 @@ function LiveSalesPanel() {
       } else {
         const clientPrice = getFlightPrice(flight);
         const flightForClient = { ...flight, price: clientPrice };
+        const guidance = buildSharedFlightGuidance(flightForClient, sessionMode, sessionContext);
         const res = await adminFetch(`/api/live-sessions/admin/${selectedSessionId}/blocks`, {
           method: "POST",
           body: JSON.stringify({
@@ -502,6 +579,7 @@ function LiveSalesPanel() {
             payload: {
               flights: [flightForClient],
               searchParams: getSearchParams(),
+              guidance,
             },
             shared: true,
           }),
@@ -522,6 +600,7 @@ function LiveSalesPanel() {
     if (!blockId) return;
     const clientPrice = getFlightPrice(flight);
     const flightForClient = { ...flight, price: clientPrice };
+    const guidance = buildSharedFlightGuidance(flightForClient, sessionMode, sessionContext);
     try {
       await adminFetch(`/api/live-sessions/admin/blocks/${blockId}`, {
         method: "PATCH",
@@ -529,6 +608,7 @@ function LiveSalesPanel() {
           payload: {
             flights: [flightForClient],
             searchParams: getSearchParams(),
+            guidance,
           },
         }),
       });
@@ -601,6 +681,10 @@ function LiveSalesPanel() {
     }
   };
 
+  const handleUseQuickReply = (message: string) => {
+    setLiveMessage(message);
+  };
+
   const handleCloseSession = async () => {
     if (!selectedSessionId) return;
     try {
@@ -614,6 +698,7 @@ function LiveSalesPanel() {
       setSharedBlockMap({});
       setCustomPrices({});
       setChatOpen(false);
+      prefilledSessionRef.current = null;
       await fetchLists();
     } catch {}
   };
@@ -683,14 +768,24 @@ function LiveSalesPanel() {
                     {requests.map((req) => (
                       <div
                         key={req.id}
-                        className="p-2 rounded-md bg-destructive/5 border border-destructive/20 mb-1"
+                        className={`p-2 rounded-md border mb-1 ${isSeniorServiceMode(req.serviceMode) ? "bg-amber-50 border-amber-200" : "bg-destructive/5 border-destructive/20"}`}
                         data-testid={`session-request-${req.id}`}
                       >
                         <div className="flex items-center justify-between gap-1 mb-1">
                           <span className="text-xs font-medium text-foreground truncate">
                             #{req.id}
                           </span>
-                          <Badge variant="destructive" className="text-[9px] px-1 py-0">Novo</Badge>
+                          <div className="flex items-center gap-1">
+                            {isSeniorServiceMode(req.serviceMode) && (
+                              <Badge className="text-[9px] px-1 py-0 bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
+                                Senior
+                              </Badge>
+                            )}
+                            <Badge variant="destructive" className="text-[9px] px-1 py-0">Novo</Badge>
+                          </div>
+                        </div>
+                        <div className="text-[9px] text-muted-foreground mb-1">
+                          {formatLiveSessionEntryPoint(req.entryPoint)}{req.language ? ` - ${req.language.toUpperCase()}` : ""}
                         </div>
                         <div className="flex items-center justify-between gap-1">
                           <span className="text-[9px] text-muted-foreground truncate">
@@ -715,12 +810,16 @@ function LiveSalesPanel() {
                       Ativas ({activeSessions.length})
                     </p>
                     {activeSessions.map((session) => (
+                      (() => {
+                        const rowTheme = getLiveSessionTheme(session.serviceMode);
+                        const seniorRow = isSeniorServiceMode(session.serviceMode);
+                        return (
                       <button
                         key={session.id}
                         onClick={() => setSelectedSessionId(session.id)}
                         className={`w-full text-left p-2 rounded-md mb-1 ${
                           selectedSessionId === session.id
-                            ? "bg-[#0074DE]/10 border border-[#0074DE]/30"
+                            ? rowTheme.activeRowClass
                             : "hover-elevate"
                         }`}
                         data-testid={`session-active-${session.id}`}
@@ -734,10 +833,22 @@ function LiveSalesPanel() {
                             <div className="h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0" />
                           )}
                         </div>
+                        <div className="flex items-center gap-1 flex-wrap mb-1">
+                          {seniorRow && (
+                            <Badge className="text-[9px] px-1 py-0 bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
+                              Senior
+                            </Badge>
+                          )}
+                          <span className={`text-[9px] ${seniorRow ? "text-amber-700" : "text-muted-foreground"}`}>
+                            {formatLiveSessionEntryPoint(session.entryPoint)}
+                          </span>
+                        </div>
                         <span className="text-[9px] text-muted-foreground truncate block">
                           {session.visitorId || "Visitante"}
                         </span>
                       </button>
+                        );
+                      })()
                     ))}
                   </div>
                 )}
@@ -765,20 +876,22 @@ function LiveSalesPanel() {
       )}
 
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
-        <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-[#0074DE] text-white flex-shrink-0">
+        <div className={`flex items-center gap-2 px-3 py-2 flex-shrink-0 ${selectedSessionId ? sessionTheme.headerClass : "border-b border-border bg-[#0074DE] text-white"}`}>
           {!sessionsPanelOpen && (
             <Button
               size="icon"
               variant="ghost"
               onClick={() => setSessionsPanelOpen(true)}
-              className="text-white no-default-hover-elevate flex-shrink-0"
+              className={selectedSessionId && isSeniorLead ? "text-amber-950 hover:bg-amber-100/70 flex-shrink-0" : "text-white no-default-hover-elevate flex-shrink-0"}
               data-testid="button-open-sessions-panel"
             >
               <PanelLeftOpen className="h-4 w-4" />
             </Button>
           )}
           <Plane className="h-4 w-4 flex-shrink-0" />
-          <span className="text-sm font-medium">Workspace de Vendas</span>
+          <span className="text-sm font-medium">
+            {isSeniorLead ? "Workspace Senior" : "Workspace de Vendas"}
+          </span>
           <div className="flex-1" />
           {!sessionsPanelOpen && totalSessions > 0 && (
             <Badge
@@ -790,14 +903,71 @@ function LiveSalesPanel() {
             </Badge>
           )}
           {selectedSessionId && (
-            <Badge variant="secondary" className="text-[10px] bg-white/20 text-white border-white/30">
-              Sessão #{selectedSessionId}
-            </Badge>
+            <div className="flex items-center gap-2">
+              {isSeniorLead && (
+                <Badge className="text-[10px] bg-white text-amber-900 border-amber-200 hover:bg-white">
+                  Senior
+                </Badge>
+              )}
+              <Badge variant="secondary" className={selectedSessionId && isSeniorLead ? "text-[10px] bg-amber-100 text-amber-900 border-amber-200" : "text-[10px] bg-white/20 text-white border-white/30"}>
+                Sessao #{selectedSessionId}
+              </Badge>
+            </div>
           )}
         </div>
 
         <div className="flex-1 overflow-y-auto min-h-0">
           <div className="p-3 border-b space-y-2">
+            {selectedSessionId && selectedSession && (
+              <div className={`rounded-2xl p-4 ${sessionTheme.softPanelClass}`}>
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge className={sessionTheme.badgeClass}>
+                        {isSeniorLead ? "Lead senior" : "Lead padrao"}
+                      </Badge>
+                      <Badge variant="outline" className="text-[11px]">
+                        {formatLiveSessionEntryPoint(selectedSession.entryPoint)}
+                      </Badge>
+                      {selectedSession.language && (
+                        <Badge variant="outline" className="text-[11px]">
+                          {selectedSession.language.toUpperCase()}
+                        </Badge>
+                      )}
+                    </div>
+                    <h2 className="mt-3 text-base font-bold">
+                      {isSeniorLead
+                        ? "Este contato pede menos ruido e mais orientacao humana."
+                        : "Use este workspace para buscar, compartilhar e fechar a venda."}
+                    </h2>
+                    {sessionSummaryItems.length > 0 && (
+                      <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+                        {sessionSummaryItems.map((item) => (
+                          <div key={item.label} className="rounded-xl border border-white/70 bg-white/70 px-3 py-3">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">{item.label}</p>
+                            <p className="mt-1 text-sm font-semibold text-slate-900">{item.value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {isSeniorLead && seniorAgentTips.length > 0 && (
+                    <div className="lg:max-w-sm">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Como conduzir</p>
+                      <div className="mt-3 space-y-2">
+                        {seniorAgentTips.map((tip) => (
+                          <div key={tip} className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs leading-relaxed text-slate-700">
+                            {tip}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center gap-2 flex-wrap">
               <Select value={tripType} onValueChange={(v) => setTripType(v as "round_trip" | "one_way" | "multi_city")}>
                 <SelectTrigger className="w-[140px] h-8 text-xs" data-testid="select-trip-type">
@@ -941,9 +1111,26 @@ function LiveSalesPanel() {
 
           {!searchingFlights && flightResults.length > 0 && (
             <div className="p-2 space-y-1">
+              {isSeniorLead && seniorFlightRanking && (
+                <div className={`rounded-xl px-3 py-3 mb-2 ${sessionTheme.guidanceCardClass}`}>
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Leitura senior do buscador</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-900">
+                        Resultados ordenados por conforto, conexao e clareza antes do preco puro.
+                      </p>
+                    </div>
+                    {seniorFlightRanking.fallbackApplied && (
+                      <Badge className="bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
+                        Sem voo estrito, mostrando melhor aproximacao
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              )}
               {sharedCount > 0 && selectedSessionId && (
-                <div className="flex items-center justify-between gap-2 px-2 py-1.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-md mb-2">
-                  <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                <div className={`flex items-center justify-between gap-2 px-2 py-1.5 rounded-md mb-2 ${isSeniorLead ? "bg-amber-50 border border-amber-200" : "bg-emerald-50 dark:bg-emerald-950/30"}`}>
+                  <span className={`text-xs font-medium ${isSeniorLead ? "text-amber-800" : "text-emerald-700 dark:text-emerald-400"}`}>
                     {sharedCount} compartilhado(s) - {sharedCurrency} {sharedTotal.toFixed(2)}
                   </span>
                   <Button
@@ -955,24 +1142,35 @@ function LiveSalesPanel() {
                     data-testid="button-send-pricing"
                   >
                     {sendingPricingSummary ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Receipt className="h-3 w-3 mr-1" />}
-                    Enviar Resumo
+                    {isSeniorLead ? "Enviar resumo simples" : "Enviar Resumo"}
                   </Button>
                 </div>
               )}
-              {flightResults.map((flight) => {
+              {orderedFlightResults.map((flight) => {
                 const isShared = !!sharedBlockMap[flight.id];
                 const customPrice = customPrices[flight.id];
                 const hasCustomPrice = customPrice && !isNaN(parseFloat(customPrice)) && parseFloat(customPrice) !== flight.price;
+                const recommendation = recommendationMap.get(flight.id);
                 return (
                   <div
                     key={flight.id}
                     className={`p-2.5 rounded-md border text-sm ${
                       isShared
-                        ? "border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20"
+                        ? isSeniorLead
+                          ? "border-amber-300 bg-amber-50/70"
+                          : "border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20"
                         : "border-border"
                     }`}
                     data-testid={`flight-result-${flight.id}`}
                   >
+                    {recommendation && (
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <Badge className="bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
+                          {getSeniorRecommendationLabel(recommendation.kind)}
+                        </Badge>
+                        <span className="text-[11px] text-slate-600">{recommendation.reasonLine}</span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <div className="flex items-center gap-1.5 min-w-0">
                         {flight.logoUrl && (
@@ -998,6 +1196,7 @@ function LiveSalesPanel() {
                             variant={isShared ? "default" : "ghost"}
                             onClick={() => handleToggleShare(flight)}
                             disabled={togglingFlight === flight.id}
+                            className={isShared && isSeniorLead ? "bg-amber-600 hover:bg-amber-700 text-white" : undefined}
                             data-testid={`button-share-${flight.id}`}
                           >
                             {togglingFlight === flight.id ? (
@@ -1086,7 +1285,7 @@ function LiveSalesPanel() {
                       handleSendNote();
                     }
                   }}
-                  placeholder="Nota para o cliente (ex: Inclui 1 mala de 23kg)"
+                  placeholder={isSeniorLead ? "Nota simples para o cliente (ex: Esta opcao tem menos cansaco e 1 conexao)" : "Nota para o cliente (ex: Inclui 1 mala de 23kg)"}
                   disabled={sendingNote}
                   className="flex-1 h-8 text-sm"
                   data-testid="input-admin-note"
@@ -1131,7 +1330,7 @@ function LiveSalesPanel() {
                       <div
                         className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full ${
                           msg.role === "client"
-                            ? "bg-[#0074DE] text-white"
+                            ? sessionTheme.userAvatarClass
                             : "bg-emerald-600 text-white"
                         }`}
                       >
@@ -1145,7 +1344,7 @@ function LiveSalesPanel() {
                         <div
                           className={`rounded-xl px-2.5 py-1.5 text-xs ${
                             msg.role === "client"
-                              ? "bg-muted text-foreground rounded-bl-sm"
+                              ? `${sessionTheme.guidanceCardClass} text-foreground rounded-bl-sm`
                               : "bg-emerald-50 dark:bg-emerald-950/40 text-foreground rounded-br-sm border border-emerald-200 dark:border-emerald-800"
                           }`}
                         >
@@ -1160,6 +1359,20 @@ function LiveSalesPanel() {
                   <div ref={liveMsgEndRef} />
                 </div>
                 <div className="p-2 pt-0">
+                  {seniorQuickReplies.length > 0 && (
+                    <div className="mb-2 flex flex-wrap gap-1.5">
+                      {seniorQuickReplies.map((replyText) => (
+                        <button
+                          key={replyText}
+                          type="button"
+                          onClick={() => handleUseQuickReply(replyText)}
+                          className={`rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors ${sessionTheme.chipClass}`}
+                        >
+                          {replyText}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex items-center gap-2">
                     <Input
                       value={liveMessage}
@@ -1170,7 +1383,7 @@ function LiveSalesPanel() {
                           handleSendLiveMessage();
                         }
                       }}
-                      placeholder="Mensagem..."
+                      placeholder={isSeniorLead ? "Mensagem calma e passo a passo..." : "Mensagem..."}
                       disabled={sendingMessage}
                       className="flex-1 h-8 text-sm"
                       data-testid="input-live-message"

@@ -85,6 +85,9 @@ export const liveSessions = pgTable("live_sessions", {
   conversationId: integer("conversation_id").references(() => conversations.id),
   visitorId: text("visitor_id"),
   language: text("language").default("pt"),
+  serviceMode: text("service_mode").default("standard"),
+  entryPoint: text("entry_point").default("chatbot"),
+  contextSnapshot: jsonb("context_snapshot"),
   status: text("status").default("requested").notNull(), // requested, active, closed
   whatsappLink: text("whatsapp_link"),
   approvedOfferId: text("approved_offer_id"),

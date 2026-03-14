@@ -30,6 +30,12 @@ import {
   Trash2,
 } from "lucide-react";
 import type { FlightOffer, FlightSlice, LiveSessionBlock, LiveSessionMessage } from "@shared/schema";
+import {
+  buildSeniorSessionSummary,
+  getLiveSessionTheme,
+  isSeniorServiceMode,
+  type LiveSessionContextSnapshot,
+} from "@/lib/live-session-context";
 
 interface SessionData {
   session: {
@@ -37,6 +43,9 @@ interface SessionData {
     status: string;
     visitorId: string | null;
     language: string | null;
+    serviceMode?: string | null;
+    entryPoint?: string | null;
+    contextSnapshot?: LiveSessionContextSnapshot | null;
     createdAt: string;
     closedAt: string | null;
     bookingStatus: string | null;
@@ -619,12 +628,26 @@ function SharedBlockRenderer({ block, index }: { block: LiveSessionBlock; index:
         const flights: FlightOffer[] = Array.isArray(payload)
           ? payload
           : (payload?.flights || []);
+        const guidance = payload?.guidance;
         return (
           <div>
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <Plane className="h-4 w-4 text-[#0074DE]" />
               <span className="text-sm font-semibold text-foreground">Opção de Voo</span>
             </div>
+            {guidance?.title && Array.isArray(guidance?.bullets) && (
+              <Card className="mb-3 border-amber-200 bg-amber-50 p-4">
+                <p className="text-sm font-semibold text-amber-900">{guidance.title}</p>
+                <div className="mt-3 space-y-2">
+                  {guidance.bullets.map((bullet: string) => (
+                    <div key={bullet} className="flex gap-2 text-sm text-slate-700">
+                      <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-500" />
+                      <span>{bullet}</span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
             {flights.map((flight: FlightOffer, fi: number) => (
               <FlightResultCard key={flight.id || fi} flight={flight} index={fi} />
             ))}
@@ -714,13 +737,18 @@ export default function LiveSessionClient() {
     }
   };
 
+  const sessionMode = data?.session?.serviceMode || "standard";
+  const isSeniorSession = isSeniorServiceMode(sessionMode);
+  const sessionTheme = getLiveSessionTheme(sessionMode);
+  const sessionSummary = buildSeniorSessionSummary((data?.session?.contextSnapshot || null) as LiveSessionContextSnapshot | null);
+
   const header = (
-    <div className="bg-[#0074DE] text-white px-4 py-3 flex items-center justify-between gap-2 sticky top-0 z-50">
+    <div className={`${sessionTheme.headerClass} px-4 py-3 flex items-center justify-between gap-2 sticky top-0 z-50`}>
       <div className="flex items-center gap-2">
         <Headphones className="h-5 w-5" />
         <div>
           <p className="text-sm font-semibold leading-tight">Michels Travel</p>
-          <p className="text-[11px] leading-tight opacity-80">Atendimento ao vivo</p>
+          <p className="text-[11px] leading-tight opacity-80">{isSeniorSession ? "Atendimento senior ao vivo" : "Atendimento ao vivo"}</p>
         </div>
       </div>
     </div>
@@ -731,7 +759,7 @@ export default function LiveSessionClient() {
       <div className="min-h-screen flex flex-col bg-background">
         {header}
         <div className="flex-1 flex items-center justify-center" data-testid="status-loading">
-          <Loader2 className="h-8 w-8 animate-spin text-[#0074DE]" />
+          <Loader2 className={`h-8 w-8 animate-spin ${isSeniorSession ? "text-amber-600" : "text-[#0074DE]"}`} />
         </div>
       </div>
     );
@@ -758,12 +786,14 @@ export default function LiveSessionClient() {
             animate={{ scale: 1, opacity: 1 }}
             className="flex flex-col items-center gap-3"
           >
-            <div className="h-16 w-16 rounded-full bg-[#0074DE]/10 flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-[#0074DE]" />
+            <div className={`h-16 w-16 rounded-full flex items-center justify-center ${isSeniorSession ? "bg-amber-100" : "bg-[#0074DE]/10"}`}>
+              <Loader2 className={`h-8 w-8 animate-spin ${isSeniorSession ? "text-amber-600" : "text-[#0074DE]"}`} />
             </div>
-            <p className="text-lg font-semibold text-foreground">Aguardando atendente...</p>
+            <p className="text-lg font-semibold text-foreground">{isSeniorSession ? "Aguardando especialista com atendimento mais calmo..." : "Aguardando atendente..."}</p>
             <p className="text-sm text-muted-foreground text-center">
-              Um agente estará com você em breve. Por favor, aguarde.
+              {isSeniorSession
+                ? "Vamos seguir com menos informacao por vez e explicacao mais clara."
+                : "Um agente estará com você em breve. Por favor, aguarde."}
             </p>
           </motion.div>
         </div>
@@ -803,6 +833,22 @@ export default function LiveSessionClient() {
       {header}
 
       <div className="flex-1 flex flex-col min-h-0">
+        {isSeniorSession && sessionSummary.length > 0 && (
+          <div className="border-b border-amber-200 bg-amber-50/80 p-4">
+            <div className="max-w-5xl mx-auto">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-800">Sua preferencia nesta conversa</p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {sessionSummary.map((item) => (
+                  <div key={item.label} className="rounded-xl border border-amber-200 bg-white px-3 py-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">{item.label}</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-900">{item.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {sharedBlocks.length > 0 && (
           <div className="flex-shrink-0 overflow-y-auto p-4 border-b border-border" style={{ maxHeight: "50vh" }}>
             <AnimatePresence>
@@ -840,7 +886,7 @@ export default function LiveSessionClient() {
                 <div
                   className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full ${
                     msg.role === "client"
-                      ? "bg-[#0074DE] text-white"
+                      ? sessionTheme.userAvatarClass
                       : "bg-emerald-600 text-white"
                   }`}
                 >
@@ -854,7 +900,7 @@ export default function LiveSessionClient() {
                   <div
                     className={`rounded-2xl px-3 py-2 text-sm leading-relaxed ${
                       msg.role === "client"
-                        ? "bg-[#0074DE] text-white rounded-br-md"
+                        ? `${sessionTheme.userBubbleClass} rounded-br-md`
                         : "bg-emerald-50 dark:bg-emerald-950/40 text-foreground rounded-bl-md border border-emerald-200 dark:border-emerald-800"
                     }`}
                   >
@@ -896,6 +942,7 @@ export default function LiveSessionClient() {
                 size="icon"
                 onClick={handleSend}
                 disabled={!chatInput.trim() || sending}
+                className={isSeniorSession ? "bg-amber-600 hover:bg-amber-700 text-white" : undefined}
                 data-testid="button-send-message"
               >
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

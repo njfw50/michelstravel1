@@ -3288,11 +3288,36 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
   app.post('/api/live-sessions/request', async (req, res) => {
     try {
       const { visitorId, language, conversationId } = req.body;
+      const serviceMode = req.body?.serviceMode === "senior" ? "senior" : "standard";
+      const entryPoint = typeof req.body?.entryPoint === "string" && req.body.entryPoint.trim()
+        ? req.body.entryPoint.trim().slice(0, 80)
+        : "chatbot";
+      const contextSnapshot =
+        req.body?.contextSnapshot && typeof req.body.contextSnapshot === "object"
+          ? req.body.contextSnapshot
+          : null;
       if (!visitorId) return res.status(400).json({ error: "visitorId required" });
 
       const existing = await storage.getLiveSessionByVisitor(visitorId);
       if (existing && (existing.status === "requested" || existing.status === "active")) {
-        return res.json(existing);
+        const shouldUpgradeExisting =
+          existing.serviceMode !== serviceMode ||
+          existing.entryPoint !== entryPoint ||
+          JSON.stringify(existing.contextSnapshot || null) !== JSON.stringify(contextSnapshot);
+
+        if (!shouldUpgradeExisting) {
+          return res.json(existing);
+        }
+
+        const updatedExisting = await storage.updateLiveSession(existing.id, {
+          serviceMode,
+          entryPoint,
+          contextSnapshot,
+          language: language || existing.language || "pt",
+          conversationId: conversationId || existing.conversationId || null,
+        });
+
+        return res.json(updatedExisting || existing);
       }
 
       const accessToken = nanoid(32);
@@ -3300,6 +3325,9 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
         accessToken,
         visitorId,
         language: language || "pt",
+        serviceMode,
+        entryPoint,
+        contextSnapshot,
         conversationId: conversationId || null,
         status: "requested",
       });

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { MessageCircle, X, Send, Loader2, User, Bot, AlertTriangle, Headphones, 
 import { useI18n } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
+import { buildLiveSessionRequestContext, getLiveSessionTheme, isSeniorServiceMode } from "@/lib/live-session-context";
 
 interface FlightResult {
   id: string;
@@ -45,7 +46,7 @@ interface ChatbotStatus {
 
 export function Chatbot() {
   const { t, language } = useI18n();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [requestingLive, setRequestingLive] = useState(false);
@@ -161,6 +162,7 @@ export function Chatbot() {
           visitorId,
           language: language || "pt",
           conversationId: sessionId,
+          ...requestContext,
         }),
       });
       const data = await res.json();
@@ -413,6 +415,32 @@ export function Chatbot() {
         ? "Modo básico activo: para búsqueda automática, envía origen, destino y fecha. Ej: GRU a MCO el 2026-06-15."
         : "Basic mode is active: for automatic search, send origin, destination, and date. Example: GRU to MCO on 2026-06-15.";
 
+  const requestContext = useMemo(
+    () => buildLiveSessionRequestContext(location, window.location.search),
+    [location],
+  );
+  const theme = useMemo(
+    () => getLiveSessionTheme(requestContext.serviceMode),
+    [requestContext.serviceMode],
+  );
+  const isSeniorContext = isSeniorServiceMode(requestContext.serviceMode);
+  const liveHelpLabel = isSeniorContext
+    ? language === "pt"
+      ? "Especialista senior"
+      : language === "es"
+        ? "Especialista senior"
+        : "Senior specialist"
+    : language === "pt"
+      ? "Atendimento ao Vivo"
+      : language === "es"
+        ? "Atencion en Vivo"
+        : "Live Help";
+  const seniorHint = language === "pt"
+    ? "Modo senior ativo: atendimento mais calmo, com menos ruido e explicacao passo a passo."
+    : language === "es"
+      ? "Modo senior activo: apoyo mas calmado, con menos ruido y explicacion paso a paso."
+      : "Senior mode is active: calmer support with less noise and step-by-step guidance.";
+
   const renderFlightCard = (flight: FlightResult) => (
     <div
       key={flight.id}
@@ -474,18 +502,23 @@ export function Chatbot() {
             className="fixed bottom-20 right-4 z-[9999] w-[360px] max-w-[calc(100vw-2rem)]"
           >
             <Card className="flex flex-col overflow-hidden shadow-xl border border-border/50">
-              <div className="flex items-center justify-between gap-2 bg-[#0074DE] px-4 py-3 text-white">
+              <div className={`flex items-center justify-between gap-2 px-4 py-3 ${theme.headerClass}`}>
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-full ${isSeniorContext ? "bg-amber-900/10" : "bg-white/20"}`}>
                     <Bot className="h-4 w-4" />
                   </div>
                   <div>
                     <p className="text-sm font-semibold leading-tight">Mia</p>
                     <div className="flex items-center gap-2">
                       <p className="text-[11px] leading-tight opacity-80">{t("chatbot.subtitle")}</p>
-                      <Badge className="bg-white/15 text-white border-white/15 hover:bg-white/15">
+                      <Badge className={isSeniorContext ? "bg-white/80 text-amber-900 border-amber-200 hover:bg-white/80" : "bg-white/15 text-white border-white/15 hover:bg-white/15"}>
                         {providerLabel}
                       </Badge>
+                      {isSeniorContext && (
+                        <Badge className="bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
+                          Senior
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -493,7 +526,7 @@ export function Chatbot() {
                   size="icon"
                   variant="ghost"
                   onClick={() => setIsOpen(false)}
-                  className="text-white no-default-hover-elevate"
+                  className={isSeniorContext ? "text-amber-950 hover:bg-amber-100/70" : "text-white no-default-hover-elevate"}
                   data-testid="button-chatbot-close"
                 >
                   <X className="h-4 w-4" />
@@ -516,7 +549,7 @@ export function Chatbot() {
                       >
                         <div className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${
                           msg.role === "user" 
-                            ? "bg-[#0074DE] text-white" 
+                            ? theme.userAvatarClass
                             : msg.role === "admin"
                             ? "bg-emerald-600 text-white"
                             : "bg-muted text-muted-foreground"
@@ -526,7 +559,7 @@ export function Chatbot() {
                         <div
                           className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
                             msg.role === "user"
-                              ? "bg-[#0074DE] text-white rounded-br-md"
+                              ? `${theme.userBubbleClass} rounded-br-md`
                               : msg.role === "admin"
                               ? "bg-emerald-50 dark:bg-emerald-950/40 text-foreground rounded-bl-md border border-emerald-200 dark:border-emerald-800"
                               : "bg-muted text-foreground rounded-bl-md"
@@ -561,6 +594,11 @@ export function Chatbot() {
               </div>
 
               <div className="border-t p-3">
+                {isSeniorContext && (
+                  <div className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
+                    {seniorHint}
+                  </div>
+                )}
                 {agentMode && status?.agentMode === "basic" && (
                   <div className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
                     {basicModeHint}
@@ -574,11 +612,11 @@ export function Chatbot() {
                     data-testid="button-chatbot-agent-toggle"
                   >
                     {agentMode ? (
-                      <ToggleRight className="h-4 w-4 text-[#0074DE]" />
+                      <ToggleRight className={`h-4 w-4 ${theme.accentTextClass}`} />
                     ) : (
                       <ToggleLeft className="h-4 w-4" />
                     )}
-                    <span className={agentMode ? "text-[#0074DE] font-medium" : ""}>
+                    <span className={agentMode ? `${theme.accentTextClass} font-medium` : ""}>
                       {t("chatbot.agent_mode")}
                     </span>
                   </button>
@@ -586,11 +624,11 @@ export function Chatbot() {
                     <button
                       onClick={handleRequestLiveSession}
                       disabled={requestingLive}
-                      className="flex items-center gap-1 text-[11px] text-[#0074DE] hover:text-[#005bb5] font-medium transition-colors"
+                      className={`flex items-center gap-1 text-[11px] font-medium transition-colors ${isSeniorContext ? "text-amber-700 hover:text-amber-900" : "text-[#0074DE] hover:text-[#005bb5]"}`}
                       data-testid="button-chatbot-live-session"
                     >
                       {requestingLive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MonitorPlay className="h-3.5 w-3.5" />}
-                      <span>{language === "pt" ? "Atendimento ao Vivo" : language === "es" ? "Atención en Vivo" : "Live Help"}</span>
+                      <span>{liveHelpLabel}</span>
                     </button>
                     {!escalated && (
                       <button
@@ -640,7 +678,7 @@ export function Chatbot() {
 
       <button
         onClick={isOpen ? () => setIsOpen(false) : handleOpen}
-        className="fixed bottom-4 right-4 z-[9999] flex h-14 w-14 items-center justify-center rounded-full bg-[#0074DE] text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+        className={`fixed bottom-4 right-4 z-[9999] flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105 active:scale-95 ${isSeniorContext ? "bg-amber-600 hover:bg-amber-700" : "bg-[#0074DE]"}`}
         data-testid="button-chatbot-toggle"
       >
         {isOpen ? (
