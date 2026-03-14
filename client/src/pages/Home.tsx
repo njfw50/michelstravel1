@@ -88,7 +88,7 @@ export default function Home() {
         title: "Prefer to book with more time and less pressure?",
         description: `If you want larger text, simpler steps, and clear human support, open the senior path or talk to us on WhatsApp at ${AGENCY_WHATSAPP_DISPLAY}.`,
         primary: "Open Senior Support",
-        secondary: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
+        secondary: "Talk on WhatsApp",
         features: [
           "Larger text and clearer buttons",
           "Less information on each step",
@@ -101,7 +101,7 @@ export default function Home() {
           title: "¿Prefiere reservar con más calma y menos presión?",
           description: `Si quiere texto más grande, pasos más simples y apoyo humano claro, abra la ruta senior o escribanos por WhatsApp al ${AGENCY_WHATSAPP_DISPLAY}.`,
           primary: "Abrir atención senior",
-          secondary: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
+          secondary: "Hablar por WhatsApp",
           features: [
             "Texto más grande y botones más claros",
             "Menos información en cada paso",
@@ -113,7 +113,7 @@ export default function Home() {
           title: "Prefere reservar com mais calma e menos pressão?",
           description: `Se voce quer letras maiores, etapas mais simples e ajuda humana visivel, abra o caminho senior ou fale por WhatsApp no ${AGENCY_WHATSAPP_DISPLAY}.`,
           primary: "Abrir Atendimento Senior",
-          secondary: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
+          secondary: "Falar no WhatsApp",
           features: [
             "Letras maiores e botões mais claros",
             "Menos informação em cada etapa",
@@ -127,6 +127,7 @@ export default function Home() {
         description: "If you live in Newark or Ironbound and want flights to Brazil with support in Portuguese, start here to compare options and continue your booking with more clarity.",
         primary: "Newark support",
         secondary: "Newark to Brazil",
+        contact: "Talk on WhatsApp",
       }
     : language === "es"
       ? {
@@ -134,12 +135,14 @@ export default function Home() {
           description: "Si vive en Newark o Ironbound y quiere vuelos a Brasil con apoyo en portugués, entre por esta página para comparar opciones y continuar su reserva con más claridad.",
           primary: "Atención en Newark",
           secondary: "Vuelos Newark-Brasil",
+          contact: "Hablar por WhatsApp",
         }
       : {
           title: "Procurando agência de viagens em Ironbound, Newark?",
           description: "Se você mora em Newark ou Ironbound e quer voos para o Brasil com apoio em português, entre por esta página e veja o caminho mais direto para pesquisar, comparar e continuar sua reserva.",
           primary: "Atendimento em Newark",
           secondary: "Voos Newark-Brasil",
+          contact: "Falar no WhatsApp",
         };
   const seniorWhatsAppHref = buildWhatsAppHref(
     buildWhatsAppMessage({
@@ -404,7 +407,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="overflow-hidden rounded-[32px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_58%,rgba(219,234,254,0.95))] p-7 shadow-[0_24px_70px_-44px_rgba(37,99,235,0.42)] md:p-9"
           >
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-4xl">
               <div className="max-w-3xl">
                 <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-blue-700">
                   <MapPin className="h-3.5 w-3.5" />
@@ -416,25 +419,25 @@ export default function Home() {
                 <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
                   {newarkContent.description}
                 </p>
-              </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Link href="/agencia-de-viagens-ironbound-newark">
-                  <Button className="rounded-full bg-blue-600 px-6 py-6 text-base font-bold text-white hover:bg-blue-700">
-                    {newarkContent.primary} <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link href="/passagens-para-o-brasil-saindo-de-newark">
-                  <Button variant="outline" className="rounded-full px-6 py-6 text-base font-bold border-blue-200 bg-white/90 text-slate-800">
-                    {newarkContent.secondary} <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-                <a href={newarkWhatsAppHref} target="_blank" rel="noreferrer">
-                  <Button variant="outline" className="rounded-full px-6 py-6 text-base font-bold">
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    {`WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`}
-                  </Button>
-                </a>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <Link href="/agencia-de-viagens-ironbound-newark">
+                    <Button className="rounded-full bg-blue-600 px-6 py-6 text-base font-bold text-white hover:bg-blue-700">
+                      {newarkContent.primary} <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link href="/passagens-para-o-brasil-saindo-de-newark">
+                    <Button variant="outline" className="rounded-full px-6 py-6 text-base font-bold border-blue-200 bg-white/90 text-slate-800">
+                      {newarkContent.secondary} <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <a href={newarkWhatsAppHref} target="_blank" rel="noreferrer">
+                    <Button variant="outline" className="rounded-full px-6 py-6 text-base font-bold">
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      {newarkContent.contact}
+                    </Button>
+                  </a>
+                </div>
               </div>
             </div>
           </motion.div>
