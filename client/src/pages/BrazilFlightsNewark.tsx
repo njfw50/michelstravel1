@@ -14,7 +14,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SEO } from "@/components/SEO";
-import { AGENCY_PHONE_DISPLAY, AGENCY_PHONE_TEL } from "@/lib/contact";
+import {
+  AGENCY_WHATSAPP_DISPLAY,
+  AGENCY_PHONE_TEL,
+  buildWhatsAppHref,
+  buildWhatsAppMessage,
+} from "@/lib/contact";
 import { useFeaturedDeals, type PublicFeaturedDeal } from "@/hooks/use-flights";
 
 const BRAZIL_AIRPORTS = new Set([
@@ -58,7 +63,7 @@ const faqItems = [
   {
     question: "Posso comprar online e depois falar com alguém?",
     answer:
-      "Pode. Você pode pesquisar e reservar online, mas também pode ligar ou abrir as mensagens para tirar dúvidas sobre bagagem, escalas, horários e regras de alteração.",
+      "Pode. Você pode pesquisar e reservar online, mas tambem pode abrir o WhatsApp para tirar duvidas sobre bagagem, escalas, horarios e regras de alteracao.",
   },
   {
     question: "Por que esta página ajuda quem quer viajar para o Brasil?",
@@ -121,6 +126,13 @@ function toSearchParams(deal: PublicFeaturedDeal) {
 export default function BrazilFlightsNewark() {
   const { data: featuredDeals, isLoading } = useFeaturedDeals();
   const [, setLocation] = useLocation();
+  const whatsAppHref = buildWhatsAppHref(
+    buildWhatsAppMessage({
+      language: "pt",
+      topic: "Passagens para o Brasil saindo de Newark",
+      details: ["Pagina: Brasil saindo de Newark"],
+    }),
+  );
 
   const allDeals = featuredDeals ?? [];
   const newarkBrazilDeals = allDeals.filter(
@@ -251,10 +263,10 @@ export default function BrazilFlightsNewark() {
               >
                 Buscar voos agora <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-              <a href={`tel:${AGENCY_PHONE_TEL}`}>
+              <a href={whatsAppHref} target="_blank" rel="noreferrer">
                 <Button variant="outline" className="rounded-full px-7 py-6 text-base font-bold">
-                  <PhoneCall className="mr-2 h-4 w-4" />
-                  {AGENCY_PHONE_DISPLAY}
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  {`WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`}
                 </Button>
               </a>
             </div>
@@ -443,12 +455,12 @@ export default function BrazilFlightsNewark() {
               <h2 className="mt-3 text-3xl font-extrabold">Transforme busca local em conversa ou reserva</h2>
               <div className="mt-6 space-y-4 text-sm leading-7 text-slate-300">
                 <p className="flex gap-3">
-                  <PhoneCall className="mt-1 h-4 w-4 flex-shrink-0 text-blue-300" />
-                  Ligue se quiser atendimento direto em portugues.
+                  <MessageCircle className="mt-1 h-4 w-4 flex-shrink-0 text-blue-300" />
+                  Abra o WhatsApp se quiser atendimento direto em portugues.
                 </p>
                 <p className="flex gap-3">
                   <MessageCircle className="mt-1 h-4 w-4 flex-shrink-0 text-blue-300" />
-                  Abra as mensagens se preferir tirar duvidas antes de comprar.
+                  Tire duvidas antes de comprar e continue com a equipe no mesmo WhatsApp.
                 </p>
                 <p className="flex gap-3">
                   <MapPin className="mt-1 h-4 w-4 flex-shrink-0 text-emerald-400" />
@@ -457,18 +469,18 @@ export default function BrazilFlightsNewark() {
               </div>
 
               <div className="mt-8 flex flex-col gap-3">
-                <a href={`tel:${AGENCY_PHONE_TEL}`}>
+                <a href={whatsAppHref} target="_blank" rel="noreferrer">
                   <Button className="w-full rounded-full bg-white text-slate-950 hover:bg-slate-100">
-                    <PhoneCall className="mr-2 h-4 w-4" />
-                    Ligar agora
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Abrir WhatsApp
                   </Button>
                 </a>
-                <Link href="/messages">
+                <a href={whatsAppHref} target="_blank" rel="noreferrer">
                   <Button variant="outline" className="w-full rounded-full border-white/30 bg-transparent text-white hover:bg-white/10">
                     <MessageCircle className="mr-2 h-4 w-4" />
-                    Abrir mensagens
+                    Enviar mensagem no WhatsApp
                   </Button>
-                </Link>
+                </a>
                 <Link href="/agencia-de-viagens-ironbound-newark">
                   <Button variant="outline" className="w-full rounded-full border-white/30 bg-transparent text-white hover:bg-white/10">
                     <MapPin className="mr-2 h-4 w-4" />

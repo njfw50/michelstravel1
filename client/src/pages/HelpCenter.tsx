@@ -7,6 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
+  AGENCY_EMAIL,
+  AGENCY_WHATSAPP_DISPLAY,
+  buildWhatsAppHref,
+  buildWhatsAppMessage,
+} from "@/lib/contact";
+import {
   Search,
   Plane,
   CreditCard,
@@ -62,6 +68,12 @@ export default function HelpCenter() {
   const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const whatsAppHref = buildWhatsAppHref(
+    buildWhatsAppMessage({
+      topic: "Central de ajuda",
+      details: ["Pagina: Help Center"],
+    }),
+  );
 
   const categories = [
     {
@@ -201,12 +213,12 @@ export default function HelpCenter() {
                   <Search className="h-8 w-8 mx-auto mb-3 text-muted-foreground opacity-30" />
                   <p className="text-sm font-medium mb-1">{t("help.no_results")}</p>
                   <p className="text-xs text-muted-foreground mb-4">{t("help.no_results_desc")}</p>
-                  <Link href="/messages">
+                  <a href={whatsAppHref} target="_blank" rel="noreferrer">
                     <Button data-testid="button-contact-from-search">
                       <MessageSquare className="h-4 w-4 mr-2" />
-                      {t("help.contact_team")}
+                      Abrir WhatsApp
                     </Button>
-                  </Link>
+                  </a>
                 </Card>
               ) : (
                 <Card className="divide-y divide-border px-4">
@@ -286,27 +298,27 @@ export default function HelpCenter() {
                   <div className="flex items-start gap-2.5">
                     <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-xs font-medium">{t("help.contact_messenger")}</p>
-                      <Link href="/messages" className="text-xs text-blue-600 hover:underline" data-testid="link-contact-messages">
-                        {t("help.contact_messenger_action")}
-                      </Link>
+                      <p className="text-xs font-medium">WhatsApp</p>
+                      <a href={whatsAppHref} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline" data-testid="link-contact-messages">
+                        Abrir conversa
+                      </a>
                     </div>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <Mail className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-xs font-medium">Email</p>
-                      <a href="mailto:contact@michelstravel.agency" className="text-xs text-blue-600 hover:underline" data-testid="link-contact-email">
-                        contact@michelstravel.agency
+                      <a href={`mailto:${AGENCY_EMAIL}`} className="text-xs text-blue-600 hover:underline" data-testid="link-contact-email">
+                        {AGENCY_EMAIL}
                       </a>
                     </div>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <Phone className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-xs font-medium">{t("help.contact_phone")}</p>
-                      <a href="tel:+18623501161" className="text-xs text-blue-600 hover:underline" data-testid="link-contact-phone">
-                        +1 (862) 350-1161
+                      <p className="text-xs font-medium">WhatsApp direto</p>
+                      <a href={whatsAppHref} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline" data-testid="link-contact-phone">
+                        {AGENCY_WHATSAPP_DISPLAY}
                       </a>
                     </div>
                   </div>

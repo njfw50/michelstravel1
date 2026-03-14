@@ -34,6 +34,12 @@ import {
   Receipt,
 } from "lucide-react";
 import { SEO } from "@/components/SEO";
+import {
+  AGENCY_EMAIL,
+  AGENCY_WHATSAPP_DISPLAY,
+  buildWhatsAppHref,
+  buildWhatsAppMessage,
+} from "@/lib/contact";
 
 const formatDuration = (duration: string) => {
   if (!duration) return "";
@@ -219,6 +225,12 @@ export default function CheckoutSuccess() {
   const [_, setLocation] = useLocation();
   const { t } = useI18n();
   const { toast } = useToast();
+  const whatsAppHref = buildWhatsAppHref(
+    buildWhatsAppMessage({
+      topic: "Ajuda apos a reserva",
+      details: ["Pagina: Checkout success"],
+    }),
+  );
   const [copied, setCopied] = useState(false);
   const [showProcessing, setShowProcessing] = useState(true);
 
@@ -644,14 +656,14 @@ export default function CheckoutSuccess() {
                 <div className="space-y-1 text-sm">
                   <div className="flex items-center gap-2 text-blue-700">
                     <Mail className="h-3.5 w-3.5" />
-                    <a href="mailto:contact@michelstravel.agency" className="underline" data-testid="link-agency-email">
-                      contact@michelstravel.agency
+                    <a href={`mailto:${AGENCY_EMAIL}`} className="underline" data-testid="link-agency-email">
+                      {AGENCY_EMAIL}
                     </a>
                   </div>
                   <div className="flex items-center gap-2 text-blue-700">
                     <Phone className="h-3.5 w-3.5" />
-                    <a href="tel:+18623501161" className="underline" data-testid="link-agency-phone">
-                      +1 (862) 350-1161
+                    <a href={whatsAppHref} target="_blank" rel="noreferrer" className="underline" data-testid="link-agency-phone">
+                      {`WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`}
                     </a>
                   </div>
                   <div className="flex items-center gap-2 text-blue-600 text-xs">

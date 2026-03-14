@@ -4,12 +4,16 @@ import { FlightBoard } from "@/components/FlightBoard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldCheck, Zap, Globe, ArrowRight, MapPin, Plane, Search, CreditCard, Ticket, Star, Clock, Headphones, Users, TrendingUp, ChevronRight, Sparkles, MessageCircle, CheckCircle2, Languages, UserCheck, PhoneCall, HeartHandshake } from "lucide-react";
+import { ShieldCheck, Zap, Globe, ArrowRight, MapPin, Plane, Search, CreditCard, Ticket, Star, Clock, Headphones, Users, TrendingUp, ChevronRight, Sparkles, MessageCircle, CheckCircle2, Languages, UserCheck, HeartHandshake } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link, useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
 import { SEO } from "@/components/SEO";
-import { AGENCY_PHONE_DISPLAY, AGENCY_PHONE_TEL } from "@/lib/contact";
+import {
+  AGENCY_WHATSAPP_DISPLAY,
+  buildWhatsAppHref,
+  buildWhatsAppMessage,
+} from "@/lib/contact";
 
 import airplaneDestination from "@/assets/images/airplane-destination.jpg";
 import airplaneLightHero from "@/assets/images/airplane-light-hero.png";
@@ -79,41 +83,41 @@ export default function Home() {
   const catalogDeals = featuredDeals?.slice(0, 6) || [];
   const locale = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
   const easyModeContent = language === "en"
-    ? {
+      ? {
         badge: "Senior support",
         title: "Prefer to book with more time and less pressure?",
-        description: `If you want larger text, simpler steps, and clear human support, open the senior path or call ${AGENCY_PHONE_DISPLAY}.`,
+        description: `If you want larger text, simpler steps, and clear human support, open the senior path or talk to us on WhatsApp at ${AGENCY_WHATSAPP_DISPLAY}.`,
         primary: "Open Senior Support",
-        secondary: AGENCY_PHONE_DISPLAY,
+        secondary: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
         features: [
           "Larger text and clearer buttons",
           "Less information on each step",
-          "Book online or finish by phone",
+          "Book online or continue on WhatsApp",
         ],
       }
     : language === "es"
       ? {
           badge: "Atención senior",
           title: "¿Prefiere reservar con más calma y menos presión?",
-          description: `Si quiere texto más grande, pasos más simples y apoyo humano claro, abra la ruta senior o llame al ${AGENCY_PHONE_DISPLAY}.`,
+          description: `Si quiere texto más grande, pasos más simples y apoyo humano claro, abra la ruta senior o escribanos por WhatsApp al ${AGENCY_WHATSAPP_DISPLAY}.`,
           primary: "Abrir atención senior",
-          secondary: AGENCY_PHONE_DISPLAY,
+          secondary: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
           features: [
             "Texto más grande y botones más claros",
             "Menos información en cada paso",
-            "Reserve en el sitio o termine por teléfono",
+            "Reserve en el sitio o siga por WhatsApp",
           ],
         }
       : {
           badge: "Atendimento senior",
           title: "Prefere reservar com mais calma e menos pressão?",
-          description: `Se você quer letras maiores, etapas mais simples e ajuda humana visível, abra o caminho senior ou ligue para ${AGENCY_PHONE_DISPLAY}.`,
+          description: `Se voce quer letras maiores, etapas mais simples e ajuda humana visivel, abra o caminho senior ou fale por WhatsApp no ${AGENCY_WHATSAPP_DISPLAY}.`,
           primary: "Abrir Atendimento Senior",
-          secondary: AGENCY_PHONE_DISPLAY,
+          secondary: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
           features: [
             "Letras maiores e botões mais claros",
             "Menos informação em cada etapa",
-            "Reserve no site ou termine por telefone",
+            "Reserve no site ou siga pelo WhatsApp",
           ],
         };
 
@@ -137,6 +141,24 @@ export default function Home() {
           primary: "Atendimento em Newark",
           secondary: "Voos Newark-Brasil",
         };
+  const seniorWhatsAppHref = buildWhatsAppHref(
+    buildWhatsAppMessage({
+      language,
+      topic: language === "en" ? "Senior support" : language === "es" ? "Atencion senior" : "Atendimento senior",
+      details: [
+        language === "en" ? "Page: Home" : language === "es" ? "Pagina: Inicio" : "Pagina: Home",
+      ],
+    }),
+  );
+  const newarkWhatsAppHref = buildWhatsAppHref(
+    buildWhatsAppMessage({
+      language,
+      topic: language === "en" ? "Newark travel help" : language === "es" ? "Ayuda de viajes en Newark" : "Ajuda de viagem em Newark",
+      details: [
+        language === "en" ? "Page: Newark section on home" : language === "es" ? "Pagina: Seccion Newark en inicio" : "Pagina: Bloco Newark na home",
+      ],
+    }),
+  );
 
   const formatDealDate = (date: string) => {
     if (!date) return "";
@@ -327,8 +349,8 @@ export default function Home() {
                     variant="outline"
                     className="rounded-full px-7 py-6 text-base font-bold border-slate-300 bg-white/90 text-slate-800"
                   >
-                    <a href={`tel:${AGENCY_PHONE_TEL}`}>
-                      <PhoneCall className="mr-2 h-5 w-5" />
+                    <a href={seniorWhatsAppHref} target="_blank" rel="noreferrer">
+                      <MessageCircle className="mr-2 h-5 w-5" />
                       {easyModeContent.secondary}
                     </a>
                   </Button>
@@ -351,18 +373,18 @@ export default function Home() {
                               ? "Start with origin, destination, and date."
                               : item === 2
                                 ? "See the flights and review calmly before paying."
-                                : "If anything feels confusing, call or open the chat."
+                                : "If anything feels confusing, open WhatsApp and continue with our team."
                             : language === "es"
                               ? item === 1
                                 ? "Empiece con origen, destino y fecha."
                                 : item === 2
                                   ? "Vea los vuelos y revise todo con calma antes de pagar."
-                                  : "Si algo parece confuso, llame o abra el chat."
+                                  : "Si algo parece confuso, abra WhatsApp y siga con nuestro equipo."
                               : item === 1
                                 ? "Comece por origem, destino e data."
                                 : item === 2
                                   ? "Veja os voos e revise tudo com calma antes de pagar."
-                                  : "Se algo parecer confuso, ligue ou abra o chat."}
+                                  : "Se algo parecer confuso, abra o WhatsApp e siga com a nossa equipe."}
                         </span>
                       </div>
                     ))}
@@ -407,10 +429,10 @@ export default function Home() {
                     {newarkContent.secondary} <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
-                <a href={`tel:${AGENCY_PHONE_TEL}`}>
+                <a href={newarkWhatsAppHref} target="_blank" rel="noreferrer">
                   <Button variant="outline" className="rounded-full px-6 py-6 text-base font-bold">
-                    <PhoneCall className="mr-2 h-4 w-4" />
-                    {AGENCY_PHONE_DISPLAY}
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    {`WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`}
                   </Button>
                 </a>
               </div>

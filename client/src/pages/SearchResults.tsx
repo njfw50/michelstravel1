@@ -5,7 +5,7 @@ import { FlightCard } from "@/components/FlightCard";
 import FlightBaggageHighlights from "@/components/FlightBaggageHighlights";
 import SeniorFlightOptionCard from "@/components/SeniorFlightOptionCard";
 import { useFlightSearch, type FlightSearchQuery } from "@/hooks/use-flights";
-import { Loader2, Filter, AlertCircle, Plane, X, Sun, Sunrise, Sunset, Moon, Globe, BarChart3, Armchair, Sparkles, CheckCircle2, Clock, ArrowRight, PhoneCall, HeartHandshake, MessageCircle } from "lucide-react";
+import { Loader2, Filter, AlertCircle, Plane, X, Sun, Sunrise, Sunset, Moon, Globe, BarChart3, Armchair, Sparkles, CheckCircle2, Clock, ArrowRight, HeartHandshake, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
@@ -15,7 +15,11 @@ import { SEO } from "@/components/SEO";
 import { Link } from "wouter";
 import { format, parseISO } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { AGENCY_PHONE_DISPLAY, AGENCY_PHONE_TEL } from "@/lib/contact";
+import {
+  AGENCY_WHATSAPP_DISPLAY,
+  buildWhatsAppHref,
+  buildWhatsAppMessage,
+} from "@/lib/contact";
 import {
   Sheet,
   SheetContent,
@@ -207,9 +211,9 @@ export default function SearchResults() {
     ? {
         badge: "Senior support active",
         title: "We reduced the options and put calmer flights first.",
-        description: `These recommendations give more weight to shorter trips, fewer connections, and less tiring schedules. If you want, call ${AGENCY_PHONE_DISPLAY} and we continue with you.`,
-        call: `Call ${AGENCY_PHONE_DISPLAY}`,
-        assistant: "Open chat",
+        description: `These recommendations give more weight to shorter trips, fewer connections, and less tiring schedules. If you want, continue with our team on WhatsApp at ${AGENCY_WHATSAPP_DISPLAY}.`,
+        call: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
+        assistant: "Send question on WhatsApp",
         back: "Back to Senior Support",
         summaryTitle: "Your preferences",
         summaryPriority: "What matters most",
@@ -237,9 +241,9 @@ export default function SearchResults() {
       ? {
           badge: "Atencion senior activa",
           title: "Reducimos las opciones y pusimos primero los vuelos mas tranquilos.",
-          description: `Estas recomendaciones dan mas peso a menos conexiones, menos tiempo total y horarios menos cansadores. Si quiere, llame al ${AGENCY_PHONE_DISPLAY} y seguimos con usted.`,
-          call: `Llamar al ${AGENCY_PHONE_DISPLAY}`,
-          assistant: "Abrir chat",
+          description: `Estas recomendaciones dan mas peso a menos conexiones, menos tiempo total y horarios menos cansadores. Si quiere, siga con nuestro equipo por WhatsApp al ${AGENCY_WHATSAPP_DISPLAY}.`,
+          call: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
+          assistant: "Enviar duda por WhatsApp",
           back: "Volver a Atencion Senior",
           summaryTitle: "Sus preferencias",
           summaryPriority: "Lo mas importante",
@@ -266,9 +270,9 @@ export default function SearchResults() {
       : {
           badge: "Atendimento senior ativo",
           title: "Reduzimos as opcoes e colocamos primeiro os voos mais tranquilos.",
-          description: `Essas recomendacoes dao mais peso a menos conexoes, menos tempo total e horarios menos cansativos. Se preferir, ligue agora para ${AGENCY_PHONE_DISPLAY} e seguimos com voce.`,
-          call: `Ligar para ${AGENCY_PHONE_DISPLAY}`,
-          assistant: "Abrir chat",
+          description: `Essas recomendacoes dao mais peso a menos conexoes, menos tempo total e horarios menos cansativos. Se preferir, siga com a nossa equipe no WhatsApp ${AGENCY_WHATSAPP_DISPLAY}.`,
+          call: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
+          assistant: "Enviar duvida por WhatsApp",
           back: "Voltar ao Atendimento Senior",
           summaryTitle: "Suas preferencias",
           summaryPriority: "O mais importante",
@@ -344,10 +348,29 @@ export default function SearchResults() {
   }, [isLoading, isFetching, showAnimation]);
 
   const isSearching = (isLoading || isFetching) || showAnimation;
-  const openAssistant = () => {
-    const chatButton = document.querySelector('[data-testid="button-chatbot-toggle"]') as HTMLButtonElement | null;
-    chatButton?.click();
-  };
+  const whatsAppHref = buildWhatsAppHref(
+    buildWhatsAppMessage({
+      language,
+      topic: isEasyMode
+        ? language === "en"
+          ? "Senior search results"
+          : language === "es"
+            ? "Resultados senior"
+            : "Resultados senior"
+        : language === "en"
+          ? "Flight search"
+          : language === "es"
+            ? "Busqueda de vuelos"
+            : "Busca de voos",
+      details: [
+        params.origin ? `${language === "en" ? "Origin" : language === "es" ? "Origen" : "Origem"}: ${params.origin}` : null,
+        params.destination ? `${language === "en" ? "Destination" : language === "es" ? "Destino" : "Destino"}: ${params.destination}` : null,
+        params.date ? `${language === "en" ? "Departure" : language === "es" ? "Salida" : "Ida"}: ${params.date}` : null,
+        (params as any).returnDate ? `${language === "en" ? "Return" : language === "es" ? "Vuelta" : "Volta"}: ${(params as any).returnDate}` : null,
+        isEasyMode ? `${language === "en" ? "Priority" : language === "es" ? "Prioridad" : "Prioridade"}: ${seniorPriority}` : null,
+      ],
+    }),
+  );
 
   const defaultValues = {
     origin: params.origin ?? "",
@@ -718,14 +741,16 @@ export default function SearchResults() {
 
                 <div className="flex flex-wrap gap-3">
                   <Button asChild className="rounded-full bg-blue-600 text-white hover:bg-blue-700" data-testid="button-easy-mode-call-results">
-                    <a href={`tel:${AGENCY_PHONE_TEL}`}>
-                      <PhoneCall className="mr-2 h-4 w-4" />
+                    <a href={whatsAppHref} target="_blank" rel="noreferrer">
+                      <MessageCircle className="mr-2 h-4 w-4" />
                       {easyModeCopy.call}
                     </a>
                   </Button>
-                  <Button variant="outline" onClick={openAssistant} className="rounded-full border-slate-300 bg-white text-slate-800" data-testid="button-easy-mode-chat-results">
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    {easyModeCopy.assistant}
+                  <Button asChild variant="outline" className="rounded-full border-slate-300 bg-white text-slate-800" data-testid="button-easy-mode-chat-results">
+                    <a href={whatsAppHref} target="_blank" rel="noreferrer">
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      {easyModeCopy.assistant}
+                    </a>
                   </Button>
                   <Link href="/senior">
                     <Button variant="ghost" className="rounded-full text-blue-700 hover:bg-blue-50" data-testid="button-easy-mode-back-results">
@@ -998,14 +1023,16 @@ export default function SearchResults() {
 
               <div className="flex flex-wrap gap-3">
                 <Button asChild className="rounded-full bg-blue-600 hover:bg-blue-700 text-white" data-testid="button-easy-mode-call-results">
-                  <a href={`tel:${AGENCY_PHONE_TEL}`}>
-                    <PhoneCall className="mr-2 h-4 w-4" />
+                  <a href={whatsAppHref} target="_blank" rel="noreferrer">
+                    <MessageCircle className="mr-2 h-4 w-4" />
                     {easyModeCopy.call}
                   </a>
                 </Button>
-                <Button variant="outline" onClick={openAssistant} className="rounded-full border-slate-300 bg-white text-slate-800" data-testid="button-easy-mode-chat-results">
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  {easyModeCopy.assistant}
+                <Button asChild variant="outline" className="rounded-full border-slate-300 bg-white text-slate-800" data-testid="button-easy-mode-chat-results">
+                  <a href={whatsAppHref} target="_blank" rel="noreferrer">
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    {easyModeCopy.assistant}
+                  </a>
                 </Button>
                 <Link href="/senior">
                   <Button variant="ghost" className="rounded-full text-blue-700 hover:bg-blue-50" data-testid="button-easy-mode-back-results">

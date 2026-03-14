@@ -15,7 +15,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n";
 import { LoginDialog } from "@/components/LoginDialog";
 import { closeLoginDialog, getLoginDialogEventName, openLoginDialog } from "@/lib/auth-utils";
-import { AGENCY_EMAIL, AGENCY_PHONE_DISPLAY, AGENCY_PHONE_TEL } from "@/lib/contact";
+import {
+  AGENCY_EMAIL,
+  AGENCY_WHATSAPP_DISPLAY,
+  buildWhatsAppHref,
+  buildWhatsAppMessage,
+} from "@/lib/contact";
 import logo from "@assets/LOGO_1770751298475.png";
 
 const LANG_OPTIONS = [
@@ -85,6 +90,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { t, language } = useI18n();
   const isHome = location === "/";
   const easyModeLabel = language === "en" ? "Senior Support" : language === "es" ? "Atencion Senior" : "Atendimento Senior";
+  const footerContactLabel = language === "en" ? "WhatsApp" : language === "es" ? "WhatsApp" : "WhatsApp";
+  const footerContactCta = language === "en" ? "Open WhatsApp" : language === "es" ? "Abrir WhatsApp" : "Abrir WhatsApp";
+  const footerWhatsAppHref = buildWhatsAppHref(
+    buildWhatsAppMessage({
+      language,
+      topic: language === "en" ? "Website contact" : language === "es" ? "Contacto del sitio" : "Contato pelo site",
+      details: [language === "en" ? "Page: Footer" : language === "es" ? "Pagina: Rodape" : "Pagina: Rodape"],
+    }),
+  );
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -387,15 +401,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <p className="text-sm text-gray-500 mb-5 max-w-sm">{t("footer.contact_desc")}</p>
                 <div className="space-y-3">
                   <a
-                    href={`tel:${AGENCY_PHONE_TEL}`}
+                    href={footerWhatsAppHref}
+                    target="_blank"
+                    rel="noreferrer"
                     className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 hover:border-blue-200 hover:bg-blue-50/40 transition-colors duration-200"
                   >
                     <div className="h-9 w-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                      <Phone className="h-4 w-4" />
+                      <MessageSquare className="h-4 w-4" />
                     </div>
                     <div>
-                      <span className="block text-xs uppercase tracking-[0.14em] text-gray-400 font-semibold">{t("footer.phone_label")}</span>
-                      <span className="font-semibold">{AGENCY_PHONE_DISPLAY}</span>
+                      <span className="block text-xs uppercase tracking-[0.14em] text-gray-400 font-semibold">{footerContactLabel}</span>
+                      <span className="font-semibold">{AGENCY_WHATSAPP_DISPLAY}</span>
                     </div>
                   </a>
                   <a
@@ -412,23 +428,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </a>
                 </div>
                 <div className="pt-5">
-                  {user ? (
-                    <Link href="/messages">
-                      <Button className="rounded-xl bg-blue-500 hover:bg-blue-600 text-white shadow-sm shadow-blue-500/20" data-testid="button-footer-contact">
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        {t("footer.contact_cta")}
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Button
-                      onClick={() => openLoginDialog()}
-                      className="rounded-xl bg-blue-500 hover:bg-blue-600 text-white shadow-sm shadow-blue-500/20"
-                      data-testid="button-footer-contact"
-                    >
+                  <a href={footerWhatsAppHref} target="_blank" rel="noreferrer">
+                    <Button className="rounded-xl bg-blue-500 hover:bg-blue-600 text-white shadow-sm shadow-blue-500/20" data-testid="button-footer-contact">
                       <MessageSquare className="mr-2 h-4 w-4" />
-                      {t("footer.contact_cta")}
+                      {footerContactCta}
                     </Button>
-                  )}
+                  </a>
                 </div>
               </div>
             </div>

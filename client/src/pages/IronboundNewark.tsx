@@ -14,7 +14,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SEO } from "@/components/SEO";
-import { AGENCY_PHONE_DISPLAY, AGENCY_PHONE_TEL } from "@/lib/contact";
+import {
+  AGENCY_WHATSAPP_DISPLAY,
+  AGENCY_PHONE_TEL,
+  buildWhatsAppHref,
+  buildWhatsAppMessage,
+} from "@/lib/contact";
 
 const faqItems = [
   {
@@ -54,6 +59,13 @@ function formatFutureDate(offsetDays: number) {
 
 export default function IronboundNewark() {
   const [, setLocation] = useLocation();
+  const whatsAppHref = buildWhatsAppHref(
+    buildWhatsAppMessage({
+      language: "pt",
+      topic: "Atendimento em Ironbound Newark",
+      details: ["Pagina: Ironbound Newark"],
+    }),
+  );
 
   const structuredData = [
     {
@@ -161,10 +173,10 @@ export default function IronboundNewark() {
               >
                 Buscar passagens <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-              <a href={`tel:${AGENCY_PHONE_TEL}`}>
+              <a href={whatsAppHref} target="_blank" rel="noreferrer">
                 <Button variant="outline" className="rounded-full px-7 py-6 text-base font-bold">
-                  <PhoneCall className="mr-2 h-4 w-4" />
-                  {AGENCY_PHONE_DISPLAY}
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  {`WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`}
                 </Button>
               </a>
             </div>
@@ -312,7 +324,7 @@ export default function IronboundNewark() {
                 </p>
                 <p className="flex gap-3">
                   <MessageCircle className="mt-1 h-4 w-4 flex-shrink-0 text-blue-300" />
-                  Caminho direto para conversa, ligação ou busca de passagem.
+                  Caminho direto para conversa no WhatsApp ou busca de passagem.
                 </p>
                 <p className="flex gap-3">
                   <MapPin className="mt-1 h-4 w-4 flex-shrink-0 text-blue-300" />
@@ -321,18 +333,18 @@ export default function IronboundNewark() {
               </div>
 
               <div className="mt-8 flex flex-col gap-3">
-                <a href={`tel:${AGENCY_PHONE_TEL}`}>
+                <a href={whatsAppHref} target="_blank" rel="noreferrer">
                   <Button className="w-full rounded-full bg-white text-slate-950 hover:bg-slate-100">
-                    <PhoneCall className="mr-2 h-4 w-4" />
-                    Ligar agora
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Abrir WhatsApp
                   </Button>
                 </a>
-                <Link href="/messages">
+                <a href={whatsAppHref} target="_blank" rel="noreferrer">
                   <Button variant="outline" className="w-full rounded-full border-white/30 bg-transparent text-white hover:bg-white/10">
                     <MessageCircle className="mr-2 h-4 w-4" />
-                    Abrir mensagens
+                    Enviar mensagem no WhatsApp
                   </Button>
-                </Link>
+                </a>
                 <Link href="/passagens-para-o-brasil-saindo-de-newark">
                   <Button variant="outline" className="w-full rounded-full border-white/30 bg-transparent text-white hover:bg-white/10">
                     <Plane className="mr-2 h-4 w-4" />

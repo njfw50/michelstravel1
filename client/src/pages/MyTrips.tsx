@@ -42,6 +42,12 @@ import { useToast } from "@/hooks/use-toast";
 import type { Booking } from "@shared/schema";
 import { SEO } from "@/components/SEO";
 import { openLoginDialog } from "@/lib/auth-utils";
+import {
+  AGENCY_EMAIL,
+  AGENCY_WHATSAPP_DISPLAY,
+  buildWhatsAppHref,
+  buildWhatsAppMessage,
+} from "@/lib/contact";
 
 function formatDuration(duration: string) {
   if (!duration) return "";
@@ -500,6 +506,12 @@ export default function MyTrips() {
   const { user, isLoading: authLoading } = useAuth();
   const { t } = useI18n();
   const [, setLocation] = useLocation();
+  const whatsAppHref = buildWhatsAppHref(
+    buildWhatsAppMessage({
+      topic: "Ajuda com minhas viagens",
+      details: ["Pagina: My Trips"],
+    }),
+  );
 
   const { data: bookings, isLoading: bookingsLoading } = useQuery<Booking[]>({
     queryKey: ["/api/bookings"],
@@ -625,7 +637,7 @@ export default function MyTrips() {
                 </div>
                 <div>
                   <div className="text-xs text-gray-500">Email</div>
-                  <a href="mailto:contact@michelstravel.agency" className="text-sm font-medium text-blue-600 hover:underline" data-testid="link-contact-email">contact@michelstravel.agency</a>
+                  <a href={`mailto:${AGENCY_EMAIL}`} className="text-sm font-medium text-blue-600 hover:underline" data-testid="link-contact-email">{AGENCY_EMAIL}</a>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -633,8 +645,8 @@ export default function MyTrips() {
                   <Phone className="h-4 w-4 text-blue-500" />
                 </div>
                 <div>
-                  <div className="text-xs text-gray-500">{t("booking.phone") || "Telefone"}</div>
-                  <a href="tel:+18623501161" className="text-sm font-medium text-blue-600 hover:underline" data-testid="link-contact-phone">+1 (862) 350-1161</a>
+                  <div className="text-xs text-gray-500">WhatsApp</div>
+                  <a href={whatsAppHref} target="_blank" rel="noreferrer" className="text-sm font-medium text-blue-600 hover:underline" data-testid="link-contact-phone">{AGENCY_WHATSAPP_DISPLAY}</a>
                 </div>
               </div>
               <div className="flex items-center gap-3">

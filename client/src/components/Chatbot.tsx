@@ -8,6 +8,7 @@ import { useI18n } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { buildLiveSessionRequestContext, getLiveSessionTheme, isSeniorServiceMode } from "@/lib/live-session-context";
+import { buildWhatsAppHref, buildWhatsAppMessage } from "@/lib/contact";
 
 interface FlightResult {
   id: string;
@@ -46,10 +47,9 @@ interface ChatbotStatus {
 
 export function Chatbot() {
   const { t, language } = useI18n();
-  const [location, navigate] = useLocation();
+  const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [sessionId, setSessionId] = useState<number | null>(null);
-  const [requestingLive, setRequestingLive] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -147,35 +147,47 @@ export function Chatbot() {
     }
   };
 
-  const handleRequestLiveSession = async () => {
-    setRequestingLive(true);
-    try {
-      let visitorId = localStorage.getItem("michels-chatbot-visitor");
-      if (!visitorId) {
-        visitorId = Math.random().toString(36).substring(2, 12);
-        localStorage.setItem("michels-chatbot-visitor", visitorId);
-      }
-      const res = await fetch("/api/live-sessions/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          visitorId,
-          language: language || "pt",
-          conversationId: sessionId,
-          ...requestContext,
-        }),
-      });
-      const data = await res.json();
-      if (data.id) {
-        setIsOpen(false);
-        navigate(`/live/${data.id}?token=${encodeURIComponent(data.accessToken)}`);
-      }
-    } catch (error) {
-      console.error("Failed to request live session:", error);
-    } finally {
-      setRequestingLive(false);
-    }
-  };
+  const requestContext = useMemo(
+    () => buildLiveSessionRequestContext(location, window.location.search),
+    [location],
+  );
+  const theme = useMemo(
+    () => getLiveSessionTheme(requestContext.serviceMode),
+    [requestContext.serviceMode],
+  );
+  const isSeniorContext = isSeniorServiceMode(requestContext.serviceMode);
+
+  const handleRequestLiveSession = useCallback(() => {
+    const latestUserMessage = [...chatMessages].reverse().find((msg) => msg.role === "user")?.content;
+    const context = requestContext.contextSnapshot;
+    const href = buildWhatsAppHref(
+      buildWhatsAppMessage({
+        language,
+        topic: isSeniorContext
+          ? language === "en"
+            ? "Senior specialist"
+            : language === "es"
+              ? "Especialista senior"
+              : "Especialista senior"
+          : language === "en"
+            ? "Live travel help"
+            : language === "es"
+              ? "Ayuda de viajes"
+              : "Ajuda de viagem",
+        details: [
+          context.origin ? `${language === "en" ? "Origin" : language === "es" ? "Origen" : "Origem"}: ${context.origin}` : null,
+          context.destination ? `${language === "en" ? "Destination" : language === "es" ? "Destino" : "Destino"}: ${context.destination}` : null,
+          context.date ? `${language === "en" ? "Departure" : language === "es" ? "Salida" : "Ida"}: ${context.date}` : null,
+          context.returnDate ? `${language === "en" ? "Return" : language === "es" ? "Vuelta" : "Volta"}: ${context.returnDate}` : null,
+          context.passengers ? `${language === "en" ? "Travelers" : language === "es" ? "Pasajeros" : "Passageiros"}: ${context.passengers}` : null,
+          latestUserMessage ? `${language === "en" ? "Last message" : language === "es" ? "Ultimo mensaje" : "Ultima mensagem"}: ${latestUserMessage}` : null,
+        ],
+      }),
+    );
+
+    window.open(href, "_blank", "noopener,noreferrer");
+    setIsOpen(false);
+  }, [chatMessages, isSeniorContext, language, requestContext]);
 
   const handleOpen = async () => {
     setIsOpen(true);
@@ -345,33 +357,10 @@ export function Chatbot() {
     }
   };
 
-  const handleAgentMode = async () => {
-    if (escalated || isStreaming) return;
-
-    let currentSessionId = sessionId;
-    if (!currentSessionId) {
-      currentSessionId = await createSession();
-      if (!currentSessionId) return;
-    }
-
-    setEscalated(true);
-
-    setChatMessages(prev => [...prev, {
-      id: Date.now(),
-      role: "assistant",
-      content: t("chatbot.agent_mode_confirm"),
-    }]);
-
-    try {
-      await fetch("/api/chatbot/escalate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: currentSessionId }),
-      });
-    } catch (error) {
-      console.error("Escalation error:", error);
-    }
-  };
+  const handleAgentMode = useCallback(() => {
+    if (isStreaming) return;
+    handleRequestLiveSession();
+  }, [handleRequestLiveSession, isStreaming]);
 
   const formatContent = (content: string) => {
     return content.replace(/\[ESCALATE\]/gi, "").replace(/\[AGENT:.*?\]/g, "").trim();
@@ -415,26 +404,17 @@ export function Chatbot() {
         ? "Modo básico activo: para búsqueda automática, envía origen, destino y fecha. Ej: GRU a MCO el 2026-06-15."
         : "Basic mode is active: for automatic search, send origin, destination, and date. Example: GRU to MCO on 2026-06-15.";
 
-  const requestContext = useMemo(
-    () => buildLiveSessionRequestContext(location, window.location.search),
-    [location],
-  );
-  const theme = useMemo(
-    () => getLiveSessionTheme(requestContext.serviceMode),
-    [requestContext.serviceMode],
-  );
-  const isSeniorContext = isSeniorServiceMode(requestContext.serviceMode);
   const liveHelpLabel = isSeniorContext
     ? language === "pt"
-      ? "Especialista senior"
+      ? "Especialista senior no WhatsApp"
       : language === "es"
-        ? "Especialista senior"
-        : "Senior specialist"
+        ? "Especialista senior por WhatsApp"
+        : "Senior specialist on WhatsApp"
     : language === "pt"
-      ? "Atendimento ao Vivo"
+      ? "Ajuda no WhatsApp"
       : language === "es"
-        ? "Atencion en Vivo"
-        : "Live Help";
+        ? "Ayuda por WhatsApp"
+        : "WhatsApp help";
   const seniorHint = language === "pt"
     ? "Modo senior ativo: atendimento mais calmo, com menos ruido e explicacao passo a passo."
     : language === "es"
@@ -623,11 +603,10 @@ export function Chatbot() {
                   <div className="flex items-center gap-3 flex-wrap">
                     <button
                       onClick={handleRequestLiveSession}
-                      disabled={requestingLive}
                       className={`flex items-center gap-1 text-[11px] font-medium transition-colors ${isSeniorContext ? "text-amber-700 hover:text-amber-900" : "text-[#0074DE] hover:text-[#005bb5]"}`}
                       data-testid="button-chatbot-live-session"
                     >
-                      {requestingLive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MonitorPlay className="h-3.5 w-3.5" />}
+                      <MonitorPlay className="h-3.5 w-3.5" />
                       <span>{liveHelpLabel}</span>
                     </button>
                     {!escalated && (
@@ -677,7 +656,7 @@ export function Chatbot() {
       </AnimatePresence>
 
       <button
-        onClick={isOpen ? () => setIsOpen(false) : handleOpen}
+        onClick={isOpen ? () => setIsOpen(false) : handleRequestLiveSession}
         className={`fixed bottom-4 right-4 z-[9999] flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105 active:scale-95 ${isSeniorContext ? "bg-amber-600 hover:bg-amber-700" : "bg-[#0074DE]"}`}
         data-testid="button-chatbot-toggle"
       >
