@@ -61,9 +61,9 @@ const faqItems = [
       "Pode. Você pode pesquisar e reservar online, mas também pode ligar ou abrir as mensagens para tirar dúvidas sobre bagagem, escalas, horários e regras de alteração.",
   },
   {
-    question: "Essa página é boa para SEO local?",
+    question: "Por que esta página ajuda quem quer viajar para o Brasil?",
     answer:
-      "Sim. Ela reforça a combinação de serviço e localização com intenção de compra real: passagens para o Brasil saindo de Newark. Isso costuma ser mais forte do que uma página genérica de agência.",
+      "Porque ela reúne rotas úteis, ofertas quando disponíveis e atendimento em português para quem quer comparar voo, bagagem, escalas e regras antes de reservar.",
   },
 ];
 
@@ -241,7 +241,7 @@ export default function BrazilFlightsNewark() {
             </h1>
             <p className="mx-auto mt-6 max-w-3xl text-lg leading-relaxed text-slate-600 md:text-xl">
               Se voce mora em Newark, Ironbound ou na regiao e quer comparar voos para o Brasil com mais
-              clareza, esta pagina foi feita para juntar intencao local, oferta real e suporte humano.
+              clareza, esta pagina foi feita para reunir rotas uteis, oferta real e suporte humano.
             </p>
 
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -261,7 +261,7 @@ export default function BrazilFlightsNewark() {
 
             <div className="mt-10 grid grid-cols-1 gap-3 text-left sm:grid-cols-3">
               {[
-                "Rotas Newark Brasil com foco comercial claro",
+                "Rotas Newark Brasil mais procuradas",
                 "Cards dinâmicos com ofertas quando houver publicacao",
                 "Atendimento humano antes e depois da emissao",
               ].map((item) => (
@@ -290,9 +290,9 @@ export default function BrazilFlightsNewark() {
               },
               {
                 icon: Plane,
-                title: "Mais perto da intencao de compra",
+                title: "Mais perto da decisao",
                 description:
-                  "Quem busca passagens para o Brasil saindo de Newark normalmente esta mais avancado na jornada. Isso tende a converter melhor e a gerar sinais mais fortes de relevancia.",
+                  "Quem busca passagens para o Brasil saindo de Newark normalmente ja quer comparar opcoes e decidir com menos etapas.",
               },
               {
                 icon: ShieldCheck,
@@ -420,22 +420,20 @@ export default function BrazilFlightsNewark() {
         <div className="container mx-auto max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[1fr_0.95fr]">
             <div className="rounded-[32px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-8 md:p-10">
-              <span className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">Por que isso ajuda</span>
+              <span className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">Por que esta pagina facilita</span>
               <h2 className="mt-3 text-3xl font-extrabold text-slate-950 md:text-4xl">
-                Uma pagina dedicada ao publico brasileiro tem mais forca do que uma home generica
+                Uma pagina dedicada ao publico brasileiro deixa sua escolha mais simples
               </h2>
               <div className="mt-6 space-y-5 text-base leading-8 text-slate-600">
                 <p>
-                  Ela junta localidade, idioma e intencao comercial na mesma URL: Newark, Brasil e atendimento em
+                  Ela junta localidade, idioma e necessidade real na mesma URL: Newark, Brasil e atendimento em
                   portugues.
                 </p>
                 <p>
-                  Para o Google, isso aumenta a relevancia da pagina para buscas especificas. Para o cliente, reduz
-                  friccao e melhora a chance de contato imediato.
+                  Para o cliente, isso reduz friccao e melhora a chance de contato imediato.
                 </p>
                 <p>
-                  Tambem cria um ativo melhor para ser usado no Google Business Profile, em diretorios locais e em
-                  links da comunidade brasileira de New Jersey.
+                  Voce consegue ver ofertas quando existem, ir para buscas rapidas e falar com alguem sem perder tempo.
                 </p>
               </div>
             </div>

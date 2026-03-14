@@ -33,9 +33,9 @@ const faqItems = [
       "Pode. Se você quiser comparar opções, validar bagagem, horário, escalas ou regras de alteração antes de pagar, o atendimento humano pode te orientar antes da emissão.",
   },
   {
-    question: "Essa página ajuda meu negócio a aparecer no Google em Newark?",
+    question: "Por que escolher a Michels Travel para viajar saindo de Newark?",
     answer:
-      "Ela ajuda porque cria uma URL dedicada, com intenção local clara para Ironbound e Newark, conteúdo útil para o usuário e dados estruturados alinhados ao serviço oferecido.",
+      "Porque você encontra atendimento em português, busca mais direta para voos saindo de Newark e apoio humano para comparar tarifa, bagagem, escalas e regras antes de pagar.",
   },
 ];
 
@@ -240,8 +240,8 @@ export default function IronboundNewark() {
                 Pesquisas comuns de clientes em Newark
               </h2>
               <p className="mt-4 text-base leading-7 text-slate-600">
-                Essas rotas ajudam a deixar a página relevante para buscas locais e também facilitam a
-                navegação de quem já chega com intenção de compra.
+                Essas rotas deixam a busca mais rápida para quem já sabe de onde quer sair e quer
+                comparar opções com mais clareza.
               </p>
             </div>
 
@@ -283,42 +283,40 @@ export default function IronboundNewark() {
         <div className="container mx-auto max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="rounded-[32px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-8 md:p-10">
-              <span className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">Sinal local forte</span>
+              <span className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">Atendimento pensado para sua viagem</span>
               <h2 className="mt-3 text-3xl font-extrabold text-slate-950 md:text-4xl">
-                O que esta página diz ao Google e ao cliente
+                O que você encontra aqui antes de reservar
               </h2>
               <div className="mt-6 space-y-5 text-base leading-8 text-slate-600">
                 <p>
-                  Ela deixa explícito que a Michels Travel atende buscas com intenção local como
-                  <strong> agência de viagens em Newark</strong>, <strong>Ironbound</strong>,
-                  <strong> voos para o Brasil saindo de Newark</strong> e <strong>atendimento em português</strong>.
+                  Você encontra uma forma mais direta de pesquisar voos saindo de Newark, falar com alguém em português
+                  e comparar o que realmente pesa na compra: tarifa, bagagem, escalas e regras.
                 </p>
                 <p>
-                  Em vez de depender só da home, você passa a ter uma URL dedicada, título local,
-                  conteúdo útil, perguntas frequentes, links internos e dados estruturados coerentes com o serviço.
+                  Em vez de navegar por páginas genéricas, você chega a uma página feita para quem mora, trabalha
+                  ou circula por Newark e quer decidir a viagem com mais segurança.
                 </p>
                 <p>
-                  Isso não garante topo imediato, mas te coloca numa posição muito melhor do que páginas genéricas,
-                  diretórios e perfis sem conteúdo próprio.
+                  Se ficar em dúvida, você pode sair da busca e falar com a equipe antes do pagamento.
                 </p>
               </div>
             </div>
 
             <div className="rounded-[32px] border border-slate-200 bg-slate-950 p-8 text-white md:p-10">
-              <span className="text-xs font-bold uppercase tracking-[0.18em] text-blue-300">Conversão local</span>
-              <h2 className="mt-3 text-3xl font-extrabold">Quando o cliente chega, ele precisa agir rápido</h2>
+              <span className="text-xs font-bold uppercase tracking-[0.18em] text-blue-300">Seu próximo passo</span>
+              <h2 className="mt-3 text-3xl font-extrabold">Escolha como prefere continuar</h2>
               <div className="mt-6 space-y-4 text-sm leading-7 text-slate-300">
                 <p className="flex gap-3">
                   <ShieldCheck className="mt-1 h-4 w-4 flex-shrink-0 text-emerald-400" />
-                  Explicação clara do que você faz e para quem atende.
+                  Atendimento claro para quem quer decidir sem pressa.
                 </p>
                 <p className="flex gap-3">
                   <MessageCircle className="mt-1 h-4 w-4 flex-shrink-0 text-blue-300" />
-                  CTA direto para conversa, ligação ou busca de passagem.
+                  Caminho direto para conversa, ligação ou busca de passagem.
                 </p>
                 <p className="flex gap-3">
                   <MapPin className="mt-1 h-4 w-4 flex-shrink-0 text-blue-300" />
-                  Contexto local de Newark e Ironbound, sem depender só de diretórios.
+                  Ajuda pensada para quem sai de Newark e arredores.
                 </p>
               </div>
 
@@ -352,7 +350,7 @@ export default function IronboundNewark() {
           <div className="text-center">
             <span className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">FAQ local</span>
             <h2 className="mt-3 text-3xl font-extrabold text-slate-950 md:text-4xl">
-              Perguntas que ajudam no SEO e na conversão
+              Perguntas comuns antes de reservar
             </h2>
           </div>
 

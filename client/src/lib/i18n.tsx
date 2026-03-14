@@ -87,11 +87,11 @@ const translations: Record<Language, Record<string, string>> = {
     "home.popular.check_prices": "Ver Preços",
     "home.popular.searches": "buscas",
     "home.catalog.title": "Ofertas em destaque",
-    "home.catalog.subtitle": "Seleção atualizada de tarifas e oportunidades acompanhadas pela equipe Michels Travel",
+    "home.catalog.subtitle": "Tarifas e oportunidades para começar sua busca com mais clareza",
     "home.catalog.price_label": "Valor de referência",
     "home.catalog.book": "Ver oferta",
     "home.catalog.empty": "Novas ofertas estão a caminho",
-    "home.catalog.empty_desc": "Assim que nossa equipe publicar novas oportunidades, elas aparecerão aqui com datas e preços de referência.",
+    "home.catalog.empty_desc": "Novas referências de tarifa devem aparecer aqui em breve. Enquanto isso, você pode iniciar sua busca agora.",
     "home.catalog.empty_cta": "Buscar voos",
 
     // Search Form
@@ -471,7 +471,7 @@ const translations: Record<Language, Record<string, string>> = {
     "home.testimonials.t2_text": "Viajo a trabalho toda semana e a Michels Travel virou minha plataforma principal. Os preços são ótimos e o suporte é excelente. Confiança total.",
     "home.testimonials.t3_name": "Fernanda L.",
     "home.testimonials.t3_loc": "Kearny, NJ",
-    "home.testimonials.t3_text": "Reservei voos para toda a família para Lisboa e foi tudo perfeito. O scanner de documento ajudou muito a não errar os dados. Experiência incrível!",
+    "home.testimonials.t3_text": "Reservei voos para toda a família para Lisboa e foi tudo perfeito. Recebi ajuda para revisar os dados antes da emissão e viajei com muito mais segurança.",
 
     // CTA
     "home.cta.title": "Planeje seu próximo voo com mais clareza",
@@ -832,11 +832,11 @@ const translations: Record<Language, Record<string, string>> = {
     "home.popular.check_prices": "Check Prices",
     "home.popular.searches": "searches",
     "home.catalog.title": "Featured fares",
-    "home.catalog.subtitle": "A curated selection of price-led opportunities reviewed by the Michels Travel team",
+    "home.catalog.subtitle": "Fare highlights to help you start your search with more clarity",
     "home.catalog.price_label": "Reference fare",
     "home.catalog.book": "View offer",
     "home.catalog.empty": "Fresh fare highlights are on the way",
-    "home.catalog.empty_desc": "As soon as our team publishes new opportunities, they will appear here with dates and reference pricing.",
+    "home.catalog.empty_desc": "Fresh fare references should appear here soon. In the meantime, you can start your search now.",
     "home.catalog.empty_cta": "Search flights",
 
     // Search Form
@@ -1216,7 +1216,7 @@ const translations: Record<Language, Record<string, string>> = {
     "home.testimonials.t2_text": "I travel for work every week and Michels Travel has become my go-to platform. Great prices and excellent support. Total confidence.",
     "home.testimonials.t3_name": "Fernanda L.",
     "home.testimonials.t3_loc": "Kearny, NJ",
-    "home.testimonials.t3_text": "I booked flights for the whole family to Lisbon and everything was perfect. The document scanner really helped avoid data entry mistakes. Amazing experience!",
+    "home.testimonials.t3_text": "I booked flights for the whole family to Lisbon and everything was perfect. I got help reviewing the details before ticketing and traveled with much more confidence.",
 
     // CTA
     "home.cta.title": "Plan your next flight with more clarity",
@@ -1577,11 +1577,11 @@ const translations: Record<Language, Record<string, string>> = {
     "home.popular.check_prices": "Ver Precios",
     "home.popular.searches": "búsquedas",
     "home.catalog.title": "Ofertas destacadas",
-    "home.catalog.subtitle": "Selección actualizada de tarifas y oportunidades acompañadas por el equipo de Michels Travel",
+    "home.catalog.subtitle": "Tarifas y oportunidades para comenzar su búsqueda con más claridad",
     "home.catalog.price_label": "Tarifa de referencia",
     "home.catalog.book": "Ver oferta",
     "home.catalog.empty": "Nuevas ofertas están en camino",
-    "home.catalog.empty_desc": "Cuando nuestro equipo publique nuevas oportunidades, aparecerán aquí con fechas y precios de referencia.",
+    "home.catalog.empty_desc": "Nuevas referencias de tarifas deberían aparecer aquí pronto. Mientras tanto, puede iniciar su búsqueda ahora.",
     "home.catalog.empty_cta": "Buscar vuelos",
 
     // Search Form
@@ -1961,7 +1961,7 @@ const translations: Record<Language, Record<string, string>> = {
     "home.testimonials.t2_text": "Viajo por trabajo todas las semanas y Michels Travel se convirtió en mi plataforma principal. Los precios son excelentes y el soporte es genial. Confianza total.",
     "home.testimonials.t3_name": "Fernanda L.",
     "home.testimonials.t3_loc": "Kearny, NJ",
-    "home.testimonials.t3_text": "Reservé vuelos para toda la familia a Lisboa y todo salió perfecto. El escáner de documentos ayudó mucho a no cometer errores. Experiencia increíble!",
+    "home.testimonials.t3_text": "Reservé vuelos para toda la familia a Lisboa y todo salió perfecto. Recibí ayuda para revisar los datos antes de emitir y viajé con mucha más tranquilidad.",
 
     // CTA
     "home.cta.title": "Planifique su próximo vuelo con más claridad",

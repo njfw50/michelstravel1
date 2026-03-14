@@ -26,6 +26,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ScanDocumentDialog } from "@/components/ScanDocumentDialog";
 import BaggageSelector from "@/components/BaggageSelector";
 import PaymentForm from "@/components/PaymentForm";
+import SeniorNameCoachDialog, {
+  type SeniorNameCoachMode,
+  type SeniorNameCoachReason,
+} from "@/components/SeniorNameCoachDialog";
 import type { FlightOffer } from "@shared/schema";
 import { AGENCY_PHONE_DISPLAY, AGENCY_PHONE_TEL } from "@/lib/contact";
 
@@ -117,11 +121,205 @@ const COUNTRIES = [
   { code: "DO", name: "Dominican Republic" }, { code: "GT", name: "Guatemala" }, { code: "HN", name: "Honduras" },
 ].sort((a, b) => a.name.localeCompare(b.name));
 
-function PassengerForm({ index, control, register, errors, passengerType, isDocRequired, t, setValue }: any) {
+type NameCoachField = "givenName" | "familyName";
+
+type NameReview = {
+  suggestedValue: string;
+  reason: SeniorNameCoachReason;
+};
+
+type NameCoachDialogState =
+  | {
+      mode: "suggest";
+      field: NameCoachField;
+      fieldLabel: string;
+      typedValue: string;
+      suggestedValue: string;
+      reason: SeniorNameCoachReason;
+      fullName: string;
+    }
+  | {
+      mode: "confirm";
+      fullName: string;
+    };
+
+function toReadableNameToken(value: string) {
+  return value
+    .split(/([-'’])/)
+    .map((part) => {
+      if (part === "-" || part === "'" || part === "’") return part;
+      if (!part) return part;
+      return `${part.charAt(0).toUpperCase()}${part.slice(1).toLowerCase()}`;
+    })
+    .join("");
+}
+
+function buildNameReview(value: string): NameReview | null {
+  if (!value) return null;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const collapsedSpaces = trimmed.replace(/\s+/g, " ");
+  const cleaned = collapsedSpaces.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ'’ -]/g, "");
+  if (!cleaned.trim()) return null;
+
+  const suggestedValue = cleaned
+    .split(" ")
+    .filter(Boolean)
+    .map(toReadableNameToken)
+    .join(" ");
+
+  if (!suggestedValue || suggestedValue === value) return null;
+
+  let reason: SeniorNameCoachReason = "case";
+  if (cleaned !== collapsedSpaces) {
+    reason = "characters";
+  } else if (collapsedSpaces !== value || trimmed !== value) {
+    reason = "spacing";
+  }
+
+  return { suggestedValue, reason };
+}
+
+function PassengerForm({ index, control, register, errors, passengerType, isDocRequired, t, setValue, getValues, isEasyMode, language }: any) {
   const [expanded, setExpanded] = useState(index === 0);
   const [scanOpen, setScanOpen] = useState(false);
+  const [nameCoachDialog, setNameCoachDialog] = useState<NameCoachDialogState | null>(null);
+  const [nameCoachFeedback, setNameCoachFeedback] = useState<string | null>(null);
+  const promptedNameValuesRef = useRef<Partial<Record<NameCoachField, string>>>({});
+  const promptedFullNameRef = useRef<string | null>(null);
+  const confirmedFullNameRef = useRef<string | null>(null);
   const paxErrors = errors?.passengers?.[index];
   const typeLabel = passengerType === "child" ? t("booking.child") : passengerType === "infant_without_seat" ? t("booking.infant") : t("booking.adult");
+  const coachCopy = language === "en"
+    ? {
+        title: "Cognitive help for the passenger name",
+        intro: "Write the name exactly as it appears on the document. If I notice extra spaces, symbols, or confusing letters, I stop and ask before changing anything.",
+        pending: "I paused here to review the name with you slowly.",
+        corrected: "Done. I adjusted the field with your permission. Please compare it with the document letter by letter.",
+        review: "No problem. I left the field ready so you can review it calmly in your own way.",
+        confirmed: "Full name reviewed. If it matches the document, you can keep going calmly.",
+      }
+    : language === "es"
+      ? {
+          title: "Ayuda cognitiva para el nombre del pasajero",
+          intro: "Escriba el nombre exactamente como aparece en el documento. Si noto espacios de sobra, símbolos o letras confusas, me detengo y pregunto antes de cambiar algo.",
+          pending: "Me detuve aquí para revisar el nombre con usted, despacio.",
+          corrected: "Listo. Ajusté el campo con su permiso. Compare el nombre con el documento letra por letra.",
+          review: "No hay problema. Dejé el campo listo para que lo revise con calma a su manera.",
+          confirmed: "Nombre completo revisado. Si está igual al documento, puede seguir con calma.",
+        }
+      : {
+          title: "Ajuda cognitiva para o nome do passageiro",
+          intro: "Escreva o nome exatamente como está no documento. Se eu notar espaços sobrando, símbolos ou letras confusas, eu paro e pergunto antes de mudar qualquer coisa.",
+          pending: "Eu parei aqui para revisar o nome com você, devagar.",
+          corrected: "Pronto. Ajustei o campo com sua permissão. Compare com o documento letra por letra.",
+          review: "Sem problema. Deixei o campo pronto para você revisar com calma do seu jeito.",
+          confirmed: "Nome completo revisado. Se estiver igual ao documento, você pode seguir com calma.",
+        };
+  const fieldLabels: Record<NameCoachField, string> = {
+    givenName: t("booking.given_name"),
+    familyName: t("booking.family_name"),
+  };
+
+  const getPassengerNameValues = () => {
+    const givenName = String(getValues(`passengers.${index}.givenName`) || "").trim();
+    const familyName = String(getValues(`passengers.${index}.familyName`) || "").trim();
+    return { givenName, familyName, fullName: `${givenName} ${familyName}`.trim() };
+  };
+
+  const focusNameField = (field: NameCoachField) => {
+    window.setTimeout(() => {
+      const target = document.querySelector<HTMLInputElement>(
+        field === "givenName"
+          ? `[data-testid="input-given-name-${index}"]`
+          : `[data-testid="input-family-name-${index}"]`,
+      );
+      target?.focus();
+      target?.select();
+    }, 40);
+  };
+
+  const maybeOpenNameCoach = (field: NameCoachField, rawValue: string) => {
+    if (!isEasyMode) return;
+
+    const review = buildNameReview(rawValue);
+    if (review) {
+      if (promptedNameValuesRef.current[field] === rawValue) return;
+
+      promptedNameValuesRef.current[field] = rawValue;
+      const currentValues = getPassengerNameValues();
+      const nextFullName = field === "givenName"
+        ? `${review.suggestedValue} ${currentValues.familyName}`.trim()
+        : `${currentValues.givenName} ${review.suggestedValue}`.trim();
+
+      setNameCoachFeedback(coachCopy.pending);
+      setNameCoachDialog({
+        mode: "suggest",
+        field,
+        fieldLabel: fieldLabels[field],
+        typedValue: rawValue,
+        suggestedValue: review.suggestedValue,
+        reason: review.reason,
+        fullName: nextFullName,
+      });
+      return;
+    }
+
+    if (field !== "familyName") return;
+
+    const currentValues = getPassengerNameValues();
+    if (!currentValues.givenName || !currentValues.familyName) return;
+    if (buildNameReview(currentValues.givenName) || buildNameReview(currentValues.familyName)) return;
+    if (confirmedFullNameRef.current === currentValues.fullName || promptedFullNameRef.current === currentValues.fullName) return;
+
+    promptedFullNameRef.current = currentValues.fullName;
+    setNameCoachFeedback(coachCopy.pending);
+    setNameCoachDialog({
+      mode: "confirm",
+      fullName: currentValues.fullName,
+    });
+  };
+
+  const givenNameField = register(`passengers.${index}.givenName`);
+  const familyNameField = register(`passengers.${index}.familyName`);
+
+  const handleNameCoachPrimary = () => {
+    if (!nameCoachDialog) return;
+
+    if (nameCoachDialog.mode === "suggest") {
+      setValue(`passengers.${index}.${nameCoachDialog.field}`, nameCoachDialog.suggestedValue, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+      setNameCoachFeedback(coachCopy.corrected);
+      setNameCoachDialog(null);
+      focusNameField(nameCoachDialog.field);
+      return;
+    }
+
+    confirmedFullNameRef.current = nameCoachDialog.fullName;
+    setNameCoachFeedback(coachCopy.confirmed);
+    setNameCoachDialog(null);
+  };
+
+  const handleNameCoachSecondary = () => {
+    if (!nameCoachDialog) return;
+
+    if (nameCoachDialog.mode === "suggest") {
+      setNameCoachFeedback(coachCopy.review);
+      const { field } = nameCoachDialog;
+      setNameCoachDialog(null);
+      focusNameField(field);
+      return;
+    }
+
+    setNameCoachFeedback(coachCopy.review);
+    setNameCoachDialog(null);
+    focusNameField("givenName");
+  };
 
   const handleScanConfirm = (data: any) => {
     if (data.givenName) setValue(`passengers.${index}.givenName`, data.givenName);
@@ -182,6 +380,27 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
             passengerIndex={index}
           />
 
+          {isEasyMode && (
+            <div className="rounded-[24px] border border-blue-200 bg-[linear-gradient(180deg,rgba(239,246,255,0.96),rgba(255,255,255,1))] p-4 shadow-[0_20px_60px_-42px_rgba(37,99,235,0.42)]">
+              <div className="flex items-start gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white">
+                  <HeartHandshake className="h-5 w-5" />
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-sm font-extrabold text-slate-950">{coachCopy.title}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-600">{coachCopy.intro}</p>
+                  </div>
+                  {nameCoachFeedback && (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-medium leading-relaxed text-emerald-900">
+                      {nameCoachFeedback}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
             <div className="space-y-1.5 col-span-1">
               <Label className="text-gray-500 text-xs font-medium">{t("booking.passenger_title")} *</Label>
@@ -207,7 +426,11 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
             <div className="space-y-1.5 col-span-1 md:col-span-2">
               <Label className="text-gray-500 text-xs font-medium">{t("booking.given_name")} *</Label>
               <Input
-                {...register(`passengers.${index}.givenName`)}
+                {...givenNameField}
+                onBlur={(event) => {
+                  givenNameField.onBlur(event);
+                  maybeOpenNameCoach("givenName", event.target.value);
+                }}
                 className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
                 placeholder="e.g. John"
                 data-testid={`input-given-name-${index}`}
@@ -217,7 +440,11 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
             <div className="space-y-1.5 col-span-1 md:col-span-2">
               <Label className="text-gray-500 text-xs font-medium">{t("booking.family_name")} *</Label>
               <Input
-                {...register(`passengers.${index}.familyName`)}
+                {...familyNameField}
+                onBlur={(event) => {
+                  familyNameField.onBlur(event);
+                  maybeOpenNameCoach("familyName", event.target.value);
+                }}
                 className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
                 placeholder="e.g. Smith"
                 data-testid={`input-family-name-${index}`}
@@ -391,6 +618,26 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
             </div>
           </div>
         </div>
+      )}
+
+      {isEasyMode && nameCoachDialog && (
+        <SeniorNameCoachDialog
+          open={!!nameCoachDialog}
+          onOpenChange={(open) => {
+            if (!open) {
+              setNameCoachDialog(null);
+            }
+          }}
+          language={language}
+          mode={nameCoachDialog.mode as SeniorNameCoachMode}
+          fieldLabel={nameCoachDialog.mode === "suggest" ? nameCoachDialog.fieldLabel : undefined}
+          typedValue={nameCoachDialog.mode === "suggest" ? nameCoachDialog.typedValue : undefined}
+          suggestedValue={nameCoachDialog.mode === "suggest" ? nameCoachDialog.suggestedValue : undefined}
+          reason={nameCoachDialog.mode === "suggest" ? nameCoachDialog.reason : undefined}
+          fullName={nameCoachDialog.fullName}
+          onPrimary={handleNameCoachPrimary}
+          onSecondary={handleNameCoachSecondary}
+        />
       )}
     </div>
   );
@@ -1133,6 +1380,9 @@ export default function Booking() {
                       isDocRequired={isDocRequired}
                       t={t}
                       setValue={form.setValue}
+                      getValues={form.getValues}
+                      isEasyMode={isEasyMode}
+                      language={language}
                     />
                   ))}
                 </CardContent>

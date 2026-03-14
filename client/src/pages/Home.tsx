@@ -81,40 +81,61 @@ export default function Home() {
   const easyModeContent = language === "en"
     ? {
         badge: "Senior support",
-        title: "Automatic booking stays on. Senior support gets its own path.",
-        description: `Travelers who want the regular automatic flow can keep using the main search. Older travelers can open a dedicated path and either finish online or call ${AGENCY_PHONE_DISPLAY}.`,
+        title: "Prefer to book with more time and less pressure?",
+        description: `If you want larger text, simpler steps, and clear human support, open the senior path or call ${AGENCY_PHONE_DISPLAY}.`,
         primary: "Open Senior Support",
         secondary: AGENCY_PHONE_DISPLAY,
         features: [
           "Larger text and clearer buttons",
-          "Less information per step",
-          "Finish online or by phone",
+          "Less information on each step",
+          "Book online or finish by phone",
         ],
       }
     : language === "es"
       ? {
-          badge: "Atencion senior",
-          title: "El flujo automatico sigue igual. La atencion senior tiene su propia ruta.",
-          description: `Quien prefiera el flujo automatico puede seguir usando la busqueda principal. Las personas mayores pueden abrir una ruta dedicada y cerrar en el sitio o llamar al ${AGENCY_PHONE_DISPLAY}.`,
-          primary: "Abrir Atencion Senior",
+          badge: "Atención senior",
+          title: "¿Prefiere reservar con más calma y menos presión?",
+          description: `Si quiere texto más grande, pasos más simples y apoyo humano claro, abra la ruta senior o llame al ${AGENCY_PHONE_DISPLAY}.`,
+          primary: "Abrir atención senior",
           secondary: AGENCY_PHONE_DISPLAY,
           features: [
             "Texto más grande y botones más claros",
-            "Menos información por paso",
-            "Cierre en el sitio o por telefono",
+            "Menos información en cada paso",
+            "Reserve en el sitio o termine por teléfono",
           ],
         }
       : {
           badge: "Atendimento senior",
-          title: "O fluxo automatico continua igual. O atendimento senior ganhou uma rota propria.",
-          description: `Quem quiser o fluxo automatico pode seguir pela busca principal. Para idosos, agora existe uma rota dedicada para fechar no site ou ligar para ${AGENCY_PHONE_DISPLAY}.`,
+          title: "Prefere reservar com mais calma e menos pressão?",
+          description: `Se você quer letras maiores, etapas mais simples e ajuda humana visível, abra o caminho senior ou ligue para ${AGENCY_PHONE_DISPLAY}.`,
           primary: "Abrir Atendimento Senior",
           secondary: AGENCY_PHONE_DISPLAY,
           features: [
             "Letras maiores e botões mais claros",
-            "Menos informação por etapa",
-            "Fechamento no site ou por telefone",
+            "Menos informação em cada etapa",
+            "Reserve no site ou termine por telefone",
           ],
+        };
+
+  const newarkContent = language === "en"
+    ? {
+        title: "Looking for a travel agency in Ironbound, Newark?",
+        description: "If you live in Newark or Ironbound and want flights to Brazil with support in Portuguese, start here to compare options and continue your booking with more clarity.",
+        primary: "Newark support",
+        secondary: "Newark to Brazil",
+      }
+    : language === "es"
+      ? {
+          title: "¿Busca una agencia de viajes en Ironbound, Newark?",
+          description: "Si vive en Newark o Ironbound y quiere vuelos a Brasil con apoyo en portugués, entre por esta página para comparar opciones y continuar su reserva con más claridad.",
+          primary: "Atención en Newark",
+          secondary: "Vuelos Newark-Brasil",
+        }
+      : {
+          title: "Procurando agência de viagens em Ironbound, Newark?",
+          description: "Se você mora em Newark ou Ironbound e quer voos para o Brasil com apoio em português, entre por esta página e veja o caminho mais direto para pesquisar, comparar e continuar sua reserva.",
+          primary: "Atendimento em Newark",
+          secondary: "Voos Newark-Brasil",
         };
 
   const formatDealDate = (date: string) => {
@@ -368,23 +389,22 @@ export default function Home() {
                   Newark / Ironbound
                 </span>
                 <h2 className="mt-4 text-3xl font-extrabold text-slate-950 md:text-4xl">
-                  Procurando agência de viagens em Ironbound, Newark?
+                  {newarkContent.title}
                 </h2>
                 <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-                  Criamos uma página local para clientes de Newark que buscam voos para o Brasil, atendimento
-                  em português e suporte humano antes de fechar a passagem.
+                  {newarkContent.description}
                 </p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link href="/agencia-de-viagens-ironbound-newark">
                   <Button className="rounded-full bg-blue-600 px-6 py-6 text-base font-bold text-white hover:bg-blue-700">
-                    Ver página de Newark <ArrowRight className="ml-2 h-4 w-4" />
+                    {newarkContent.primary} <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
                 <Link href="/passagens-para-o-brasil-saindo-de-newark">
                   <Button variant="outline" className="rounded-full px-6 py-6 text-base font-bold border-blue-200 bg-white/90 text-slate-800">
-                    Brasil saindo de Newark <ArrowRight className="ml-2 h-4 w-4" />
+                    {newarkContent.secondary} <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
                 <a href={`tel:${AGENCY_PHONE_TEL}`}>
