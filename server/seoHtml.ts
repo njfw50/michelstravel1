@@ -10,7 +10,12 @@ const DEFAULT_DESCRIPTION =
   "Atendimento em português para passagens aéreas em Newark, NJ, com foco em voos para o Brasil, suporte humano e ajuda clara para clientes de Ironbound e região.";
 const DEFAULT_OG_DESCRIPTION =
   "Atendimento em português para passagens aéreas em Newark, NJ, com foco em voos para o Brasil e suporte humano.";
-const DEFAULT_IMAGE_PATH = "/images/og-cover.png";
+const DEFAULT_IMAGE_PATH = "/images/og-share-card.png";
+const DEFAULT_IMAGE_ALT =
+  "Michels Travel: voos para o Brasil com atendimento em portugues saindo de Newark.";
+const DEFAULT_IMAGE_WIDTH = "1200";
+const DEFAULT_IMAGE_HEIGHT = "630";
+const DEFAULT_IMAGE_TYPE = "image/png";
 
 const NOINDEX_PREFIXES = [
   "/search",
@@ -261,6 +266,7 @@ export function renderSeoHtml(template: string, req: Request): string {
   const seo = getSeoConfig(req.originalUrl || req.path, origin);
   const canonicalUrl = `${origin}${seo.path === "/" ? "/" : seo.path}`;
   const ogDescription = seo.ogDescription || seo.description;
+  const defaultImageUrl = `${origin}${DEFAULT_IMAGE_PATH}`;
   const robots = seo.indexable
     ? "index, follow"
     : "noindex, nofollow, noarchive, nosnippet";
@@ -309,7 +315,32 @@ export function renderSeoHtml(template: string, req: Request): string {
   html = replaceTag(
     html,
     /<meta property="og:image" content="[^"]*"\s*\/?>/i,
-    `<meta property="og:image" content="${escapeHtml(`${origin}${DEFAULT_IMAGE_PATH}`)}" />`,
+    `<meta property="og:image" content="${escapeHtml(defaultImageUrl)}" />`,
+  );
+  html = replaceTag(
+    html,
+    /<meta property="og:image:secure_url" content="[^"]*"\s*\/?>/i,
+    `<meta property="og:image:secure_url" content="${escapeHtml(defaultImageUrl)}" />`,
+  );
+  html = replaceTag(
+    html,
+    /<meta property="og:image:width" content="[^"]*"\s*\/?>/i,
+    `<meta property="og:image:width" content="${DEFAULT_IMAGE_WIDTH}" />`,
+  );
+  html = replaceTag(
+    html,
+    /<meta property="og:image:height" content="[^"]*"\s*\/?>/i,
+    `<meta property="og:image:height" content="${DEFAULT_IMAGE_HEIGHT}" />`,
+  );
+  html = replaceTag(
+    html,
+    /<meta property="og:image:type" content="[^"]*"\s*\/?>/i,
+    `<meta property="og:image:type" content="${DEFAULT_IMAGE_TYPE}" />`,
+  );
+  html = replaceTag(
+    html,
+    /<meta property="og:image:alt" content="[^"]*"\s*\/?>/i,
+    `<meta property="og:image:alt" content="${escapeHtml(DEFAULT_IMAGE_ALT)}" />`,
   );
   html = replaceTag(
     html,
@@ -324,7 +355,12 @@ export function renderSeoHtml(template: string, req: Request): string {
   html = replaceTag(
     html,
     /<meta name="twitter:image" content="[^"]*"\s*\/?>/i,
-    `<meta name="twitter:image" content="${escapeHtml(`${origin}${DEFAULT_IMAGE_PATH}`)}" />`,
+    `<meta name="twitter:image" content="${escapeHtml(defaultImageUrl)}" />`,
+  );
+  html = replaceTag(
+    html,
+    /<meta name="twitter:image:alt" content="[^"]*"\s*\/?>/i,
+    `<meta name="twitter:image:alt" content="${escapeHtml(DEFAULT_IMAGE_ALT)}" />`,
   );
 
   return injectStructuredData(html, seo.structuredData);
