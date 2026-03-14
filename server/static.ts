@@ -1,33 +1,7 @@
 import express, { type Express, type Request } from "express";
 import fs from "fs";
 import path from "path";
-
-const KNOWN_SITE_ORIGINS = [
-  "https://buyflights.net",
-  "https://www.michelstravel.agency",
-];
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function getPreferredOrigin(req: Request): string {
-  if (process.env.APP_URL) {
-    return process.env.APP_URL.replace(/\/$/, "");
-  }
-
-  const protocol = req.headers["x-forwarded-proto"] || req.protocol || "https";
-  const host = req.headers["x-forwarded-host"] || req.headers["host"] || req.hostname;
-  return `${protocol}://${host}`.replace(/\/$/, "");
-}
-
-function injectDynamicOrigin(html: string, req: Request): string {
-  const origin = getPreferredOrigin(req);
-
-  return KNOWN_SITE_ORIGINS.reduce((updatedHtml, siteOrigin) => {
-    return updatedHtml.replace(new RegExp(escapeRegExp(siteOrigin), "g"), origin);
-  }, html);
-}
+import { renderSeoHtml } from "./seoHtml";
 
 export function serveStatic(app: Express) {
   const distPath = path.resolve(__dirname, "public");
@@ -61,7 +35,7 @@ export function serveStatic(app: Express) {
     res.setHeader("Expires", "0");
     const htmlPath = path.resolve(distPath, "index.html");
     let html = fs.readFileSync(htmlPath, "utf-8");
-    html = injectDynamicOrigin(html, req);
+    html = renderSeoHtml(html, req);
     res.status(200).set({ "Content-Type": "text/html" }).end(html);
   });
 }
