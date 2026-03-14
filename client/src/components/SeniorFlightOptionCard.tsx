@@ -162,8 +162,8 @@ export default function SeniorFlightOptionCard({
       ];
 
   return (
-    <Card className="overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_24px_80px_-46px_rgba(15,23,42,0.32)]">
-      <div className="p-5 md:p-7">
+    <Card className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_24px_80px_-46px_rgba(15,23,42,0.32)] md:rounded-[30px]">
+      <div className="p-4 sm:p-5 md:p-7">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-3">
             <span className={`inline-flex items-center rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] ${getKindTone(kind)}`}>
@@ -187,9 +187,9 @@ export default function SeniorFlightOptionCard({
             </div>
           </div>
 
-          <div className="rounded-[26px] border border-slate-200 bg-slate-50 px-5 py-4 text-right">
+          <div className="w-full rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-left sm:w-auto sm:px-5 sm:text-right">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Preco total</p>
-            <p className="mt-1 text-4xl font-extrabold text-slate-950">
+            <p className="mt-1 text-3xl font-extrabold text-slate-950 sm:text-4xl">
               {new Intl.NumberFormat(locale, {
                 style: "currency",
                 currency: flight.currency,
@@ -200,7 +200,7 @@ export default function SeniorFlightOptionCard({
           </div>
         </div>
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
+        <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
           <div className="space-y-4">
             {routeSlices.map((slice, index) => {
               const firstSegment = slice.segments[0];
@@ -212,9 +212,9 @@ export default function SeniorFlightOptionCard({
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">{label}</p>
                     <p className="text-xs text-slate-500">{formatRouteDate(firstSegment?.departureTime)}</p>
                   </div>
-                  <div className="mt-3 grid grid-cols-[84px_minmax(0,1fr)_84px] items-center gap-3">
+                  <div className="mt-3 grid grid-cols-[72px_minmax(0,1fr)_72px] items-center gap-2 sm:grid-cols-[84px_minmax(0,1fr)_84px] sm:gap-3">
                     <div>
-                      <p className="text-3xl font-extrabold text-slate-950">{formatRouteTime(firstSegment?.departureTime)}</p>
+                      <p className="text-[1.6rem] font-extrabold text-slate-950 sm:text-3xl">{formatRouteTime(firstSegment?.departureTime)}</p>
                       <p className="mt-1 text-sm font-semibold text-slate-700">{slice.originCode}</p>
                       <p className="text-xs text-slate-500">{slice.originCity || slice.originCode}</p>
                     </div>
@@ -231,7 +231,7 @@ export default function SeniorFlightOptionCard({
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-3xl font-extrabold text-slate-950">{formatRouteTime(lastSegment?.arrivalTime)}</p>
+                      <p className="text-[1.6rem] font-extrabold text-slate-950 sm:text-3xl">{formatRouteTime(lastSegment?.arrivalTime)}</p>
                       <p className="mt-1 text-sm font-semibold text-slate-700">{slice.destinationCode}</p>
                       <p className="text-xs text-slate-500">{slice.destinationCity || slice.destinationCode}</p>
                     </div>

@@ -40,12 +40,17 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 4.5rem;
+  }
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-body);
+    overflow-x: hidden;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
@@ -330,29 +335,84 @@
 }
 
 .brand-mark-shell--header {
-  width: 5.5rem;
-  height: 5.5rem;
-  padding: 0.7rem;
-  border-radius: 1.9rem;
+  width: 4.15rem;
+  height: 4.15rem;
+  padding: 0.5rem;
+  border-radius: 1.45rem;
 }
 
 .brand-mark-shell--footer {
-  width: 4.9rem;
-  height: 4.9rem;
-  padding: 0.62rem;
-  border-radius: 1.6rem;
+  width: 4rem;
+  height: 4rem;
+  padding: 0.5rem;
+  border-radius: 1.35rem;
 }
 
 .brand-mark-shell--welcome {
-  width: 7rem;
-  height: 7rem;
-  padding: 0.9rem;
-  border-radius: 2rem;
+  width: 5.75rem;
+  height: 5.75rem;
+  padding: 0.72rem;
+  border-radius: 1.7rem;
 }
 
 .brand-mark-shell--selector {
-  width: 5.6rem;
-  height: 5.6rem;
-  padding: 0.72rem;
-  border-radius: 1.8rem;
+  width: 4.75rem;
+  height: 4.75rem;
+  padding: 0.58rem;
+  border-radius: 1.45rem;
+}
+
+@media (min-width: 768px) {
+  .brand-mark-shell--header {
+    width: 5.5rem;
+    height: 5.5rem;
+    padding: 0.7rem;
+    border-radius: 1.9rem;
+  }
+
+  .brand-mark-shell--footer {
+    width: 4.9rem;
+    height: 4.9rem;
+    padding: 0.62rem;
+    border-radius: 1.6rem;
+  }
+
+  .brand-mark-shell--welcome {
+    width: 7rem;
+    height: 7rem;
+    padding: 0.9rem;
+    border-radius: 2rem;
+  }
+
+  .brand-mark-shell--selector {
+    width: 5.6rem;
+    height: 5.6rem;
+    padding: 0.72rem;
+    border-radius: 1.8rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .section-eyebrow {
+    font-size: 0.64rem;
+    letter-spacing: 0.16em;
+    padding: 0.32rem 0.8rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .guide-card,
+  .step-card,
+  .testimonial-card {
+    border-radius: 1.25rem;
+    padding: 1.35rem;
+  }
+
+  .guide-cta-section {
+    border-radius: 1.75rem;
+  }
+
+  .stat-card {
+    padding: 1rem 1.1rem;
+    border-radius: 1rem;
+  }
 }

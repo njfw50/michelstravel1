@@ -225,7 +225,7 @@ export default function Home() {
         description="Atendimento em português para passagens aéreas em Newark, NJ, com foco em voos para o Brasil, suporte humano e ajuda clara para clientes de Ironbound e região."
         path="/"
       />
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[78vh] md:min-h-[90vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 select-none">
           <img 
             src={airplaneLightHero}
@@ -240,23 +240,23 @@ export default function Home() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="text-center mb-12 md:mb-16 max-w-4xl mx-auto"
+            className="text-center mb-10 md:mb-16 max-w-4xl mx-auto"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.3 }}
-              className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/25 rounded-full px-5 py-2 mb-8 shadow-sm"
+              className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/25 rounded-full px-4 py-2 mb-6 sm:mb-8 shadow-sm"
             >
               <Sparkles className="h-3.5 w-3.5 text-blue-300" />
-              <span className="text-xs font-semibold text-white/90 uppercase tracking-[0.15em]">{t("home.badge")}</span>
+              <span className="text-[11px] font-semibold text-white/90 uppercase tracking-[0.15em]">{t("home.badge")}</span>
             </motion.div>
 
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-extrabold text-white mb-6 leading-[0.93] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)]" data-testid="text-hero-title">
+            <h1 className="text-[2.75rem] sm:text-5xl md:text-7xl lg:text-8xl font-display font-extrabold text-white mb-5 md:mb-6 leading-[0.93] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)]" data-testid="text-hero-title">
               {t("home.title.1")} <br/>
               <span className="text-blue-300 drop-shadow-[0_2px_12px_rgba(59,130,246,0.5)]">{t("home.title.2")}</span>
             </h1>
-            <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto font-medium leading-relaxed" data-testid="text-hero-subtitle">
+            <p className="text-base sm:text-lg md:text-xl text-white/80 max-w-2xl mx-auto font-medium leading-relaxed" data-testid="text-hero-subtitle">
               {t("home.subtitle")}
             </p>
           </motion.div>
@@ -265,7 +265,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-6xl mx-auto pb-16"
+            className="max-w-6xl mx-auto pb-10 md:pb-16"
           >
             <FlightSearchForm />
           </motion.div>
@@ -274,15 +274,15 @@ export default function Home() {
         <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-[hsl(220,20%,97%)] to-transparent pointer-events-none" />
       </section>
 
-      <section className="relative mt-6 z-20 pb-8">
+      <section className="relative mt-4 md:mt-6 z-20 pb-8">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-white rounded-2xl p-6 md:p-8 shadow-[0_4px_32px_-8px_hsl(213_90%_50%/0.12)] border border-gray-200/80"
+            className="bg-white rounded-[24px] p-4 sm:p-6 md:p-8 shadow-[0_4px_32px_-8px_hsl(213_90%_50%/0.12)] border border-gray-200/80"
           >
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 md:gap-8">
               {[
                 { value: airlineCount > 0 ? `${airlineCount}+` : "500+", labelKey: "home.stats.airlines", icon: Plane, color: "text-blue-500", bg: "bg-blue-50" },
                 { value: airportCount > 0 ? `${airportCount.toLocaleString()}+` : "3,000+", labelKey: "home.stats.destinations", icon: Globe, color: "text-blue-600", bg: "bg-blue-50" },
@@ -295,14 +295,14 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.08 }}
-                  className="flex items-center gap-4"
+                  className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-4 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0"
                 >
-                  <div className={`h-12 w-12 rounded-xl ${stat.bg} border border-gray-100 flex items-center justify-center ${stat.color} flex-shrink-0`}>
+                  <div className={`h-11 w-11 md:h-12 md:w-12 rounded-xl ${stat.bg} border border-gray-100 flex items-center justify-center ${stat.color} flex-shrink-0`}>
                     <stat.icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <span className="text-2xl md:text-3xl font-extrabold font-display text-gray-900 block leading-none">{stat.value}</span>
-                    <span className="text-[11px] text-gray-400 mt-0.5 uppercase tracking-[0.15em] font-semibold block">{t(stat.labelKey)}</span>
+                    <span className="text-xl sm:text-2xl md:text-3xl font-extrabold font-display text-gray-900 block leading-none">{stat.value}</span>
+                    <span className="text-[10px] sm:text-[11px] text-gray-400 mt-0.5 uppercase tracking-[0.15em] font-semibold block">{t(stat.labelKey)}</span>
                   </div>
                 </motion.div>
               ))}
@@ -317,24 +317,24 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="relative overflow-hidden rounded-[32px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_55%,rgba(219,234,254,0.95))] p-7 md:p-10 shadow-[0_20px_80px_-36px_rgba(37,99,235,0.35)]"
+            className="relative overflow-hidden rounded-[26px] md:rounded-[32px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_55%,rgba(219,234,254,0.95))] p-5 sm:p-6 md:p-10 shadow-[0_20px_80px_-36px_rgba(37,99,235,0.35)]"
           >
             <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-200/50 blur-3xl" />
             <div className="absolute bottom-0 left-1/3 h-32 w-32 rounded-full bg-emerald-100/70 blur-3xl" />
-            <div className="relative grid grid-cols-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,360px)] gap-8 items-center">
+            <div className="relative grid grid-cols-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,360px)] gap-6 md:gap-8 items-center">
               <div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/90 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
+                <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/90 px-3.5 py-2 text-[11px] sm:px-4 sm:text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
                   <HeartHandshake className="h-4 w-4" />
                   {easyModeContent.badge}
                 </span>
-                <h2 className="mt-5 text-3xl md:text-5xl font-display font-extrabold leading-tight text-slate-950">
+                <h2 className="mt-5 text-[2rem] sm:text-3xl md:text-5xl font-display font-extrabold leading-tight text-slate-950">
                   {easyModeContent.title}
                 </h2>
-                <p className="mt-4 max-w-2xl text-base md:text-lg leading-relaxed text-slate-600">
+                <p className="mt-4 max-w-2xl text-sm sm:text-base md:text-lg leading-relaxed text-slate-600">
                   {easyModeContent.description}
                 </p>
 
-                <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                   {easyModeContent.features.map((feature) => (
                     <div key={feature} className="rounded-2xl border border-white/80 bg-white/85 px-4 py-4 text-sm font-semibold text-slate-700 shadow-sm">
                       {feature}
@@ -342,10 +342,10 @@ export default function Home() {
                   ))}
                 </div>
 
-                <div className="mt-7 flex flex-wrap gap-3">
+                <div className="mt-7 flex flex-col sm:flex-row sm:flex-wrap gap-3">
                   <Button
                     onClick={() => setLocation("/senior")}
-                    className="rounded-full px-7 py-6 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
+                    className="w-full sm:w-auto rounded-full px-6 py-5 sm:px-7 sm:py-6 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
                     data-testid="button-open-easy-mode"
                   >
                     {easyModeContent.primary}
@@ -354,7 +354,7 @@ export default function Home() {
                   <Button
                     variant="outline"
                     onClick={openSeniorAssistant}
-                    className="rounded-full px-7 py-6 text-base font-bold border-slate-300 bg-white/90 text-slate-800"
+                    className="w-full sm:w-auto rounded-full px-6 py-5 sm:px-7 sm:py-6 text-base font-bold border-slate-300 bg-white/90 text-slate-800"
                   >
                     <MessageCircle className="mr-2 h-5 w-5" />
                     {easyModeContent.secondary}
@@ -362,10 +362,10 @@ export default function Home() {
                 </div>
               </div>
 
-              <Card className="rounded-[28px] border border-slate-200 bg-slate-950 text-white shadow-[0_24px_80px_-40px_rgba(15,23,42,0.9)]">
-                <CardContent className="p-6 md:p-7">
+              <Card className="rounded-[24px] md:rounded-[28px] border border-slate-200 bg-slate-950 text-white shadow-[0_24px_80px_-40px_rgba(15,23,42,0.9)]">
+                <CardContent className="p-5 sm:p-6 md:p-7">
                   <span className="text-xs font-bold uppercase tracking-[0.2em] text-blue-200">Michels Travel</span>
-                  <h3 className="mt-3 text-2xl font-display font-extrabold">
+                  <h3 className="mt-3 text-[1.5rem] sm:text-2xl font-display font-extrabold">
                     {language === "en" ? "Designed for people who prefer clarity over rush." : language === "es" ? "Pensado para quien prefiere claridad en lugar de prisa." : "Pensado para quem prefere clareza no lugar de pressa."}
                   </h3>
                   <div className="mt-6 space-y-3">
@@ -407,7 +407,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="overflow-hidden rounded-[32px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_58%,rgba(219,234,254,0.95))] p-7 shadow-[0_24px_70px_-44px_rgba(37,99,235,0.42)] md:p-9"
+            className="overflow-hidden rounded-[26px] md:rounded-[32px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_58%,rgba(219,234,254,0.95))] p-5 sm:p-6 shadow-[0_24px_70px_-44px_rgba(37,99,235,0.42)] md:p-9"
           >
             <div className="max-w-4xl">
               <div className="max-w-3xl">
@@ -415,26 +415,26 @@ export default function Home() {
                   <MapPin className="h-3.5 w-3.5" />
                   Newark / Ironbound
                 </span>
-                <h2 className="mt-4 text-3xl font-extrabold text-slate-950 md:text-4xl">
+                <h2 className="mt-4 text-[2rem] sm:text-3xl font-extrabold text-slate-950 md:text-4xl">
                   {newarkContent.title}
                 </h2>
-                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+                <p className="mt-4 max-w-2xl text-sm sm:text-base leading-7 text-slate-600">
                   {newarkContent.description}
                 </p>
 
-                <div className="mt-6 flex flex-wrap gap-3">
+                <div className="mt-6 flex flex-col sm:flex-row sm:flex-wrap gap-3">
                   <Link href="/agencia-de-viagens-ironbound-newark">
-                    <Button className="rounded-full bg-blue-600 px-6 py-6 text-base font-bold text-white hover:bg-blue-700">
+                    <Button className="w-full sm:w-auto rounded-full bg-blue-600 px-6 py-5 sm:py-6 text-base font-bold text-white hover:bg-blue-700">
                       {newarkContent.primary} <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
                   <Link href="/passagens-para-o-brasil-saindo-de-newark">
-                    <Button variant="outline" className="rounded-full px-6 py-6 text-base font-bold border-blue-200 bg-white/90 text-slate-800">
+                    <Button variant="outline" className="w-full sm:w-auto rounded-full px-6 py-5 sm:py-6 text-base font-bold border-blue-200 bg-white/90 text-slate-800">
                       {newarkContent.secondary} <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
                   <a href={newarkWhatsAppHref} target="_blank" rel="noreferrer">
-                    <Button variant="outline" className="rounded-full px-6 py-6 text-base font-bold">
+                    <Button variant="outline" className="w-full sm:w-auto rounded-full px-6 py-5 sm:py-6 text-base font-bold">
                       <MessageCircle className="mr-2 h-4 w-4" />
                       {newarkContent.contact}
                     </Button>
@@ -446,19 +446,19 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-24 md:py-32 section-light">
+      <section className="py-16 md:py-32 section-light">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-12 md:mb-16"
           >
             <span className="section-eyebrow">{t("home.how.title")}</span>
-            <h2 className="text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-4">{t("home.how.subtitle")}</h2>
+            <h2 className="text-[1.9rem] sm:text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-4">{t("home.how.subtitle")}</h2>
           </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
             {[
               { icon: Search, step: "01", titleKey: "home.how.step1_title", descKey: "home.how.step1_desc", color: "bg-blue-500" },
               { icon: CreditCard, step: "02", titleKey: "home.how.step2_title", descKey: "home.how.step2_desc", color: "bg-blue-600" },
@@ -484,19 +484,19 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-24 md:py-32 section-white">
+      <section className="py-16 md:py-32 section-white">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-12 md:mb-16"
           >
             <span className="section-eyebrow">{t("home.trust.title")}</span>
-            <h2 className="text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-4">{t("home.trust.subtitle")}</h2>
+            <h2 className="text-[1.9rem] sm:text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-4">{t("home.trust.subtitle")}</h2>
           </motion.div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
             {[
               { icon: ShieldCheck, titleKey: "home.trust.secure", descKey: "home.trust.secure_desc", color: "bg-emerald-500" },
               { icon: Zap, titleKey: "home.trust.instant", descKey: "home.trust.instant_desc", color: "bg-blue-500" },
@@ -508,7 +508,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="guide-card p-8 md:p-10"
+                className="guide-card p-6 sm:p-8 md:p-10"
               >
                 <div className={`h-14 w-14 rounded-xl ${item.color} flex items-center justify-center mb-6 shadow-md shadow-blue-500/20`}>
                   <item.icon className="h-6 w-6 text-white" />
@@ -561,7 +561,7 @@ export default function Home() {
       )}
 
       {airports && airports.length > 0 && (
-        <section className="py-24 md:py-32 section-white" data-testid="section-destinations">
+        <section className="py-16 md:py-32 section-white" data-testid="section-destinations">
           <div className="container mx-auto px-4 md:px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -571,7 +571,7 @@ export default function Home() {
             >
               <div>
                 <span className="section-eyebrow">{t("home.popular.title")}</span>
-                <h2 className="text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-2">{t("home.popular.subtitle")}</h2>
+                <h2 className="text-[1.9rem] sm:text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-2">{t("home.popular.subtitle")}</h2>
               </div>
             </motion.div>
 
@@ -637,7 +637,7 @@ export default function Home() {
         </section>
       )}
 
-      <section className="py-24 md:py-32 section-light" data-testid="section-featured-catalog">
+      <section className="py-16 md:py-32 section-light" data-testid="section-featured-catalog">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -647,7 +647,7 @@ export default function Home() {
           >
             <div>
               <span className="section-eyebrow">{t("home.catalog.title")}</span>
-              <h2 className="text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-2">
+              <h2 className="text-[1.9rem] sm:text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-2">
                 {t("home.catalog.subtitle")}
               </h2>
             </div>
@@ -815,19 +815,19 @@ export default function Home() {
 
       <FlightBoard />
 
-      <section className="py-24 md:py-32 section-light">
+      <section className="py-16 md:py-32 section-light">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-12 md:mb-16"
           >
             <span className="section-eyebrow">{t("home.testimonials.title")}</span>
-            <h2 className="text-3xl md:text-5xl font-extrabold font-display text-gray-900">{t("home.testimonials.subtitle")}</h2>
+            <h2 className="text-[1.9rem] sm:text-3xl md:text-5xl font-extrabold font-display text-gray-900">{t("home.testimonials.subtitle")}</h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
             {[
               { nameKey: "home.testimonials.t1_name", locKey: "home.testimonials.t1_loc", textKey: "home.testimonials.t1_text" },
               { nameKey: "home.testimonials.t2_name", locKey: "home.testimonials.t2_loc", textKey: "home.testimonials.t2_text" },
@@ -862,27 +862,27 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-24 md:py-32 bg-white" data-testid="section-assistant">
+      <section className="py-16 md:py-32 bg-white" data-testid="section-assistant">
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-6xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#0a1628] via-[#0f2240] to-[#1a3a6e]"
+              className="relative rounded-[28px] md:rounded-3xl overflow-hidden bg-gradient-to-br from-[#0a1628] via-[#0f2240] to-[#1a3a6e]"
             >
               <div className="absolute inset-0 opacity-10">
                 <div className="absolute top-10 left-10 w-72 h-72 bg-blue-400 rounded-full blur-3xl" />
                 <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-300 rounded-full blur-3xl" />
               </div>
 
-              <div className="relative z-10 flex flex-col lg:flex-row items-center gap-10 lg:gap-16 p-8 md:p-12 lg:p-16">
+              <div className="relative z-10 flex flex-col lg:flex-row items-center gap-8 lg:gap-16 p-5 sm:p-7 md:p-12 lg:p-16">
                 <div className="flex-1 text-center lg:text-left">
                   <span className="text-xs font-bold text-blue-300 uppercase tracking-[0.2em] mb-4 block">{t("home.assistant.label")}</span>
-                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold font-display text-white mb-5 leading-tight">
+                  <h2 className="text-[2rem] sm:text-3xl md:text-4xl lg:text-5xl font-extrabold font-display text-white mb-5 leading-tight">
                     {t("home.assistant.title")}
                   </h2>
-                  <p className="text-blue-200/80 text-base md:text-lg leading-relaxed mb-8 max-w-lg">
+                  <p className="text-blue-200/80 text-sm sm:text-base md:text-lg leading-relaxed mb-7 md:mb-8 max-w-lg">
                     {t("home.assistant.desc")}
                   </p>
 
@@ -915,7 +915,7 @@ export default function Home() {
                         autoSend: true,
                       })
                     }
-                    className="rounded-full bg-white text-[#0f2240] border-white shadow-lg shadow-black/20"
+                    className="w-full sm:w-auto rounded-full bg-white text-[#0f2240] border-white shadow-lg shadow-black/20"
                     data-testid="button-open-assistant"
                   >
                     <MessageCircle className="mr-2 h-5 w-5" />
@@ -925,7 +925,7 @@ export default function Home() {
 
                 <div className="flex-shrink-0 w-full max-w-xs lg:max-w-sm">
                   <div className="relative">
-                    <div className="bg-white rounded-2xl shadow-2xl p-5 space-y-3">
+                    <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-5 space-y-3">
                       <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
                         <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
                           <MessageCircle className="h-5 w-5 text-white" />
@@ -976,23 +976,23 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-24 md:py-32 section-white">
+      <section className="py-16 md:py-32 section-white">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="max-w-5xl mx-auto guide-cta-section p-10 md:p-16 text-center"
+            className="max-w-5xl mx-auto guide-cta-section p-6 sm:p-8 md:p-16 text-center"
           >
             <span className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-5 py-2 text-xs font-bold text-blue-200 uppercase tracking-[0.15em] mb-8">
               <Sparkles className="h-3.5 w-3.5" />
               Michels Travel
             </span>
-            <h2 className="text-4xl md:text-6xl font-extrabold font-display text-white mb-6 leading-tight">{t("home.cta.title")}</h2>
-            <p className="text-blue-200/80 text-lg mb-10 max-w-xl mx-auto leading-relaxed">{t("home.cta.subtitle")}</p>
+            <h2 className="text-[2.35rem] sm:text-4xl md:text-6xl font-extrabold font-display text-white mb-6 leading-tight">{t("home.cta.title")}</h2>
+            <p className="text-blue-200/80 text-base md:text-lg mb-8 md:mb-10 max-w-xl mx-auto leading-relaxed">{t("home.cta.subtitle")}</p>
             <Button 
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="rounded-full px-10 py-6 text-lg font-bold bg-white text-blue-600 hover:bg-blue-50 shadow-xl shadow-black/20 transition-all duration-200 hover:-translate-y-0.5"
+              className="w-full sm:w-auto rounded-full px-8 sm:px-10 py-5 sm:py-6 text-base sm:text-lg font-bold bg-white text-blue-600 hover:bg-blue-50 shadow-xl shadow-black/20 transition-all duration-200 hover:-translate-y-0.5"
               data-testid="button-cta-search"
             >
               {t("home.cta.button")} <ArrowRight className="ml-2 h-5 w-5" />

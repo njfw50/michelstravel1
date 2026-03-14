@@ -155,18 +155,18 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
       className={cn(
-        "bg-white rounded-2xl shadow-[0_8px_40px_-8px_hsl(213_90%_50%/0.18)] border border-gray-200/90 relative z-10 max-w-5xl mx-auto",
+        "relative z-10 mx-auto max-w-5xl rounded-[28px] border border-gray-200/90 bg-white shadow-[0_8px_40px_-8px_hsl(213_90%_50%/0.18)] md:rounded-2xl",
         className
       )}
     >
-      <div className="px-6 md:px-8 pt-6 pb-3 flex items-center justify-between flex-wrap gap-3">
+      <div className="flex flex-col gap-3 px-4 pb-3 pt-4 sm:px-6 md:flex-row md:items-center md:justify-between md:px-8 md:pt-6">
         <Tabs defaultValue="round-trip" value={tripType} onValueChange={setTripType}>
-          <TabsList className="bg-gray-50 p-1 rounded-full border border-gray-200/80">
+          <TabsList className="grid w-full grid-cols-3 rounded-[20px] border border-gray-200/80 bg-gray-50 p-1 sm:w-auto sm:rounded-full">
             {["round-trip", "one-way", "multi-city"].map((type) => (
               <TabsTrigger
                 key={type}
                 value={type}
-                className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm text-gray-400 rounded-lg px-4 py-2 transition-all text-sm font-semibold"
+                className="rounded-2xl px-2 py-2 text-xs font-semibold text-gray-400 transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm sm:rounded-lg sm:px-4 sm:text-sm"
                 data-testid={`tab-${type}`}
               >
                 {t(`search.${type.replace("-", "_")}`)}
@@ -176,11 +176,11 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
         </Tabs>
       </div>
 
-      <form onSubmit={handleSearch} className="px-6 md:px-8 pb-6 md:pb-8 pt-2 space-y-4">
+      <form onSubmit={handleSearch} className="space-y-4 px-4 pb-5 pt-2 sm:px-6 md:px-8 md:pb-8">
         {tripType === "multi-city" ? (
           <div className="space-y-3">
             {multiCityLegs.map((leg, i) => (
-              <div key={i} className="relative rounded-xl border-2 border-gray-100 p-4 space-y-3 bg-gray-50/50">
+              <div key={i} className="relative space-y-3 rounded-2xl border-2 border-gray-100 bg-gray-50/50 p-3 sm:p-4">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-blue-500 uppercase tracking-wider">{t("search.leg") || "Leg"} {i + 1}</span>
                   {multiCityLegs.length > 2 && (
@@ -224,7 +224,7 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
                           <ChevronDown className="h-4 w-4 text-gray-300 group-hover:text-blue-400 transition-colors" />
                         </button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 rounded-xl shadow-xl border-gray-200" align="start">
+                      <PopoverContent className="w-[min(20rem,calc(100vw-1.5rem))] p-0 rounded-xl border-gray-200 shadow-xl sm:w-auto" align="start">
                         <Calendar
                           mode="single"
                           selected={leg.date}
@@ -275,7 +275,7 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
                       <ChevronDown className="h-4 w-4 text-gray-300 group-hover:text-blue-400 transition-colors flex-shrink-0" />
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-80 p-5 rounded-xl shadow-xl border-gray-200" align="end">
+                  <PopoverContent className="w-[min(20rem,calc(100vw-1.5rem))] p-5 rounded-xl border-gray-200 shadow-xl sm:w-80" align="end">
                     <div className="space-y-5">
                       <div className="space-y-3">
                         <h4 className="font-bold text-sm text-gray-900 border-b border-gray-100 pb-2">{t("search.class")}</h4>
@@ -355,7 +355,7 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 items-end">
+            <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[1fr_auto_1fr]">
               <LocationSearch 
                 label={t("search.origin")}
                 placeholder={t("search.city_placeholder")}
@@ -386,7 +386,23 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="flex md:hidden justify-center">
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm transition-all hover:border-blue-300 hover:text-blue-600"
+                onClick={() => {
+                  const temp = origin;
+                  setOrigin(destination);
+                  setDestination(temp);
+                }}
+                data-testid="button-swap-mobile"
+              >
+                <ArrowRightLeft className="h-4 w-4" />
+                {t("search.swap") || "Swap"}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block pl-1">{t("search.departure")}</label>
                 <Popover>
@@ -403,7 +419,7 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
                       <ChevronDown className="h-4 w-4 text-gray-300 group-hover:text-blue-400 transition-colors" />
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 rounded-xl shadow-xl border-gray-200" align="start">
+                  <PopoverContent className="w-[min(20rem,calc(100vw-1.5rem))] p-0 rounded-xl border-gray-200 shadow-xl sm:w-auto" align="start">
                     <Calendar
                       mode="single"
                       selected={date}
@@ -439,7 +455,7 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
                       <ChevronDown className={cn("h-4 w-4 transition-colors", tripType === "one-way" ? "text-gray-200" : "text-gray-300 group-hover:text-blue-400")} />
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 rounded-xl shadow-xl border-gray-200" align="start">
+                  <PopoverContent className="w-[min(20rem,calc(100vw-1.5rem))] p-0 rounded-xl border-gray-200 shadow-xl sm:w-auto" align="start">
                     <Calendar
                       mode="single"
                       selected={returnDate}
@@ -472,7 +488,7 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
                       <ChevronDown className="h-4 w-4 text-gray-300 group-hover:text-blue-400 transition-colors flex-shrink-0" />
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-80 p-5 rounded-xl shadow-xl border-gray-200" align="end">
+                  <PopoverContent className="w-[min(20rem,calc(100vw-1.5rem))] p-5 rounded-xl border-gray-200 shadow-xl sm:w-80" align="end">
                     <div className="space-y-5">
                       <div className="space-y-3">
                         <h4 className="font-bold text-sm text-gray-900 border-b border-gray-100 pb-2">{t("search.class")}</h4>

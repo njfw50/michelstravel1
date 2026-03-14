@@ -161,8 +161,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           ? "bg-white/97 backdrop-blur-xl border-b border-gray-200/70 shadow-[0_2px_20px_-4px_hsl(213_90%_50%/0.08)]"
           : "bg-transparent border-b border-transparent"
       )}>
-        <div className="container mx-auto px-4 md:px-6 h-20 md:h-24 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-8">
+        <div className="container mx-auto flex h-16 items-center justify-between gap-3 px-4 sm:px-5 md:h-24 md:px-6">
+          <div className="flex items-center gap-4 md:gap-8">
             <Link href="/" className="flex items-center gap-4 group">
               <div className="brand-mark-shell brand-mark-shell--header">
                 <img 
@@ -198,7 +198,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </nav>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             <LanguageSwitcher variant="navbar" />
             <div className="hidden md:flex items-center gap-3">
               {user ? (
@@ -271,7 +271,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
 
             <button 
-              className="md:hidden p-2 rounded-lg transition-colors text-gray-600 hover:bg-gray-100"
+              className="md:hidden flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200/80 bg-white/85 text-gray-600 shadow-sm transition-colors hover:bg-gray-100"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               data-testid="button-mobile-menu"
             >
@@ -287,16 +287,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden fixed top-20 inset-x-0 z-40 bg-white/98 backdrop-blur-xl border-b border-gray-200 overflow-hidden shadow-lg"
+            className="md:hidden fixed inset-x-0 top-16 z-40 max-h-[calc(100vh-4rem)] overflow-y-auto border-b border-gray-200 bg-white/98 shadow-lg backdrop-blur-xl"
           >
-            <div className="container mx-auto px-4 py-4 space-y-1">
+            <div className="container mx-auto space-y-2 px-4 py-4">
               {navLinks.map((link) => (
                 <Link 
                   key={link.href} 
                   href={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
-                    "block py-3 text-base font-medium rounded-lg px-4 transition-colors",
+                    "block rounded-xl px-4 py-3 text-base font-medium transition-colors",
                     location === link.href
                       ? "text-blue-600 bg-blue-50"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
@@ -305,12 +305,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   {link.label}
                 </Link>
               ))}
-              <div className="pt-4 border-t border-gray-200">
+              <div className="space-y-2 border-t border-gray-200 pt-4">
                 {user ? (
                   <>
                     <button
                       onClick={() => { setIsMobileMenuOpen(false); setLocation("/messages"); }}
-                      className="block w-full text-left py-3 text-base font-medium text-gray-600 rounded-lg px-4 hover:bg-gray-50 flex items-center gap-2"
+                      className="flex w-full items-center gap-2 rounded-xl px-4 py-3 text-left text-base font-medium text-gray-600 hover:bg-gray-50"
                       data-testid="button-mobile-messages"
                     >
                       <MessageSquare className="h-4 w-4" />
@@ -318,7 +318,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     </button>
                     <button
                       onClick={() => { setIsMobileMenuOpen(false); setLocation("/profile"); }}
-                      className="block w-full text-left py-3 text-base font-medium text-gray-600 rounded-lg px-4 hover:bg-gray-50"
+                      className="block w-full rounded-xl px-4 py-3 text-left text-base font-medium text-gray-600 hover:bg-gray-50"
                       data-testid="button-mobile-profile"
                     >
                       {t("nav.profile") || "My Profile"}
@@ -326,7 +326,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     {adminCheck?.isAdmin && (
                       <button
                         onClick={() => { setIsMobileMenuOpen(false); setLocation("/admin"); }}
-                        className="block w-full text-left py-3 text-base font-medium text-blue-600 rounded-lg px-4"
+                        className="block w-full rounded-xl px-4 py-3 text-left text-base font-medium text-blue-600"
                         data-testid="button-mobile-admin-panel"
                       >
                         {t("nav.admin")}
@@ -334,7 +334,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     )}
                     <button 
                       onClick={() => logout()}
-                      className="block w-full text-left py-3 text-base font-medium text-red-500 rounded-lg px-4"
+                      className="block w-full rounded-xl px-4 py-3 text-left text-base font-medium text-red-500"
                     >
                       {t("nav.logout")}
                     </button>
@@ -342,7 +342,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 ) : (
                   <Button 
                     onClick={() => { setIsMobileMenuOpen(false); openLoginDialog(); }}
-                    className="w-full justify-center bg-blue-500 text-white rounded-xl"
+                    className="w-full justify-center rounded-xl bg-blue-500 text-white"
                   >
                     {t("nav.signin")}
                   </Button>
@@ -355,16 +355,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <LoginDialog open={loginDialogOpen} onOpenChange={handleLoginDialogChange} authError={authError} />
 
-      <main className="flex-1 pt-20 md:pt-24">
+      <main className="flex-1 pt-16 md:pt-24">
         {children}
       </main>
 
       <footer className="relative bg-white border-t border-gray-100">
         <div className="container mx-auto px-4 md:px-6 relative">
-          <div className="py-16">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
-              <div className="md:col-span-4">
-                <div className="flex items-center gap-2 mb-5">
+          <div className="py-12 md:py-16">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-12 md:gap-12">
+              <div className="text-center md:col-span-4 md:text-left">
+                <div className="mb-5 flex items-center justify-center gap-2 md:justify-start">
                   <div className="brand-mark-shell brand-mark-shell--footer">
                     <img 
                       src={logo} 
@@ -372,7 +372,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     />
                   </div>
                 </div>
-                <p className="text-sm leading-relaxed text-gray-500 max-w-xs">
+                <p className="mx-auto max-w-sm text-sm leading-relaxed text-gray-500 md:mx-0 md:max-w-xs">
                   {t("footer.slogan")}
                 </p>
               </div>
@@ -429,7 +429,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </div>
                 <div className="pt-5">
                   <a href={footerWhatsAppHref} target="_blank" rel="noreferrer">
-                    <Button className="rounded-xl bg-blue-500 hover:bg-blue-600 text-white shadow-sm shadow-blue-500/20" data-testid="button-footer-contact">
+                    <Button className="w-full rounded-xl bg-blue-500 text-white shadow-sm shadow-blue-500/20 hover:bg-blue-600 sm:w-auto" data-testid="button-footer-contact">
                       <MessageSquare className="mr-2 h-4 w-4" />
                       {footerContactCta}
                     </Button>
@@ -440,7 +440,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="border-t border-gray-100 py-8">
-            <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center lg:justify-center lg:gap-x-8 lg:gap-y-4">
               <div className="flex items-center gap-2.5" data-testid="seal-nj-registered">
                 <div className="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center">
                   <Building2 className="h-4 w-4 text-blue-500" />

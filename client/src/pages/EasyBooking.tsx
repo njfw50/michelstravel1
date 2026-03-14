@@ -452,36 +452,36 @@ export default function EasyBooking() {
           <div className="absolute top-32 right-10 h-72 w-72 rounded-full bg-emerald-100/70 blur-3xl" />
         </div>
 
-        <div className="container mx-auto px-4 md:px-6 py-12 md:py-16 relative">
+        <div className="container mx-auto px-4 md:px-6 py-8 md:py-16 relative">
           <div className="max-w-5xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/85 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/85 px-3.5 py-2 text-xs sm:px-4 sm:text-sm font-semibold text-blue-700 shadow-sm">
               <HeartHandshake className="h-4 w-4" />
               {copy.badge}
             </span>
-            <h1 className="mt-6 text-4xl md:text-6xl font-display font-extrabold tracking-tight text-slate-950 leading-[0.95]">
+            <h1 className="mt-5 text-[2.5rem] sm:text-5xl md:text-6xl font-display font-extrabold tracking-tight text-slate-950 leading-[0.95]">
               {copy.title}
             </h1>
-            <p className="mt-5 max-w-3xl text-lg md:text-2xl leading-relaxed text-slate-600">
+            <p className="mt-4 max-w-3xl text-base sm:text-lg md:text-2xl leading-relaxed text-slate-600">
               {copy.subtitle}
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button size="lg" onClick={openAssistant} className="min-h-14 rounded-2xl px-6 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white">
+            <div className="mt-7 flex flex-col sm:flex-row sm:flex-wrap gap-3">
+              <Button size="lg" onClick={openAssistant} className="min-h-14 w-full sm:w-auto rounded-2xl px-5 sm:px-6 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white">
                 <MessageCircle className="h-5 w-5" />
                 {copy.chat}
               </Button>
-              <Button asChild size="lg" variant="outline" className="min-h-14 rounded-2xl px-6 text-base font-bold border-slate-300 bg-white/90 text-slate-800">
+              <Button asChild size="lg" variant="outline" className="min-h-14 w-full sm:w-auto rounded-2xl px-5 sm:px-6 text-base font-bold border-slate-300 bg-white/90 text-slate-800">
                 <a href={whatsAppHref} target="_blank" rel="noreferrer">
                   <MessageCircle className="h-5 w-5" />
                   {copy.direct_call}
                 </a>
               </Button>
-              <Button size="lg" variant="ghost" onClick={goToPlanner} className="min-h-14 rounded-2xl px-4 text-base font-bold text-blue-700 hover:bg-blue-50">
+              <Button size="lg" variant="ghost" onClick={goToPlanner} className="min-h-14 w-full sm:w-auto rounded-2xl px-4 text-base font-bold text-blue-700 hover:bg-blue-50">
                 {currentLanguage === "en" ? "Answer the questions below" : currentLanguage === "es" ? "Responder las preguntas abajo" : "Responder as perguntas abaixo"}
               </Button>
             </div>
 
-            <div className="mt-8 inline-flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm md:text-base text-emerald-900 shadow-sm">
+            <div className="mt-6 inline-flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3.5 text-sm md:text-base text-emerald-900 shadow-sm">
               <ShieldCheck className="h-5 w-5 mt-0.5 shrink-0 text-emerald-600" />
               <span>{copy.trust}</span>
             </div>
@@ -491,15 +491,15 @@ export default function EasyBooking() {
 
       <section className="py-10 md:py-14">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.1fr)_380px] gap-8 items-start">
-            <Card id="senior-planner" className="rounded-[28px] border border-slate-200 bg-white shadow-[0_20px_80px_-30px_rgba(15,23,42,0.28)]">
-              <CardContent className="p-6 md:p-8 space-y-8">
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.1fr)_380px] gap-6 md:gap-8 items-start">
+            <Card id="senior-planner" className="rounded-[24px] md:rounded-[28px] border border-slate-200 bg-white shadow-[0_20px_80px_-30px_rgba(15,23,42,0.28)]">
+              <CardContent className="p-4 sm:p-5 md:p-8 space-y-6 md:space-y-8">
                 <div>
                   <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
                     <HeartHandshake className="h-4 w-4" />
                     {wizardCopy.progress}
                   </span>
-                  <h2 className="mt-4 text-2xl md:text-3xl font-display font-extrabold text-slate-950">
+                  <h2 className="mt-4 text-[1.75rem] sm:text-2xl md:text-3xl font-display font-extrabold text-slate-950">
                     {currentStep === 0
                       ? wizardCopy.routeTitle
                       : currentStep === 1
@@ -510,7 +510,7 @@ export default function EasyBooking() {
                             ? wizardCopy.connectionTitle
                             : wizardCopy.bagTitle}
                   </h2>
-                  <p className="mt-3 text-base md:text-lg text-slate-600 leading-relaxed">
+                  <p className="mt-3 text-sm sm:text-base md:text-lg text-slate-600 leading-relaxed">
                     {currentStep === 0
                       ? wizardCopy.routeDesc
                       : currentStep === 1
@@ -523,12 +523,12 @@ export default function EasyBooking() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
                   {[0, 1, 2, 3, 4].map((step) => (
                     <div
                       key={step}
                       className={cn(
-                        "flex h-11 w-11 items-center justify-center rounded-full border text-sm font-extrabold",
+                        "flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full border text-sm font-extrabold",
                         currentStep === step
                           ? "border-blue-600 bg-blue-600 text-white"
                           : currentStep > step
@@ -542,19 +542,19 @@ export default function EasyBooking() {
                 </div>
 
                 {currentStep === 4 && (
-                  <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 px-5 py-5 shadow-[0_20px_60px_-42px_rgba(16,185,129,0.35)]">
+                  <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 px-4 py-4 sm:px-5 sm:py-5 shadow-[0_20px_60px_-42px_rgba(16,185,129,0.35)]">
                     <p className="text-sm font-semibold leading-relaxed text-emerald-950">{wizardCopy.bagNote}</p>
                     <p className="mt-2 text-sm leading-relaxed text-emerald-900">{copy.baggage_support}</p>
                   </div>
                 )}
 
                 {currentStep === 1 && (
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-col sm:flex-row flex-wrap gap-3">
                   <button
                     type="button"
                     onClick={() => setTripType("round-trip")}
                     className={cn(
-                      "rounded-2xl px-5 py-3 text-base font-bold transition-colors",
+                      "rounded-2xl px-4 py-3 text-sm sm:px-5 sm:text-base font-bold transition-colors",
                       tripType === "round-trip" ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "bg-slate-100 text-slate-700 hover:bg-slate-200",
                     )}
                   >
@@ -564,7 +564,7 @@ export default function EasyBooking() {
                     type="button"
                     onClick={() => setTripType("one-way")}
                     className={cn(
-                      "rounded-2xl px-5 py-3 text-base font-bold transition-colors",
+                      "rounded-2xl px-4 py-3 text-sm sm:px-5 sm:text-base font-bold transition-colors",
                       tripType === "one-way" ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "bg-slate-100 text-slate-700 hover:bg-slate-200",
                     )}
                   >
@@ -593,7 +593,7 @@ export default function EasyBooking() {
                 )}
 
                 {currentStep === 1 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
                   <div className="space-y-2">
                     <label className="block pl-1 text-sm font-semibold tracking-[0.08em] text-slate-600">{copy.departure}</label>
                     <Popover>
@@ -645,11 +645,11 @@ export default function EasyBooking() {
                 )}
 
                 {currentStep === 1 && (
-                <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5 md:p-6">
+                <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4 sm:p-5 md:p-6">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
                       <p className="text-sm font-semibold tracking-[0.08em] text-slate-600">{copy.travelers}</p>
-                      <p className="mt-1 text-lg md:text-xl font-bold text-slate-950">
+                      <p className="mt-1 text-base sm:text-lg md:text-xl font-bold text-slate-950">
                         {adults} {adults === 1 ? copy.traveler_one : copy.traveler_many}
                       </p>
                       <p className="mt-2 text-sm text-slate-500 max-w-xl">{copy.travelers_hint}</p>
@@ -662,7 +662,7 @@ export default function EasyBooking() {
                       >
                         -
                       </button>
-                      <div className="flex h-14 min-w-20 items-center justify-center rounded-2xl bg-white border border-slate-200 text-2xl font-extrabold text-slate-950">
+                      <div className="flex h-14 min-w-[4.5rem] items-center justify-center rounded-2xl bg-white border border-slate-200 text-2xl font-extrabold text-slate-950">
                         {adults}
                       </div>
                       <button
@@ -680,7 +680,7 @@ export default function EasyBooking() {
                 {currentStep === 0 && (
                 <div className="space-y-3">
                   <p className="text-sm font-semibold tracking-[0.08em] text-slate-600">{copy.quick_routes}</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {QUICK_ROUTES.map((route) => (
                       <button
                         key={`${route.origin}-${route.destination}`}
@@ -689,7 +689,7 @@ export default function EasyBooking() {
                           setOrigin(route.origin);
                           setDestination(route.destination);
                         }}
-                        className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left text-base font-semibold text-slate-700 transition-all hover:border-blue-300 hover:bg-blue-50"
+                        className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left text-sm sm:text-base font-semibold text-slate-700 transition-all hover:border-blue-300 hover:bg-blue-50"
                       >
                         {copy[route.key]}
                       </button>
@@ -699,7 +699,7 @@ export default function EasyBooking() {
                 )}
 
                 {currentStep === 2 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {[
                       { value: "comfort", label: wizardCopy.priorityComfort },
                       { value: "fastest", label: wizardCopy.priorityFastest },
@@ -711,7 +711,7 @@ export default function EasyBooking() {
                         type="button"
                         onClick={() => setPriority(option.value as SeniorPriority)}
                         className={cn(
-                          "rounded-[24px] border px-5 py-5 text-left text-base font-bold transition-all",
+                          "rounded-[24px] border px-4 py-4 text-left text-sm sm:px-5 sm:py-5 sm:text-base font-bold transition-all",
                           priority === option.value ? "border-blue-500 bg-blue-50 text-blue-900 shadow-[0_20px_60px_-42px_rgba(37,99,235,0.42)]" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50/70",
                         )}
                       >
@@ -733,7 +733,7 @@ export default function EasyBooking() {
                         type="button"
                         onClick={() => setConnections(option.value as SeniorConnections)}
                         className={cn(
-                          "rounded-[24px] border px-5 py-5 text-left text-base font-bold transition-all",
+                          "rounded-[24px] border px-4 py-4 text-left text-sm sm:px-5 sm:py-5 sm:text-base font-bold transition-all",
                           connections === option.value ? "border-blue-500 bg-blue-50 text-blue-900 shadow-[0_20px_60px_-42px_rgba(37,99,235,0.42)]" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50/70",
                         )}
                       >
@@ -745,7 +745,7 @@ export default function EasyBooking() {
 
                 {currentStep === 4 && (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       {[
                         { value: "checked", label: wizardCopy.bagsChecked },
                         { value: "carry", label: wizardCopy.bagsCarry },
@@ -756,7 +756,7 @@ export default function EasyBooking() {
                           type="button"
                           onClick={() => setBags(option.value as SeniorBags)}
                           className={cn(
-                            "rounded-[24px] border px-5 py-5 text-left text-base font-bold transition-all",
+                            "rounded-[24px] border px-4 py-4 text-left text-sm sm:px-5 sm:py-5 sm:text-base font-bold transition-all",
                             bags === option.value ? "border-blue-500 bg-blue-50 text-blue-900 shadow-[0_20px_60px_-42px_rgba(37,99,235,0.42)]" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50/70",
                           )}
                         >
@@ -765,7 +765,7 @@ export default function EasyBooking() {
                       ))}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {[
                         { value: "day", label: wizardCopy.timeDay },
                         { value: "any", label: wizardCopy.timeAny },
@@ -775,7 +775,7 @@ export default function EasyBooking() {
                           type="button"
                           onClick={() => setTimePreference(option.value as SeniorTime)}
                           className={cn(
-                            "rounded-[24px] border px-5 py-5 text-left text-base font-bold transition-all",
+                            "rounded-[24px] border px-4 py-4 text-left text-sm sm:px-5 sm:py-5 sm:text-base font-bold transition-all",
                             timePreference === option.value ? "border-blue-500 bg-blue-50 text-blue-900 shadow-[0_20px_60px_-42px_rgba(37,99,235,0.42)]" : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50/70",
                           )}
                         >
@@ -819,15 +819,15 @@ export default function EasyBooking() {
             </Card>
 
             <div className="space-y-6">
-              <Card className="rounded-[28px] border border-slate-200 bg-[#0f172a] text-white shadow-[0_20px_80px_-30px_rgba(15,23,42,0.6)]">
-                <CardContent className="p-6 md:p-7">
+              <Card className="rounded-[24px] md:rounded-[28px] border border-slate-200 bg-[#0f172a] text-white shadow-[0_20px_80px_-30px_rgba(15,23,42,0.6)]">
+                <CardContent className="p-5 md:p-7">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10">
                       <UserRound className="h-6 w-6 text-blue-200" />
                     </div>
                     <div>
                       <p className="text-sm uppercase tracking-[0.16em] text-blue-200">Michels Travel</p>
-                      <h3 className="text-2xl font-display font-extrabold">{copy.helper_title}</h3>
+                      <h3 className="text-[1.4rem] sm:text-2xl font-display font-extrabold">{copy.helper_title}</h3>
                     </div>
                   </div>
                   <p className="text-base leading-relaxed text-slate-300">{copy.helper_desc}</p>
@@ -842,8 +842,8 @@ export default function EasyBooking() {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-[28px] border border-slate-200 bg-white">
-                <CardContent className="p-6 md:p-7">
+              <Card className="rounded-[24px] md:rounded-[28px] border border-slate-200 bg-white">
+                <CardContent className="p-5 md:p-7">
                   <h3 className="text-xl font-display font-extrabold text-slate-950">{wizardCopy.summaryTitle}</h3>
                   <div className="mt-4 space-y-3">
                     {summaryItems.length > 0 ? summaryItems.map((item) => (

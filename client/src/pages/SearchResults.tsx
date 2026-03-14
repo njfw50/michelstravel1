@@ -736,8 +736,8 @@ export default function SearchResults() {
         <SEO title="Resultados Senior" description="Voos organizados com menos informacao irrelevante e mais foco em conforto, conexoes e clareza." path="/search" noindex={true} />
 
         <section className="border-b border-slate-200 bg-white/90 backdrop-blur">
-          <div className="container mx-auto max-w-6xl px-4 py-8 md:py-10">
-            <div className="rounded-[32px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_55%,rgba(219,234,254,0.96))] p-6 shadow-[0_24px_80px_-48px_rgba(37,99,235,0.42)] md:p-7">
+          <div className="container mx-auto max-w-6xl px-4 py-6 md:py-10">
+            <div className="rounded-[28px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_55%,rgba(219,234,254,0.96))] p-4 shadow-[0_24px_80px_-48px_rgba(37,99,235,0.42)] sm:p-5 md:rounded-[32px] md:p-7">
               <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                 <div className="max-w-3xl">
                   <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
@@ -764,19 +764,19 @@ export default function SearchResults() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
-                  <Button asChild className="rounded-full bg-blue-600 text-white hover:bg-blue-700" data-testid="button-easy-mode-call-results">
+                <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
+                  <Button asChild className="w-full rounded-full bg-blue-600 text-white hover:bg-blue-700 sm:w-auto" data-testid="button-easy-mode-call-results">
                     <a href={whatsAppHref} target="_blank" rel="noreferrer">
                       <MessageCircle className="mr-2 h-4 w-4" />
                       {easyModeCopy.call}
                     </a>
                   </Button>
-                  <Button variant="outline" onClick={openAssistant} className="rounded-full border-slate-300 bg-white text-slate-800" data-testid="button-easy-mode-chat-results">
+                  <Button variant="outline" onClick={openAssistant} className="w-full rounded-full border-slate-300 bg-white text-slate-800 sm:w-auto" data-testid="button-easy-mode-chat-results">
                     <MessageCircle className="mr-2 h-4 w-4" />
                     {easyModeCopy.assistant}
                   </Button>
                   <Link href="/senior">
-                    <Button variant="ghost" className="rounded-full text-blue-700 hover:bg-blue-50" data-testid="button-easy-mode-back-results">
+                    <Button variant="ghost" className="w-full rounded-full text-blue-700 hover:bg-blue-50 sm:w-auto" data-testid="button-easy-mode-back-results">
                       {easyModeCopy.back}
                     </Button>
                   </Link>
@@ -786,9 +786,9 @@ export default function SearchResults() {
           </div>
         </section>
 
-        <div className="container mx-auto mt-8 max-w-6xl px-4">
+        <div className="container mx-auto mt-6 max-w-6xl px-4 md:mt-8">
           <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-            <Card className="h-fit rounded-[30px] border border-slate-200 bg-white shadow-[0_20px_70px_-42px_rgba(15,23,42,0.24)]">
+            <Card className="order-2 h-fit rounded-[28px] border border-slate-200 bg-white shadow-[0_20px_70px_-42px_rgba(15,23,42,0.24)] xl:order-1 xl:rounded-[30px]">
               <div className="p-5 md:p-6">
                 <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-slate-500">{easyModeCopy.summaryTitle}</p>
                 <div className="mt-5 space-y-3">
@@ -807,7 +807,7 @@ export default function SearchResults() {
               </div>
             </Card>
 
-            <div className="space-y-5">
+            <div className="order-1 space-y-5 xl:order-2">
               {isSearching && <FlightSearchAnimation t={t} />}
 
               {error && !isSearching && (
@@ -836,7 +836,7 @@ export default function SearchResults() {
                     />
                   ))}
 
-                  <div className="rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_20px_70px_-42px_rgba(15,23,42,0.22)]">
+                  <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-[0_20px_70px_-42px_rgba(15,23,42,0.22)] sm:p-5 md:rounded-[30px]">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                       <div>
                         <h2 className="text-xl font-extrabold text-slate-950">{easyModeCopy.extraTitle}</h2>
@@ -1029,7 +1029,7 @@ export default function SearchResults() {
 
       <div className="container mx-auto px-4 mt-8 max-w-6xl">
         {isEasyMode && (
-          <div className="mb-6 rounded-[28px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_55%,rgba(219,234,254,0.96))] p-5 md:p-6 shadow-[0_20px_80px_-44px_rgba(37,99,235,0.45)]">
+          <div className="mb-6 rounded-[28px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_55%,rgba(219,234,254,0.96))] p-4 shadow-[0_20px_80px_-44px_rgba(37,99,235,0.45)] sm:p-5 md:p-6">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
               <div className="max-w-2xl">
                 <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
@@ -1044,19 +1044,19 @@ export default function SearchResults() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-3">
-                <Button asChild className="rounded-full bg-blue-600 hover:bg-blue-700 text-white" data-testid="button-easy-mode-call-results">
+              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
+                <Button asChild className="w-full rounded-full bg-blue-600 text-white hover:bg-blue-700 sm:w-auto" data-testid="button-easy-mode-call-results">
                   <a href={whatsAppHref} target="_blank" rel="noreferrer">
                     <MessageCircle className="mr-2 h-4 w-4" />
                     {easyModeCopy.call}
                   </a>
                 </Button>
-                <Button variant="outline" onClick={openAssistant} className="rounded-full border-slate-300 bg-white text-slate-800" data-testid="button-easy-mode-chat-results">
+                <Button variant="outline" onClick={openAssistant} className="w-full rounded-full border-slate-300 bg-white text-slate-800 sm:w-auto" data-testid="button-easy-mode-chat-results">
                   <MessageCircle className="mr-2 h-4 w-4" />
                   {easyModeCopy.assistant}
                 </Button>
                 <Link href="/senior">
-                  <Button variant="ghost" className="rounded-full text-blue-700 hover:bg-blue-50" data-testid="button-easy-mode-back-results">
+                  <Button variant="ghost" className="w-full rounded-full text-blue-700 hover:bg-blue-50 sm:w-auto" data-testid="button-easy-mode-back-results">
                     {easyModeCopy.back}
                   </Button>
                 </Link>
