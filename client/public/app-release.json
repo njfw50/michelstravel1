@@ -1,0 +1,23 @@
+{
+  "senior": {
+    "appName": "Michels Travel Senior",
+    "installPagePath": "/apps/michels-travel-senior",
+    "android": {
+      "status": "coming_soon",
+      "version": null,
+      "directDownloadUrl": null,
+      "archivedDownloadUrl": null,
+      "playStoreUrl": null,
+      "packageName": "agency.michelstravel.senior",
+      "minAndroid": "8.0+",
+      "sizeLabel": null,
+      "releasedAt": null,
+      "sha256": null,
+      "installNotes": {
+        "pt": "Quando o APK Android estiver publicado, o botao de download aparece aqui automaticamente.",
+        "en": "When the Android APK is published, the download button will appear here automatically.",
+        "es": "Cuando el APK de Android este publicado, el boton de descarga aparecera aqui automaticamente."
+      }
+    }
+  }
+}

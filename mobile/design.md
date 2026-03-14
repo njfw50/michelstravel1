@@ -1,4 +1,4 @@
-# Design do Flight Commission Hub - Admin Mobile App
+# Design do Michels Travel Senior
 
 ## Orientação e Uso
 O aplicativo é projetado para **orientação portrait (9:16)** e **uso com uma mão**, seguindo as diretrizes do Apple Human Interface Guidelines (HIG) para proporcionar uma experiência nativa e intuitiva.

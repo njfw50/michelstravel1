@@ -2,6 +2,7 @@ import express, { type Request, type Response, type NextFunction } from "express
 import { runMigrations } from 'stripe-replit-sync';
 import { registerRoutes } from "./routes";
 import { registerVoiceEscalationRoutes } from "./routes/voice_escalation";
+import { registerCustomerMobileRoutes } from "./routes/customer_mobile";
 import { serveStatic } from "./static";
 import { getStripeSync } from "./stripeClient";
 import { WebhookHandlers } from "./webhookHandlers";
@@ -199,6 +200,7 @@ app.use((req, res, next) => {
   await setupAuth(app);
   registerAuthRoutes(app);
   registerRoutes(app);
+  registerCustomerMobileRoutes(app);
   registerVoiceEscalationRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {

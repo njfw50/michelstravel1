@@ -1,0 +1,10 @@
+Place the generated Android APK in this folder using the publish script:
+
+  powershell -ExecutionPolicy Bypass -File .\script\publish-android-release.ps1 -ApkPath <path-to-apk> -Version 1.0.0
+
+The script will copy the APK here as:
+
+  michels-travel-senior-latest.apk
+  michels-travel-senior-<version>.apk
+
+and update client/public/app-release.json so the website can show the install button.

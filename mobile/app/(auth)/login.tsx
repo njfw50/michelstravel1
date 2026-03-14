@@ -50,10 +50,10 @@ export default function LoginScreen() {
               <Text className="text-4xl text-background">✈️</Text>
             </View>
             <Text className="text-3xl font-bold text-foreground mb-2">
-              Flight Commission Hub
+              Michels Travel Senior
             </Text>
             <Text className="text-base text-muted">
-              Gerenciamento Administrativo
+              Atendimento com mais calma e clareza
             </Text>
           </View>
 
@@ -125,7 +125,7 @@ export default function LoginScreen() {
           {/* Informações adicionais */}
           <View className="mt-8">
             <Text className="text-center text-muted text-sm">
-              Acesso restrito a administradores e agentes autorizados
+              Entre para continuar seu atendimento senior com seguranca
             </Text>
           </View>
         </View>

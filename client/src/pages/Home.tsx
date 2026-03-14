@@ -1,6 +1,7 @@
 import { FlightSearchForm } from "@/components/FlightSearchForm";
 import { usePopularFlights, useAirlines, useFeaturedAirports, useFeaturedDeals, type PublicFeaturedDeal } from "@/hooks/use-flights";
 import { FlightBoard } from "@/components/FlightBoard";
+import AppLaunchPromo from "@/components/AppLaunchPromo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -445,6 +446,8 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      <AppLaunchPromo mode="all" source="home" />
 
       <section className="py-16 md:py-32 section-light">
         <div className="container mx-auto px-4 md:px-6">

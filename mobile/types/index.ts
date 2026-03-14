@@ -1,4 +1,4 @@
-// Tipos compartilhados do Flight Commission Hub Mobile
+// Tipos compartilhados do Michels Travel Senior
 
 export interface User {
   id: string;

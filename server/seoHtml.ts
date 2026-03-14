@@ -196,6 +196,33 @@ function buildSeniorStructuredData(origin: string) {
   ];
 }
 
+function buildSeniorAppStructuredData(origin: string) {
+  return [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: "Baixar App Android Michels Travel Senior",
+      url: `${origin}/apps/michels-travel-senior`,
+      description:
+        "Pagina oficial da Michels Travel para instalar o app Android senior, continuar a viagem com mais calma e escanear documentos direto do celular.",
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: "Michels Travel Senior",
+      operatingSystem: "Android",
+      applicationCategory: "TravelApplication",
+      url: `${origin}/apps/michels-travel-senior`,
+      downloadUrl: `${origin}/apps/michels-travel-senior`,
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+      },
+    },
+  ];
+}
+
 function getSeoConfig(path: string, origin: string): SeoConfig {
   const normalizedPath = normalizePath(path);
   const fallback: SeoConfig = {
@@ -239,6 +266,18 @@ function getSeoConfig(path: string, origin: string): SeoConfig {
       ogDescription:
         "Caminho simplificado da Michels Travel para clientes que preferem comprar com mais calma e apoio humano.",
       structuredData: buildSeniorStructuredData(origin),
+    };
+  }
+
+  if (normalizedPath === "/apps/michels-travel-senior") {
+    return {
+      ...fallback,
+      title: "Baixar App Android Michels Travel Senior",
+      description:
+        "Pagina oficial da Michels Travel para instalar o app Android senior, continuar a viagem com mais calma e escanear documentos direto do celular.",
+      ogDescription:
+        "Instale o app Android senior da Michels Travel e continue sua viagem com mais calma direto do celular.",
+      structuredData: buildSeniorAppStructuredData(origin),
     };
   }
 

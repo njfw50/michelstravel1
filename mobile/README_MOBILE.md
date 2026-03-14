@@ -1,6 +1,6 @@
-# Flight Commission Hub - Mobile Admin App
+# Michels Travel Senior - Mobile App
 
-Aplicativo mobile administrativo para gerenciamento completo do Flight Commission Hub, permitindo controle total de reservas, pagamentos, mensagens e analytics na palma da mão.
+Aplicativo mobile da Michels Travel Senior para uma experiencia de viagem mais simples, calma e segura no celular.
 
 ## 📱 Sobre o Aplicativo
 

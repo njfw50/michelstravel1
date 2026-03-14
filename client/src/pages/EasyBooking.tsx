@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { CalendarDays, CheckCircle2, ChevronDown, MessageCircle, Search, ShieldCheck, UserRound, ArrowRight, HeartHandshake, BriefcaseBusiness, Package, Luggage } from "lucide-react";
 import { SEO } from "@/components/SEO";
+import AppLaunchPromo from "@/components/AppLaunchPromo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -488,6 +489,8 @@ export default function EasyBooking() {
           </div>
         </div>
       </section>
+
+      <AppLaunchPromo mode="senior" source="senior-page" />
 
       <section className="py-10 md:py-14">
         <div className="container mx-auto px-4 md:px-6">
