@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 import { FlightSearchForm } from "@/components/FlightSearchForm";
 import { FlightCard } from "@/components/FlightCard";
+import FlightBaggageHighlights from "@/components/FlightBaggageHighlights";
 import { useFlightSearch, type FlightSearchQuery } from "@/hooks/use-flights";
 import { Loader2, Filter, AlertCircle, Plane, X, Sun, Sunrise, Sunset, Moon, Globe, BarChart3, Armchair, Sparkles, CheckCircle2, Clock, ArrowRight, PhoneCall, HeartHandshake, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -287,6 +288,7 @@ export default function SearchResults() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const [selectedOutboundKey, setSelectedOutboundKey] = useState<string | null>(null);
+  const priceLocale = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
 
   const FLIGHTS_PER_PAGE = 10;
   const [visibleOneWayCount, setVisibleOneWayCount] = useState(FLIGHTS_PER_PAGE);
@@ -431,8 +433,8 @@ export default function SearchResults() {
     const roundTripOffers = flights.filter(f => f.slices && f.slices.length >= 2);
     if (roundTripOffers.length === 0) return null;
 
-    const outboundMap = new Map<string, { slice: FlightSlice; airline: string; logoUrl?: string | null; lowestPrice: number }>();
-    const returnMap = new Map<string, { slice: FlightSlice; airline: string; logoUrl?: string | null; lowestPrice: number }>();
+    const outboundMap = new Map<string, { slice: FlightSlice; airline: string; logoUrl?: string | null; lowestPrice: number; offer: FlightOffer }>();
+    const returnMap = new Map<string, { slice: FlightSlice; airline: string; logoUrl?: string | null; lowestPrice: number; offer: FlightOffer }>();
     const comboMap = new Map<string, FlightOffer>();
 
     for (const flight of roundTripOffers) {
@@ -447,16 +449,18 @@ export default function SearchResults() {
 
       const existingOb = outboundMap.get(obKey);
       if (!existingOb) {
-        outboundMap.set(obKey, { slice: flight.slices![0], airline: flight.airline, logoUrl: flight.logoUrl, lowestPrice: flight.price });
+        outboundMap.set(obKey, { slice: flight.slices![0], airline: flight.airline, logoUrl: flight.logoUrl, lowestPrice: flight.price, offer: flight });
       } else if (flight.price < existingOb.lowestPrice) {
         existingOb.lowestPrice = flight.price;
+        existingOb.offer = flight;
       }
 
       const existingRt = returnMap.get(rtKey);
       if (!existingRt) {
-        returnMap.set(rtKey, { slice: flight.slices![1], airline: flight.airline, logoUrl: flight.logoUrl, lowestPrice: flight.price });
+        returnMap.set(rtKey, { slice: flight.slices![1], airline: flight.airline, logoUrl: flight.logoUrl, lowestPrice: flight.price, offer: flight });
       } else if (flight.price < existingRt.lowestPrice) {
         existingRt.lowestPrice = flight.price;
+        existingRt.offer = flight;
       }
     }
 
@@ -493,7 +497,7 @@ export default function SearchResults() {
   const returnOptionsForSelected = useMemo(() => {
     if (!selectedOutboundKey || !offerMatrix) return [];
     const { returnMap } = offerMatrix;
-    const results: { returnKey: string; slice: FlightSlice; airline: string; logoUrl?: string | null; offer: FlightOffer | null; price: number | null }[] = [];
+    const results: { returnKey: string; slice: FlightSlice; airline: string; logoUrl?: string | null; sampleOffer: FlightOffer; offer: FlightOffer | null; price: number | null }[] = [];
 
     for (const [rtKey, rtData] of Array.from(returnMap.entries())) {
       const comboKey = `${selectedOutboundKey}::${rtKey}`;
@@ -503,6 +507,7 @@ export default function SearchResults() {
         slice: rtData.slice,
         airline: rtData.airline,
         logoUrl: rtData.logoUrl,
+        sampleOffer: rtData.offer,
         offer: matchingOffer,
         price: matchingOffer ? matchingOffer.price : null,
       });
@@ -544,7 +549,7 @@ export default function SearchResults() {
 
   const formatPrice = (amount: number) => {
     const currency = flights?.[0]?.currency || "USD";
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(priceLocale, {
       style: 'currency',
       currency,
       minimumFractionDigits: 0,
@@ -990,13 +995,21 @@ export default function SearchResults() {
                                     <div className="text-right">
                                       <p className="text-[10px] text-gray-400 uppercase">{t("results.from") || "a partir de"}</p>
                                       <p className="text-xl font-bold text-gray-900">
-                                        {new Intl.NumberFormat("en-US", { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(group.lowestPrice)}
+                                        {new Intl.NumberFormat(priceLocale, { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(group.lowestPrice)}
                                       </p>
                                       <p className="text-[10px] text-gray-400">{t("results.round_trip_total") || "ida + volta"}</p>
                                     </div>
                                     <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg group-hover:shadow-md transition-all" data-testid={`button-select-outbound-${key}`}>
                                       {t("flight.select") || "Selecionar"} <ArrowRight className="ml-1 h-3.5 w-3.5" />
                                     </Button>
+                                  </div>
+
+                                  <div className="md:col-span-12">
+                                    <FlightBaggageHighlights
+                                      flight={group.offer}
+                                      simplified={isEasyMode}
+                                      compact
+                                    />
                                   </div>
                                 </div>
                               </Card>
@@ -1069,10 +1082,10 @@ export default function SearchResults() {
                                   <Plane className="text-gray-400 h-5 w-5" />
                                 )}
                               </div>
-                              <div className="flex items-center gap-4 flex-1 flex-wrap">
-                                <div>
-                                  <p className="font-bold text-gray-900 text-sm">{obData.airline}</p>
-                                  <p className="text-xs text-gray-500">{firstSeg.flightNumber}</p>
+                            <div className="flex items-center gap-4 flex-1 flex-wrap">
+                              <div>
+                                <p className="font-bold text-gray-900 text-sm">{obData.airline}</p>
+                                <p className="text-xs text-gray-500">{firstSeg.flightNumber}</p>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm">
                                   <div className="text-center">
@@ -1093,6 +1106,13 @@ export default function SearchResults() {
                                   </span>
                                 </div>
                               </div>
+                            </div>
+                            <div className="mt-3">
+                              <FlightBaggageHighlights
+                                flight={obData.offer}
+                                simplified={isEasyMode}
+                                compact
+                              />
                             </div>
                           </div>
                         );
@@ -1176,7 +1196,7 @@ export default function SearchResults() {
                                         <div className="text-right">
                                           <p className="text-[10px] text-gray-400 uppercase">{t("flight.total_price") || "Preço total"}</p>
                                           <p className="text-2xl font-bold text-gray-900">
-                                            {new Intl.NumberFormat("en-US", { style: "currency", currency: rt.offer!.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(rt.price!)}
+                                            {new Intl.NumberFormat(priceLocale, { style: "currency", currency: rt.offer!.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(rt.price!)}
                                           </p>
                                           <p className="text-[10px] text-gray-400">{t("results.round_trip_total") || "ida + volta"}</p>
                                         </div>
@@ -1191,6 +1211,14 @@ export default function SearchResults() {
                                         <p className="text-xs text-gray-400">{t("results.unavailable_combo") || "Combinação indisponível"}</p>
                                       </div>
                                     )}
+                                  </div>
+
+                                  <div className="md:col-span-12">
+                                    <FlightBaggageHighlights
+                                      flight={rt.offer || rt.sampleOffer}
+                                      simplified={isEasyMode}
+                                      compact
+                                    />
                                   </div>
                                 </div>
                               </Card>
@@ -1224,7 +1252,7 @@ export default function SearchResults() {
             {!isSearching && !showTwoStepFlow && filteredAndSortedFlights.length > 0 && (
               <div className="space-y-4">
                 {filteredAndSortedFlights.slice(0, visibleOneWayCount).map((flight) => (
-                  <FlightCard key={flight.id} flight={flight} />
+                  <FlightCard key={flight.id} flight={flight} simplified={isEasyMode} />
                 ))}
                 {filteredAndSortedFlights.length > visibleOneWayCount && (
                   <div className="flex flex-col items-center gap-2 pt-2" data-testid="oneway-pagination">

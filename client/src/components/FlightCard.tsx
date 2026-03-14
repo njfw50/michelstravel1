@@ -2,10 +2,11 @@ import { type FlightOffer } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plane, Clock, ArrowRight, Luggage, Leaf } from "lucide-react";
+import { Plane, Clock, ArrowRight, Leaf } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Link } from "wouter";
 import { useI18n } from "@/lib/i18n";
+import FlightBaggageHighlights from "@/components/FlightBaggageHighlights";
 
 const formatDuration = (duration: string) => {
   const hoursMatch = duration.match(/(\d+)H/);
@@ -15,25 +16,16 @@ const formatDuration = (duration: string) => {
   return `${hours}h ${minutes}m`;
 };
 
-const formatPrice = (amount: number, currency: string) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
-
 interface FlightCardProps {
   flight: FlightOffer;
+  simplified?: boolean;
 }
 
-export function FlightCard({ flight }: FlightCardProps) {
-  const { t } = useI18n();
+export function FlightCard({ flight, simplified = false }: FlightCardProps) {
+  const { t, language } = useI18n();
+  const locale = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
   
   const cabinClassName = flight.passengers?.[0]?.cabinClassName;
-  const checkedBags = flight.passengers?.[0]?.baggages?.find(b => b.type === "checked");
-  const carryOnBags = flight.passengers?.[0]?.baggages?.find(b => b.type === "carry_on");
   const fareBrand = flight.passengers?.[0]?.fareBrandName;
 
   const searchParams = new URLSearchParams(window.location.search);
@@ -184,22 +176,14 @@ export function FlightCard({ flight }: FlightCardProps) {
             </div>
           )}
           
-          {/* Baggage and Aircraft Info */}
-          {(checkedBags || carryOnBags || flight.aircraftType) && (
-            <div className="flex items-center justify-center gap-3 mt-2 flex-wrap">
+          <div className="mt-3 space-y-2">
+            <FlightBaggageHighlights flight={flight} simplified={simplified} compact />
+
+            {(flight.aircraftType || (flight as any).totalEmissionsKg) && (
+              <div className="flex items-center justify-center gap-3 flex-wrap">
               {flight.aircraftType && (
                 <span className="text-[10px] text-gray-400 flex items-center gap-1">
                   <Plane className="h-2.5 w-2.5" /> {flight.aircraftType}
-                </span>
-              )}
-              {checkedBags && checkedBags.quantity > 0 && (
-                <span className="text-[10px] text-emerald-600 flex items-center gap-1" data-testid="text-checked-bags">
-                  <Luggage className="h-2.5 w-2.5" /> {checkedBags.quantity}x {t("booking.checked_bag")}
-                </span>
-              )}
-              {carryOnBags && carryOnBags.quantity > 0 && (
-                <span className="text-[10px] text-blue-600 flex items-center gap-1">
-                  <Luggage className="h-2.5 w-2.5" /> {carryOnBags.quantity}x {t("booking.carry_on")}
                 </span>
               )}
               {(flight as any).totalEmissionsKg && (
@@ -207,8 +191,9 @@ export function FlightCard({ flight }: FlightCardProps) {
                   <Leaf className="h-2.5 w-2.5" /> {Math.round((flight as any).totalEmissionsKg)} kg CO₂
                 </span>
               )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Price and Select Button */}
@@ -217,12 +202,17 @@ export function FlightCard({ flight }: FlightCardProps) {
             <span className="text-xs text-gray-500 font-medium md:block hidden">{t("flight.total_price")}</span>
             <span className="text-sm text-gray-500 md:hidden">{t("flight.price_per_adult")}</span>
             <div className="text-3xl font-display font-bold text-gray-900" data-testid="text-price">
-              {formatPrice(flight.price, flight.currency)}
+              {new Intl.NumberFormat(locale, {
+                style: "currency",
+                currency: flight.currency,
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              }).format(flight.price)}
             </div>
             {flight.baseAmount && flight.taxAmount && (
               <div className="text-[10px] text-gray-400 mt-0.5 flex flex-col items-end gap-0">
-                <span>{t("flight.base_fare") || "Base"}: {formatPrice(parseFloat(flight.baseAmount), flight.currency)}</span>
-                <span>{t("flight.taxes") || "Taxes"}: {formatPrice(parseFloat(flight.taxAmount), flight.currency)}</span>
+                <span>{t("flight.base_fare") || "Base"}: {new Intl.NumberFormat(locale, { style: "currency", currency: flight.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(parseFloat(flight.baseAmount))}</span>
+                <span>{t("flight.taxes") || "Taxes"}: {new Intl.NumberFormat(locale, { style: "currency", currency: flight.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(parseFloat(flight.taxAmount))}</span>
               </div>
             )}
           </div>
