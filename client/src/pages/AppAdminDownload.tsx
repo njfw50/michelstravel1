@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Download, MessageCircle, ShieldCheck, Smartphone, BellRing } from "lucide-react";
+import { ArrowRight, Download, ShieldCheck, Smartphone, BellRing } from "lucide-react";
 import { Link } from "wouter";
 
 import { SEO } from "@/components/SEO";
@@ -15,7 +15,6 @@ import {
   getAdminAndroidPrimaryUrl,
   hasAdminAndroidRelease,
 } from "@/lib/app-release";
-import { buildWhatsAppHref, buildWhatsAppMessage } from "@/lib/contact";
 
 function isAndroidDevice() {
   if (typeof navigator === "undefined") return false;
@@ -40,6 +39,23 @@ export default function AppAdminDownload() {
   const android = manifest.admin.android;
   const releasedAt = formatReleaseDate(android.releasedAt, locale);
 
+  useEffect(() => {
+    if (!androidDevice || !releaseReady || !primaryUrl || typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("autostart") === "0") {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      window.location.href = primaryUrl;
+    }, 450);
+
+    return () => window.clearTimeout(timeout);
+  }, [androidDevice, primaryUrl, releaseReady]);
+
   const copy = useMemo(() => {
     if (language === "en") {
       return {
@@ -48,10 +64,10 @@ export default function AppAdminDownload() {
         subtitle:
           "This is the separate operations app for you, not the senior app and not the customer booking app.",
         download: android.playStoreUrl ? "Open in Google Play" : "Install admin app",
-        whatsApp: "Request admin app access",
+        pending: "Admin installer coming soon",
         backDashboard: "Back to dashboard",
         noteReady: androidDevice
-          ? "After the download finishes, Android may ask you to allow installs from this browser the first time."
+          ? "The installer should start on your phone. If Android blocks the first install, allow installs from this browser and open the button again."
           : "Open this page on your Android phone to install the admin app directly.",
         notePending: android.installNotes[language],
         version: "Version",
@@ -71,10 +87,10 @@ export default function AppAdminDownload() {
         subtitle:
           "Esta es la app separada de operacion para usted, no la app senior ni la app del cliente comprador.",
         download: android.playStoreUrl ? "Abrir en Google Play" : "Instalar app admin",
-        whatsApp: "Pedir acceso a la app admin",
+        pending: "Instalador admin en preparacion",
         backDashboard: "Volver al dashboard",
         noteReady: androidDevice
-          ? "Cuando termine la descarga, Android puede pedir permiso para instalar apps desde este navegador la primera vez."
+          ? "El instalador debe comenzar en su telefono. Si Android bloquea la primera instalacion, permita instalaciones desde este navegador y abra el boton otra vez."
           : "Abra esta pagina en su telefono Android para instalar la app admin directamente.",
         notePending: android.installNotes[language],
         version: "Version",
@@ -93,10 +109,10 @@ export default function AppAdminDownload() {
       subtitle:
         "Este e o app separado da sua operacao, nao o app senior e nao o app de busca e compra do cliente.",
       download: android.playStoreUrl ? "Abrir no Google Play" : "Instalar app admin",
-      whatsApp: "Pedir acesso ao app admin",
+      pending: "Instalador admin em preparo",
       backDashboard: "Voltar ao dashboard",
       noteReady: androidDevice
-        ? "Quando o download terminar, o Android pode pedir permissao para instalar apps deste navegador na primeira vez."
+        ? "O instalador deve comecar no seu celular. Se o Android bloquear a primeira instalacao, permita instalar apps deste navegador e abra o botao novamente."
         : "Abra esta pagina no seu celular Android para instalar o app admin diretamente.",
       notePending: android.installNotes[language],
       version: "Versao",
@@ -108,24 +124,6 @@ export default function AppAdminDownload() {
       featureOps: "App dedicado so para sua operacao",
     };
   }, [android.installNotes, android.playStoreUrl, androidDevice, language]);
-
-  const whatsAppHref = buildWhatsAppHref(
-    buildWhatsAppMessage({
-      language,
-      topic:
-        language === "en"
-          ? "Admin app access"
-          : language === "es"
-            ? "Acceso app admin"
-            : "Acesso app admin",
-      details: [
-        manifest.admin.appName,
-        releaseReady
-          ? `Versao: ${android.version || "disponivel"}`
-          : "Quero ser avisado quando o app admin estiver pronto para instalar.",
-      ],
-    }),
-  );
 
   return (
     <>
@@ -161,11 +159,9 @@ export default function AppAdminDownload() {
                       </a>
                     </Button>
                   ) : (
-                    <Button asChild className="rounded-full bg-blue-600 px-6 py-6 text-base font-bold text-white hover:bg-blue-700">
-                      <a href={whatsAppHref} target="_blank" rel="noreferrer">
-                        <MessageCircle className="mr-2 h-4 w-4" />
-                        {copy.whatsApp}
-                      </a>
+                    <Button disabled className="rounded-full bg-slate-300 px-6 py-6 text-base font-bold text-slate-700 opacity-100">
+                      <Download className="mr-2 h-4 w-4" />
+                      {copy.pending}
                     </Button>
                   )}
 
