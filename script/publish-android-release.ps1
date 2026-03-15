@@ -24,12 +24,9 @@ $manifestPath = Join-Path $repoRoot "client\public\app-release.json"
 
 New-Item -ItemType Directory -Force -Path $downloadsDir | Out-Null
 
-$versionedFileName = "michels-travel-senior-$Version.apk"
 $latestFileName = "michels-travel-senior-latest.apk"
-$versionedTarget = Join-Path $downloadsDir $versionedFileName
 $latestTarget = Join-Path $downloadsDir $latestFileName
 
-Copy-Item -LiteralPath $ApkPath -Destination $versionedTarget -Force
 Copy-Item -LiteralPath $ApkPath -Destination $latestTarget -Force
 
 $fileInfo = Get-Item -LiteralPath $latestTarget
@@ -44,8 +41,8 @@ $manifest = [ordered]@{
     android = [ordered]@{
       status = "ready"
       version = $Version
-      directDownloadUrl = "/downloads/$latestFileName?v=$Version"
-      archivedDownloadUrl = "/downloads/$versionedFileName"
+      directDownloadUrl = "/downloads/${latestFileName}?v=$Version"
+      archivedDownloadUrl = $null
       playStoreUrl = $(if ($PlayStoreUrl) { $PlayStoreUrl } else { $null })
       packageName = $PackageName
       minAndroid = $MinAndroid
