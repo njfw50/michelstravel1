@@ -15,6 +15,7 @@ import {
 
 const MOBILE_ACCESS_TOKEN_TTL_SECONDS = 60 * 15;
 const MOBILE_REFRESH_TOKEN_TTL_DAYS = 30;
+const WEB_HANDOFF_TOKEN_TTL_SECONDS = 60 * 5;
 const MOBILE_JWT_SECRET = process.env.MOBILE_JWT_SECRET || process.env.SESSION_SECRET;
 
 if (!MOBILE_JWT_SECRET) {
@@ -116,6 +117,13 @@ type CustomerMobileRequest = Request & {
   customerMobileAuth?: CustomerMobileAuth;
 };
 
+type CustomerWebHandoffPayload = {
+  userId: string;
+  deviceId: string;
+  target: string;
+  type: "customer_mobile_web_handoff";
+};
+
 function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
@@ -138,6 +146,17 @@ function signAccessToken(payload: CustomerMobileAuth) {
   );
 }
 
+function signWebHandoffToken(payload: Omit<CustomerWebHandoffPayload, "type">) {
+  return jwt.sign(
+    {
+      ...payload,
+      type: "customer_mobile_web_handoff",
+    },
+    MOBILE_JWT_SECRET!,
+    { expiresIn: WEB_HANDOFF_TOKEN_TTL_SECONDS },
+  );
+}
+
 function readBearerToken(req: Request) {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith("Bearer ")) return null;
@@ -146,6 +165,19 @@ function readBearerToken(req: Request) {
 
 function normalizeRouteParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function sanitizeWebTarget(target: string | null | undefined) {
+  if (!target || typeof target !== "string") {
+    return "/senior";
+  }
+
+  const trimmed = target.trim();
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//")) {
+    return "/senior";
+  }
+
+  return trimmed;
 }
 
 function normalizeEmail(value: string) {
@@ -595,6 +627,84 @@ export function registerCustomerMobileRoutes(app: Express) {
     await revokeActiveRefreshTokensForDevice(auth.deviceId);
 
     return res.json({ success: true });
+  });
+
+  app.post("/api/mobile/customer/web-session", requireCustomerMobileAuth, async (req: CustomerMobileRequest, res) => {
+    const auth = req.customerMobileAuth!;
+    const target = sanitizeWebTarget(req.body?.target);
+    const handoffToken = signWebHandoffToken({
+      userId: auth.userId,
+      deviceId: auth.deviceId,
+      target,
+    });
+
+    const origin = `${req.protocol}://${req.get("host")}`;
+    const params = new URLSearchParams({
+      token: handoffToken,
+      target,
+    });
+
+    return res.json({
+      url: `${origin}/api/mobile/customer/web-auth?${params.toString()}`,
+      expiresInSeconds: WEB_HANDOFF_TOKEN_TTL_SECONDS,
+    });
+  });
+
+  app.get("/api/mobile/customer/web-auth", async (req: Request, res) => {
+    const token = normalizeRouteParam(req.query.token as string | string[] | undefined);
+    const target = sanitizeWebTarget(normalizeRouteParam(req.query.target as string | string[] | undefined));
+
+    if (!token) {
+      return res.redirect(target);
+    }
+
+    try {
+      const decoded = jwt.verify(token, MOBILE_JWT_SECRET!) as CustomerWebHandoffPayload;
+      if (decoded.type !== "customer_mobile_web_handoff") {
+        return res.redirect(target);
+      }
+
+      const [device] = await db
+        .select()
+        .from(customerMobileDevices)
+        .where(
+          and(
+            eq(customerMobileDevices.id, decoded.deviceId),
+            eq(customerMobileDevices.userId, decoded.userId),
+            isNull(customerMobileDevices.revokedAt),
+          ),
+        );
+
+      if (!device) {
+        return res.redirect(target);
+      }
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, decoded.userId));
+
+      if (!user) {
+        return res.redirect(target);
+      }
+
+      (req as any).login(user, (error: unknown) => {
+        if (error) {
+          console.error("[mobile web auth] login bridge failed:", error);
+          return res.redirect(target);
+        }
+
+        const session = (req as any).session;
+        if (session?.save) {
+          return session.save(() => res.redirect(decoded.target || target));
+        }
+
+        return res.redirect(decoded.target || target);
+      });
+    } catch (error) {
+      console.error("[mobile web auth] invalid handoff token:", error);
+      return res.redirect(target);
+    }
   });
 
   app.get("/api/mobile/customer/me", requireCustomerMobileAuth, async (req: CustomerMobileRequest, res) => {

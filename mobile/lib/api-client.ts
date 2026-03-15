@@ -18,6 +18,11 @@ type RegisterInput = LoginInput & {
   lastName?: string;
 };
 
+type WebSessionResponse = {
+  url: string;
+  expiresInSeconds: number;
+};
+
 class ApiClient {
   private client: AxiosInstance;
   private refreshing = false;
@@ -163,6 +168,13 @@ class ApiClient {
   async getCurrentCustomer(): Promise<CustomerIdentityPayload> {
     const response = await this.client.get<CustomerIdentityPayload>('/api/mobile/customer/me');
     return response.data;
+  }
+
+  async createWebSessionLink(target: string): Promise<string> {
+    const response = await this.client.post<WebSessionResponse>('/api/mobile/customer/web-session', {
+      target,
+    });
+    return response.data.url;
   }
 
   async logout(): Promise<void> {

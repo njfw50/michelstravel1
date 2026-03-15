@@ -1,7 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, Text, TouchableOpacity, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { WebView } from 'react-native-webview';
+
+import { apiClient } from '@/lib/api-client';
 
 type SiteFlowWebViewProps = {
   path: string;
@@ -14,15 +16,41 @@ const SITE_BASE_URL = process.env.EXPO_PUBLIC_SITE_URL || 'https://www.michelstr
 export function SiteFlowWebView({ path, title, subtitle }: SiteFlowWebViewProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [bridgeUrl, setBridgeUrl] = useState<string | null>(null);
 
-  const url = useMemo(() => {
+  const fallbackUrl = useMemo(() => {
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
     const separator = normalizedPath.includes('?') ? '&' : '?';
     return `${SITE_BASE_URL}${normalizedPath}${separator}appShell=senior`;
   }, [path]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    setIsLoading(true);
+    setHasError(false);
+    setBridgeUrl(null);
+
+    apiClient.createWebSessionLink(path)
+      .then((url) => {
+        if (!isMounted) return;
+        setBridgeUrl(url);
+      })
+      .catch((error) => {
+        console.error('[mobile] failed to create web session bridge:', error);
+        if (!isMounted) return;
+        setBridgeUrl(fallbackUrl);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [path, fallbackUrl]);
+
+  const effectiveUrl = bridgeUrl || fallbackUrl;
+
   const openOutside = async () => {
-    await WebBrowser.openBrowserAsync(url);
+    await WebBrowser.openBrowserAsync(effectiveUrl);
   };
 
   return (
@@ -40,7 +68,7 @@ export function SiteFlowWebView({ path, title, subtitle }: SiteFlowWebViewProps)
             <Text className="text-sm font-semibold text-background">Abrir fora do app</Text>
           </TouchableOpacity>
           <View className="rounded-full border border-border bg-surface px-4 py-3">
-            <Text className="text-sm font-semibold text-foreground">Fluxo real do site</Text>
+            <Text className="text-sm font-semibold text-foreground">Mesma conta do site</Text>
           </View>
         </View>
       </View>
@@ -55,7 +83,7 @@ export function SiteFlowWebView({ path, title, subtitle }: SiteFlowWebViewProps)
             onPress={openOutside}
             activeOpacity={0.85}
           >
-            <Text className="text-base font-semibold text-background">Abrir fluxo de busca</Text>
+            <Text className="text-base font-semibold text-background">Abrir fluxo do site</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -63,7 +91,7 @@ export function SiteFlowWebView({ path, title, subtitle }: SiteFlowWebViewProps)
           {isLoading && !hasError && (
             <View className="absolute inset-0 z-10 items-center justify-center bg-white/95">
               <ActivityIndicator size="large" color="#2F63F5" />
-              <Text className="mt-3 text-sm text-muted">Carregando busca e compra...</Text>
+              <Text className="mt-3 text-sm text-muted">Conectando sua conta ao fluxo do site...</Text>
             </View>
           )}
 
@@ -73,7 +101,7 @@ export function SiteFlowWebView({ path, title, subtitle }: SiteFlowWebViewProps)
                 Nao foi possivel abrir o fluxo dentro do app agora.
               </Text>
               <Text className="mt-2 text-center text-sm leading-6 text-muted">
-                Voce ainda pode continuar a busca e a compra abrindo o mesmo fluxo no navegador.
+                Voce ainda pode continuar no navegador com a mesma pagina.
               </Text>
               <TouchableOpacity
                 className="mt-5 rounded-full bg-primary px-5 py-4"
@@ -85,7 +113,7 @@ export function SiteFlowWebView({ path, title, subtitle }: SiteFlowWebViewProps)
             </View>
           ) : (
             <WebView
-              source={{ uri: url }}
+              source={{ uri: effectiveUrl }}
               onLoadEnd={() => setIsLoading(false)}
               onError={() => {
                 setHasError(true);
