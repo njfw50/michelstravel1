@@ -327,18 +327,26 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
   };
 
   const handleScanConfirm = (data: any) => {
-    if (data.givenName) setValue(`passengers.${index}.givenName`, data.givenName);
-    if (data.familyName) setValue(`passengers.${index}.familyName`, data.familyName);
-    if (data.bornOn) setValue(`passengers.${index}.bornOn`, data.bornOn);
-    if (data.gender) setValue(`passengers.${index}.gender`, data.gender);
-    if (data.passportNumber) setValue(`passengers.${index}.documentNumber`, data.passportNumber);
-    if (data.passportExpiryDate) setValue(`passengers.${index}.documentExpiryDate`, data.passportExpiryDate);
-    if (data.nationality) setValue(`passengers.${index}.nationality`, data.nationality);
-    if (data.passportIssuingCountry) setValue(`passengers.${index}.documentIssuingCountry`, data.passportIssuingCountry);
+    const applyScannedValue = (field: string, value: string) => {
+      setValue(field, value, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+    };
+
+    if (data.givenName) applyScannedValue(`passengers.${index}.givenName`, data.givenName);
+    if (data.familyName) applyScannedValue(`passengers.${index}.familyName`, data.familyName);
+    if (data.bornOn) applyScannedValue(`passengers.${index}.bornOn`, data.bornOn);
+    if (data.gender) applyScannedValue(`passengers.${index}.gender`, data.gender);
+    if (data.passportNumber) applyScannedValue(`passengers.${index}.documentNumber`, data.passportNumber);
+    if (data.passportExpiryDate) applyScannedValue(`passengers.${index}.documentExpiryDate`, data.passportExpiryDate);
+    if (data.nationality) applyScannedValue(`passengers.${index}.nationality`, data.nationality);
+    if (data.passportIssuingCountry) applyScannedValue(`passengers.${index}.documentIssuingCountry`, data.passportIssuingCountry);
     if (data.documentType) {
-      setValue(`passengers.${index}.documentType`, data.documentType);
+      applyScannedValue(`passengers.${index}.documentType`, data.documentType);
     } else {
-      setValue(`passengers.${index}.documentType`, "passport");
+      applyScannedValue(`passengers.${index}.documentType`, "passport");
     }
   };
 

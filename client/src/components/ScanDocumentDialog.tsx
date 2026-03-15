@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, type ChangeEvent, type MutableRefObject } from "react";
 import {
   Dialog,
   DialogContent,
@@ -27,33 +27,42 @@ import {
   Sun,
   Maximize2,
   Focus,
+  Sparkles,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { parseMRZ } from "@/lib/mrz";
-import { preprocessForMRZ, createPreviewUrl } from "@/lib/imagePreprocess";
+import { parseMRZ, type MRZResult } from "@/lib/mrz";
+import { preprocessForMRZ, createPreviewUrl, blobToDataUrl } from "@/lib/imagePreprocess";
+import {
+  mergeDocumentScanCandidates,
+  type DocumentAiCandidate,
+  type MergedDocumentScanResult,
+} from "@/lib/documentScan";
 import Tesseract from "tesseract.js";
 
 type Step = "select" | "processing" | "review" | "error";
+type TesseractWorker = Awaited<ReturnType<typeof Tesseract.createWorker>>;
 
-interface ExtractedData {
-  givenName: string;
-  familyName: string;
-  bornOn: string;
-  gender: "m" | "f" | "";
-  passportNumber: string;
-  passportExpiryDate: string;
-  nationality: string;
-  passportIssuingCountry: string;
-  documentType: string;
-  confidence: number;
-  warnings: string[];
+interface ScanAnalyzeResponse {
+  available: boolean;
+  candidate: DocumentAiCandidate | null;
 }
 
 interface ScanDocumentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (data: ExtractedData) => void;
+  onConfirm: (data: MergedDocumentScanResult) => void;
   passengerIndex: number;
+}
+
+function createWarningLabels(t: (key: string) => string) {
+  return {
+    doc_number_check_failed: t("scan.warning_doc_number"),
+    birth_date_check_failed: t("scan.warning_birth_date"),
+    expiry_date_check_failed: t("scan.warning_expiry"),
+    unexpected_doc_type: t("scan.warning_type"),
+    ai_manual_review: t("scan.warning_manual_review"),
+    low_confidence: t("scan.warning_low_confidence"),
+  } satisfies Record<string, string>;
 }
 
 export function ScanDocumentDialog({
@@ -63,22 +72,29 @@ export function ScanDocumentDialog({
   passengerIndex,
 }: ScanDocumentDialogProps) {
   const { t } = useI18n();
+  const warningLabels = createWarningLabels(t);
   const [step, setStep] = useState<Step>("select");
   const [progress, setProgress] = useState(0);
   const [progressLabel, setProgressLabel] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
-  const [editableData, setEditableData] = useState<ExtractedData | null>(null);
+  const [editableData, setEditableData] = useState<MergedDocumentScanResult | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const progressRef = useRef(0);
+  const mrzProgressRangeRef = useRef({ offset: 20, span: 14 });
+  const generalProgressRangeRef = useRef({ offset: 62, span: 10 });
+
+  const setProgressValue = (value: number) => {
+    progressRef.current = value;
+    setProgress(value);
+  };
 
   const resetState = useCallback(() => {
     setStep("select");
-    setProgress(0);
+    setProgressValue(0);
     setProgressLabel("");
     setImagePreview(null);
-    setExtractedData(null);
     setEditableData(null);
     setErrorMessage("");
   }, []);
@@ -88,127 +104,280 @@ export function ScanDocumentDialog({
     onOpenChange(newOpen);
   };
 
-  const runOCRAttempt = async (imageBlob: Blob, label: string): Promise<string> => {
-    setProgressLabel(label);
-    const result = await Tesseract.recognize(imageBlob, "eng", {
-      logger: (m: any) => {
-        if (m.status === "recognizing text") {
-          setProgress((prev) => Math.min(prev + Math.round(m.progress * 15), 90));
+  const createOcrWorker = async (
+    rangeRef: MutableRefObject<{ offset: number; span: number }>,
+  ): Promise<TesseractWorker> =>
+    Tesseract.createWorker("eng", Tesseract.OEM.LSTM_ONLY, {
+      logger: (message) => {
+        if (message.status === "recognizing text") {
+          const nextValue = rangeRef.current.offset + Math.round(message.progress * rangeRef.current.span);
+          if (nextValue > progressRef.current) {
+            setProgressValue(Math.min(nextValue, 92));
+          }
         }
       },
     });
-    return result.data.text;
+
+  const runMrzPass = async (
+    worker: TesseractWorker,
+    imageBlob: Blob,
+    label: string,
+    offset: number,
+    span: number,
+  ): Promise<string> => {
+    mrzProgressRangeRef.current = { offset, span };
+    setProgressLabel(label);
+    await worker.setParameters({
+      tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
+      tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<",
+      preserve_interword_spaces: "1",
+    });
+    const result = await worker.recognize(imageBlob);
+    return result.data.text || "";
+  };
+
+  const runGeneralPass = async (
+    worker: TesseractWorker,
+    imageBlob: Blob,
+    label: string,
+    offset: number,
+    span: number,
+  ): Promise<string> => {
+    generalProgressRangeRef.current = { offset, span };
+    setProgressLabel(label);
+    await worker.setParameters({
+      tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+      preserve_interword_spaces: "1",
+      tessedit_char_whitelist: "",
+    });
+    const result = await worker.recognize(imageBlob);
+    return result.data.text || "";
+  };
+
+  const analyzeWithAi = async (payload: {
+    documentImageDataUrl: string;
+    mrzImageDataUrl: string;
+    rawOcrText: string;
+    mrzResult: MRZResult | null;
+  }): Promise<ScanAnalyzeResponse | null> => {
+    const response = await fetch("/api/document-scanner/analyze", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return response.json();
   };
 
   const processImage = async (file: File) => {
     setStep("processing");
-    setProgress(5);
+    setProgressValue(5);
     setProgressLabel(t("scan.step_preparing"));
 
     const preview = await createPreviewUrl(file);
     setImagePreview(preview);
 
+    let mrzWorker: TesseractWorker | null = null;
+    let generalWorker: TesseractWorker | null = null;
+
     try {
-      setProgress(10);
+      const {
+        original,
+        enhanced,
+        mrzCropped,
+        mrzWide,
+        analysisPreview,
+        analysisMrzPreview,
+      } = await preprocessForMRZ(file);
+
+      setProgressValue(16);
       setProgressLabel(t("scan.step_enhancing"));
 
-      const { original, enhanced, mrzCropped } = await preprocessForMRZ(file);
+      mrzWorker = await createOcrWorker(mrzProgressRangeRef);
+      generalWorker = await createOcrWorker(generalProgressRangeRef);
 
-      setProgress(20);
-
-      const attempts = [
-        { blob: mrzCropped, label: t("scan.attempt_mrz_zone") },
-        { blob: enhanced, label: t("scan.attempt_enhanced") },
-        { blob: original, label: t("scan.attempt_original") },
+      const mrzAttempts = [
+        { blob: mrzCropped, label: t("scan.attempt_mrz_zone"), offset: 20, span: 14 },
+        { blob: mrzWide, label: t("scan.attempt_mrz_backup"), offset: 35, span: 14 },
+        { blob: enhanced, label: t("scan.attempt_enhanced"), offset: 50, span: 10 },
       ];
 
-      let bestResult: ExtractedData | null = null;
+      let bestMrzResult: MRZResult | null = null;
+      const ocrSnapshots: string[] = [];
 
-      for (const attempt of attempts) {
+      for (const attempt of mrzAttempts) {
         try {
-          const ocrText = await runOCRAttempt(attempt.blob, attempt.label);
-          const mrzResult = parseMRZ(ocrText);
+          const ocrText = await runMrzPass(
+            mrzWorker,
+            attempt.blob,
+            attempt.label,
+            attempt.offset,
+            attempt.span,
+          );
+          ocrSnapshots.push(ocrText);
+          const parsed = parseMRZ(ocrText);
 
-          if (mrzResult && mrzResult.surname) {
-            const data: ExtractedData = {
-              givenName: mrzResult.givenNames,
-              familyName: mrzResult.surname,
-              bornOn: mrzResult.dateOfBirth,
-              gender: mrzResult.gender,
-              passportNumber: mrzResult.documentNumber,
-              passportExpiryDate: mrzResult.expiryDate,
-              nationality: mrzResult.nationality,
-              passportIssuingCountry: mrzResult.issuingCountry,
-              documentType: mrzResult.documentType,
-              confidence: mrzResult.confidence,
-              warnings: mrzResult.warnings,
-            };
-
-            if (!bestResult || data.confidence > bestResult.confidence) {
-              bestResult = data;
-            }
-
-            if (data.confidence >= 80) break;
+          if (parsed && (!bestMrzResult || parsed.confidence > bestMrzResult.confidence)) {
+            bestMrzResult = parsed;
           }
-        } catch (err) {
-          console.warn(`OCR attempt failed (${attempt.label}):`, err);
+
+          if (parsed && parsed.confidence >= 90) {
+            break;
+          }
+        } catch (error) {
+          console.warn("[DOCUMENT SCANNER] MRZ pass failed:", error);
         }
       }
 
-      setProgress(95);
-
-      if (bestResult) {
-        setExtractedData(bestResult);
-        setEditableData({ ...bestResult });
-        setProgress(100);
-        setStep("review");
-      } else {
-        setErrorMessage(t("scan.no_mrz_found"));
-        setStep("error");
+      let generalOcrText = "";
+      try {
+        generalOcrText = await runGeneralPass(
+          generalWorker,
+          enhanced,
+          t("scan.attempt_original"),
+          62,
+          10,
+        );
+      } catch (error) {
+        console.warn("[DOCUMENT SCANNER] Enhanced OCR pass failed:", error);
       }
-    } catch (err) {
-      console.error("OCR error:", err);
+
+      if (!generalOcrText) {
+        try {
+          generalOcrText = await runGeneralPass(
+            generalWorker,
+            original,
+            t("scan.attempt_full_document"),
+            72,
+            10,
+          );
+        } catch (error) {
+          console.warn("[DOCUMENT SCANNER] Original OCR pass failed:", error);
+        }
+      }
+
+      setProgressValue(84);
+      setProgressLabel(t("scan.step_ai_review"));
+
+      const [documentImageDataUrl, mrzImageDataUrl] = await Promise.all([
+        blobToDataUrl(analysisPreview),
+        blobToDataUrl(analysisMrzPreview),
+      ]);
+
+      const aiReview = await analyzeWithAi({
+        documentImageDataUrl,
+        mrzImageDataUrl,
+        rawOcrText: [generalOcrText, ...ocrSnapshots].filter(Boolean).join("\n\n"),
+        mrzResult: bestMrzResult,
+      });
+
+      const merged = mergeDocumentScanCandidates({
+        mrz: bestMrzResult,
+        ai: aiReview?.candidate || null,
+      });
+
+      const warnings = [...merged.warnings];
+      if ((aiReview?.available && aiReview.candidate) || merged.source === "ai-assisted") {
+        if (!merged.notes) {
+          merged.notes = t("scan.ai_review_ready");
+        }
+      }
+
+      if (merged.confidence < 70 && !warnings.includes("low_confidence")) {
+        warnings.push("low_confidence");
+      }
+
+      if (!bestMrzResult && aiReview?.candidate && !warnings.includes("ai_manual_review")) {
+        warnings.push("ai_manual_review");
+      }
+
+      merged.warnings = warnings;
+
+      setProgressValue(96);
+
+      if (!merged.givenName && !merged.familyName && !merged.passportNumber) {
+        setErrorMessage(bestMrzResult || aiReview?.candidate ? t("scan.ocr_error") : t("scan.no_mrz_found"));
+        setStep("error");
+        return;
+      }
+
+      setEditableData(merged);
+      setProgressValue(100);
+      setStep("review");
+    } catch (error) {
+      console.error("[DOCUMENT SCANNER] Processing error:", error);
       setErrorMessage(t("scan.ocr_error"));
       setStep("error");
+    } finally {
+      await Promise.allSettled([
+        mrzWorker?.terminate(),
+        generalWorker?.terminate(),
+      ]);
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (file) {
-      processImage(file);
+      void processImage(file);
     }
-    if (e.target) e.target.value = "";
+    event.target.value = "";
   };
 
   const handleConfirm = () => {
-    if (editableData) {
-      onConfirm(editableData);
-      handleOpenChange(false);
-    }
+    if (!editableData) return;
+    onConfirm(editableData);
+    handleOpenChange(false);
   };
 
   const docTypeLabel = (type: string) => {
     switch (type) {
-      case "passport": return t("scan.doc_passport");
-      case "id_card": return t("scan.doc_id_card");
-      case "travel_doc": return t("scan.doc_travel_doc");
-      case "visa": return t("scan.doc_visa");
-      default: return t("scan.doc_document");
+      case "passport":
+        return t("scan.doc_passport");
+      case "id_card":
+      case "national_id":
+        return t("scan.doc_id_card");
+      case "travel_doc":
+      case "travel_document":
+        return t("scan.doc_travel_doc");
+      case "visa":
+        return t("scan.doc_visa");
+      default:
+        return t("scan.doc_document");
     }
   };
 
-  const confidenceColor = (conf: number) => {
-    if (conf >= 80) return "text-emerald-600";
-    if (conf >= 60) return "text-amber-600";
+  const sourceLabel = (source: MergedDocumentScanResult["source"]) => {
+    switch (source) {
+      case "mrz":
+        return t("scan.source_mrz");
+      case "ai-assisted":
+        return t("scan.source_ai");
+      default:
+        return t("scan.source_ocr");
+    }
+  };
+
+  const confidenceColor = (confidence: number) => {
+    if (confidence >= 80) return "text-emerald-600";
+    if (confidence >= 60) return "text-amber-600";
     return "text-red-600";
   };
 
-  const confidenceBg = (conf: number) => {
-    if (conf >= 80) return "bg-emerald-50 text-emerald-700 border-emerald-200";
-    if (conf >= 60) return "bg-amber-50 text-amber-700 border-amber-200";
+  const confidenceBg = (confidence: number) => {
+    if (confidence >= 80) return "bg-emerald-50 text-emerald-700 border-emerald-200";
+    if (confidence >= 60) return "bg-amber-50 text-amber-700 border-amber-200";
     return "bg-red-50 text-red-700 border-red-200";
   };
+
+  const renderWarning = (warning: string) => warningLabels[warning as keyof typeof warningLabels] || warning;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -367,9 +536,15 @@ export function ScanDocumentDialog({
 
             <div className="space-y-4 mt-2">
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <Badge className={`text-xs ${confidenceBg(editableData.confidence)}`}>
-                  {docTypeLabel(editableData.documentType)}
-                </Badge>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge className={`text-xs ${confidenceBg(editableData.confidence)}`}>
+                    {docTypeLabel(editableData.documentType)}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs border-blue-200 text-blue-700 bg-blue-50">
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    {sourceLabel(editableData.source)}
+                  </Badge>
+                </div>
                 <div className="flex items-center gap-1.5">
                   {editableData.confidence >= 80 ? (
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
@@ -382,12 +557,23 @@ export function ScanDocumentDialog({
                 </div>
               </div>
 
+              {editableData.notes && (
+                <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                  <p className="text-xs font-bold text-blue-800 mb-1">{t("scan.ai_notes")}</p>
+                  <p className="text-xs text-blue-700 leading-relaxed">{editableData.notes}</p>
+                </div>
+              )}
+
               {editableData.warnings.length > 0 && (
                 <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-2">
                   <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
                   <div className="text-xs text-amber-700">
                     <p className="font-bold mb-1">{t("scan.warnings")}</p>
-                    <p>{t("scan.verify_data")}</p>
+                    <ul className="space-y-1 list-disc pl-4">
+                      {editableData.warnings.map((warning) => (
+                        <li key={warning}>{renderWarning(warning)}</li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
               )}
@@ -398,7 +584,7 @@ export function ScanDocumentDialog({
                     <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.family_name")}</Label>
                     <Input
                       value={editableData.familyName}
-                      onChange={(e) => setEditableData({ ...editableData, familyName: e.target.value })}
+                      onChange={(event) => setEditableData({ ...editableData, familyName: event.target.value })}
                       className="bg-white border-gray-200 text-gray-900 text-sm"
                       data-testid={`input-scan-family-name-${passengerIndex}`}
                     />
@@ -407,7 +593,7 @@ export function ScanDocumentDialog({
                     <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.given_name")}</Label>
                     <Input
                       value={editableData.givenName}
-                      onChange={(e) => setEditableData({ ...editableData, givenName: e.target.value })}
+                      onChange={(event) => setEditableData({ ...editableData, givenName: event.target.value })}
                       className="bg-white border-gray-200 text-gray-900 text-sm"
                       data-testid={`input-scan-given-name-${passengerIndex}`}
                     />
@@ -420,7 +606,7 @@ export function ScanDocumentDialog({
                     <Input
                       type="date"
                       value={editableData.bornOn}
-                      onChange={(e) => setEditableData({ ...editableData, bornOn: e.target.value })}
+                      onChange={(event) => setEditableData({ ...editableData, bornOn: event.target.value })}
                       className="bg-white border-gray-200 text-gray-900 text-sm"
                       data-testid={`input-scan-dob-${passengerIndex}`}
                     />
@@ -457,7 +643,7 @@ export function ScanDocumentDialog({
                     <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("scan.doc_number")}</Label>
                     <Input
                       value={editableData.passportNumber}
-                      onChange={(e) => setEditableData({ ...editableData, passportNumber: e.target.value })}
+                      onChange={(event) => setEditableData({ ...editableData, passportNumber: event.target.value.toUpperCase() })}
                       className="bg-white border-gray-200 text-gray-900 text-sm"
                       data-testid={`input-scan-doc-number-${passengerIndex}`}
                     />
@@ -467,7 +653,7 @@ export function ScanDocumentDialog({
                     <Input
                       type="date"
                       value={editableData.passportExpiryDate}
-                      onChange={(e) => setEditableData({ ...editableData, passportExpiryDate: e.target.value })}
+                      onChange={(event) => setEditableData({ ...editableData, passportExpiryDate: event.target.value })}
                       className="bg-white border-gray-200 text-gray-900 text-sm"
                       data-testid={`input-scan-expiry-${passengerIndex}`}
                     />
@@ -479,7 +665,7 @@ export function ScanDocumentDialog({
                     <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.nationality")}</Label>
                     <Input
                       value={editableData.nationality}
-                      onChange={(e) => setEditableData({ ...editableData, nationality: e.target.value.toUpperCase() })}
+                      onChange={(event) => setEditableData({ ...editableData, nationality: event.target.value.toUpperCase() })}
                       className="bg-white border-gray-200 text-gray-900 text-sm"
                       maxLength={3}
                       placeholder="BRA"
@@ -490,7 +676,7 @@ export function ScanDocumentDialog({
                     <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.issuing_country")}</Label>
                     <Input
                       value={editableData.passportIssuingCountry}
-                      onChange={(e) => setEditableData({ ...editableData, passportIssuingCountry: e.target.value.toUpperCase() })}
+                      onChange={(event) => setEditableData({ ...editableData, passportIssuingCountry: event.target.value.toUpperCase() })}
                       className="bg-white border-gray-200 text-gray-900 text-sm"
                       maxLength={3}
                       placeholder="BRA"

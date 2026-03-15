@@ -35,6 +35,7 @@ import {
 } from "./services/chatbotFallback";
 import { buildOwnerDeskSnapshot } from "./services/ownerDesk";
 import { buildRedactedDocumentPayload } from "./services/passengerPrivacy";
+import { analyzeDocumentScanWithAi } from "./services/documentScannerAi";
 
 function parseNumericRouteParam(value: string | string[] | undefined): number {
   const normalizedValue = Array.isArray(value) ? value[0] : value;
@@ -102,6 +103,33 @@ export function registerRoutes(app: Express) {
     } catch (error) {
         console.error('Places search error:', error);
         res.status(500).json({ error: 'Failed to search places' });
+    }
+  });
+
+  app.post('/api/document-scanner/analyze', async (req, res) => {
+    try {
+      const {
+        documentImageDataUrl,
+        mrzImageDataUrl,
+        rawOcrText,
+        mrzResult,
+      } = req.body ?? {};
+
+      if (!documentImageDataUrl || typeof documentImageDataUrl !== "string") {
+        return res.status(400).json({ error: "documentImageDataUrl required" });
+      }
+
+      const analysis = await analyzeDocumentScanWithAi({
+        documentImageDataUrl,
+        mrzImageDataUrl: typeof mrzImageDataUrl === "string" ? mrzImageDataUrl : null,
+        rawOcrText: typeof rawOcrText === "string" ? rawOcrText : null,
+        mrzResult: mrzResult && typeof mrzResult === "object" ? mrzResult : null,
+      });
+
+      res.json(analysis);
+    } catch (error) {
+      console.error("[DOCUMENT SCANNER] Analyze route failed:", error);
+      res.status(500).json({ error: "Failed to analyze document" });
     }
   });
 
