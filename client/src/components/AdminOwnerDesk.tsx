@@ -232,27 +232,29 @@ export function AdminOwnerDesk({
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6 p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+      <CardContent className="space-y-6 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Alerta principal</p>
-            <p className="mt-2 text-base font-semibold text-slate-900">{data.mobileDeck.headline}</p>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="text-[10px] sm:text-xs uppercase tracking-[0.18em] text-slate-500">Alerta principal</p>
+            <p className="mt-1 sm:mt-2 text-sm sm:text-base font-semibold text-slate-900">{data.mobileDeck.headline}</p>
+            <p className="mt-1 text-xs sm:text-sm text-slate-500">
               {data.summary.alertingNow} alertas no radar · {data.summary.overdueFollowUps} follow-ups vencidos · {data.mobileDeck.linkedDevices} dispositivos ligados
             </p>
           </div>
-          {!pushEnabled && notificationPermission !== "unsupported" && (
-            <Button variant="outline" className="gap-2" onClick={enableNotifications} disabled={pushLoading}>
-              <BellRing className="h-4 w-4" />
-              {pushLoading ? "Ligando push..." : "Ativar push no celular"}
-            </Button>
-          )}
-          {pushEnabled && (
-            <Badge className="border border-emerald-200 bg-emerald-50 text-emerald-700">
-              <BellRing className="mr-1 h-3.5 w-3.5" />
-              Push ativo
-            </Badge>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {!pushEnabled && notificationPermission !== "unsupported" && (
+              <Button variant="outline" size="sm" className="gap-2 shrink-0" onClick={enableNotifications} disabled={pushLoading}>
+                <BellRing className="h-4 w-4" />
+                {pushLoading ? "Ligando push..." : "Ativar push no celular"}
+              </Button>
+            )}
+            {pushEnabled && (
+              <Badge className="border border-emerald-200 bg-emerald-50 text-emerald-700 shrink-0">
+                <BellRing className="mr-1 h-3.5 w-3.5" />
+                Push ativo
+              </Badge>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -418,22 +420,22 @@ export function AdminOwnerDesk({
                     </div>
                   </div>
 
-                  <div className="mt-4 grid gap-3 sm:grid-cols-4">
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Receita</p>
-                      <p className="mt-1 text-base font-semibold text-slate-900">{formatMoney(ownerCase.totalRevenue)}</p>
+                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-2 sm:p-3">
+                      <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.16em] text-slate-500">Receita</p>
+                      <p className="mt-1 text-sm sm:text-base font-semibold text-slate-900">{formatMoney(ownerCase.totalRevenue)}</p>
                     </div>
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Reservas</p>
-                      <p className="mt-1 text-base font-semibold text-slate-900">{ownerCase.totalBookings}</p>
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-2 sm:p-3">
+                      <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.16em] text-slate-500">Reservas</p>
+                      <p className="mt-1 text-sm sm:text-base font-semibold text-slate-900">{ownerCase.totalBookings}</p>
                     </div>
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Inbox</p>
-                      <p className="mt-1 text-base font-semibold text-slate-900">{ownerCase.unreadInboxCount}</p>
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-2 sm:p-3">
+                      <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.16em] text-slate-500">Inbox</p>
+                      <p className="mt-1 text-sm sm:text-base font-semibold text-slate-900">{ownerCase.unreadInboxCount}</p>
                     </div>
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Dispositivos</p>
-                      <p className="mt-1 text-base font-semibold text-slate-900">{ownerCase.deviceCount}</p>
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-2 sm:p-3">
+                      <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.16em] text-slate-500">Aparelhos</p>
+                      <p className="mt-1 text-sm sm:text-base font-semibold text-slate-900">{ownerCase.deviceCount}</p>
                     </div>
                   </div>
 

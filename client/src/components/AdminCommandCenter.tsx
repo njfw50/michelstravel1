@@ -620,26 +620,26 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
               </div>
             </div>
 
-            <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/5 p-4 backdrop-blur">
+            <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/5 p-4 backdrop-blur mt-6 lg:mt-0">
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
-                  <p className="text-xs uppercase tracking-[0.16em] text-white/50">Revenue today</p>
-                  <p className="mt-2 text-2xl font-bold">{formatCurrency(data.revenue.today)}</p>
+                <div className="rounded-2xl border border-white/10 bg-black/10 p-3 sm:p-4">
+                  <p className="text-[10px] sm:text-xs uppercase tracking-[0.16em] text-white/50">Revenue today</p>
+                  <p className="mt-1 sm:mt-2 text-xl sm:text-2xl font-bold">{formatCurrency(data.revenue.today)}</p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
-                  <p className="text-xs uppercase tracking-[0.16em] text-white/50">At risk</p>
-                  <p className="mt-2 text-2xl font-bold">{formatCurrency(data.revenue.atRisk)}</p>
+                <div className="rounded-2xl border border-white/10 bg-black/10 p-3 sm:p-4">
+                  <p className="text-[10px] sm:text-xs uppercase tracking-[0.16em] text-white/50">At risk</p>
+                  <p className="mt-1 sm:mt-2 text-xl sm:text-2xl font-bold">{formatCurrency(data.revenue.atRisk)}</p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
-                  <p className="text-xs uppercase tracking-[0.16em] text-white/50">Bookings today</p>
-                  <p className="mt-2 text-2xl font-bold">{data.counters.todayBookings}</p>
+                <div className="rounded-2xl border border-white/10 bg-black/10 p-3 sm:p-4">
+                  <p className="text-[10px] sm:text-xs uppercase tracking-[0.16em] text-white/50">Bookings today</p>
+                  <p className="mt-1 sm:mt-2 text-xl sm:text-2xl font-bold">{data.counters.todayBookings}</p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
-                  <p className="text-xs uppercase tracking-[0.16em] text-white/50">Searches today</p>
-                  <p className="mt-2 text-2xl font-bold">{data.counters.todaySearches}</p>
+                <div className="rounded-2xl border border-white/10 bg-black/10 p-3 sm:p-4">
+                  <p className="text-[10px] sm:text-xs uppercase tracking-[0.16em] text-white/50">Searches today</p>
+                  <p className="mt-1 sm:mt-2 text-xl sm:text-2xl font-bold">{data.counters.todaySearches}</p>
                 </div>
               </div>
-              <p className="text-xs text-white/55">
+              <p className="text-xs text-white/55 mt-2">
                 Updated {formatMoment(data.generatedAt)}. Average booking value {formatCurrency(data.revenue.avgBookingValue)}.
               </p>
             </div>

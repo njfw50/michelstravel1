@@ -925,15 +925,17 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "command" | "overview" | "bookings" | "settings" | "senior")} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 max-w-3xl" data-testid="tabs-admin-nav">
-            <TabsTrigger value="command" data-testid="tab-command">Command Center</TabsTrigger>
-            <TabsTrigger value="overview" data-testid="tab-overview">Visao Geral</TabsTrigger>
-            <TabsTrigger value="bookings" data-testid="tab-bookings">Reservas</TabsTrigger>
-            <TabsTrigger value="senior" data-testid="tab-senior">Assistência Sênior</TabsTrigger>
-            <TabsTrigger value="settings" data-testid="tab-settings">Configuracoes</TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto pb-2">
+            <TabsList className="inline-flex min-w-max md:w-full md:grid md:grid-cols-5 max-w-3xl" data-testid="tabs-admin-nav">
+              <TabsTrigger value="command" data-testid="tab-command">Command Center</TabsTrigger>
+              <TabsTrigger value="overview" data-testid="tab-overview">Visao Geral</TabsTrigger>
+              <TabsTrigger value="bookings" data-testid="tab-bookings">Reservas</TabsTrigger>
+              <TabsTrigger value="senior" data-testid="tab-senior">Assistência Sênior</TabsTrigger>
+              <TabsTrigger value="settings" data-testid="tab-settings">Configuracoes</TabsTrigger>
+            </TabsList>
+          </div>
 
-            <TabsContent value="command" className="space-y-6 mt-6">
+            <TabsContent value="command" className="space-y-6 mt-4">
               <AdminCommandCenter
                 onOpenLiveDesk={(options) =>
                   setLocation(options?.sessionId ? `/admin/live-chat?session=${options.sessionId}` : "/admin/live-chat")
