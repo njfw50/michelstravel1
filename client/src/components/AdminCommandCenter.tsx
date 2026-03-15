@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowRight, CheckCircle2, Copy, DollarSign, ExternalLink, Loader2, Mail, MessageSquare, Phone, Plane, RefreshCw, Send, ShieldAlert, Sparkles, TrendingUp, Users } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle2, Copy, DollarSign, ExternalLink, Loader2, Mail, MessageSquare, Phone, Plane, RefreshCw, Send, ShieldAlert, Smartphone, Sparkles, TrendingUp, Users } from "lucide-react";
 import { format, formatDistanceToNowStrict } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
@@ -356,6 +356,34 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
     }
   };
 
+  const getAdminAppUrl = () => {
+    if (typeof window === "undefined") {
+      return "/admin-app?tab=alertas";
+    }
+
+    return `${window.location.origin}/admin-app?tab=alertas`;
+  };
+
+  const handleOpenAdminApp = () => {
+    window.open(getAdminAppUrl(), "_blank", "noopener,noreferrer");
+  };
+
+  const handleCopyAdminAppLink = async () => {
+    try {
+      await navigator.clipboard.writeText(getAdminAppUrl());
+      toast({
+        title: "Admin app link copied",
+        description: "Open it on your phone or save it to your home screen.",
+      });
+    } catch {
+      toast({
+        title: "Clipboard unavailable",
+        description: "Copying the admin app link is not available in this browser session.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const openEmail = (email?: string | null) => {
     if (!email) return;
     window.location.href = `mailto:${email}`;
@@ -508,6 +536,22 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                 <Button className="gap-2 bg-white text-slate-900 hover:bg-white/90" onClick={() => onOpenLiveDesk()}>
                   <MessageSquare className="h-4 w-4" />
                   Open live desk
+                </Button>
+                <Button
+                  variant="outline"
+                  className="gap-2 border-white/20 bg-white/5 text-white hover:bg-white/10"
+                  onClick={handleOpenAdminApp}
+                >
+                  <Smartphone className="h-4 w-4" />
+                  Open admin app
+                </Button>
+                <Button
+                  variant="outline"
+                  className="gap-2 border-white/20 bg-white/5 text-white hover:bg-white/10"
+                  onClick={handleCopyAdminAppLink}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Copy admin app link
                 </Button>
                 <Button
                   variant="outline"
