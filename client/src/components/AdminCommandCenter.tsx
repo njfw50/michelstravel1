@@ -407,29 +407,29 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
     }
   };
 
-  const getAdminAppUrl = () => {
+  const getAdminInstallUrl = () => {
     if (typeof window === "undefined") {
-      return "/admin-app?tab=alertas";
+      return "/apps/michels-travel-admin";
     }
 
-    return `${window.location.origin}/admin-app?tab=alertas`;
+    return `${window.location.origin}/apps/michels-travel-admin`;
   };
 
-  const handleOpenAdminApp = () => {
-    window.open(getAdminAppUrl(), "_blank", "noopener,noreferrer");
+  const handleOpenAdminInstallPage = () => {
+    window.open(getAdminInstallUrl(), "_blank", "noopener,noreferrer");
   };
 
-  const handleCopyAdminAppLink = async () => {
+  const handleCopyAdminInstallLink = async () => {
     try {
-      await navigator.clipboard.writeText(getAdminAppUrl());
+      await navigator.clipboard.writeText(getAdminInstallUrl());
       toast({
-        title: "Admin app link copied",
-        description: "Open it on your phone or save it to your home screen.",
+        title: "Admin install link copied",
+        description: "Open it on your phone to install the Michels Travel Admin app when the build is ready.",
       });
     } catch {
       toast({
         title: "Clipboard unavailable",
-        description: "Copying the admin app link is not available in this browser session.",
+        description: "Copying the admin install link is not available in this browser session.",
         variant: "destructive",
       });
     }
@@ -591,18 +591,18 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                 <Button
                   variant="outline"
                   className="gap-2 border-white/20 bg-white/5 text-white hover:bg-white/10"
-                  onClick={handleOpenAdminApp}
+                  onClick={handleOpenAdminInstallPage}
                 >
                   <Smartphone className="h-4 w-4" />
-                  Open admin app
+                  Install admin app
                 </Button>
                 <Button
                   variant="outline"
                   className="gap-2 border-white/20 bg-white/5 text-white hover:bg-white/10"
-                  onClick={handleCopyAdminAppLink}
+                  onClick={handleCopyAdminInstallLink}
                 >
                   <ExternalLink className="h-4 w-4" />
-                  Copy admin app link
+                  Copy install link
                 </Button>
                 <Button
                   variant="outline"
@@ -654,11 +654,11 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
         <ProductAppCard
           title="Michels Travel Admin"
           audience="Operacao"
-          description="Seu app de dono e atendimento. Aqui voce recebe alertas, abre casos, entra no live desk e acompanha tudo do cliente no celular."
-          status="Ativo agora"
+          description="Seu app separado de operacao e atendimento. Ele nao e o senior e nao e o app de busca e compra do cliente."
+          status="Instalacao separada do senior"
           icon={<Smartphone className="h-5 w-5" />}
-          primaryAction={{ label: "Abrir app admin", onClick: handleOpenAdminApp }}
-          secondaryAction={{ label: "Copiar link do app admin", onClick: handleCopyAdminAppLink }}
+          primaryAction={{ label: "Instalar app admin", onClick: handleOpenAdminInstallPage }}
+          secondaryAction={{ label: "Copiar link de instalacao", onClick: handleCopyAdminInstallLink }}
         />
         <ProductAppCard
           title="Michels Travel Senior"

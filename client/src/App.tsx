@@ -32,6 +32,7 @@ import About from "@/pages/About";
 import IronboundNewark from "@/pages/IronboundNewark";
 import BrazilFlightsNewark from "@/pages/BrazilFlightsNewark";
 import AppSeniorDownload from "@/pages/AppSeniorDownload";
+import AppAdminDownload from "@/pages/AppAdminDownload";
 import AdminApp from "@/pages/AdminApp";
 
 import CheckoutSuccess from "@/pages/CheckoutSuccess";
@@ -94,6 +95,7 @@ function Router() {
       <Route path="/agencia-de-viagens-ironbound-newark" component={() => <Layout><IronboundNewark /></Layout>} />
       <Route path="/passagens-para-o-brasil-saindo-de-newark" component={() => <Layout><BrazilFlightsNewark /></Layout>} />
       <Route path="/apps/michels-travel-senior" component={() => <Layout><AppSeniorDownload /></Layout>} />
+      <Route path="/apps/michels-travel-admin" component={() => <Layout><AppAdminDownload /></Layout>} />
       <Route path="/blog" component={() => <Layout><BlogList /></Layout>} />
       <Route path="/blog/:slug" component={() => <Layout><BlogPost /></Layout>} />
       
