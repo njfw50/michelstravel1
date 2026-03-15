@@ -33,6 +33,7 @@ import {
   normalizeChatLanguage,
   parseAgentFallbackRequest,
 } from "./services/chatbotFallback";
+import { buildRedactedDocumentPayload } from "./services/passengerPrivacy";
 
 function parseNumericRouteParam(value: string | string[] | undefined): number {
   const normalizedValue = Array.isArray(value) ? value[0] : value;
@@ -3748,6 +3749,7 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
       await storage.updateLiveSession(id, {
         bookingId: booking.id,
         bookingStatus: "booking_created",
+        submittedDocuments: buildRedactedDocumentPayload(docs.passengers),
       });
 
       notifyLiveSessionClients(id, "booking_update", {

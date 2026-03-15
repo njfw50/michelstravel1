@@ -5,6 +5,7 @@ import { bookings } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { sendBookingConfirmationEmail } from './services/emailService';
 import { createDuffelOrder, type DuffelPassenger } from './services/duffel';
+import { sanitizePassengersForRetention } from './services/passengerPrivacy';
 
 async function fetchReceiptUrl(paymentIntentId: string): Promise<string | null> {
   try {
@@ -40,6 +41,16 @@ function mapPassengersToDuffelFormat(passengerDetails: any[], contactEmail: stri
     nationality: p.nationality || '',
     type: p.type || 'adult',
   }));
+}
+
+async function redactBookingPassengerDetails(bookingId: number, passengerDetails: any[]) {
+  const retainedPassengers = sanitizePassengersForRetention(passengerDetails);
+
+  await db.update(bookings)
+    .set({ passengerDetails: retainedPassengers })
+    .where(eq(bookings.id, bookingId));
+
+  return retainedPassengers;
 }
 
 export class WebhookHandlers {
@@ -104,11 +115,13 @@ export class WebhookHandlers {
                   const duffelResult = await createDuffelOrder(offerId, duffelPassengers, orderAmount, orderCurrency);
 
                   if (duffelResult) {
+                    const retainedPassengers = await redactBookingPassengerDetails(id, passengers);
                     await db.update(bookings)
                       .set({
                         duffelOrderId: duffelResult.orderId,
                         duffelBookingReference: duffelResult.bookingReference,
                         ticketStatus: 'issued',
+                        passengerDetails: retainedPassengers,
                         flightData: {
                           ...flightData,
                           duffelOrderId: duffelResult.orderId,
@@ -146,9 +159,13 @@ export class WebhookHandlers {
                 }
               } else if (isTestMode) {
                 console.log(`[WEBHOOK] Test mode booking #${id} - skipping Duffel order creation`);
+                const passengers = (updated.passengerDetails as any[]) || [];
+                const retainedPassengers = await redactBookingPassengerDetails(id, passengers);
+                updated.passengerDetails = retainedPassengers as any;
               }
 
               if (!updated.confirmationEmailSent) {
+                const safePassengers = sanitizePassengersForRetention((updated.passengerDetails as any[]) || []);
                 sendBookingConfirmationEmail({
                   referenceCode: updated.referenceCode || `MT-${updated.id}`,
                   contactEmail: updated.contactEmail,
@@ -157,7 +174,7 @@ export class WebhookHandlers {
                   currency: updated.currency || 'USD',
                   status: 'confirmed',
                   flightData: updated.flightData,
-                  passengerDetails: (updated.passengerDetails as any[]) || [],
+                  passengerDetails: safePassengers,
                   createdAt: updated.createdAt?.toString() || new Date().toISOString(),
                 }).then(() => {
                   db.update(bookings)
@@ -222,19 +239,21 @@ export class WebhookHandlers {
                     const duffelResult = await createDuffelOrder(offerId, duffelPassengers, orderAmount, orderCurrency);
 
                     if (duffelResult) {
+                      const retainedPassengers = await redactBookingPassengerDetails(id, passengers);
                       await db.update(bookings)
                         .set({
                           duffelOrderId: duffelResult.orderId,
                           duffelBookingReference: duffelResult.bookingReference,
                           ticketStatus: 'issued',
+                          passengerDetails: retainedPassengers,
                           flightData: {
                             ...flightData,
                             duffelOrderId: duffelResult.orderId,
                             duffelBookingReference: duffelResult.bookingReference,
                             ticketIssued: true,
                           },
-                        })
-                        .where(eq(bookings.id, id));
+                      })
+                      .where(eq(bookings.id, id));
                       console.log(`[WEBHOOK] Duffel order created for booking #${id}: ${duffelResult.orderId}`);
                     } else {
                       await db.update(bookings)
@@ -255,9 +274,13 @@ export class WebhookHandlers {
                   }
                 } else if (isTestMode) {
                   console.log(`[WEBHOOK] Test mode booking #${id} - skipping Duffel order creation`);
+                  const passengers = (updated.passengerDetails as any[]) || [];
+                  const retainedPassengers = await redactBookingPassengerDetails(id, passengers);
+                  updated.passengerDetails = retainedPassengers as any;
                 }
 
                 if (!updated.confirmationEmailSent) {
+                  const safePassengers = sanitizePassengersForRetention((updated.passengerDetails as any[]) || []);
                   sendBookingConfirmationEmail({
                     referenceCode: updated.referenceCode || `MT-${updated.id}`,
                     contactEmail: updated.contactEmail,
@@ -266,7 +289,7 @@ export class WebhookHandlers {
                     currency: updated.currency || 'USD',
                     status: 'confirmed',
                     flightData: updated.flightData,
-                    passengerDetails: (updated.passengerDetails as any[]) || [],
+                    passengerDetails: safePassengers,
                     createdAt: updated.createdAt?.toString() || new Date().toISOString(),
                   }).then(() => {
                     db.update(bookings)
