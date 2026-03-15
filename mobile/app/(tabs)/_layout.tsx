@@ -53,8 +53,17 @@ export default function TabLayout() {
       <Tabs.Screen
         name="analytics"
         options={{
+          href: IS_ADMIN_APP ? "/analytics" : null,
           title: IS_ADMIN_APP ? "Conta" : "Conta",
           tabBarIcon: ({ color }) => <IconSymbol size={28} name={IS_ADMIN_APP ? "person.text.rectangle.fill" : "person.crop.circle.fill"} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="senior"
+        options={{
+          href: IS_ADMIN_APP ? "/senior" : null,
+          title: "Senior",
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name={IS_ADMIN_APP ? "heart.text.square.fill" : "heart.text.square.fill"} color={color} />,
         }}
       />
     </Tabs>

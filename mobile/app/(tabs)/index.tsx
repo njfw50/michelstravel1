@@ -30,90 +30,74 @@ const quickTools = [
 ];
 
 function SeniorHomeScreen() {
-  const { user, profile } = useAuthCustom();
+  const { user } = useAuthCustom();
   const firstName = user?.firstName?.trim() || "Cliente";
-  const preferredAirport = profile?.preferredAirport || "EWR";
-  const passengerCount = profile?.savedPassengers?.length || 0;
 
   return (
     <ScreenContainer>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32 }}>
-        <View className="rounded-[30px] border border-border bg-surface px-5 py-5">
-          <View className="flex-row items-center gap-4">
-            <Image source={brandLogo} resizeMode="contain" style={{ width: 76, height: 76 }} />
-            <View className="flex-1">
-              <Text className="text-xs font-semibold uppercase tracking-[1px] text-primary">
-                Michels Travel Senior
-              </Text>
-              <Text className="mt-2 text-2xl font-bold text-foreground">Ola, {firstName}</Text>
-              <Text className="mt-2 text-sm leading-6 text-muted">
-                Este app agora e o seu espaco proprio para planejar a viagem com mais calma, menos medo e ajuda humana por perto.
-              </Text>
-            </View>
-          </View>
-
-          <View className="mt-5 flex-row flex-wrap gap-2">
-            <View className="rounded-full border border-border bg-background px-3 py-2">
-              <Text className="text-xs font-semibold uppercase tracking-[0.8px] text-foreground">
-                Aeroporto base {preferredAirport}
-              </Text>
-            </View>
-            <View className="rounded-full border border-border bg-background px-3 py-2">
-              <Text className="text-xs font-semibold uppercase tracking-[0.8px] text-foreground">
-                {passengerCount} passageiro{passengerCount === 1 ? "" : "s"} salvo{passengerCount === 1 ? "" : "s"}
-              </Text>
-            </View>
-            <View className="rounded-full border border-border bg-background px-3 py-2">
-              <Text className="text-xs font-semibold uppercase tracking-[0.8px] text-foreground">
-                {profile?.needsHumanHelp ? "Humano em prioridade" : "Ajuda quando pedir"}
-              </Text>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            className="mt-5 rounded-[22px] bg-primary px-5 py-4"
-            onPress={() => router.push("/bookings")}
-            activeOpacity={0.85}
-          >
-            <Text className="text-center text-base font-semibold text-background">
-              Comecar a planejar minha viagem
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <View className="mt-6 gap-4">
-          {quickTools.map((tool) => (
-            <TouchableOpacity
-              key={tool.title}
-              className="rounded-[26px] border border-border bg-surface px-5 py-5"
-              onPress={() => router.push(tool.route as never)}
-              activeOpacity={0.85}
-            >
-              <Text className="text-3xl">{tool.emoji}</Text>
-              <Text className="mt-3 text-xl font-bold text-foreground">{tool.title}</Text>
-              <Text className="mt-2 text-sm leading-6 text-muted">{tool.description}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <View className="mt-6 rounded-[26px] border border-border bg-surface px-5 py-5">
-          <Text className="text-lg font-bold text-foreground">Ferramentas feitas para idosos</Text>
-          <Text className="mt-3 text-sm leading-6 text-muted">
-            Aqui o app trabalha em etapas simples. Primeiro voce escolhe o que importa, depois ve opcoes explicadas em linguagem clara, e por ultimo guarda sua escolha ou chama ajuda humana.
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 }}>
+        
+        {/* Header Ultra Simplificado com Foto */}
+        <View className="mb-8 items-center mt-4">
+          <Image source={brandLogo} resizeMode="contain" style={{ width: 100, height: 100 }} />
+          <Text className="mt-4 text-3xl font-bold text-slate-900 text-center">
+            Olá, {firstName}!
           </Text>
-
-          <View className="mt-4 gap-3">
-            {[
-              "Busca guiada por conforto, horario e conexao.",
-              "Escolha da ida e da volta separadas, sem misturar opcoes.",
-              "Passageiros salvos sem guardar cartao nem documento depois da venda.",
-            ].map((item) => (
-              <View key={item} className="rounded-[22px] bg-background px-4 py-4">
-                <Text className="text-sm leading-6 text-foreground">{item}</Text>
-              </View>
-            ))}
-          </View>
+          <Text className="mt-2 text-xl text-slate-600 text-center">
+            Como podemos ajudar você hoje?
+          </Text>
         </View>
+
+        {/* Botões Principais - Huge Touch Targets */}
+        <View className="gap-6">
+          
+          {/* Botão de Viagem Atual (Meu Voo) */}
+          <TouchableOpacity
+            className="rounded-[32px] border-2 border-emerald-500 bg-emerald-50 p-6 flex-row items-center justify-between shadow-sm"
+            onPress={() => router.push("/bookings")}
+            activeOpacity={0.8}
+          >
+            <View className="flex-1 mr-4">
+              <Text className="text-4xl mb-2">✈️</Text>
+              <Text className="text-2xl font-bold text-slate-900">Meu Voo Atual</Text>
+              <Text className="text-lg text-slate-600 mt-1">Ver portões, horários ou passagens de hoje</Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* Botão Central de Pânico / Ligar Humano */}
+          <TouchableOpacity
+            className="rounded-[32px] border-2 border-red-500 bg-red-500 p-6 flex-row items-center justify-between shadow-md"
+            onPress={() => router.push("/messages")}
+            activeOpacity={0.8}
+          >
+            <View className="flex-1 mr-4">
+              <Text className="text-4xl mb-2">📞</Text>
+              <Text className="text-2xl font-bold text-white">Ligar para um Atendente</Text>
+              <Text className="text-lg text-red-100 mt-1">Falar com uma pessoa de verdade agora mesmo</Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* Botão Comprar / Planejar com Voz */}
+          <TouchableOpacity
+            className="rounded-[32px] border-2 border-primary bg-surface p-6 flex-row items-center justify-between shadow-sm"
+            onPress={() => router.push("/bookings")}
+            activeOpacity={0.8}
+          >
+            <View className="flex-1 mr-4">
+              <Text className="text-4xl mb-2">🎙️</Text>
+              <Text className="text-2xl font-bold text-slate-900">Nova Viagem</Text>
+              <Text className="text-lg text-slate-600 mt-1">Diga para onde quer ir e nós montamos para você</Text>
+            </View>
+          </TouchableOpacity>
+
+        </View>
+
+        <View className="mt-8 rounded-[24px] bg-slate-100 p-6">
+          <Text className="text-xl font-bold text-slate-800 text-center">
+            "Não se preocupe em apertar botão errado. A qualquer momento ligamos para você se precisar."
+          </Text>
+        </View>
+
       </ScrollView>
     </ScreenContainer>
   );

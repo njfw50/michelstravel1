@@ -155,6 +155,18 @@ export const voiceEscalations = pgTable("voice_escalations", {
   resolvedAt: timestamp("resolved_at"),
 });
 
+// === SENIOR ALERTS (Assistência Sênior) ===
+export const seniorAlerts = pgTable("senior_alerts", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  bookingId: integer("booking_id").references(() => bookings.id),
+  type: text("type").notNull(), // 'panic_button', 'confusion_detected', 'connection_risk', 'gate_change'
+  status: text("status").default("pending").notNull(), // pending, in_progress, resolved
+  message: text("message"), // e.g: "Passageiro solicitou ajuda humana."
+  createdAt: timestamp("created_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+});
+
 // === FEATURED DEALS (Zapier/Social Media Promotions) ===
 export const featuredDeals = pgTable("featured_deals", {
   id: serial("id").primaryKey(),
@@ -194,6 +206,7 @@ export const insertLiveSessionMessageSchema = createInsertSchema(liveSessionMess
 export const insertInternalThreadSchema = createInsertSchema(internalThreads).omit({ id: true, createdAt: true, lastMessageAt: true });
 export const insertInternalMessageSchema = createInsertSchema(internalMessages).omit({ id: true, createdAt: true });
 export const insertVoiceEscalationSchema = createInsertSchema(voiceEscalations).omit({ id: true, createdAt: true, resolvedAt: true });
+export const insertSeniorAlertSchema = createInsertSchema(seniorAlerts).omit({ id: true, createdAt: true, resolvedAt: true });
 export const insertFeaturedDealSchema = createInsertSchema(featuredDeals).omit({ id: true, createdAt: true, lastPublishedAt: true });
 
 // === TYPES ===
@@ -223,6 +236,9 @@ export type InsertInternalMessage = z.infer<typeof insertInternalMessageSchema>;
 
 export type VoiceEscalation = typeof voiceEscalations.$inferSelect;
 export type InsertVoiceEscalation = z.infer<typeof insertVoiceEscalationSchema>;
+
+export type SeniorAlert = typeof seniorAlerts.$inferSelect;
+export type InsertSeniorAlert = z.infer<typeof insertSeniorAlertSchema>;
 
 export type FeaturedDeal = typeof featuredDeals.$inferSelect;
 export type InsertFeaturedDeal = z.infer<typeof insertFeaturedDealSchema>;

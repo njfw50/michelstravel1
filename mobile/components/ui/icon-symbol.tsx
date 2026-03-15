@@ -21,6 +21,11 @@ const MAPPING = {
   "person.crop.circle.fill": "account-circle",
   "chevron.left.forwardslash.chevron.right": "code",
   "chevron.right": "chevron-right",
+  "heart.text.square.fill": "favorite",
+  "bell.fill": "notifications",
+  "person.text.rectangle.fill": "contact-page",
+  "tray.full.fill": "inbox",
+  "exclamationmark.triangle.fill": "warning",
 } as IconMapping;
 
 /**
