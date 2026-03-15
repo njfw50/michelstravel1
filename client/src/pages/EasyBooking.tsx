@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { CalendarDays, CheckCircle2, ChevronDown, MessageCircle, Search, ShieldCheck, UserRound, ArrowRight, HeartHandshake, BriefcaseBusiness, Package, Luggage } from "lucide-react";
@@ -225,6 +225,8 @@ export default function EasyBooking() {
   const [departureDate, setDepartureDate] = useState<Date | undefined>();
   const [returnDate, setReturnDate] = useState<Date | undefined>();
   const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
+  const [infants, setInfants] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [priority, setPriority] = useState<SeniorPriority>("comfort");
   const [connections, setConnections] = useState<SeniorConnections>("one");
@@ -336,10 +338,36 @@ export default function EasyBooking() {
         destination ? `${currentLanguage === "en" ? "Destination" : currentLanguage === "es" ? "Destino" : "Destino"}: ${destination}` : null,
         departureDate ? `${currentLanguage === "en" ? "Departure" : currentLanguage === "es" ? "Salida" : "Ida"}: ${format(departureDate, "yyyy-MM-dd")}` : null,
         tripType === "round-trip" && returnDate ? `${currentLanguage === "en" ? "Return" : currentLanguage === "es" ? "Vuelta" : "Volta"}: ${format(returnDate, "yyyy-MM-dd")}` : null,
-        `${currentLanguage === "en" ? "Travelers" : currentLanguage === "es" ? "Pasajeros" : "Passageiros"}: ${adults}`,
+        `${currentLanguage === "en" ? "Travelers" : currentLanguage === "es" ? "Pasajeros" : "Passageiros"}: ${adults + children + infants}`,
       ],
     }),
   );
+
+  const travelerSummary = (
+    currentLanguage === "en"
+      ? [
+          adults ? `${adults} adult${adults === 1 ? "" : "s"}` : null,
+          children ? `${children} child${children === 1 ? "" : "ren"}` : null,
+          infants ? `${infants} infant${infants === 1 ? "" : "s"}` : null,
+        ]
+      : currentLanguage === "es"
+        ? [
+            adults ? `${adults} adulto${adults === 1 ? "" : "s"}` : null,
+            children ? `${children} niño${children === 1 ? "" : "s"}` : null,
+            infants ? `${infants} bebe${infants === 1 ? "" : "s"}` : null,
+          ]
+        : [
+            adults ? `${adults} adulto${adults === 1 ? "" : "s"}` : null,
+            children ? `${children} crianca${children === 1 ? "" : "s"}` : null,
+            infants ? `${infants} bebe${infants === 1 ? "" : "s"}` : null,
+          ]
+  )
+    .filter(Boolean)
+    .join(" · ");
+
+  useEffect(() => {
+    setInfants((value) => Math.min(value, adults));
+  }, [adults]);
 
   const goToPlanner = () => {
     document.getElementById("senior-planner")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -372,7 +400,7 @@ export default function EasyBooking() {
     { label: wizardCopy.priorityTitle, value: priority === "fastest" ? wizardCopy.priorityFastest : priority === "balanced" ? wizardCopy.priorityBalanced : priority === "cheapest" ? wizardCopy.priorityCheapest : wizardCopy.priorityComfort },
     { label: wizardCopy.connectionTitle, value: connections === "none" ? wizardCopy.connectionsNone : connections === "any" ? wizardCopy.connectionsAny : wizardCopy.connectionsOne },
     { label: wizardCopy.bagTitle, value: bags === "checked" ? wizardCopy.bagsChecked : bags === "carry" ? wizardCopy.bagsCarry : wizardCopy.bagsFlexible },
-    { label: copy.travelers, value: `${adults} ${adults === 1 ? copy.traveler_one : copy.traveler_many}` },
+    { label: copy.travelers, value: travelerSummary },
   ].filter((item) => item.value);
 
   const validateStep = (step: number) => {
@@ -424,10 +452,11 @@ export default function EasyBooking() {
       origin,
       destination,
       date: format(departureDate, "yyyy-MM-dd"),
-      passengers: String(adults),
+      tripType,
+      passengers: String(adults + children + infants),
       adults: String(adults),
-      children: "0",
-      infants: "0",
+      children: String(children),
+      infants: String(infants),
       cabinClass: "economy",
       ui: "easy",
       seniorPriority: priority,
@@ -649,33 +678,67 @@ export default function EasyBooking() {
 
                 {currentStep === 1 && (
                 <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4 sm:p-5 md:p-6">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-semibold tracking-[0.08em] text-slate-600">{copy.travelers}</p>
-                      <p className="mt-1 text-base sm:text-lg md:text-xl font-bold text-slate-950">
-                        {adults} {adults === 1 ? copy.traveler_one : copy.traveler_many}
-                      </p>
-                      <p className="mt-2 text-sm text-slate-500 max-w-xl">{copy.travelers_hint}</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setAdults((value) => Math.max(1, value - 1))}
-                        className="h-12 w-12 rounded-2xl bg-white border border-slate-200 text-2xl font-bold text-slate-700 transition-colors hover:border-blue-300 hover:text-blue-600"
-                      >
-                        -
-                      </button>
-                      <div className="flex h-14 min-w-[4.5rem] items-center justify-center rounded-2xl bg-white border border-slate-200 text-2xl font-extrabold text-slate-950">
-                        {adults}
+                  <div>
+                    <p className="text-sm font-semibold tracking-[0.08em] text-slate-600">{copy.travelers}</p>
+                    <p className="mt-1 text-base sm:text-lg md:text-xl font-bold text-slate-950">
+                      {travelerSummary}
+                    </p>
+                    <p className="mt-2 text-sm text-slate-500 max-w-xl">{copy.travelers_hint}</p>
+                  </div>
+                  <div className="mt-5 space-y-4">
+                    {[
+                      {
+                        label: currentLanguage === "en" ? "Adults" : currentLanguage === "es" ? "Adultos" : "Adultos",
+                        hint: currentLanguage === "en" ? "Age 12 or older" : currentLanguage === "es" ? "12 anos o mas" : "12 anos ou mais",
+                        value: adults,
+                        min: 1,
+                        max: 9,
+                        onChange: setAdults,
+                      },
+                      {
+                        label: currentLanguage === "en" ? "Children" : currentLanguage === "es" ? "Niños" : "Criancas",
+                        hint: currentLanguage === "en" ? "Age 2 to 11" : currentLanguage === "es" ? "De 2 a 11 anos" : "De 2 a 11 anos",
+                        value: children,
+                        min: 0,
+                        max: 8,
+                        onChange: setChildren,
+                      },
+                      {
+                        label: currentLanguage === "en" ? "Infants" : currentLanguage === "es" ? "Bebes" : "Bebes",
+                        hint: currentLanguage === "en" ? "Under 2 years old" : currentLanguage === "es" ? "Menos de 2 anos" : "Menos de 2 anos",
+                        value: infants,
+                        min: 0,
+                        max: adults,
+                        onChange: setInfants,
+                      },
+                    ].map((group) => (
+                      <div key={group.label} className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-base font-bold text-slate-950">{group.label}</p>
+                          <p className="text-sm text-slate-500">{group.hint}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => group.onChange((value) => Math.max(group.min, value - 1))}
+                            className="h-12 w-12 rounded-2xl bg-slate-50 border border-slate-200 text-2xl font-bold text-slate-700 transition-colors hover:border-blue-300 hover:text-blue-600"
+                          >
+                            -
+                          </button>
+                          <div className="flex h-14 min-w-[4.5rem] items-center justify-center rounded-2xl bg-slate-50 border border-slate-200 text-2xl font-extrabold text-slate-950">
+                            {group.value}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => group.onChange((value) => Math.min(group.max, value + 1))}
+                            className="h-12 w-12 rounded-2xl bg-slate-50 border border-slate-200 text-2xl font-bold text-slate-700 transition-colors hover:border-blue-300 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-40"
+                            disabled={group.value >= group.max}
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setAdults((value) => Math.min(9, value + 1))}
-                        className="h-12 w-12 rounded-2xl bg-white border border-slate-200 text-2xl font-bold text-slate-700 transition-colors hover:border-blue-300 hover:text-blue-600"
-                      >
-                        +
-                      </button>
-                    </div>
+                    ))}
                   </div>
                 </div>
                 )}

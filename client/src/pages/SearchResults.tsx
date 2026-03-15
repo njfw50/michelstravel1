@@ -31,6 +31,7 @@ import {
 import type { FlightOffer, FlightSlice } from "@shared/schema";
 import {
   buildSeniorRecommendations,
+  getSeniorFlightInsight,
   type SeniorBagPreference,
   type SeniorConnectionPreference,
   type SeniorPreferences,
@@ -397,14 +398,46 @@ export default function SearchResults() {
     openChatbotAssistant({ message: starter, autoSend: true });
   }, [language, params]);
 
-  const defaultValues = {
+  const defaultValues = useMemo(() => ({
     origin: params.origin ?? "",
     destination: params.destination ?? "",
     date: params.date ? new Date(params.date) : undefined,
+    returnDate: (params as any).returnDate ? new Date((params as any).returnDate) : undefined,
     passengers: params.passengers ?? "1",
-  };
+    adults: params.adults ?? "1",
+    children: params.children ?? "0",
+    infants: params.infants ?? "0",
+    cabinClass: params.cabinClass ?? "economy",
+    tripType: isMultiCity ? "multi-city" : (params as any).returnDate ? "round-trip" : "one-way",
+  }), [
+    isMultiCity,
+    params.adults,
+    params.cabinClass,
+    params.children,
+    params.date,
+    params.destination,
+    params.infants,
+    params.origin,
+    params.passengers,
+    (params as any).returnDate,
+  ]);
 
-  const [sortBy, setSortBy] = useState<SortOption>("cheapest");
+  const easyPreferences: SeniorPreferences = {
+    priority: ["comfort", "fastest", "balanced", "cheapest"].includes(seniorPriority) ? seniorPriority : "comfort",
+    connections: ["none", "one", "any"].includes(seniorConnections) ? seniorConnections : "one",
+    bags: ["checked", "carry", "flexible"].includes(seniorBags) ? seniorBags : "flexible",
+    time: ["day", "any"].includes(seniorTime) ? seniorTime : "day",
+  };
+  const initialSortBy: SortOption =
+    isEasyMode
+      ? seniorPriority === "fastest"
+        ? "fastest"
+        : seniorPriority === "cheapest"
+          ? "cheapest"
+          : "best"
+      : "cheapest";
+
+  const [sortBy, setSortBy] = useState<SortOption>(initialSortBy);
   const [selectedStops, setSelectedStops] = useState<Set<string>>(new Set());
   const [selectedAirlines, setSelectedAirlines] = useState<Set<string>>(new Set());
   const [selectedDepartureTimes, setSelectedDepartureTimes] = useState<Set<DepartureTime>>(new Set());
@@ -454,6 +487,11 @@ export default function SearchResults() {
     setVisibleReturnCount(FLIGHTS_PER_PAGE);
   }, [sortBy, selectedStops, selectedAirlines, selectedDepartureTimes, selectedReturnTimes, priceRange]);
 
+  useEffect(() => {
+    if (!isEasyMode) return;
+    setSortBy(initialSortBy);
+  }, [initialSortBy, isEasyMode]);
+
   const uniqueAirlines = useMemo(() => {
     if (!flights) return [];
     return Array.from(new Set(flights.map(f => f.airline))).sort();
@@ -498,6 +536,45 @@ export default function SearchResults() {
     setVisibleReturnCount(FLIGHTS_PER_PAGE);
   }, []);
 
+  const compareFlights = useCallback((a: FlightOffer, b: FlightOffer) => {
+    if (isEasyMode) {
+      if (sortBy === "cheapest") {
+        return a.price - b.price || parseDurationToMinutes(a.duration) - parseDurationToMinutes(b.duration);
+      }
+
+      if (sortBy === "fastest") {
+        return parseDurationToMinutes(a.duration) - parseDurationToMinutes(b.duration) || a.price - b.price;
+      }
+
+      const insightA = getSeniorFlightInsight(a, easyPreferences);
+      const insightB = getSeniorFlightInsight(b, easyPreferences);
+      const scoreA =
+        easyPreferences.priority === "balanced" || easyPreferences.priority === "cheapest"
+          ? insightA.balancedScore
+          : insightA.comfortScore;
+      const scoreB =
+        easyPreferences.priority === "balanced" || easyPreferences.priority === "cheapest"
+          ? insightB.balancedScore
+          : insightB.comfortScore;
+
+      return scoreA - scoreB || a.price - b.price || parseDurationToMinutes(a.duration) - parseDurationToMinutes(b.duration);
+    }
+
+    switch (sortBy) {
+      case "cheapest":
+        return a.price - b.price;
+      case "fastest":
+        return parseDurationToMinutes(a.duration) - parseDurationToMinutes(b.duration);
+      case "best": {
+        const scoreA = a.price * 0.6 + parseDurationToMinutes(a.duration) * 0.4;
+        const scoreB = b.price * 0.6 + parseDurationToMinutes(b.duration) * 0.4;
+        return scoreA - scoreB;
+      }
+      default:
+        return 0;
+    }
+  }, [easyPreferences, isEasyMode, sortBy]);
+
   const filteredAndSortedFlights = useMemo(() => {
     if (!flights) return [];
 
@@ -535,24 +612,10 @@ export default function SearchResults() {
       return true;
     });
 
-    filtered.sort((a: FlightOffer, b: FlightOffer) => {
-      switch (sortBy) {
-        case "cheapest":
-          return a.price - b.price;
-        case "fastest":
-          return parseDurationToMinutes(a.duration) - parseDurationToMinutes(b.duration);
-        case "best": {
-          const scoreA = a.price * 0.6 + parseDurationToMinutes(a.duration) * 0.4;
-          const scoreB = b.price * 0.6 + parseDurationToMinutes(b.duration) * 0.4;
-          return scoreA - scoreB;
-        }
-        default:
-          return 0;
-      }
-    });
+    filtered.sort(compareFlights);
 
     return filtered;
-  }, [flights, selectedStops, selectedAirlines, selectedDepartureTimes, selectedReturnTimes, priceRange, sortBy]);
+  }, [compareFlights, flights, selectedStops, selectedAirlines, selectedDepartureTimes, selectedReturnTimes, priceRange]);
 
   const offerMatrix = useMemo(() => {
     if (!isRoundTrip || !flights || flights.length === 0) return null;
@@ -593,17 +656,6 @@ export default function SearchResults() {
     return { outboundMap, returnMap, comboMap };
   }, [flights, isRoundTrip, getOutboundKey, getReturnKey]);
 
-  const filteredOutboundKeys = useMemo(() => {
-    if (!offerMatrix || !filteredAndSortedFlights) return new Set<string>();
-    const keys = new Set<string>();
-    for (const flight of filteredAndSortedFlights) {
-      if (flight.slices && flight.slices.length >= 2) {
-        keys.add(getOutboundKey(flight));
-      }
-    }
-    return keys;
-  }, [offerMatrix, filteredAndSortedFlights, getOutboundKey]);
-
   const filteredComboMap = useMemo(() => {
     if (!isRoundTrip || !filteredAndSortedFlights) return new Map<string, FlightOffer>();
     const map = new Map<string, FlightOffer>();
@@ -620,45 +672,62 @@ export default function SearchResults() {
     return map;
   }, [filteredAndSortedFlights, isRoundTrip, getOutboundKey, getReturnKey]);
 
-  const returnOptionsForSelected = useMemo(() => {
-    if (!selectedOutboundKey || !offerMatrix) return [];
-    const { returnMap } = offerMatrix;
-    const results: { returnKey: string; slice: FlightSlice; airline: string; logoUrl?: string | null; sampleOffer: FlightOffer; offer: FlightOffer | null; price: number | null }[] = [];
+  const outboundOptionsForDisplay = useMemo(() => {
+    if (!offerMatrix) return [];
 
-    for (const [rtKey, rtData] of Array.from(returnMap.entries())) {
-      const comboKey = `${selectedOutboundKey}::${rtKey}`;
-      const matchingOffer = filteredComboMap.get(comboKey) || null;
+    const grouped = new Map<string, { slice: FlightSlice; airline: string; logoUrl?: string | null; lowestPrice: number; offer: FlightOffer }>();
+
+    for (const flight of filteredAndSortedFlights) {
+      if (!flight.slices || flight.slices.length < 2) continue;
+      const outboundKey = getOutboundKey(flight);
+      const existing = grouped.get(outboundKey);
+      if (!existing || compareFlights(flight, existing.offer) < 0) {
+        grouped.set(outboundKey, {
+          slice: flight.slices[0],
+          airline: flight.airline,
+          logoUrl: flight.logoUrl,
+          lowestPrice: flight.price,
+          offer: flight,
+        });
+      }
+    }
+
+    if (grouped.size === 0) {
+      return Array.from(offerMatrix.outboundMap.entries()).sort(([, a], [, b]) => compareFlights(a.offer, b.offer));
+    }
+
+    return Array.from(grouped.entries()).sort(([, a], [, b]) => compareFlights(a.offer, b.offer));
+  }, [compareFlights, filteredAndSortedFlights, getOutboundKey, offerMatrix]);
+
+  const returnOptionsForSelected = useMemo(() => {
+    if (!selectedOutboundKey) return [];
+
+    const results: { returnKey: string; slice: FlightSlice; airline: string; logoUrl?: string | null; offer: FlightOffer; price: number }[] = [];
+
+    for (const [comboKey, offer] of Array.from(filteredComboMap.entries())) {
+      if (!comboKey.startsWith(`${selectedOutboundKey}::`) || !offer.slices || offer.slices.length < 2) continue;
+
       results.push({
-        returnKey: rtKey,
-        slice: rtData.slice,
-        airline: rtData.airline,
-        logoUrl: rtData.logoUrl,
-        sampleOffer: rtData.offer,
-        offer: matchingOffer,
-        price: matchingOffer ? matchingOffer.price : null,
+        returnKey: getReturnKey(offer),
+        slice: offer.slices[1],
+        airline: offer.airline,
+        logoUrl: offer.logoUrl,
+        offer,
+        price: offer.price,
       });
     }
 
-    const available = results.filter(r => r.offer !== null);
-    const unavailable = results.filter(r => r.offer === null);
-
-    available.sort((a, b) => {
-      switch (sortBy) {
-        case "cheapest": return (a.price || 0) - (b.price || 0);
-        case "fastest": return parseDurationToMinutes(a.slice.duration) - parseDurationToMinutes(b.slice.duration);
-        case "best": {
-          const sa = (a.price || 0) * 0.6 + parseDurationToMinutes(a.slice.duration) * 0.4;
-          const sb = (b.price || 0) * 0.6 + parseDurationToMinutes(b.slice.duration) * 0.4;
-          return sa - sb;
-        }
-        default: return 0;
-      }
-    });
-
-    return [...available, ...unavailable];
-  }, [selectedOutboundKey, offerMatrix, filteredComboMap, sortBy]);
+    results.sort((a, b) => compareFlights(a.offer, b.offer));
+    return results;
+  }, [compareFlights, filteredComboMap, getReturnKey, selectedOutboundKey]);
 
   const showTwoStepFlow = isRoundTrip && offerMatrix !== null;
+  const hideStandardFilters = isEasyMode && showTwoStepFlow;
+
+  useEffect(() => {
+    if (!hideStandardFilters) return;
+    clearFilters();
+  }, [clearFilters, hideStandardFilters]);
 
   const stopsOptions = [
     { key: "direct", label: t("flight.direct") || "Direct" },
@@ -681,13 +750,6 @@ export default function SearchResults() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
-  };
-
-  const easyPreferences: SeniorPreferences = {
-    priority: ["comfort", "fastest", "balanced", "cheapest"].includes(seniorPriority) ? seniorPriority : "comfort",
-    connections: ["none", "one", "any"].includes(seniorConnections) ? seniorConnections : "one",
-    bags: ["checked", "carry", "flexible"].includes(seniorBags) ? seniorBags : "flexible",
-    time: ["day", "any"].includes(seniorTime) ? seniorTime : "day",
   };
 
   const easyPreferenceItems = [
@@ -728,9 +790,15 @@ export default function SearchResults() {
     [flights, easyPreferences],
   );
 
-  const easyDefaultSort = easyPreferences.priority === "fastest" ? "fastest" : easyPreferences.priority === "cheapest" ? "cheapest" : "best";
+  useEffect(() => {
+    if (!selectedOutboundKey) return;
+    const outboundStillVisible = outboundOptionsForDisplay.some(([key]) => key === selectedOutboundKey);
+    if (!outboundStillVisible) {
+      setSelectedOutboundKey(null);
+    }
+  }, [outboundOptionsForDisplay, selectedOutboundKey]);
 
-  if (isEasyMode) {
+  if (isEasyMode && !showTwoStepFlow) {
     return (
       <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.98),_rgba(241,245,249,0.98)_36%,_rgba(226,232,240,0.96)_100%)] pb-20">
         <SEO title="Resultados Senior" description="Voos organizados com menos informacao irrelevante e mais foco em conforto, conexoes e clareza." path="/search" noindex={true} />
@@ -1023,7 +1091,20 @@ export default function SearchResults() {
       <SEO title="Resultados da Pesquisa" description="Compare voos e encontre as melhores ofertas de passagens aéreas. Preços atualizados em tempo real." path="/search" noindex={true} />
       <div className="bg-white border-b border-gray-200 shadow-sm pb-6 pt-8 px-4">
         <div className="container mx-auto max-w-6xl">
-           <FlightSearchForm defaultValues={defaultValues} extraSearchParams={isEasyMode ? { ui: "easy" } : undefined} />
+           <FlightSearchForm
+             defaultValues={defaultValues}
+             extraSearchParams={
+               isEasyMode
+                 ? {
+                     ui: "easy",
+                     seniorPriority,
+                     seniorConnections,
+                     seniorBags,
+                     seniorTime,
+                   }
+                 : undefined
+             }
+           />
         </div>
       </div>
 
@@ -1065,78 +1146,97 @@ export default function SearchResults() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
-          <div className="hidden lg:block lg:col-span-3 space-y-6">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 sticky top-24">
-              {filterPanel}
+        {hideStandardFilters && (
+          <div className="mb-6 rounded-[28px] border border-slate-200 bg-white p-4 shadow-[0_20px_70px_-42px_rgba(15,23,42,0.22)] sm:p-5">
+            <div className="grid gap-3 md:grid-cols-4">
+              {easyPreferenceItems.map((item) => (
+                <div key={item.label} className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-4">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">{item.label}</p>
+                  <p className="mt-2 text-sm font-semibold leading-relaxed text-slate-900">{item.value}</p>
+                </div>
+              ))}
             </div>
           </div>
+        )}
 
-          <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
-            <SheetContent side="left" className="overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>{t("results.filters") || "Filters"}</SheetTitle>
-                <SheetDescription>{t("results.filter_desc") || "Refine your search results"}</SheetDescription>
-              </SheetHeader>
-              <div className="mt-4">
+        <div className={hideStandardFilters ? "grid grid-cols-1 gap-8" : "grid grid-cols-1 lg:grid-cols-12 gap-8"}>
+
+          {!hideStandardFilters && (
+            <div className="hidden lg:block lg:col-span-3 space-y-6">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 sticky top-24">
                 {filterPanel}
               </div>
-            </SheetContent>
-          </Sheet>
+            </div>
+          )}
 
-          <div className="lg:col-span-9 space-y-4">
+          {!hideStandardFilters && (
+            <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+              <SheetContent side="left" className="overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>{t("results.filters") || "Filters"}</SheetTitle>
+                  <SheetDescription>{t("results.filter_desc") || "Refine your search results"}</SheetDescription>
+                </SheetHeader>
+                <div className="mt-4">
+                  {filterPanel}
+                </div>
+              </SheetContent>
+            </Sheet>
+          )}
+
+          <div className={hideStandardFilters ? "space-y-4" : "lg:col-span-9 space-y-4"}>
             <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-xl font-bold text-gray-900" data-testid="text-results-count">
                   {isSearching
                     ? t("results.searching") || "Searching..."
                     : showTwoStepFlow && !selectedOutboundKey && offerMatrix
-                      ? `${filteredOutboundKeys.size > 0 ? filteredOutboundKeys.size : offerMatrix.outboundMap.size} ${t("results.outbound_flights") || "voos de ida"}`
+                      ? `${outboundOptionsForDisplay.length} ${t("results.outbound_flights") || "voos de ida"}`
                       : showTwoStepFlow && selectedOutboundKey
-                        ? `${returnOptionsForSelected.filter(r => r.offer).length} ${t("results.return_flights") || "opcoes de volta"}`
+                        ? `${returnOptionsForSelected.length} ${t("results.return_flights") || "opcoes de volta"}`
                         : `${filteredAndSortedFlights.length} ${t("results.flights_found") || "flights found"}`}
                 </h2>
-                {activeFilterCount > 0 && (
+                {!hideStandardFilters && activeFilterCount > 0 && (
                   <Badge variant="secondary" data-testid="badge-active-filters">
                     {activeFilterCount} {activeFilterCount === 1
                       ? (t("results.filter_active") || "filter")
                       : (t("results.filters_active") || "filters")}
                   </Badge>
                 )}
-                {activeFilterCount > 0 && flights && filteredAndSortedFlights.length < flights.length && (
+                {!hideStandardFilters && activeFilterCount > 0 && flights && filteredAndSortedFlights.length < flights.length && (
                   <span className="text-xs text-gray-400" data-testid="text-total-count">
                     ({t("results.of") || "of"} {flights.length})
                   </span>
                 )}
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="lg:hidden border-gray-200 bg-white text-gray-700"
-                  onClick={() => setMobileFiltersOpen(true)}
-                  data-testid="button-mobile-filters"
-                >
-                  <Filter className="h-4 w-4 mr-2" />
-                  {t("results.filters") || "Filters"}
-                  {activeFilterCount > 0 && (
-                    <Badge variant="default" className="ml-1.5 text-[10px] px-1.5 py-0">
-                      {activeFilterCount}
-                    </Badge>
-                  )}
-                </Button>
-                <select
-                  className="bg-white border border-gray-200 text-sm rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-gray-700 cursor-pointer shadow-sm"
-                  data-testid="select-sort"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortOption)}
-                >
-                  <option value="cheapest">{t("results.sort_cheapest") || "Cheapest"}</option>
-                  <option value="fastest">{t("results.sort_fastest") || "Fastest"}</option>
-                  <option value="best">{t("results.sort_best") || "Best"}</option>
-                </select>
-              </div>
+              {!hideStandardFilters && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="lg:hidden border-gray-200 bg-white text-gray-700"
+                    onClick={() => setMobileFiltersOpen(true)}
+                    data-testid="button-mobile-filters"
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    {t("results.filters") || "Filters"}
+                    {activeFilterCount > 0 && (
+                      <Badge variant="default" className="ml-1.5 text-[10px] px-1.5 py-0">
+                        {activeFilterCount}
+                      </Badge>
+                    )}
+                  </Button>
+                  <select
+                    className="bg-white border border-gray-200 text-sm rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-gray-700 cursor-pointer shadow-sm"
+                    data-testid="select-sort"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  >
+                    <option value="cheapest">{t("results.sort_cheapest") || "Cheapest"}</option>
+                    <option value="fastest">{t("results.sort_fastest") || "Fastest"}</option>
+                    <option value="best">{t("results.sort_best") || "Best"}</option>
+                  </select>
+                </div>
+              )}
             </div>
 
             {isSearching && (
@@ -1234,16 +1334,14 @@ export default function SearchResults() {
                         <div>
                           <p className="text-sm font-bold text-blue-900 dark:text-blue-100">{t("results.select_outbound") || "Selecione o voo de ida"}</p>
                           <p className="text-xs text-blue-600 dark:text-blue-400">
-                            {flights?.[0]?.originCity || params.origin} → {flights?.[0]?.destinationCity || params.destination} · {filteredOutboundKeys.size > 0 ? filteredOutboundKeys.size : offerMatrix.outboundMap.size} {t("results.options") || "opções"}
+                            {flights?.[0]?.originCity || params.origin} → {flights?.[0]?.destinationCity || params.destination} · {outboundOptionsForDisplay.length} {t("results.options") || "opções"}
                           </p>
                         </div>
                       </div>
 
                       <div className="space-y-3">
                         {(() => {
-                          const allOutbound = Array.from(offerMatrix.outboundMap.entries())
-                            .filter(([key]) => filteredOutboundKeys.size === 0 || filteredOutboundKeys.has(key))
-                            .sort(([,a], [,b]) => a.lowestPrice - b.lowestPrice);
+                          const allOutbound = outboundOptionsForDisplay;
                           const visibleOutbound = allOutbound.slice(0, visibleOutboundCount);
                           return (<>
                         {visibleOutbound.map(([key, group]) => {
@@ -1439,7 +1537,7 @@ export default function SearchResults() {
                         <div>
                           <p className="text-sm font-bold text-blue-900 dark:text-blue-100">{t("results.select_return") || "Agora selecione o voo de volta"}</p>
                           <p className="text-xs text-blue-600 dark:text-blue-400">
-                            {flights?.[0]?.destinationCity || params.destination} → {flights?.[0]?.originCity || params.origin} · {returnOptionsForSelected.filter(r => r.offer).length} {t("results.available") || "disponíveis"}
+                            {flights?.[0]?.destinationCity || params.destination} → {flights?.[0]?.originCity || params.origin} · {returnOptionsForSelected.length} {t("results.available") || "disponíveis"}
                           </p>
                         </div>
                       </div>
@@ -1451,8 +1549,7 @@ export default function SearchResults() {
                             const lastSeg = returnSlice.segments[returnSlice.segments.length - 1];
                             const stopsCount = returnSlice.segments.length - 1;
                             const sliceDuration = returnSlice.duration.startsWith("P") ? formatDurationUtil(returnSlice.duration) : returnSlice.duration;
-                            const isAvailable = rt.offer !== null;
-                            const bookUrl = isAvailable ? `/book/${rt.offer!.id}?${searchParams.toString()}` : "";
+                            const bookUrl = `/book/${rt.offer.id}?${searchParams.toString()}`;
                             const depDate = format(parseISO(firstSeg.departureTime), "dd MMM");
                             const arrDate = format(parseISO(lastSeg.arrivalTime), "dd MMM");
                             const isDiffDay = depDate !== arrDate;
@@ -1460,7 +1557,7 @@ export default function SearchResults() {
                             return (
                               <Card
                                 key={rt.returnKey}
-                                className={`p-0 overflow-hidden border transition-all bg-white rounded-2xl ${isAvailable ? "border-gray-200 hover:border-blue-400 hover:shadow-md group" : "border-gray-100 opacity-40 pointer-events-none"}`}
+                                className="p-0 overflow-hidden border transition-all bg-white rounded-2xl border-gray-200 hover:border-blue-400 hover:shadow-md group"
                                 data-testid={`return-option-${rt.returnKey}`}
                               >
                                 <div className="p-5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
@@ -1507,31 +1604,23 @@ export default function SearchResults() {
                                   </div>
 
                                   <div className="md:col-span-4 flex items-center justify-end gap-3">
-                                    {isAvailable ? (
-                                      <>
-                                        <div className="text-right">
-                                          <p className="text-[10px] text-gray-400 uppercase">{t("flight.total_price") || "Preço total"}</p>
-                                          <p className="text-2xl font-bold text-gray-900">
-                                            {new Intl.NumberFormat(priceLocale, { style: "currency", currency: rt.offer!.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(rt.price!)}
-                                          </p>
-                                          <p className="text-[10px] text-gray-400">{t("results.round_trip_total") || "ida + volta"}</p>
-                                        </div>
-                                        <Link href={bookUrl}>
-                                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg group-hover:shadow-md transition-all" data-testid={`button-select-return-${rt.returnKey}`}>
-                                            {t("flight.book") || "Reservar"} <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                                          </Button>
-                                        </Link>
-                                      </>
-                                    ) : (
-                                      <div className="text-right">
-                                        <p className="text-xs text-gray-400">{t("results.unavailable_combo") || "Combinação indisponível"}</p>
-                                      </div>
-                                    )}
+                                    <div className="text-right">
+                                      <p className="text-[10px] text-gray-400 uppercase">{t("flight.total_price") || "Preço total"}</p>
+                                      <p className="text-2xl font-bold text-gray-900">
+                                        {new Intl.NumberFormat(priceLocale, { style: "currency", currency: rt.offer.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(rt.price)}
+                                      </p>
+                                      <p className="text-[10px] text-gray-400">{t("results.round_trip_total") || "ida + volta"}</p>
+                                    </div>
+                                    <Link href={bookUrl}>
+                                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg group-hover:shadow-md transition-all" data-testid={`button-select-return-${rt.returnKey}`}>
+                                        {t("flight.book") || "Reservar"} <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                                      </Button>
+                                    </Link>
                                   </div>
 
                                   <div className="md:col-span-12">
                                     <FlightBaggageHighlights
-                                      flight={rt.offer || rt.sampleOffer}
+                                      flight={rt.offer}
                                       simplified={isEasyMode}
                                       compact
                                     />

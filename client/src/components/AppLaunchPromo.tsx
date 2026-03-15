@@ -27,7 +27,6 @@ const PLATFORM_LABELS = ["iPhone", "Android", "Samsung"];
 export default function AppLaunchPromo({
   mode = "all",
   className,
-  source = "site",
 }: AppLaunchPromoProps) {
   const { language } = useI18n();
   const { data } = useQuery({
@@ -55,15 +54,15 @@ export default function AppLaunchPromo({
           seniorDesc: "Open directly in the easier journey, with calmer screens, larger actions, and less pressure for older travelers.",
           featureSignedIn: "Stay signed in on your own device",
           featureScanner: "Scan documents from the phone and send them to your booking",
-          featureAlerts: "Get notified when your trip, payment, or support needs attention",
-          waitlist: "Ask to be notified",
-          downloadNow: "Download Android app",
-          siteNow: mode === "senior" ? "Use Senior Support now" : "Use the site now",
-          storeNote: "Planned for App Store, Google Play, and Galaxy Store.",
-          releaseNote: releaseVersion ? `Android available now: version ${releaseVersion}.` : "Android available now.",
-          topic: mode === "senior" ? "Senior app early access" : "Apps early access",
-          interest: mode === "senior" ? "I want to be notified about the Michels Senior app." : "I want to be notified about the Michels Travel apps.",
-        }
+            featureAlerts: "Get notified when your trip, payment, or support needs attention",
+            waitlist: "Ask to be notified",
+            downloadNow: "Download Android app",
+            siteNow: mode === "senior" ? "Open senior site" : "Open website",
+            storeNote: "Planned for App Store, Google Play, and Galaxy Store.",
+            releaseNote: releaseVersion ? `Android available now: version ${releaseVersion}.` : "Android available now.",
+            topic: mode === "senior" ? "Senior app early access" : "Apps early access",
+            interest: mode === "senior" ? "I want the Michels Travel Senior app when it is ready." : "I want the Michels Travel apps when they are ready.",
+          }
       : language === "es"
         ? {
             eyebrow: "Apps próximamente",
@@ -81,11 +80,11 @@ export default function AppLaunchPromo({
             featureAlerts: "Recibir avisos cuando su viaje, pago o ayuda necesiten atención",
             waitlist: "Pedir aviso",
             downloadNow: "Descargar app Android",
-            siteNow: mode === "senior" ? "Usar Atención Senior ahora" : "Usar el sitio ahora",
+            siteNow: mode === "senior" ? "Abrir sitio senior" : "Abrir sitio web",
             storeNote: "Previsto para App Store, Google Play y Galaxy Store.",
             releaseNote: releaseVersion ? `Android disponible ahora: version ${releaseVersion}.` : "Android disponible ahora.",
             topic: mode === "senior" ? "Acceso anticipado app senior" : "Acceso anticipado apps",
-            interest: mode === "senior" ? "Quiero que me avisen cuando salga la app Michels Senior." : "Quiero que me avisen cuando salgan las apps de Michels Travel.",
+            interest: mode === "senior" ? "Quiero usar la app Michels Travel Senior cuando esté lista." : "Quiero usar las apps de Michels Travel cuando estén listas.",
           }
         : {
             eyebrow: "Apps em breve",
@@ -103,11 +102,11 @@ export default function AppLaunchPromo({
             featureAlerts: "Receber aviso quando a viagem, o pagamento ou a ajuda precisarem de atencao",
             waitlist: "Quero ser avisado",
             downloadNow: "Baixar app Android",
-            siteNow: mode === "senior" ? "Usar Atendimento Senior agora" : "Usar o site agora",
+            siteNow: mode === "senior" ? "Abrir site senior" : "Abrir o site",
             storeNote: "Previsto para App Store, Google Play e Galaxy Store.",
             releaseNote: releaseVersion ? `Android disponivel agora: versao ${releaseVersion}.` : "Android disponivel agora.",
-            topic: mode === "senior" ? "Lista do app senior" : "Lista dos apps",
-            interest: mode === "senior" ? "Quero ser avisado quando o app Michels Senior estiver pronto." : "Quero ser avisado quando os apps da Michels Travel estiverem prontos.",
+            topic: mode === "senior" ? "App Michels Travel Senior" : "Apps Michels Travel",
+            interest: mode === "senior" ? "Quero usar o app Michels Travel Senior quando ele estiver pronto." : "Quero usar os apps da Michels Travel quando eles estiverem prontos.",
           };
 
   const waitlistHref = buildWhatsAppHref(
@@ -116,8 +115,7 @@ export default function AppLaunchPromo({
       topic: copy.topic,
       details: [
         copy.interest,
-        `Origem: ${source}`,
-        mode === "senior" ? "Foco: senior" : "Foco: apps standard e senior",
+        mode === "senior" ? "Quero pesquisar viagens com mais calma no app senior." : "Quero acompanhar minhas viagens e pesquisar no app da Michels Travel.",
       ],
     }),
   );

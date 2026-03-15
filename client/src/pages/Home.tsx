@@ -150,9 +150,7 @@ export default function Home() {
     buildWhatsAppMessage({
       language,
       topic: language === "en" ? "Newark travel help" : language === "es" ? "Ayuda de viajes en Newark" : "Ajuda de viagem em Newark",
-      details: [
-        language === "en" ? "Page: Newark section on home" : language === "es" ? "Pagina: Seccion Newark en inicio" : "Pagina: Bloco Newark na home",
-      ],
+      details: [language === "en" ? "I want help with flights leaving from Newark." : language === "es" ? "Quiero ayuda con vuelos saliendo de Newark." : "Quero ajuda com voos saindo de Newark."],
     }),
   );
 

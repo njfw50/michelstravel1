@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Users, Search, ArrowRightLeft, Plus, Minus, ChevronDown, Trash2 } from "lucide-react";
@@ -22,7 +22,13 @@ interface FlightSearchFormProps {
     origin: string;
     destination: string;
     date: Date | undefined;
+    returnDate?: Date | undefined;
     passengers: string;
+    adults?: string;
+    children?: string;
+    infants?: string;
+    cabinClass?: string;
+    tripType?: string;
   };
   extraSearchParams?: Record<string, string | undefined>;
 }
@@ -37,24 +43,51 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
   const { t } = useI18n();
-  const [tripType, setTripType] = useState("round-trip");
+  const [tripType, setTripType] = useState(
+    defaultValues
+      ? defaultValues.tripType || (defaultValues.returnDate ? "round-trip" : "one-way")
+      : "round-trip",
+  );
   
   const [origin, setOrigin] = useState(defaultValues?.origin || "");
   const [destination, setDestination] = useState(defaultValues?.destination || "");
   const [date, setDate] = useState<Date | undefined>(defaultValues?.date);
-  const [returnDate, setReturnDate] = useState<Date | undefined>();
+  const [returnDate, setReturnDate] = useState<Date | undefined>(defaultValues?.returnDate);
 
   const [multiCityLegs, setMultiCityLegs] = useState<MultiCityLeg[]>([
     { origin: "", destination: "", date: undefined },
     { origin: "", destination: "", date: undefined },
   ]);
 
-  const [adults, setAdults] = useState(1);
-  const [children, setChildren] = useState(0);
-  const [infants, setInfants] = useState(0);
-  const [cabinClass, setCabinClass] = useState("economy");
+  const [adults, setAdults] = useState(Number(defaultValues?.adults || "1"));
+  const [children, setChildren] = useState(Number(defaultValues?.children || "0"));
+  const [infants, setInfants] = useState(Number(defaultValues?.infants || "0"));
+  const [cabinClass, setCabinClass] = useState(defaultValues?.cabinClass || "economy");
 
   const totalPassengers = adults + children + infants;
+
+  useEffect(() => {
+    if (!defaultValues) return;
+    setTripType(defaultValues.tripType || (defaultValues.returnDate ? "round-trip" : "one-way"));
+    setOrigin(defaultValues.origin || "");
+    setDestination(defaultValues.destination || "");
+    setDate(defaultValues.date);
+    setReturnDate(defaultValues.returnDate);
+    setAdults(Number(defaultValues.adults || "1"));
+    setChildren(Number(defaultValues.children || "0"));
+    setInfants(Number(defaultValues.infants || "0"));
+    setCabinClass(defaultValues.cabinClass || "economy");
+  }, [
+    defaultValues?.adults,
+    defaultValues?.cabinClass,
+    defaultValues?.children,
+    defaultValues?.date,
+    defaultValues?.destination,
+    defaultValues?.infants,
+    defaultValues?.origin,
+    defaultValues?.returnDate,
+    defaultValues?.tripType,
+  ]);
 
   const classLabel = (id: string) => t(`class.${id}`);
   const appendExtraSearchParams = (params: URLSearchParams) => {
@@ -136,6 +169,7 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
     params.set("origin", origin);
     params.set("destination", destination);
     params.set("date", format(date, "yyyy-MM-dd"));
+    params.set("tripType", tripType);
     if (tripType === "round-trip" && returnDate) {
         params.set("returnDate", format(returnDate, "yyyy-MM-dd"));
     }

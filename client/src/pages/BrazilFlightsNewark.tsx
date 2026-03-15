@@ -14,12 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SEO } from "@/components/SEO";
-import {
-  AGENCY_WHATSAPP_DISPLAY,
-  AGENCY_PHONE_TEL,
-  buildWhatsAppHref,
-  buildWhatsAppMessage,
-} from "@/lib/contact";
+import { AGENCY_WHATSAPP_DISPLAY, AGENCY_PHONE_TEL, buildWhatsAppHref, buildWhatsAppMessage } from "@/lib/contact";
 import { useFeaturedDeals, type PublicFeaturedDeal } from "@/hooks/use-flights";
 
 const BRAZIL_AIRPORTS = new Set([
@@ -43,17 +38,17 @@ const BRAZIL_AIRPORTS = new Set([
 const NEWARK_REGION_AIRPORTS = new Set(["EWR", "JFK", "LGA"]);
 
 const fallbackRoutes = [
-  { origin: "EWR", destination: "GRU", label: "Newark para Sao Paulo", city: "Sao Paulo", dateOffset: 21 },
-  { origin: "EWR", destination: "GIG", label: "Newark para Rio de Janeiro", city: "Rio de Janeiro", dateOffset: 24 },
-  { origin: "EWR", destination: "BSB", label: "Newark para Brasilia", city: "Brasilia", dateOffset: 28 },
-  { origin: "EWR", destination: "SSA", label: "Newark para Salvador", city: "Salvador", dateOffset: 30 },
+  { origin: "EWR", destination: "GRU", label: "Newark para Sao Paulo", city: "Sao Paulo", dateOffset: 21, returnOffset: 35 },
+  { origin: "EWR", destination: "GIG", label: "Newark para Rio de Janeiro", city: "Rio de Janeiro", dateOffset: 24, returnOffset: 38 },
+  { origin: "EWR", destination: "BSB", label: "Newark para Brasilia", city: "Brasilia", dateOffset: 28, returnOffset: 42 },
+  { origin: "EWR", destination: "SSA", label: "Newark para Salvador", city: "Salvador", dateOffset: 30, returnOffset: 45 },
 ];
 
 const faqItems = [
   {
     question: "Vocês ajudam brasileiros a comparar voos saindo de Newark para o Brasil?",
     answer:
-      "Sim. A página foi feita exatamente para esse público, com foco em rotas entre Newark e destinos brasileiros, atendimento em português e suporte humano antes da emissão.",
+      "Sim. Aqui voce encontra rotas entre Newark e destinos brasileiros, atendimento em portugues e suporte humano antes da reserva.",
   },
   {
     question: "As ofertas mostradas aqui são dinâmicas?",
@@ -76,6 +71,23 @@ function formatFutureDate(offsetDays: number) {
   const date = new Date();
   date.setDate(date.getDate() + offsetDays);
   return date.toISOString().split("T")[0];
+}
+
+function buildRoundTripSearch(origin: string, destination: string, departureOffset: number, returnOffset: number) {
+  const params = new URLSearchParams({
+    origin,
+    destination,
+    date: formatFutureDate(departureOffset),
+    returnDate: formatFutureDate(returnOffset),
+    tripType: "round-trip",
+    passengers: "1",
+    adults: "1",
+    children: "0",
+    infants: "0",
+    cabinClass: "economy",
+  });
+
+  return params.toString();
 }
 
 function formatDealPrice(value: number | null, currency: string) {
@@ -130,7 +142,7 @@ export default function BrazilFlightsNewark() {
     buildWhatsAppMessage({
       language: "pt",
       topic: "Passagens para o Brasil saindo de Newark",
-      details: ["Pagina: Brasil saindo de Newark"],
+      details: ["Quero ajuda para comparar voos saindo de Newark para o Brasil."],
     }),
   );
 
@@ -246,22 +258,22 @@ export default function BrazilFlightsNewark() {
           >
             <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/90 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-700 shadow-sm">
               <Sparkles className="h-3.5 w-3.5" />
-              Pagina dedicada ao publico brasileiro
+              Atendimento em portugues
             </span>
             <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-slate-950 md:text-6xl">
               Passagens para o Brasil saindo de Newark, com atendimento em portugues
             </h1>
             <p className="mx-auto mt-6 max-w-3xl text-lg leading-relaxed text-slate-600 md:text-xl">
-              Se voce mora em Newark, Ironbound ou na regiao e quer comparar voos para o Brasil com mais
-              clareza, esta pagina foi feita para reunir rotas uteis, oferta real e suporte humano.
+              Se voce mora em Newark, Ironbound ou na regiao e quer viajar para o Brasil, aqui voce pode
+              comparar rotas, ver datas com mais calma e falar com nossa equipe antes de reservar.
             </p>
 
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button
                 className="rounded-full bg-blue-600 px-7 py-6 text-base font-bold text-white hover:bg-blue-700"
-                onClick={() => setLocation("/search?origin=EWR&destination=GRU&date=" + formatFutureDate(21) + "&passengers=1&adults=1&children=0&infants=0&cabinClass=economy")}
+                onClick={() => setLocation(`/search?${buildRoundTripSearch("EWR", "GRU", 21, 35)}`)}
               >
-                Buscar voos agora <ArrowRight className="ml-2 h-4 w-4" />
+                Ver ida e volta para Sao Paulo <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <a href={whatsAppHref} target="_blank" rel="noreferrer">
                 <Button variant="outline" className="rounded-full px-7 py-6 text-base font-bold">
@@ -274,8 +286,8 @@ export default function BrazilFlightsNewark() {
             <div className="mt-10 grid grid-cols-1 gap-3 text-left sm:grid-cols-3">
               {[
                 "Rotas Newark Brasil mais procuradas",
-                "Cards dinâmicos com ofertas quando houver publicacao",
-                "Atendimento humano antes e depois da emissao",
+                "Ida e volta organizada em duas etapas, com mais clareza",
+                "Atendimento humano antes e depois da reserva",
               ].map((item) => (
                 <div
                   key={item}
@@ -296,15 +308,15 @@ export default function BrazilFlightsNewark() {
             {[
               {
                 icon: MapPin,
-                title: "Feita para Newark e Ironbound",
+                title: "Pensada para Newark e Ironbound",
                 description:
-                  "Nao e uma pagina generica de agencia. Ela foi escrita para pessoas da comunidade brasileira que pesquisam voos saindo de Newark ou da regiao imediata.",
+                  "Aqui voce encontra rotas saindo de Newark e da regiao com linguagem simples e apoio em portugues para decidir melhor.",
               },
               {
                 icon: Plane,
-                title: "Mais perto da decisao",
+                title: "Mais clareza na escolha",
                 description:
-                  "Quem busca passagens para o Brasil saindo de Newark normalmente ja quer comparar opcoes e decidir com menos etapas.",
+                  "Voce consegue comparar horarios, bagagem, conexoes e tempo de viagem sem ficar perdido no meio da busca.",
               },
               {
                 icon: ShieldCheck,
@@ -338,13 +350,13 @@ export default function BrazilFlightsNewark() {
           <div className="rounded-[32px] border border-slate-200 bg-white p-8 shadow-[0_35px_100px_-60px_rgba(15,23,42,0.4)] md:p-10">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div className="max-w-3xl">
-                <span className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">Ofertas dinamicas</span>
+                <span className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">Rotas e ofertas em destaque</span>
                 <h2 className="mt-3 text-3xl font-extrabold text-slate-950 md:text-4xl">
-                  Voos para o Brasil que fazem sentido para esse publico
+                  Opcoes que costumam fazer sentido para quem sai de Newark
                 </h2>
                 <p className="mt-4 text-base leading-7 text-slate-600">
-                  Quando existem ofertas publicadas para Newark ou para o corredor Newark/Nova York com destino ao
-                  Brasil, esta secao se atualiza automaticamente.
+                  Quando encontramos ofertas publicadas para Newark ou para o corredor Newark/Nova York com destino ao
+                  Brasil, elas aparecem aqui. Quando nao houver oferta pronta, voce ainda pode abrir uma rota ida e volta e continuar a comparacao.
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
@@ -406,19 +418,17 @@ export default function BrazilFlightsNewark() {
                     key={route.label}
                     type="button"
                     onClick={() =>
-                      setLocation(
-                        `/search?origin=${route.origin}&destination=${route.destination}&date=${formatFutureDate(route.dateOffset)}&passengers=1&adults=1&children=0&infants=0&cabinClass=economy`,
-                      )
+                      setLocation(`/search?${buildRoundTripSearch(route.origin, route.destination, route.dateOffset, route.returnOffset)}`)
                     }
                     className="group rounded-3xl border border-slate-200 bg-slate-50 p-5 text-left transition-all duration-200 hover:border-blue-200 hover:bg-blue-50"
                   >
-                    <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Busca rapida</span>
+                    <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Ida e volta</span>
                     <div className="mt-3 text-lg font-bold text-slate-950">{route.label}</div>
                     <p className="mt-2 text-sm leading-6 text-slate-600">
-                      Ir direto para busca de voos entre Newark e {route.city}.
+                      Abrir a ida primeiro e depois escolher a volta entre Newark e {route.city}.
                     </p>
                     <div className="mt-5 flex items-center text-sm font-semibold text-blue-700">
-                      Pesquisar rota <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+                      Comparar esta rota <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
                     </div>
                   </button>
                 ))}
@@ -432,20 +442,19 @@ export default function BrazilFlightsNewark() {
         <div className="container mx-auto max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[1fr_0.95fr]">
             <div className="rounded-[32px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-8 md:p-10">
-              <span className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">Por que esta pagina facilita</span>
+              <span className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">Mais clareza para reservar</span>
               <h2 className="mt-3 text-3xl font-extrabold text-slate-950 md:text-4xl">
-                Uma pagina dedicada ao publico brasileiro deixa sua escolha mais simples
+                Tudo o que mais pesa na compra fica mais facil de comparar
               </h2>
               <div className="mt-6 space-y-5 text-base leading-8 text-slate-600">
                 <p>
-                  Ela junta localidade, idioma e necessidade real na mesma URL: Newark, Brasil e atendimento em
-                  portugues.
+                  Voce consegue juntar local de saida, idioma e destino na mesma busca: Newark, Brasil e atendimento em portugues.
                 </p>
                 <p>
-                  Para o cliente, isso reduz friccao e melhora a chance de contato imediato.
+                  Isso deixa mais simples decidir entre preco, bagagem, conexoes e horario antes do pagamento.
                 </p>
                 <p>
-                  Voce consegue ver ofertas quando existem, ir para buscas rapidas e falar com alguem sem perder tempo.
+                  Se surgir duvida, voce pode falar com alguem sem perder a busca nem recomeçar o processo.
                 </p>
               </div>
             </div>
@@ -464,7 +473,7 @@ export default function BrazilFlightsNewark() {
                 </p>
                 <p className="flex gap-3">
                   <MapPin className="mt-1 h-4 w-4 flex-shrink-0 text-emerald-400" />
-                  Visite tambem a pagina local de Ironbound e Newark para reforcar a presenca regional.
+                  Veja tambem o atendimento local para Newark e Ironbound.
                 </p>
               </div>
 
@@ -484,7 +493,7 @@ export default function BrazilFlightsNewark() {
                 <Link href="/agencia-de-viagens-ironbound-newark">
                   <Button variant="outline" className="w-full rounded-full border-white/30 bg-transparent text-white hover:bg-white/10">
                     <MapPin className="mr-2 h-4 w-4" />
-                    Ver pagina local de Newark
+                    Ver atendimento em Newark
                   </Button>
                 </Link>
               </div>

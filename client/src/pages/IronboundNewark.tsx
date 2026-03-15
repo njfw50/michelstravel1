@@ -45,10 +45,10 @@ const faqItems = [
 ];
 
 const popularRoutes = [
-  { label: "Newark para São Paulo", destination: "GRU", dateOffset: 21 },
-  { label: "Newark para Rio de Janeiro", destination: "GIG", dateOffset: 24 },
-  { label: "Newark para Orlando", destination: "MCO", dateOffset: 15 },
-  { label: "Newark para Lisboa", destination: "LIS", dateOffset: 28 },
+  { label: "Newark para São Paulo", destination: "GRU", dateOffset: 21, returnOffset: 35 },
+  { label: "Newark para Rio de Janeiro", destination: "GIG", dateOffset: 24, returnOffset: 38 },
+  { label: "Newark para Orlando", destination: "MCO", dateOffset: 15, returnOffset: 22 },
+  { label: "Newark para Lisboa", destination: "LIS", dateOffset: 28, returnOffset: 40 },
 ];
 
 function formatFutureDate(offsetDays: number) {
@@ -57,13 +57,30 @@ function formatFutureDate(offsetDays: number) {
   return date.toISOString().split("T")[0];
 }
 
+function buildRoundTripSearch(destination: string, departureOffset: number, returnOffset: number) {
+  const params = new URLSearchParams({
+    origin: "EWR",
+    destination,
+    date: formatFutureDate(departureOffset),
+    returnDate: formatFutureDate(returnOffset),
+    tripType: "round-trip",
+    passengers: "1",
+    adults: "1",
+    children: "0",
+    infants: "0",
+    cabinClass: "economy",
+  });
+
+  return params.toString();
+}
+
 export default function IronboundNewark() {
   const [, setLocation] = useLocation();
   const whatsAppHref = buildWhatsAppHref(
     buildWhatsAppMessage({
       language: "pt",
       topic: "Atendimento em Ironbound Newark",
-      details: ["Pagina: Ironbound Newark"],
+      details: ["Quero ajuda para comparar passagens saindo de Newark."],
     }),
   );
 
@@ -163,15 +180,15 @@ export default function IronboundNewark() {
             </h1>
             <p className="mx-auto mt-6 max-w-3xl text-lg leading-relaxed text-slate-600 md:text-xl">
               Se o seu foco é sair de Newark, comparar voos com mais clareza e falar com alguém em português
-              antes de emitir, esta é a página local da Michels Travel para a região de Ironbound.
+              antes de reservar, este é o caminho mais direto para começar.
             </p>
 
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button
                 className="rounded-full bg-blue-600 px-7 py-6 text-base font-bold text-white hover:bg-blue-700"
-                onClick={() => setLocation("/search")}
+                onClick={() => setLocation(`/search?${buildRoundTripSearch("GRU", 21, 35)}`)}
               >
-                Buscar passagens <ArrowRight className="ml-2 h-4 w-4" />
+                Ver ida e volta para São Paulo <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <a href={whatsAppHref} target="_blank" rel="noreferrer">
                 <Button variant="outline" className="rounded-full px-7 py-6 text-base font-bold">
@@ -208,7 +225,7 @@ export default function IronboundNewark() {
                 icon: Plane,
                 title: "Voos saindo de Newark",
                 description:
-                  "Conteúdo e atendimento orientados para quem pesquisa saídas por EWR e quer opções mais alinhadas à rotina de Newark e North Jersey.",
+                  "Rotas pensadas para quem sai por EWR e quer comparar opções mais próximas da rotina de Newark e North Jersey.",
               },
               {
                 icon: Headphones,
@@ -220,7 +237,7 @@ export default function IronboundNewark() {
                 icon: Globe,
                 title: "Foco forte em Brasil e comunidade lusófona",
                 description:
-                  "A região de Ironbound tem demanda clara por viagens ao Brasil, Portugal e conexões internacionais. A página fala a linguagem dessa busca.",
+                  "A região de Ironbound tem demanda clara por viagens ao Brasil, Portugal e conexões internacionais. Aqui voce encontra ajuda mais próxima dessa realidade.",
               },
             ].map((item, index) => (
               <motion.div
@@ -262,24 +279,12 @@ export default function IronboundNewark() {
                 <button
                   key={route.label}
                   type="button"
-                  onClick={() => {
-                    const params = new URLSearchParams({
-                      origin: "EWR",
-                      destination: route.destination,
-                      date: formatFutureDate(route.dateOffset),
-                      passengers: "1",
-                      adults: "1",
-                      children: "0",
-                      infants: "0",
-                      cabinClass: "economy",
-                    });
-                    setLocation(`/search?${params.toString()}`);
-                  }}
+                  onClick={() => setLocation(`/search?${buildRoundTripSearch(route.destination, route.dateOffset, route.returnOffset)}`)}
                   className="group rounded-3xl border border-slate-200 bg-slate-50 px-5 py-5 text-left transition-all duration-200 hover:border-blue-200 hover:bg-blue-50"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <span className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Saindo de EWR</span>
+                      <span className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Ida e volta saindo de EWR</span>
                       <div className="mt-2 text-lg font-bold text-slate-900">{route.label}</div>
                     </div>
                     <ArrowRight className="h-5 w-5 text-slate-400 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-blue-600" />
@@ -305,8 +310,8 @@ export default function IronboundNewark() {
                   e comparar o que realmente pesa na compra: tarifa, bagagem, escalas e regras.
                 </p>
                 <p>
-                  Em vez de navegar por páginas genéricas, você chega a uma página feita para quem mora, trabalha
-                  ou circula por Newark e quer decidir a viagem com mais segurança.
+                  Em vez de abrir uma busca genérica, voce chega a um caminho mais direto para quem mora, trabalha
+                  ou circula por Newark e quer decidir a viagem com mais seguranca.
                 </p>
                 <p>
                   Se ficar em dúvida, você pode sair da busca e falar com a equipe antes do pagamento.
@@ -348,7 +353,7 @@ export default function IronboundNewark() {
                 <Link href="/passagens-para-o-brasil-saindo-de-newark">
                   <Button variant="outline" className="w-full rounded-full border-white/30 bg-transparent text-white hover:bg-white/10">
                     <Plane className="mr-2 h-4 w-4" />
-                    Ver pagina Brasil saindo de Newark
+                    Ver voos Newark-Brasil
                   </Button>
                 </Link>
               </div>
