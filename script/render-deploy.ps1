@@ -38,8 +38,36 @@ $headers = @{
   "Content-Type" = "application/json"
 }
 
+function Invoke-RenderRequest {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Uri,
+
+    [ValidateSet("Get", "Post")]
+    [string]$Method = "Get",
+
+    [int]$Retries = 3,
+
+    [int]$RetryDelaySeconds = 5
+  )
+
+  for ($attempt = 1; $attempt -le $Retries; $attempt += 1) {
+    try {
+      return Invoke-RestMethod -Headers $headers -Uri $Uri -Method $Method
+    }
+    catch {
+      if ($attempt -ge $Retries) {
+        throw
+      }
+
+      Write-Host "Render request failed (attempt $attempt/$Retries). Retrying..."
+      Start-Sleep -Seconds $RetryDelaySeconds
+    }
+  }
+}
+
 $serviceUrl = "https://api.render.com/v1/services/$ServiceId"
-$deploy = Invoke-RestMethod -Headers $headers -Uri "$serviceUrl/deploys" -Method Post
+$deploy = Invoke-RenderRequest -Uri "$serviceUrl/deploys" -Method Post
 
 Write-Host "Render deploy created: $($deploy.id)"
 Write-Host "Commit: $($deploy.commit.id)"
@@ -55,7 +83,14 @@ $failedStatuses = @("build_failed", "update_failed", "pre_deploy_failed", "cance
 while ((Get-Date) -lt $deadline) {
   Start-Sleep -Seconds $PollIntervalSeconds
 
-  $deployItems = Invoke-RestMethod -Headers $headers -Uri "$serviceUrl/deploys?limit=20" -Method Get
+  try {
+    $deployItems = Invoke-RenderRequest -Uri "$serviceUrl/deploys?limit=20" -Method Get
+  }
+  catch {
+    Write-Host "Render status check failed. Waiting for the next poll..."
+    continue
+  }
+
   $currentDeploy = $deployItems |
     ForEach-Object { $_.deploy } |
     Where-Object { $_.id -eq $deploy.id } |
