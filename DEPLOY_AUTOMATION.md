@@ -13,6 +13,15 @@ powershell -ExecutionPolicy Bypass -File .\script\set-render-env.ps1 -ApiKey YOU
 
 This does **not** commit the token into the repository.
 
+## 1b. Configure Owner Desk push keys once
+
+```powershell
+cd C:\Users\njfw2\michelstravel1
+powershell -ExecutionPolicy Bypass -File .\script\setup-owner-push.ps1
+```
+
+This generates VAPID keys locally if needed, stores them in your user environment and pushes the same values to Render.
+
 ## 2. Publish a normal site update
 
 ```powershell

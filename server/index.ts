@@ -3,6 +3,7 @@ import { runMigrations } from 'stripe-replit-sync';
 import { registerRoutes } from "./routes";
 import { registerVoiceEscalationRoutes } from "./routes/voice_escalation";
 import { registerCustomerMobileRoutes } from "./routes/customer_mobile";
+import { registerOwnerPushRoutes } from "./routes/owner_push";
 import { serveStatic } from "./static";
 import { getStripeSync } from "./stripeClient";
 import { WebhookHandlers } from "./webhookHandlers";
@@ -11,6 +12,7 @@ import { createServer } from "http";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 import { runAppMigrations } from "./appMigrations";
 import { ensureDefaultBlogPosts } from "./blogSeed";
+import { startOwnerPushLoop } from "./services/ownerPush";
 
 const app = express();
 const httpServer = createServer(app);
@@ -202,6 +204,8 @@ app.use((req, res, next) => {
   registerRoutes(app);
   registerCustomerMobileRoutes(app);
   registerVoiceEscalationRoutes(app);
+  registerOwnerPushRoutes(app);
+  startOwnerPushLoop();
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

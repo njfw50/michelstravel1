@@ -22,9 +22,43 @@ self.addEventListener('message', (event) => {
   }
 });
 
+self.addEventListener('push', (event) => {
+  if (!event.data) {
+    return;
+  }
+
+  let payload = null;
+
+  try {
+    payload = event.data.json();
+  } catch {
+    payload = {
+      title: 'Michels Travel',
+      body: event.data.text(),
+      tag: `owner-push-${Date.now()}`,
+      url: '/admin-app?tab=alertas',
+    };
+  }
+
+  const title = payload?.title || 'Michels Travel';
+  const options = {
+    body: payload?.body || 'Novo alerta do Owner Desk.',
+    tag: payload?.tag || `owner-push-${Date.now()}`,
+    icon: payload?.icon || '/icons/icon-192.png',
+    badge: payload?.badge || '/favicon.png',
+    data: {
+      url: payload?.url || '/admin-app?tab=alertas',
+      category: payload?.category || 'alert',
+      level: payload?.level || 'info',
+    },
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = event.notification?.data?.url || '/admin';
+  const targetUrl = event.notification?.data?.url || '/admin-app?tab=alertas';
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {

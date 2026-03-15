@@ -17,6 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getOwnerPushSubscription, subscribeOwnerPush } from "@/lib/ownerPush";
 import type { AdminOwnerDeskData } from "@/hooks/use-admin";
 
 type OwnerDeskCase = AdminOwnerDeskData["cases"][number];
@@ -66,29 +67,6 @@ function actionLabel(action: OwnerDeskAction) {
     default:
       return "Abrir";
   }
-}
-
-async function emitOwnerNotification(alert: OwnerDeskAlert) {
-  const body = [alert.customerName, alert.route, alert.summary].filter(Boolean).join(" • ");
-  if ("serviceWorker" in navigator) {
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification(alert.title, {
-        body,
-        tag: alert.id,
-        data: { url: alert.actionUrl },
-      });
-      return;
-    } catch {
-      // Fall back to direct notifications below.
-    }
-  }
-
-  const notification = new Notification(alert.title, { body, tag: alert.id });
-  notification.onclick = () => {
-    window.focus();
-    window.location.href = alert.actionUrl;
-  };
 }
 
 function stageTone(stage: OwnerDeskCase["stage"]) {
@@ -155,6 +133,8 @@ export function AdminOwnerDesk({
     if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";
     return Notification.permission;
   });
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
 
   const filteredCases = useMemo(() => {
     const source = data?.cases || [];
@@ -181,34 +161,27 @@ export function AdminOwnerDesk({
       return;
     }
     setNotificationPermission(Notification.permission);
-  }, []);
-
-  useEffect(() => {
-    if (notificationPermission !== "granted" || !data?.alerts?.length || typeof window === "undefined") {
-      return;
-    }
-
-    const key = "michels-owner-desk-notified-alerts";
-    const stored = window.localStorage.getItem(key);
-    const seen = new Set<string>(stored ? JSON.parse(stored) : []);
-    const freshAlerts = data.alerts
-      .filter((alert) => (alert.level === "critical" || alert.level === "attention") && !seen.has(alert.id))
-      .slice(0, 2);
-
-    if (freshAlerts.length === 0) return;
-
-    freshAlerts.forEach((alert) => {
-      void emitOwnerNotification(alert);
-      seen.add(alert.id);
+    void getOwnerPushSubscription().then((subscription) => {
+      setPushEnabled(Boolean(subscription));
+    }).catch(() => {
+      setPushEnabled(false);
     });
-
-    window.localStorage.setItem(key, JSON.stringify(Array.from(seen).slice(-40)));
-  }, [data?.alerts, notificationPermission]);
+  }, []);
 
   const enableNotifications = async () => {
     if (typeof window === "undefined" || !("Notification" in window)) return;
-    const permission = await Notification.requestPermission();
-    setNotificationPermission(permission);
+    setPushLoading(true);
+
+    try {
+      await subscribeOwnerPush({ deviceLabel: "Owner Desk" });
+      setNotificationPermission("granted");
+      setPushEnabled(true);
+    } catch (error) {
+      console.error("[OWNER PUSH] subscribe failed:", error);
+      setNotificationPermission(Notification.permission);
+    } finally {
+      setPushLoading(false);
+    }
   };
 
   if (isLoading) {
@@ -268,16 +241,16 @@ export function AdminOwnerDesk({
               {data.summary.alertingNow} alertas no radar · {data.summary.overdueFollowUps} follow-ups vencidos · {data.mobileDeck.linkedDevices} dispositivos ligados
             </p>
           </div>
-          {notificationPermission !== "granted" && notificationPermission !== "unsupported" && (
-            <Button variant="outline" className="gap-2" onClick={enableNotifications}>
+          {!pushEnabled && notificationPermission !== "unsupported" && (
+            <Button variant="outline" className="gap-2" onClick={enableNotifications} disabled={pushLoading}>
               <BellRing className="h-4 w-4" />
-              Ativar alertas no celular
+              {pushLoading ? "Ligando push..." : "Ativar push no celular"}
             </Button>
           )}
-          {notificationPermission === "granted" && (
+          {pushEnabled && (
             <Badge className="border border-emerald-200 bg-emerald-50 text-emerald-700">
               <BellRing className="mr-1 h-3.5 w-3.5" />
-              Alertas ativos
+              Push ativo
             </Badge>
           )}
         </div>

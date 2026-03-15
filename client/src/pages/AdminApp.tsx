@@ -55,6 +55,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
+import { getOwnerPushSubscription, subscribeOwnerPush } from "@/lib/ownerPush";
 
 interface PlaceResult {
   id: string;
@@ -201,6 +202,34 @@ function authFetch(url: string, options: RequestInit = {}) {
       "Content-Type": "application/json",
     },
   });
+}
+
+type AdminAppTab = "chat" | "vendas" | "mensagens" | "alertas";
+
+function readAdminAppTarget() {
+  if (typeof window === "undefined") {
+    return {
+      tab: "alertas" as AdminAppTab,
+      sessionId: null as number | null,
+      threadId: null as number | null,
+    };
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const tabParam = params.get("tab");
+  const sessionId = Number(params.get("session") || "");
+  const threadId = Number(params.get("thread") || "");
+
+  const tab: AdminAppTab =
+    tabParam === "chat" || tabParam === "vendas" || tabParam === "mensagens" || tabParam === "alertas"
+      ? tabParam
+      : "alertas";
+
+  return {
+    tab,
+    sessionId: Number.isFinite(sessionId) && sessionId > 0 ? sessionId : null,
+    threadId: Number.isFinite(threadId) && threadId > 0 ? threadId : null,
+  };
 }
 
 function formatRelativeMoment(value?: string | null) {
@@ -433,10 +462,16 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   );
 }
 
-function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
+function LiveSalesPanel({
+  onLogout,
+  initialSessionId = null,
+}: {
+  onLogout: () => void;
+  initialSessionId?: number | null;
+}) {
   const [requests, setRequests] = useState<LiveSessionRequest[]>([]);
   const [activeSessions, setActiveSessions] = useState<LiveSessionActive[]>([]);
-  const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
+  const [selectedSessionId, setSelectedSessionId] = useState<number | null>(initialSessionId);
   const [sessionDetail, setSessionDetail] = useState<LiveSessionDetail | null>(null);
   const [loadingList, setLoadingList] = useState(true);
 
@@ -528,6 +563,12 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
       return () => clearInterval(interval);
     }
   }, [selectedSessionId, fetchSessionDetail]);
+
+  useEffect(() => {
+    if (initialSessionId && initialSessionId !== selectedSessionId) {
+      setSelectedSessionId(initialSessionId);
+    }
+  }, [initialSessionId, selectedSessionId]);
 
   useEffect(() => {
     liveMsgEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1619,9 +1660,15 @@ function LiveSalesPanel({ onLogout }: { onLogout: () => void }) {
   );
 }
 
-function AdminMessengerPanel({ onLogout }: { onLogout: () => void }) {
+function AdminMessengerPanel({
+  onLogout,
+  initialThreadId = null,
+}: {
+  onLogout: () => void;
+  initialThreadId?: number | null;
+}) {
   const [threads, setThreads] = useState<any[]>([]);
-  const [selectedThreadId, setSelectedThreadId] = useState<number | null>(null);
+  const [selectedThreadId, setSelectedThreadId] = useState<number | null>(initialThreadId);
   const [messages, setMessages] = useState<any[]>([]);
   const [replyText, setReplyText] = useState("");
   const [loading, setLoading] = useState(true);
@@ -1657,6 +1704,12 @@ function AdminMessengerPanel({ onLogout }: { onLogout: () => void }) {
       return () => clearInterval(interval);
     }
   }, [selectedThreadId, fetchMessages]);
+
+  useEffect(() => {
+    if (initialThreadId && initialThreadId !== selectedThreadId) {
+      setSelectedThreadId(initialThreadId);
+    }
+  }, [initialThreadId, selectedThreadId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1776,6 +1829,7 @@ function runOwnerMobileAction(action: OwnerDeskMobileAlert["action"] | OwnerDesk
   customerPhone?: string | null;
   customerEmail?: string | null;
   liveSessionId?: number | null;
+  threadId?: number | null;
   actionUrl?: string;
   customerName?: string | null;
 }) {
@@ -1799,20 +1853,38 @@ function runOwnerMobileAction(action: OwnerDeskMobileAlert["action"] | OwnerDesk
   }
 
   if (action === "open-live-desk" && payload.liveSessionId) {
-    window.location.href = `/admin/live-chat?session=${payload.liveSessionId}`;
+    window.location.href = `/admin-app?tab=vendas&session=${payload.liveSessionId}`;
     return;
   }
 
-  window.location.href = payload.actionUrl || "/admin";
+  if (action === "open-bookings") {
+    window.location.href = payload.liveSessionId
+      ? `/admin-app?tab=vendas&session=${payload.liveSessionId}`
+      : "/admin-app?tab=vendas";
+    return;
+  }
+
+  if (action === "focus-inbox") {
+    window.location.href = payload.threadId
+      ? `/admin-app?tab=mensagens&thread=${payload.threadId}`
+      : "/admin-app?tab=mensagens";
+    return;
+  }
+
+  window.location.href = payload.actionUrl || "/admin-app?tab=alertas";
 }
 
 function OwnerAlertsPanel({ onLogout }: { onLogout: () => void }) {
   const [data, setData] = useState<OwnerDeskMobileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | "unsupported">(() => {
-    if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";
+    if (typeof window === "undefined" || !("Notification" in window) || !("PushManager" in window) || !("serviceWorker" in navigator)) {
+      return "unsupported";
+    }
     return Notification.permission;
   });
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
 
   const fetchOwnerDesk = useCallback(async () => {
     try {
@@ -1837,37 +1909,36 @@ function OwnerAlertsPanel({ onLogout }: { onLogout: () => void }) {
   }, [fetchOwnerDesk]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !("Notification" in window)) {
+    if (typeof window === "undefined" || !("Notification" in window) || !("PushManager" in window) || !("serviceWorker" in navigator)) {
       setNotificationPermission("unsupported");
       return;
     }
     setNotificationPermission(Notification.permission);
+    void getOwnerPushSubscription().then((subscription) => {
+      setPushEnabled(Boolean(subscription));
+    }).catch(() => {
+      setPushEnabled(false);
+    });
   }, []);
 
-  useEffect(() => {
-    if (notificationPermission !== "granted" || !data?.alerts?.length) return;
-    const key = "michels-owner-mobile-alerts";
-    const seen = new Set<string>(JSON.parse(localStorage.getItem(key) || "[]"));
-    const freshAlerts = data.alerts.filter((alert) => alert.level === "critical" && !seen.has(alert.id)).slice(0, 2);
-    if (freshAlerts.length === 0) return;
-
-    freshAlerts.forEach((alert) => {
-      const body = [alert.customerName, alert.route, alert.summary].filter(Boolean).join(" • ");
-      const notification = new Notification(alert.title, { body, tag: alert.id });
-      notification.onclick = () => {
-        window.focus();
-        window.location.href = alert.actionUrl;
-      };
-      seen.add(alert.id);
-    });
-
-    localStorage.setItem(key, JSON.stringify(Array.from(seen).slice(-40)));
-  }, [data?.alerts, notificationPermission]);
-
   const enableNotifications = async () => {
-    if (typeof window === "undefined" || !("Notification" in window)) return;
-    const permission = await Notification.requestPermission();
-    setNotificationPermission(permission);
+    if (typeof window === "undefined" || !("Notification" in window) || !("PushManager" in window) || !("serviceWorker" in navigator)) {
+      return;
+    }
+
+    setPushLoading(true);
+    try {
+      await subscribeOwnerPush({
+        authToken: getToken(),
+        deviceLabel: "Owner Mobile Desk",
+      });
+      setNotificationPermission("granted");
+      setPushEnabled(true);
+    } catch {
+      setNotificationPermission(Notification.permission);
+    } finally {
+      setPushLoading(false);
+    }
   };
 
   if (loading) {
@@ -1889,15 +1960,19 @@ function OwnerAlertsPanel({ onLogout }: { onLogout: () => void }) {
               {data?.summary.alertingNow || 0} alertas ativos · {data?.summary.overdueFollowUps || 0} follow-ups vencidos · {data?.summary.liveNow || 0} ao vivo
             </p>
           </div>
-          {notificationPermission !== "granted" && notificationPermission !== "unsupported" ? (
-            <Button size="sm" variant="outline" className="gap-2" onClick={enableNotifications}>
+          {!pushEnabled && notificationPermission !== "unsupported" ? (
+            <Button size="sm" variant="outline" className="gap-2" onClick={enableNotifications} disabled={pushLoading}>
               <BellRing className="h-4 w-4" />
-              Alertas
+              {pushLoading ? "Ligando push..." : "Ativar push"}
             </Button>
+          ) : notificationPermission === "unsupported" ? (
+            <Badge variant="outline" className="border-slate-200 text-slate-500">
+              Push indisponivel
+            </Badge>
           ) : (
             <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
               <BellRing className="h-3 w-3 mr-1" />
-              Ativos
+              Push ativo
             </Badge>
           )}
         </div>
@@ -2032,7 +2107,10 @@ function OwnerAlertsPanel({ onLogout }: { onLogout: () => void }) {
 }
 
 function ChatApp({ onLogout }: { onLogout: () => void }) {
-  const [activeTab, setActiveTab] = useState<"chat" | "vendas" | "mensagens" | "alertas">("alertas");
+  const initialTargetRef = useRef(readAdminAppTarget());
+  const [activeTab, setActiveTab] = useState<AdminAppTab>(initialTargetRef.current.tab);
+  const [targetSessionId, setTargetSessionId] = useState<number | null>(initialTargetRef.current.sessionId);
+  const [targetThreadId, setTargetThreadId] = useState<number | null>(initialTargetRef.current.threadId);
   const [selectedConvId, setSelectedConvId] = useState<number | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedMessages, setSelectedMessages] = useState<Message[]>([]);
@@ -2086,6 +2164,22 @@ function ChatApp({ onLogout }: { onLogout: () => void }) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [selectedMessages]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const syncFromUrl = () => {
+      const target = readAdminAppTarget();
+      setActiveTab(target.tab);
+      setTargetSessionId(target.sessionId);
+      setTargetThreadId(target.threadId);
+    };
+
+    window.addEventListener("popstate", syncFromUrl);
+    return () => window.removeEventListener("popstate", syncFromUrl);
+  }, []);
 
   const selectedConv = conversations.find((c) => c.id === selectedConvId);
   const escalatedConvs = conversations.filter((c) => c.escalated && !c.resolved);
@@ -2377,9 +2471,9 @@ function ChatApp({ onLogout }: { onLogout: () => void }) {
       {activeTab === "alertas" ? (
         <OwnerAlertsPanel onLogout={onLogout} />
       ) : activeTab === "vendas" ? (
-        <LiveSalesPanel onLogout={onLogout} />
+        <LiveSalesPanel onLogout={onLogout} initialSessionId={targetSessionId} />
       ) : activeTab === "mensagens" ? (
-        <AdminMessengerPanel onLogout={onLogout} />
+        <AdminMessengerPanel onLogout={onLogout} initialThreadId={targetThreadId} />
       ) : (
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {loading ? (

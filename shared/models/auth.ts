@@ -141,6 +141,46 @@ export const documentScanResults = pgTable(
   ],
 );
 
+export const ownerPushSubscriptions = pgTable(
+  "owner_push_subscriptions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    channel: text("channel").notNull().default("owner_desk"),
+    endpoint: text("endpoint").notNull().unique(),
+    subscription: jsonb("subscription").notNull().default(sql`'{}'::jsonb`),
+    deviceLabel: text("device_label"),
+    platform: text("platform"),
+    userAgent: text("user_agent"),
+    active: boolean("active").notNull().default(true),
+    lastSeenAt: timestamp("last_seen_at"),
+    lastNotifiedAt: timestamp("last_notified_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("IDX_owner_push_subscriptions_channel").on(table.channel),
+    index("IDX_owner_push_subscriptions_active").on(table.active),
+  ],
+);
+
+export const ownerPushDeliveries = pgTable(
+  "owner_push_deliveries",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    subscriptionId: uuid("subscription_id").notNull().references(() => ownerPushSubscriptions.id, { onDelete: "cascade" }),
+    fingerprint: text("fingerprint").notNull(),
+    category: text("category").notNull().default("alert"),
+    payload: jsonb("payload").notNull().default(sql`'{}'::jsonb`),
+    deliveredAt: timestamp("delivered_at").notNull().defaultNow(),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("IDX_owner_push_deliveries_subscription_id").on(table.subscriptionId),
+    index("IDX_owner_push_deliveries_fingerprint").on(table.fingerprint),
+    index("IDX_owner_push_deliveries_delivered_at").on(table.deliveredAt),
+  ],
+);
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type CustomerProfile = typeof customerProfiles.$inferSelect;
@@ -153,3 +193,7 @@ export type DocumentScanSession = typeof documentScanSessions.$inferSelect;
 export type InsertDocumentScanSession = typeof documentScanSessions.$inferInsert;
 export type DocumentScanResult = typeof documentScanResults.$inferSelect;
 export type InsertDocumentScanResult = typeof documentScanResults.$inferInsert;
+export type OwnerPushSubscription = typeof ownerPushSubscriptions.$inferSelect;
+export type InsertOwnerPushSubscription = typeof ownerPushSubscriptions.$inferInsert;
+export type OwnerPushDelivery = typeof ownerPushDeliveries.$inferSelect;
+export type InsertOwnerPushDelivery = typeof ownerPushDeliveries.$inferInsert;
