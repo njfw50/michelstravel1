@@ -111,6 +111,63 @@ export interface AdminCommandCenterData {
   shiftBrief: string;
 }
 
+export interface AdminOwnerDeskData {
+  generatedAt: string;
+  summary: {
+    totalCases: number;
+    hotCases: number;
+    seniorCases: number;
+    paymentWatch: number;
+    liveNow: number;
+    mobileLinked: number;
+  };
+  cases: Array<{
+    id: string;
+    customerName: string | null;
+    customerEmail: string | null;
+    customerPhone: string | null;
+    preferredLanguage: string | null;
+    serviceMode: "standard" | "senior";
+    needsHumanHelp: boolean;
+    route: string | null;
+    sourceLabel: string;
+    stage: string;
+    stageLabel: string;
+    priorityBand: "hot" | "warm" | "watch";
+    heatScore: number;
+    nextBestAction: {
+      action: "open-live-desk" | "open-bookings" | "focus-inbox" | "call" | "whatsapp" | "email";
+      label: string;
+      description: string;
+    };
+    availableActions: Array<"open-live-desk" | "open-bookings" | "focus-inbox" | "call" | "whatsapp" | "email">;
+    lastTouchAt: string | null;
+    latestSummary: string | null;
+    totalRevenue: number;
+    totalBookings: number;
+    pendingBookings: number;
+    unreadInboxCount: number;
+    openEscalations: number;
+    liveRequests: number;
+    activeLiveSessions: number;
+    appLinked: boolean;
+    deviceCount: number;
+    scannerHandoffEnabled: boolean;
+    bookingId: number | null;
+    threadId: number | null;
+    liveSessionId: number | null;
+    escalationId: number | null;
+    timeline: Array<{
+      id: string;
+      type: "booking" | "live" | "inbox" | "escalation" | "account";
+      title: string;
+      summary: string;
+      status: string;
+      createdAt: string;
+    }>;
+  }>;
+}
+
 export function useAdminStats() {
   return useQuery({
     queryKey: [api.admin.dashboard_stats.path],
@@ -169,6 +226,18 @@ export function useAdminCommandCenter() {
     queryFn: async () => {
       const res = await fetch("/api/admin/command-center", { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch command center");
+      return res.json();
+    },
+    refetchInterval: 15000,
+  });
+}
+
+export function useAdminOwnerDesk() {
+  return useQuery<AdminOwnerDeskData>({
+    queryKey: ["/api/admin/owner-desk"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/owner-desk", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch owner desk");
       return res.json();
     },
     refetchInterval: 15000,

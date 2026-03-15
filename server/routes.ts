@@ -33,6 +33,7 @@ import {
   normalizeChatLanguage,
   parseAgentFallbackRequest,
 } from "./services/chatbotFallback";
+import { buildOwnerDeskSnapshot } from "./services/ownerDesk";
 import { buildRedactedDocumentPayload } from "./services/passengerPrivacy";
 
 function parseNumericRouteParam(value: string | string[] | undefined): number {
@@ -1621,6 +1622,16 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Admin command center error:", error);
       res.status(500).json({ error: "Failed to build admin command center" });
+    }
+  });
+
+  app.get('/api/admin/owner-desk', requireAdmin, async (_req, res) => {
+    try {
+      const snapshot = await buildOwnerDeskSnapshot();
+      res.json(snapshot);
+    } catch (error) {
+      console.error("Owner desk error:", error);
+      res.status(500).json({ error: "Failed to build owner desk" });
     }
   });
 

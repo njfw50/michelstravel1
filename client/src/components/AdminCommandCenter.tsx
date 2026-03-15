@@ -10,12 +10,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useAdminCommandCenter, type AdminCommandCenterData } from "@/hooks/use-admin";
+import { AdminOwnerDesk } from "@/components/AdminOwnerDesk";
+import { useAdminCommandCenter, useAdminOwnerDesk, type AdminCommandCenterData, type AdminOwnerDeskData } from "@/hooks/use-admin";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 interface AdminCommandCenterProps {
-  onOpenLiveDesk: () => void;
+  onOpenLiveDesk: (options?: { sessionId?: number }) => void;
   onOpenBookings: (options?: { status?: string; search?: string; bookingId?: number }) => void;
   onOpenSettings: () => void;
 }
@@ -176,6 +177,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data, isLoading, isError, error } = useAdminCommandCenter();
+  const ownerDeskQuery = useAdminOwnerDesk();
   const [selectedThreadId, setSelectedThreadId] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
   const [dealDraft, setDealDraft] = useState<QuickDealDraft | null>(null);
@@ -210,6 +212,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
 
   const invalidateMissionControl = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/admin/command-center"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/owner-desk"] });
     queryClient.invalidateQueries({ queryKey: ["/api/admin/bookings"] });
     queryClient.invalidateQueries({ queryKey: ["/api/admin/messenger/threads"] });
     queryClient.invalidateQueries({ queryKey: ["/api/live-sessions/admin/requests"] });
@@ -363,10 +366,25 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
     window.location.href = `tel:${phone.replace(/[^\d+]/g, "")}`;
   };
 
-  const focusInbox = () => {
+  const openWhatsApp = (phone?: string | null, customerName?: string | null) => {
+    if (!phone) return;
+    const digits = phone.replace(/\D+/g, "");
+    if (!digits) return;
+    const intro = customerName
+      ? `Oi ${customerName}, aqui e a Michels Travel. Estou com seu atendimento aberto e posso continuar com voce por aqui.`
+      : "Oi, aqui e a Michels Travel. Estou com seu atendimento aberto e posso continuar com voce por aqui.";
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(intro)}`, "_blank", "noopener,noreferrer");
+  };
+
+  const focusInbox = (threadId?: number | null) => {
     if (threads.length === 0) return;
-    const preferred = threads.find((thread) => Number(thread.unreadCount || 0) > 0) || threads[0];
+    const preferred = (threadId ? threads.find((thread) => thread.id === threadId) : null) ||
+      threads.find((thread) => Number(thread.unreadCount || 0) > 0) ||
+      threads[0];
     setSelectedThreadId(preferred.id);
+    window.setTimeout(() => {
+      document.getElementById("client-inbox-relay")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
   };
 
   const runRecommendedAction = (action: AdminCommandCenterData["recommendedActions"][number]["action"]) => {
@@ -382,6 +400,36 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
         break;
       case "open-settings":
         onOpenSettings();
+        break;
+    }
+  };
+
+  const runOwnerDeskAction = (
+    ownerCase: AdminOwnerDeskData["cases"][number],
+    action: AdminOwnerDeskData["cases"][number]["availableActions"][number],
+  ) => {
+    switch (action) {
+      case "open-live-desk":
+        onOpenLiveDesk(ownerCase.liveSessionId ? { sessionId: ownerCase.liveSessionId } : undefined);
+        break;
+      case "open-bookings":
+        onOpenBookings({
+          bookingId: ownerCase.bookingId || undefined,
+          status: ownerCase.pendingBookings > 0 ? "pending" : undefined,
+          search: ownerCase.customerEmail || ownerCase.customerPhone || undefined,
+        });
+        break;
+      case "focus-inbox":
+        focusInbox(ownerCase.threadId);
+        break;
+      case "call":
+        openPhone(ownerCase.customerPhone);
+        break;
+      case "whatsapp":
+        openWhatsApp(ownerCase.customerPhone, ownerCase.customerName);
+        break;
+      case "email":
+        openEmail(ownerCase.customerEmail);
         break;
     }
   };
@@ -457,7 +505,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
               <h2 className="mt-4 max-w-3xl text-3xl font-bold tracking-tight">{data.health.headline}</h2>
               <p className="mt-3 max-w-3xl text-sm text-white/75">{data.health.summary}</p>
               <div className="mt-6 flex flex-wrap items-center gap-3">
-                <Button className="gap-2 bg-white text-slate-900 hover:bg-white/90" onClick={onOpenLiveDesk}>
+                <Button className="gap-2 bg-white text-slate-900 hover:bg-white/90" onClick={() => onOpenLiveDesk()}>
                   <MessageSquare className="h-4 w-4" />
                   Open live desk
                 </Button>
@@ -537,6 +585,14 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
           tone={data.counters.openEscalations > 0 ? "danger" : "growth"}
         />
       </div>
+
+      <AdminOwnerDesk
+        data={ownerDeskQuery.data}
+        isLoading={ownerDeskQuery.isLoading}
+        isError={ownerDeskQuery.isError}
+        error={ownerDeskQuery.error as Error | null | undefined}
+        onRunAction={runOwnerDeskAction}
+      />
 
       <div className="grid gap-6 xl:grid-cols-[1.6fr,1fr]">
         <div className="space-y-6">
@@ -761,7 +817,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                     <p className="text-xs uppercase tracking-[0.16em] text-gray-500">Live requests</p>
                     <p className="mt-1 text-2xl font-bold text-gray-900">{data.counters.liveRequests}</p>
                   </div>
-                  <Button size="sm" className="gap-2" onClick={onOpenLiveDesk}>
+                  <Button size="sm" className="gap-2" onClick={() => onOpenLiveDesk()}>
                     <MessageSquare className="h-4 w-4" />
                     Open desk
                   </Button>
@@ -794,7 +850,12 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                             {acceptLiveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                             Accept
                           </Button>
-                          <Button size="sm" variant="outline" className="gap-2" onClick={onOpenLiveDesk}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-2"
+                            onClick={() => onOpenLiveDesk({ sessionId: session.id })}
+                          >
                             <ExternalLink className="h-4 w-4" />
                             Open desk
                           </Button>
@@ -863,7 +924,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
             </CardContent>
           </Card>
 
-          <Card className="border border-gray-200 shadow-sm">
+          <Card id="client-inbox-relay" className="border border-gray-200 shadow-sm">
             <CardHeader className="flex flex-row items-start justify-between gap-4">
               <div>
                 <CardTitle className="text-gray-900">Client Inbox Relay</CardTitle>

@@ -492,6 +492,13 @@ function LiveSalesPanel() {
   }, [fetchLists]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const requestedSession = Number.parseInt(new URLSearchParams(window.location.search).get("session") || "", 10);
+    if (!Number.isFinite(requestedSession) || requestedSession <= 0) return;
+    setSelectedSessionId(requestedSession);
+  }, []);
+
+  useEffect(() => {
     if (selectedSessionId) {
       fetchSessionDetail();
       const interval = setInterval(fetchSessionDetail, 3000);
@@ -1652,6 +1659,14 @@ export default function AdminLiveChat() {
   const { data: adminCheck, isLoading: adminCheckLoading } = useQuery<{ isAdmin: boolean }>({
     queryKey: ["/api/admin/check"],
   });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const requestedSession = new URLSearchParams(window.location.search).get("session");
+    if (requestedSession) {
+      setActiveTab("vendas");
+    }
+  }, []);
 
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();

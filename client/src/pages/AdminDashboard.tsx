@@ -931,13 +931,15 @@ export default function AdminDashboard() {
             <TabsTrigger value="settings" data-testid="tab-settings">Configuracoes</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="command" className="space-y-6 mt-6">
-            <AdminCommandCenter
-              onOpenLiveDesk={() => setLocation("/admin/live-chat")}
-              onOpenBookings={openBookingsView}
-              onOpenSettings={openSettingsView}
-            />
-          </TabsContent>
+            <TabsContent value="command" className="space-y-6 mt-6">
+              <AdminCommandCenter
+                onOpenLiveDesk={(options) =>
+                  setLocation(options?.sessionId ? `/admin/live-chat?session=${options.sessionId}` : "/admin/live-chat")
+                }
+                onOpenBookings={openBookingsView}
+                onOpenSettings={openSettingsView}
+              />
+            </TabsContent>
 
           <TabsContent value="overview" className="space-y-6 mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
