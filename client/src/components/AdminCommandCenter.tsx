@@ -408,11 +408,8 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
   };
 
   const getAdminInstallUrl = () => {
-    if (typeof window === "undefined") {
-      return "/apps/michels-travel-admin";
-    }
-
-    return `${window.location.origin}/apps/michels-travel-admin`;
+    // URL exposta publicamente pelo Expo p/ projetos do usuário
+    return "https://expo.dev/accounts/njfw23/projects/michels-travel-senior/builds"; 
   };
 
   const handleOpenAdminInstallPage = () => {
