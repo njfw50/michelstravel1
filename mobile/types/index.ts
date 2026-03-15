@@ -2,6 +2,15 @@
 
 export type AuthMethod = 'email' | 'phone';
 
+export interface SavedPassenger {
+  id: string;
+  label: string;
+  firstName: string;
+  lastName?: string;
+  passengerType: 'adult' | 'child' | 'infant';
+  mobilitySupport?: boolean;
+}
+
 export interface User {
   id: string;
   email?: string | null;
@@ -24,7 +33,7 @@ export interface CustomerProfile {
   experienceMode: 'standard' | 'senior';
   preferredLanguage: 'pt' | 'en' | 'es';
   preferredAirport?: string | null;
-  savedPassengers: Record<string, any>[];
+  savedPassengers: SavedPassenger[];
   connectionTolerance: 'avoid' | 'one_stop' | 'balanced' | 'price_first';
   bagsPreference: 'checked' | 'carry' | 'flexible';
   needsHumanHelp: boolean;
@@ -36,6 +45,8 @@ export interface CustomerProfile {
   createdAt: string;
   updatedAt: string;
 }
+
+export type CustomerProfileUpdateInput = Partial<Omit<CustomerProfile, 'createdAt' | 'updatedAt'>>;
 
 export interface CustomerDevice {
   id: string;

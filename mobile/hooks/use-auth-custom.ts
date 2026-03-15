@@ -26,6 +26,7 @@ interface AuthState {
   register: (input: RegisterArgs) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  setProfile: (profile: CustomerProfile) => Promise<void>;
   clearError: () => void;
 }
 
@@ -45,7 +46,7 @@ async function clearIdentity() {
   await SecureStore.deleteItemAsync('customerDevice');
 }
 
-export const useAuthCustom = create<AuthState>((set) => ({
+export const useAuthCustom = create<AuthState>((set, get) => ({
   user: null,
   profile: null,
   device: null,
@@ -161,6 +162,19 @@ export const useAuthCustom = create<AuthState>((set) => ({
         isLoading: false,
       });
     }
+  },
+
+  setProfile: async (profile) => {
+    const current = get();
+    if (!current.user) return;
+
+    await persistIdentity({
+      user: current.user,
+      profile,
+      device: current.device,
+    });
+
+    set({ profile });
   },
 
   clearError: () => set({ error: null }),

@@ -3,7 +3,15 @@ import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-import { AuthMethod, AuthTokens, CustomerAuthPayload, CustomerIdentityPayload } from '@/types';
+import {
+  AuthMethod,
+  AuthTokens,
+  CustomerAuthPayload,
+  CustomerIdentityPayload,
+  CustomerProfile,
+  CustomerProfileUpdateInput,
+} from '@/types';
+import { FlightOffer, FlightSearchRequest } from '@/types/flights';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://www.michelstravel.agency';
 
@@ -21,6 +29,10 @@ type RegisterInput = LoginInput & {
 type WebSessionResponse = {
   url: string;
   expiresInSeconds: number;
+};
+
+type CustomerProfileResponse = {
+  profile: CustomerProfile;
 };
 
 class ApiClient {
@@ -167,6 +179,34 @@ class ApiClient {
 
   async getCurrentCustomer(): Promise<CustomerIdentityPayload> {
     const response = await this.client.get<CustomerIdentityPayload>('/api/mobile/customer/me');
+    return response.data;
+  }
+
+  async getProfile(): Promise<CustomerProfile> {
+    const response = await this.client.get<CustomerProfileResponse>('/api/mobile/customer/profile');
+    return response.data.profile;
+  }
+
+  async updateProfile(input: CustomerProfileUpdateInput): Promise<CustomerProfile> {
+    const response = await this.client.patch<CustomerProfileResponse>('/api/mobile/customer/profile', input);
+    return response.data.profile;
+  }
+
+  async searchFlights(input: FlightSearchRequest): Promise<FlightOffer[]> {
+    const totalPassengers = input.adults + input.children + input.infants;
+    const response = await this.client.get<FlightOffer[]>('/api/flights/search', {
+      params: {
+        origin: input.origin,
+        destination: input.destination,
+        date: input.date,
+        returnDate: input.returnDate,
+        adults: String(input.adults),
+        children: String(input.children),
+        infants: String(input.infants),
+        passengers: String(totalPassengers || 1),
+        cabinClass: input.cabinClass,
+      },
+    });
     return response.data;
   }
 

@@ -13,7 +13,7 @@ const env = {
 const config: ExpoConfig = {
   name: env.appName,
   slug: env.appSlug,
-  version: "1.0.1",
+  version: "1.1.0",
   extra: {
     eas: {
       projectId: "3083bad9-35a2-4ee3-b97b-ef5f554dccd7",
