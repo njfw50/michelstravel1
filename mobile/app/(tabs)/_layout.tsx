@@ -5,6 +5,7 @@ import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Platform } from "react-native";
 import { useColors } from "@/hooks/use-colors";
+import { IS_ADMIN_APP } from "@/lib/app-variant";
 
 export default function TabLayout() {
   const colors = useColors();
@@ -31,29 +32,29 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Inicio",
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: IS_ADMIN_APP ? "Radar" : "Inicio",
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name={IS_ADMIN_APP ? "bell.fill" : "house.fill"} color={color} />,
         }}
       />
       <Tabs.Screen
         name="bookings"
         options={{
-          title: "Planejar",
+          title: IS_ADMIN_APP ? "Vendas" : "Planejar",
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="airplane.circle.fill" color={color} />,
         }}
       />
       <Tabs.Screen
         name="messages"
         options={{
-          title: "Ajuda",
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="message.fill" color={color} />,
+          title: IS_ADMIN_APP ? "Inbox" : "Ajuda",
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name={IS_ADMIN_APP ? "tray.full.fill" : "message.fill"} color={color} />,
         }}
       />
       <Tabs.Screen
         name="analytics"
         options={{
-          title: "Conta",
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.crop.circle.fill" color={color} />,
+          title: IS_ADMIN_APP ? "Conta" : "Conta",
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name={IS_ADMIN_APP ? "person.text.rectangle.fill" : "person.crop.circle.fill"} color={color} />,
         }}
       />
     </Tabs>

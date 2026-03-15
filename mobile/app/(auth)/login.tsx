@@ -15,6 +15,8 @@ import { router } from 'expo-router';
 
 import { ScreenContainer } from '@/components/screen-container';
 import { useAuthCustom } from '@/hooks/use-auth-custom';
+import { useAdminAuth } from '@/hooks/use-admin-auth';
+import { APP_DISPLAY_NAME, IS_ADMIN_APP } from '@/lib/app-variant';
 import { AuthMethod } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -30,12 +32,33 @@ export default function LoginScreen() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const { login, register, isLoading, error, clearError } = useAuthCustom();
+  const adminAuth = useAdminAuth();
 
   useEffect(() => {
     clearError();
   }, [mode, method, clearError]);
 
   const handleSubmit = async () => {
+    if (IS_ADMIN_APP) {
+      const trimmedPassword = password.trim();
+      if (!trimmedPassword) {
+        Alert.alert('Senha ausente', 'Digite a senha de administrador para entrar.');
+        return;
+      }
+
+      try {
+        adminAuth.clearError();
+        await adminAuth.login(trimmedPassword);
+        router.replace('/(tabs)');
+      } catch (err: any) {
+        Alert.alert(
+          'Nao foi possivel entrar',
+          err?.response?.data?.error || err?.message || 'Tente novamente em instantes.',
+        );
+      }
+      return;
+    }
+
     const trimmedIdentifier = identifier.trim();
     const trimmedPassword = password.trim();
 
@@ -102,7 +125,7 @@ export default function LoginScreen() {
               <View className="rounded-[28px] border border-border bg-background px-5 py-6">
                 <View className="self-center rounded-full border border-border bg-surface px-3 py-2">
                   <Text className="text-xs font-semibold uppercase tracking-[1px] text-primary">
-                    Michels Travel Senior
+                    {APP_DISPLAY_NAME}
                   </Text>
                 </View>
                 <Image
@@ -111,14 +134,19 @@ export default function LoginScreen() {
                   style={{ width: 100, height: 100, alignSelf: 'center', marginBottom: 16 }}
                 />
                 <Text className="text-center text-3xl font-bold text-foreground">
-                  Michels Travel Senior
+                  {APP_DISPLAY_NAME}
                 </Text>
                 <Text className="mt-3 text-center text-base leading-6 text-muted">
-                  Base clara, visual do site e entrada simples para voce pesquisar ou continuar sua viagem.
+                  {IS_ADMIN_APP
+                    ? 'Entrada direta do operador, com acesso rapido ao radar, live desk e atendimento da Michels Travel.'
+                    : 'Base clara, visual do site e entrada simples para voce pesquisar ou continuar sua viagem.'}
                 </Text>
 
                 <View className="mt-5 flex-row flex-wrap justify-center gap-2">
-                  {['Mais calma', 'Ajuda humana', 'Viagem organizada'].map((label) => (
+                  {(IS_ADMIN_APP
+                    ? ['Owner desk', 'Atendimento vivo', 'Operacao no celular']
+                    : ['Mais calma', 'Ajuda humana', 'Viagem organizada']
+                  ).map((label) => (
                     <View key={label} className="rounded-full border border-border bg-surface px-3 py-2">
                       <Text className="text-xs font-semibold uppercase tracking-[0.8px] text-foreground">
                         {label}
@@ -128,57 +156,61 @@ export default function LoginScreen() {
                 </View>
               </View>
 
-              <View className="mt-6 flex-row rounded-2xl bg-background p-1">
-                {[
-                  { key: 'login', label: 'Entrar' },
-                  { key: 'register', label: 'Criar conta' },
-                ].map((item) => (
-                  <TouchableOpacity
-                    key={item.key}
-                    className={cn(
-                      'flex-1 rounded-2xl px-4 py-3',
-                      mode === item.key ? 'bg-primary' : 'bg-transparent',
-                    )}
-                    onPress={() => setMode(item.key as FormMode)}
-                    disabled={isLoading}
-                    activeOpacity={0.85}
-                  >
-                    <Text
-                      className={cn(
-                        'text-center text-sm font-semibold',
-                        mode === item.key ? 'text-background' : 'text-foreground',
-                      )}
-                    >
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              {!IS_ADMIN_APP ? (
+                <>
+                  <View className="mt-6 flex-row rounded-2xl bg-background p-1">
+                    {[
+                      { key: 'login', label: 'Entrar' },
+                      { key: 'register', label: 'Criar conta' },
+                    ].map((item) => (
+                      <TouchableOpacity
+                        key={item.key}
+                        className={cn(
+                          'flex-1 rounded-2xl px-4 py-3',
+                          mode === item.key ? 'bg-primary' : 'bg-transparent',
+                        )}
+                        onPress={() => setMode(item.key as FormMode)}
+                        disabled={isLoading}
+                        activeOpacity={0.85}
+                      >
+                        <Text
+                          className={cn(
+                            'text-center text-sm font-semibold',
+                            mode === item.key ? 'text-background' : 'text-foreground',
+                          )}
+                        >
+                          {item.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
 
-              <View className="mt-4 flex-row rounded-2xl bg-background p-1">
-                {[
-                  { key: 'phone', label: 'Telefone' },
-                  { key: 'email', label: 'Email' },
-                ].map((item) => (
-                  <TouchableOpacity
-                    key={item.key}
-                    className={cn(
-                      'flex-1 rounded-2xl px-4 py-3',
-                      method === item.key ? 'bg-surface border border-border' : 'bg-transparent',
-                    )}
-                    onPress={() => setMethod(item.key as AuthMethod)}
-                    disabled={isLoading}
-                    activeOpacity={0.85}
-                  >
-                    <Text className="text-center text-sm font-semibold text-foreground">
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                  <View className="mt-4 flex-row rounded-2xl bg-background p-1">
+                    {[
+                      { key: 'phone', label: 'Telefone' },
+                      { key: 'email', label: 'Email' },
+                    ].map((item) => (
+                      <TouchableOpacity
+                        key={item.key}
+                        className={cn(
+                          'flex-1 rounded-2xl px-4 py-3',
+                          method === item.key ? 'bg-surface border border-border' : 'bg-transparent',
+                        )}
+                        onPress={() => setMethod(item.key as AuthMethod)}
+                        disabled={isLoading}
+                        activeOpacity={0.85}
+                      >
+                        <Text className="text-center text-sm font-semibold text-foreground">
+                          {item.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </>
+              ) : null}
 
               <View className="mt-6 gap-4">
-                {mode === 'register' && (
+                {!IS_ADMIN_APP && mode === 'register' && (
                   <>
                     <View>
                       <Text className="mb-2 text-sm font-medium text-foreground">Primeiro nome</Text>
@@ -206,28 +238,32 @@ export default function LoginScreen() {
                   </>
                 )}
 
+                {!IS_ADMIN_APP ? (
+                  <View>
+                    <Text className="mb-2 text-sm font-medium text-foreground">
+                      {method === 'phone' ? 'Telefone' : 'Email'}
+                    </Text>
+                    <TextInput
+                      className="rounded-2xl border border-border bg-background px-4 py-4 text-base text-foreground"
+                      placeholder={method === 'phone' ? '+1 (862) 350-1161' : 'voce@email.com'}
+                      placeholderTextColor="#8C98AE"
+                      value={identifier}
+                      onChangeText={setIdentifier}
+                      keyboardType={method === 'phone' ? 'phone-pad' : 'email-address'}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={!isLoading}
+                    />
+                  </View>
+                ) : null}
+
                 <View>
                   <Text className="mb-2 text-sm font-medium text-foreground">
-                    {method === 'phone' ? 'Telefone' : 'Email'}
+                    {IS_ADMIN_APP ? 'Senha de administrador' : 'Senha'}
                   </Text>
                   <TextInput
                     className="rounded-2xl border border-border bg-background px-4 py-4 text-base text-foreground"
-                    placeholder={method === 'phone' ? '+1 (862) 350-1161' : 'voce@email.com'}
-                    placeholderTextColor="#8C98AE"
-                    value={identifier}
-                    onChangeText={setIdentifier}
-                    keyboardType={method === 'phone' ? 'phone-pad' : 'email-address'}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    editable={!isLoading}
-                  />
-                </View>
-
-                <View>
-                  <Text className="mb-2 text-sm font-medium text-foreground">Senha</Text>
-                  <TextInput
-                    className="rounded-2xl border border-border bg-background px-4 py-4 text-base text-foreground"
-                    placeholder="Digite sua senha"
+                    placeholder={IS_ADMIN_APP ? 'Digite a senha do app admin' : 'Digite sua senha'}
                     placeholderTextColor="#8C98AE"
                     value={password}
                     onChangeText={setPassword}
@@ -245,21 +281,26 @@ export default function LoginScreen() {
                     <Text className="text-sm text-error">{error}</Text>
                   </View>
                 )}
+                {IS_ADMIN_APP && adminAuth.error && (
+                  <View className="rounded-2xl border border-error/20 bg-error/10 px-4 py-3">
+                    <Text className="text-sm text-error">{adminAuth.error}</Text>
+                  </View>
+                )}
 
                 <TouchableOpacity
                   className={cn(
                     'mt-2 rounded-2xl bg-primary px-4 py-4',
-                    isLoading && 'opacity-70',
+                    (IS_ADMIN_APP ? adminAuth.isLoading : isLoading) && 'opacity-70',
                   )}
                   onPress={handleSubmit}
-                  disabled={isLoading}
+                  disabled={IS_ADMIN_APP ? adminAuth.isLoading : isLoading}
                   activeOpacity={0.85}
                 >
-                  {isLoading ? (
+                  {IS_ADMIN_APP ? adminAuth.isLoading : isLoading ? (
                     <ActivityIndicator color="#ffffff" />
                   ) : (
                     <Text className="text-center text-base font-semibold text-background">
-                      {mode === 'login' ? 'Entrar agora' : 'Criar minha conta'}
+                      {IS_ADMIN_APP ? 'Entrar no app admin' : mode === 'login' ? 'Entrar agora' : 'Criar minha conta'}
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -267,12 +308,16 @@ export default function LoginScreen() {
 
               <View className="mt-6 rounded-2xl border border-border bg-background px-4 py-4">
                 <Text className="text-sm font-semibold text-foreground">
-                  {mode === 'login'
+                  {IS_ADMIN_APP
+                    ? 'Este app e separado do Senior e separado do app do cliente comprador.'
+                    : mode === 'login'
                     ? 'Entre e continue sua viagem exatamente de onde parou.'
                     : 'Crie sua conta para salvar passageiros, documentos e preferencias do atendimento senior.'}
                 </Text>
                 <Text className="mt-2 text-sm leading-6 text-muted">
-                  Voce pode usar {method === 'phone' ? 'telefone e senha' : 'email e senha'} sem precisar reaprender o sistema a cada acesso.
+                  {IS_ADMIN_APP
+                    ? 'Ele foi preparado para alertas, live desk, inbox e operacao no celular.'
+                    : `Voce pode usar ${method === 'phone' ? 'telefone e senha' : 'email e senha'} sem precisar reaprender o sistema a cada acesso.`}
                 </Text>
               </View>
             </View>

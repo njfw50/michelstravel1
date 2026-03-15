@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { Alert, Linking, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 
+import { AdminWorkspaceWebView } from "@/components/admin-workspace-webview";
 import { ScreenContainer } from "@/components/screen-container";
 import {
   AGENCY_PHONE_DISPLAY,
@@ -9,6 +11,7 @@ import {
   buildWhatsAppMessage,
 } from "@/lib/contact";
 import { useAuthCustom } from "@/hooks/use-auth-custom";
+import { IS_ADMIN_APP } from "@/lib/app-variant";
 
 const guides = [
   {
@@ -71,7 +74,7 @@ async function openExternalLink(url: string) {
   await Linking.openURL(url);
 }
 
-export default function MessagesScreen() {
+function SeniorMessagesScreen() {
   const { profile } = useAuthCustom();
   const [activeGuideId, setActiveGuideId] = useState(guides[0].id);
 
@@ -193,4 +196,21 @@ export default function MessagesScreen() {
       </ScrollView>
     </ScreenContainer>
   );
+}
+
+export default function MessagesScreen() {
+  const params = useLocalSearchParams<{ thread?: string }>();
+
+  if (IS_ADMIN_APP) {
+    const threadParam = params.thread ? `&thread=${encodeURIComponent(params.thread)}` : "";
+    return (
+      <AdminWorkspaceWebView
+        path={`/admin-app?tab=mensagens${threadParam}`}
+        title="Inbox do operador"
+        subtitle="Abra mensagens, email, escalonagem e respostas do dashboard direto no app admin."
+      />
+    );
+  }
+
+  return <SeniorMessagesScreen />;
 }

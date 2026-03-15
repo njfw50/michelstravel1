@@ -20,6 +20,8 @@ import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 import { useAuthCustom } from "@/hooks/use-auth-custom";
+import { useAdminAuth } from "@/hooks/use-admin-auth";
+import { APP_DISPLAY_NAME, IS_ADMIN_APP } from "@/lib/app-variant";
 import { router } from "expo-router";
 import { ActivityIndicator, View, Text } from "react-native";
 
@@ -31,11 +33,15 @@ export const unstable_settings = {
 };
 
 function RootLayoutContent() {
-  const { isAuthenticated, isLoading, checkAuth } = useAuthCustom();
+  const customerAuth = useAuthCustom();
+  const adminAuth = useAdminAuth();
+  const isAuthenticated = IS_ADMIN_APP ? adminAuth.isAuthenticated : customerAuth.isAuthenticated;
+  const isLoading = IS_ADMIN_APP ? adminAuth.isLoading : customerAuth.isLoading;
+  const checkAuth = IS_ADMIN_APP ? adminAuth.checkAuth : customerAuth.checkAuth;
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -51,7 +57,7 @@ function RootLayoutContent() {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F3F7FF' }}>
         <ActivityIndicator size="large" color="#2F63F5" />
-        <Text style={{ marginTop: 16, color: '#60708D' }}>Carregando sua conta...</Text>
+        <Text style={{ marginTop: 16, color: '#60708D' }}>Carregando {APP_DISPLAY_NAME}...</Text>
       </View>
     );
   }

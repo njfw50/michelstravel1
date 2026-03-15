@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
+import { AdminAccountScreen } from "@/components/admin-account-screen";
 import { ScreenContainer } from "@/components/screen-container";
 import { useAuthCustom } from "@/hooks/use-auth-custom";
 import { apiClient } from "@/lib/api-client";
+import { IS_ADMIN_APP } from "@/lib/app-variant";
 import { CustomerProfile, SavedPassenger } from "@/types";
 
 type PassengerType = SavedPassenger["passengerType"];
@@ -68,7 +70,7 @@ function ChoiceGroup<T extends string>({
   );
 }
 
-export default function AccountScreen() {
+function SeniorAccountScreen() {
   const { user, profile, logout, isLoading, setProfile } = useAuthCustom();
   const [preferredAirport, setPreferredAirport] = useState(profile?.preferredAirport || "EWR");
   const [preferredLanguage, setPreferredLanguage] = useState(profile?.preferredLanguage || "pt");
@@ -329,4 +331,12 @@ export default function AccountScreen() {
       </ScrollView>
     </ScreenContainer>
   );
+}
+
+export default function AccountScreen() {
+  if (IS_ADMIN_APP) {
+    return <AdminAccountScreen />;
+  }
+
+  return <SeniorAccountScreen />;
 }

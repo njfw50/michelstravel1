@@ -1,8 +1,10 @@
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { router } from "expo-router";
 
+import { AdminHomeScreen } from "@/components/admin-home-screen";
 import { ScreenContainer } from "@/components/screen-container";
 import { useAuthCustom } from "@/hooks/use-auth-custom";
+import { IS_ADMIN_APP } from "@/lib/app-variant";
 
 const brandLogo = require("../../assets/images/site-logo.png");
 
@@ -27,7 +29,7 @@ const quickTools = [
   },
 ];
 
-export default function HomeScreen() {
+function SeniorHomeScreen() {
   const { user, profile } = useAuthCustom();
   const firstName = user?.firstName?.trim() || "Cliente";
   const preferredAirport = profile?.preferredAirport || "EWR";
@@ -97,7 +99,7 @@ export default function HomeScreen() {
         <View className="mt-6 rounded-[26px] border border-border bg-surface px-5 py-5">
           <Text className="text-lg font-bold text-foreground">Ferramentas feitas para idosos</Text>
           <Text className="mt-3 text-sm leading-6 text-muted">
-            Aqui o app trabalha em etapas simples. Primeiro voce escolhe o que importa, depois vê opcoes explicadas em linguagem clara, e por ultimo guarda sua escolha ou chama ajuda humana.
+            Aqui o app trabalha em etapas simples. Primeiro voce escolhe o que importa, depois ve opcoes explicadas em linguagem clara, e por ultimo guarda sua escolha ou chama ajuda humana.
           </Text>
 
           <View className="mt-4 gap-3">
@@ -115,4 +117,12 @@ export default function HomeScreen() {
       </ScrollView>
     </ScreenContainer>
   );
+}
+
+export default function HomeScreen() {
+  if (IS_ADMIN_APP) {
+    return <AdminHomeScreen />;
+  }
+
+  return <SeniorHomeScreen />;
 }

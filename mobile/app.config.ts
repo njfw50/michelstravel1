@@ -2,31 +2,50 @@
 import "./scripts/load-env.js";
 import type { ExpoConfig } from "expo/config";
 
-const env = {
-  appName: "Michels Travel Senior",
-  appSlug: "michels-travel-senior",
-  scheme: "michelstravelsenior",
-  iosBundleId: "agency.michelstravel.senior",
-  androidPackage: "agency.michelstravel.senior",
-};
+const appVariant = process.env.APP_VARIANT === "admin" ? "admin" : "senior";
+const seniorProjectId = "3083bad9-35a2-4ee3-b97b-ef5f554dccd7";
+const adminProjectId = process.env.EAS_PROJECT_ID_ADMIN || seniorProjectId;
+
+const variantConfig = appVariant === "admin"
+  ? {
+      appName: "Michels Travel Admin",
+      appSlug: "michels-travel-admin",
+      scheme: "michelstraveladmin",
+      iosBundleId: "agency.michelstravel.admin",
+      androidPackage: "agency.michelstravel.admin",
+      projectId: adminProjectId,
+      version: process.env.APP_VERSION || "1.0.0",
+    }
+  : {
+      appName: "Michels Travel Senior",
+      appSlug: "michels-travel-senior",
+      scheme: "michelstravelsenior",
+      iosBundleId: "agency.michelstravel.senior",
+      androidPackage: "agency.michelstravel.senior",
+      projectId: seniorProjectId,
+      version: process.env.APP_VERSION || "1.1.0",
+    };
 
 const config: ExpoConfig = {
-  name: env.appName,
-  slug: env.appSlug,
-  version: "1.1.0",
+  name: variantConfig.appName,
+  slug: variantConfig.appSlug,
+  version: variantConfig.version,
   extra: {
     eas: {
-      projectId: "3083bad9-35a2-4ee3-b97b-ef5f554dccd7",
+      projectId: variantConfig.projectId,
     },
+    appVariant,
+    appDisplayName: variantConfig.appName,
+    appScheme: variantConfig.scheme,
   },
   orientation: "portrait",
   icon: "./assets/images/icon.png",
-  scheme: env.scheme,
+  scheme: variantConfig.scheme,
   userInterfaceStyle: "light",
   newArchEnabled: true,
   ios: {
     supportsTablet: true,
-    bundleIdentifier: env.iosBundleId,
+    bundleIdentifier: variantConfig.iosBundleId,
     "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -40,7 +59,7 @@ const config: ExpoConfig = {
     },
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
-    package: env.androidPackage,
+    package: variantConfig.androidPackage,
     permissions: ["POST_NOTIFICATIONS"],
     intentFilters: [
       {
@@ -48,7 +67,7 @@ const config: ExpoConfig = {
         autoVerify: true,
         data: [
           {
-            scheme: env.scheme,
+            scheme: variantConfig.scheme,
             host: "*",
           },
         ],
