@@ -132,6 +132,57 @@ function QueueCard({
   );
 }
 
+function ProductAppCard({
+  title,
+  audience,
+  description,
+  status,
+  icon,
+  primaryAction,
+  secondaryAction,
+}: {
+  title: string;
+  audience: string;
+  description: string;
+  status: string;
+  icon: ReactNode;
+  primaryAction?: { label: string; onClick: () => void };
+  secondaryAction?: { label: string; onClick: () => void };
+}) {
+  return (
+    <Card className="border border-gray-200 shadow-sm">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <Badge className="border border-blue-200 bg-blue-50 text-blue-700">{audience}</Badge>
+            <h3 className="mt-3 text-xl font-semibold text-gray-900">{title}</h3>
+            <p className="mt-2 text-sm text-gray-600">{description}</p>
+            <p className="mt-3 text-xs uppercase tracking-[0.16em] text-gray-400">{status}</p>
+          </div>
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 text-gray-700">
+            {icon}
+          </div>
+        </div>
+
+        {(primaryAction || secondaryAction) && (
+          <div className="mt-5 flex flex-wrap gap-2">
+            {primaryAction && (
+              <Button className="gap-2" onClick={primaryAction.onClick}>
+                {primaryAction.label}
+              </Button>
+            )}
+            {secondaryAction && (
+              <Button variant="outline" className="gap-2" onClick={secondaryAction.onClick}>
+                {secondaryAction.label}
+              </Button>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function buildQuickDealDraft(route: { route: string; routeKey: string }): QuickDealDraft {
   const [origin = "", destination = ""] = route.routeKey.split("-");
   return {
@@ -598,6 +649,32 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
           </div>
         </CardContent>
       </Card>
+
+      <div className="grid gap-4 xl:grid-cols-3">
+        <ProductAppCard
+          title="Michels Travel Admin"
+          audience="Operacao"
+          description="Seu app de dono e atendimento. Aqui voce recebe alertas, abre casos, entra no live desk e acompanha tudo do cliente no celular."
+          status="Ativo agora"
+          icon={<Smartphone className="h-5 w-5" />}
+          primaryAction={{ label: "Abrir app admin", onClick: handleOpenAdminApp }}
+          secondaryAction={{ label: "Copiar link do app admin", onClick: handleCopyAdminAppLink }}
+        />
+        <ProductAppCard
+          title="Michels Travel Senior"
+          audience="Idosos"
+          description="App separado para o publico senior, com fluxo facilitado, ajuda calma e jornada dedicada ao cliente idoso."
+          status="Separado do admin"
+          icon={<Users className="h-5 w-5" />}
+        />
+        <ProductAppCard
+          title="Michels Travel Cliente"
+          audience="Busca e compra"
+          description="App separado para o cliente comum pesquisar voos, comparar, comprar e acompanhar reservas sem usar o app senior nem o admin."
+          status="Separado do admin"
+          icon={<Plane className="h-5 w-5" />}
+        />
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <QueueCard
