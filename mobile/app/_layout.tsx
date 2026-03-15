@@ -49,9 +49,9 @@ function RootLayoutContent() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff' }}>
-        <ActivityIndicator size="large" color="#0a7ea4" />
-        <Text style={{ marginTop: 16, color: '#687076' }}>Carregando...</Text>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F3F7FF' }}>
+        <ActivityIndicator size="large" color="#2F63F5" />
+        <Text style={{ marginTop: 16, color: '#60708D' }}>Carregando sua conta...</Text>
       </View>
     );
   }

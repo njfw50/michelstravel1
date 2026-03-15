@@ -1,17 +1,70 @@
 // Tipos compartilhados do Michels Travel Senior
 
+export type AuthMethod = 'email' | 'phone';
+
 export interface User {
   id: string;
-  email: string;
-  name: string;
-  role: 'admin' | 'agent';
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  phone?: string | null;
+  profileImageUrl?: string | null;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
-  expiresAt: number;
+  expiresInSeconds: number;
+  refreshExpiresAt: string;
+}
+
+export interface CustomerProfile {
+  experienceMode: 'standard' | 'senior';
+  preferredLanguage: 'pt' | 'en' | 'es';
+  preferredAirport?: string | null;
+  savedPassengers: Record<string, any>[];
+  connectionTolerance: 'avoid' | 'one_stop' | 'balanced' | 'price_first';
+  bagsPreference: 'checked' | 'carry' | 'flexible';
+  needsHumanHelp: boolean;
+  biometricEnabled: boolean;
+  scannerHandoffEnabled: boolean;
+  seniorAssistantEnabled: boolean;
+  lastActiveBookingId?: number | null;
+  lastActiveOfferId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CustomerDevice {
+  id: string;
+  platform: 'ios' | 'android' | 'web';
+  storeChannel: 'app_store' | 'play_store' | 'galaxy_store' | 'internal' | 'direct';
+  appVariant: 'standard' | 'senior';
+  deviceName?: string | null;
+  deviceModel?: string | null;
+  osVersion?: string | null;
+  appVersion?: string | null;
+  hasPushToken: boolean;
+  trustedAt?: string | null;
+  lastSeenAt?: string | null;
+  revokedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CustomerAuthPayload {
+  user: User;
+  profile: CustomerProfile;
+  device: CustomerDevice | null;
+  session: AuthTokens;
+}
+
+export interface CustomerIdentityPayload {
+  user: User;
+  profile: CustomerProfile;
+  device: CustomerDevice | null;
 }
 
 export interface DashboardStats {

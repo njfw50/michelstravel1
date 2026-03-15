@@ -2,7 +2,7 @@ import type { Express, NextFunction, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
-import { and, desc, eq, gt, isNull } from "drizzle-orm";
+import { and, desc, eq, gt, isNotNull, isNull } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "../db";
@@ -21,9 +21,11 @@ if (!MOBILE_JWT_SECRET) {
   throw new Error("MOBILE_JWT_SECRET or SESSION_SECRET must be configured");
 }
 
+const authMethodSchema = z.enum(["email", "phone"]);
+
 const deviceSchema = z.object({
   id: z.string().uuid().optional(),
-  platform: z.enum(["ios", "android"]),
+  platform: z.enum(["ios", "android", "web"]),
   storeChannel: z.enum(["app_store", "play_store", "galaxy_store", "internal", "direct"]).default("direct"),
   appVariant: z.enum(["standard", "senior"]).default("standard"),
   deviceName: z.string().max(160).optional(),
@@ -34,18 +36,50 @@ const deviceSchema = z.object({
 });
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  method: authMethodSchema,
+  identifier: z.string().min(1),
   password: z.string().min(1),
   device: deviceSchema,
+}).superRefine((value, ctx) => {
+  if (value.method === "email") {
+    if (!z.string().email().safeParse(value.identifier.trim()).success) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["identifier"], message: "Invalid email address" });
+    }
+    return;
+  }
+
+  if (!normalizePhone(value.identifier)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["identifier"], message: "Invalid phone number" });
+  }
 });
 
 const refreshSchema = z.object({
   refreshToken: z.string().min(20),
 });
 
+const registerSchema = z.object({
+  firstName: z.string().trim().min(2).max(80),
+  lastName: z.string().trim().max(80).optional(),
+  method: authMethodSchema,
+  identifier: z.string().min(1),
+  password: z.string().min(6).max(120),
+  device: deviceSchema,
+}).superRefine((value, ctx) => {
+  if (value.method === "email") {
+    if (!z.string().email().safeParse(value.identifier.trim()).success) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["identifier"], message: "Invalid email address" });
+    }
+    return;
+  }
+
+  if (!normalizePhone(value.identifier)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["identifier"], message: "Invalid phone number" });
+  }
+});
+
 const registerDeviceSchema = z.object({
   id: z.string().uuid().optional(),
-  platform: z.enum(["ios", "android"]).optional(),
+  platform: z.enum(["ios", "android", "web"]).optional(),
   storeChannel: z.enum(["app_store", "play_store", "galaxy_store", "internal", "direct"]).optional(),
   appVariant: z.enum(["standard", "senior"]).optional(),
   deviceName: z.string().max(160).optional(),
@@ -114,6 +148,35 @@ function normalizeRouteParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
+function normalizeEmail(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function normalizePhone(value: string) {
+  const trimmed = value.trim();
+  const digits = trimmed.replace(/\D/g, "");
+
+  if (digits.length < 10 || digits.length > 15) {
+    return null;
+  }
+
+  if (trimmed.startsWith("+")) {
+    return `+${digits}`;
+  }
+
+  if (digits.startsWith("00")) {
+    return `+${digits.slice(2)}`;
+  }
+
+  return digits;
+}
+
+function buildPhoneCandidates(value: string) {
+  const digits = value.replace(/\D/g, "");
+  const withPlus = digits ? `+${digits}` : "";
+  return Array.from(new Set([value, digits, withPlus].filter(Boolean)));
+}
+
 function serializeUser(user: typeof users.$inferSelect) {
   return {
     id: user.id,
@@ -125,6 +188,19 @@ function serializeUser(user: typeof users.$inferSelect) {
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
+}
+
+function buildProfileSeedFromVariant(appVariant: "standard" | "senior") {
+  if (appVariant === "senior") {
+    return {
+      experienceMode: "senior" as const,
+      preferredLanguage: "pt" as const,
+      needsHumanHelp: true,
+      seniorAssistantEnabled: true,
+    };
+  }
+
+  return undefined;
 }
 
 function serializeProfile(profile: typeof customerProfiles.$inferSelect) {
@@ -165,7 +241,10 @@ function serializeDevice(device: typeof customerMobileDevices.$inferSelect) {
   };
 }
 
-async function ensureCustomerProfile(userId: string) {
+async function ensureCustomerProfile(
+  userId: string,
+  seed: Partial<typeof customerProfiles.$inferInsert> = {},
+) {
   const [existing] = await db
     .select()
     .from(customerProfiles)
@@ -177,10 +256,45 @@ async function ensureCustomerProfile(userId: string) {
 
   const [created] = await db
     .insert(customerProfiles)
-    .values({ userId })
+    .values({ userId, ...seed })
     .returning();
 
   return created;
+}
+
+async function findUserByEmail(email: string) {
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, normalizeEmail(email)));
+
+  return user;
+}
+
+async function findUserByPhone(phone: string) {
+  const normalizedTarget = normalizePhone(phone);
+
+  for (const candidate of buildPhoneCandidates(phone)) {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.phone, candidate));
+
+    if (user) {
+      return user;
+    }
+  }
+
+  if (normalizedTarget) {
+    const phoneUsers = await db
+      .select()
+      .from(users)
+      .where(isNotNull(users.phone));
+
+    return phoneUsers.find((user) => normalizePhone(user.phone || "") === normalizedTarget);
+  }
+
+  return undefined;
 }
 
 async function revokeActiveRefreshTokensForDevice(deviceId: string) {
@@ -340,12 +454,11 @@ export function registerCustomerMobileRoutes(app: Express) {
       return res.status(400).json({ error: "Invalid login payload", details: parsed.error.flatten() });
     }
 
-    const { email, password, device } = parsed.data;
+    const { method, identifier, password, device } = parsed.data;
 
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email.toLowerCase()));
+    const user = method === "email"
+      ? await findUserByEmail(identifier)
+      : await findUserByPhone(identifier);
 
     if (!user || !user.passwordHash) {
       return res.status(401).json({ error: "Invalid credentials" });
@@ -357,10 +470,53 @@ export function registerCustomerMobileRoutes(app: Express) {
     }
 
     const mobileDevice = await upsertDeviceForUser(user.id, device);
-    const profile = await ensureCustomerProfile(user.id);
+    const profile = await ensureCustomerProfile(user.id, buildProfileSeedFromVariant(device.appVariant));
     const session = await issueSession(user, mobileDevice);
 
     return res.json({
+      user: serializeUser(user),
+      profile: serializeProfile(profile),
+      device: serializeDevice(mobileDevice),
+      session,
+    });
+  });
+
+  app.post("/api/mobile/customer/auth/register", async (req, res) => {
+    const parsed = registerSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid registration payload", details: parsed.error.flatten() });
+    }
+
+    const { firstName, lastName, method, identifier, password, device } = parsed.data;
+    const email = method === "email" ? normalizeEmail(identifier) : null;
+    const phone = method === "phone" ? normalizePhone(identifier) : null;
+
+    if (email && await findUserByEmail(email)) {
+      return res.status(409).json({ error: "This email is already registered" });
+    }
+
+    if (phone && await findUserByPhone(phone)) {
+      return res.status(409).json({ error: "This phone number is already registered" });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    const [user] = await db
+      .insert(users)
+      .values({
+        firstName,
+        lastName: lastName || null,
+        email,
+        phone,
+        passwordHash,
+      })
+      .returning();
+
+    const mobileDevice = await upsertDeviceForUser(user.id, device);
+    const profile = await ensureCustomerProfile(user.id, buildProfileSeedFromVariant(device.appVariant));
+    const session = await issueSession(user, mobileDevice);
+
+    return res.status(201).json({
       user: serializeUser(user),
       profile: serializeProfile(profile),
       device: serializeDevice(mobileDevice),
