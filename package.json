@@ -8,7 +8,9 @@
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "deploy:render": "powershell -ExecutionPolicy Bypass -File .\\script\\render-deploy.ps1",
+    "ship:site": "powershell -ExecutionPolicy Bypass -File .\\script\\ship-site.ps1"
   },
   "dependencies": {
     "@duffel/api": "^4.21.5",
