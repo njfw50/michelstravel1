@@ -99,26 +99,28 @@ export default function LoginScreen() {
         >
           <View className="flex-1 justify-center">
             <View className="rounded-[32px] border border-border bg-surface px-5 py-5 shadow-sm">
-              <View
-                className="rounded-[28px] px-5 py-6"
-                style={{ backgroundColor: '#273B97' }}
-              >
+              <View className="rounded-[28px] border border-border bg-background px-5 py-6">
+                <View className="self-center rounded-full border border-border bg-surface px-3 py-2">
+                  <Text className="text-xs font-semibold uppercase tracking-[1px] text-primary">
+                    Michels Travel Senior
+                  </Text>
+                </View>
                 <Image
                   source={brandLogo}
                   resizeMode="contain"
                   style={{ width: 100, height: 100, alignSelf: 'center', marginBottom: 16 }}
                 />
-                <Text className="text-center text-3xl font-bold text-white">
+                <Text className="text-center text-3xl font-bold text-foreground">
                   Michels Travel Senior
                 </Text>
-                <Text className="mt-3 text-center text-base leading-6 text-white/85">
-                  O mesmo visual do site, com entrada simples e seu atendimento salvo no aparelho.
+                <Text className="mt-3 text-center text-base leading-6 text-muted">
+                  Base clara, visual do site e entrada simples para voce pesquisar ou continuar sua viagem.
                 </Text>
 
                 <View className="mt-5 flex-row flex-wrap justify-center gap-2">
                   {['Mais calma', 'Ajuda humana', 'Viagem organizada'].map((label) => (
-                    <View key={label} className="rounded-full border border-white/20 bg-white/10 px-3 py-2">
-                      <Text className="text-xs font-semibold uppercase tracking-[0.8px] text-white">
+                    <View key={label} className="rounded-full border border-border bg-surface px-3 py-2">
+                      <Text className="text-xs font-semibold uppercase tracking-[0.8px] text-foreground">
                         {label}
                       </Text>
                     </View>
