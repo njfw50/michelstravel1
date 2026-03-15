@@ -120,6 +120,52 @@ export interface AdminOwnerDeskData {
     paymentWatch: number;
     liveNow: number;
     mobileLinked: number;
+    alertingNow: number;
+    overdueFollowUps: number;
+  };
+  alerts: Array<{
+    id: string;
+    level: "critical" | "attention" | "info";
+    title: string;
+    summary: string;
+    customerCaseId: string;
+    customerName: string | null;
+    route: string | null;
+    stageLabel: string;
+    heatScore: number;
+    triggeredAt: string | null;
+    action: "open-live-desk" | "open-bookings" | "focus-inbox" | "call" | "whatsapp" | "email";
+    actionLabel: string;
+    actionUrl: string;
+    customerPhone: string | null;
+    customerEmail: string | null;
+    liveSessionId: number | null;
+    bookingId: number | null;
+    threadId: number | null;
+  }>;
+  followUps: Array<{
+    id: string;
+    customerCaseId: string;
+    customerName: string | null;
+    route: string | null;
+    dueAt: string;
+    overdue: boolean;
+    urgency: "overdue" | "soon" | "planned";
+    reason: string;
+    channel: "open-live-desk" | "open-bookings" | "focus-inbox" | "call" | "whatsapp" | "email";
+    actionLabel: string;
+    actionUrl: string;
+    customerPhone: string | null;
+    customerEmail: string | null;
+    liveSessionId: number | null;
+    bookingId: number | null;
+    threadId: number | null;
+  }>;
+  mobileDeck: {
+    headline: string;
+    criticalCount: number;
+    dueSoonCount: number;
+    linkedDevices: number;
   };
   cases: Array<{
     id: string;

@@ -32,6 +32,7 @@ import About from "@/pages/About";
 import IronboundNewark from "@/pages/IronboundNewark";
 import BrazilFlightsNewark from "@/pages/BrazilFlightsNewark";
 import AppSeniorDownload from "@/pages/AppSeniorDownload";
+import AdminApp from "@/pages/AdminApp";
 
 import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import CheckoutCancel from "@/pages/CheckoutCancel";
@@ -81,6 +82,7 @@ function Router() {
           <AdminLiveChat />
         </Layout>
       </Route>
+      <Route path="/admin-app" component={AdminApp} />
 
       <Route path="/" component={() => <Layout><Home /></Layout>} />
       <Route path="/easy" component={() => <Layout><EasyBooking /></Layout>} />

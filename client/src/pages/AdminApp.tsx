@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { formatDistanceToNowStrict } from "date-fns";
 import {
   Select,
   SelectContent,
@@ -48,6 +49,10 @@ import {
   Mail,
   ArrowLeft,
   FileText,
+  BellRing,
+  Flame,
+  Wallet,
+  Smartphone,
 } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 
@@ -198,6 +203,15 @@ function authFetch(url: string, options: RequestInit = {}) {
   });
 }
 
+function formatRelativeMoment(value?: string | null) {
+  if (!value) return "Agora";
+  try {
+    return formatDistanceToNowStrict(new Date(value), { addSuffix: true });
+  } catch {
+    return "Agora";
+  }
+}
+
 interface Message {
   id: number;
   conversationId: number;
@@ -267,6 +281,68 @@ interface LiveBlock {
   payload: unknown;
   shared: boolean;
   sortOrder: number;
+}
+
+interface OwnerDeskMobileAlert {
+  id: string;
+  level: "critical" | "attention" | "info";
+  title: string;
+  summary: string;
+  customerCaseId: string;
+  customerName: string | null;
+  route: string | null;
+  stageLabel: string;
+  heatScore: number;
+  triggeredAt: string | null;
+  action: "open-live-desk" | "open-bookings" | "focus-inbox" | "call" | "whatsapp" | "email";
+  actionLabel: string;
+  actionUrl: string;
+  customerPhone: string | null;
+  customerEmail: string | null;
+  liveSessionId: number | null;
+  bookingId: number | null;
+  threadId: number | null;
+}
+
+interface OwnerDeskMobileFollowUp {
+  id: string;
+  customerCaseId: string;
+  customerName: string | null;
+  route: string | null;
+  dueAt: string;
+  overdue: boolean;
+  urgency: "overdue" | "soon" | "planned";
+  reason: string;
+  channel: "open-live-desk" | "open-bookings" | "focus-inbox" | "call" | "whatsapp" | "email";
+  actionLabel: string;
+  actionUrl: string;
+  customerPhone: string | null;
+  customerEmail: string | null;
+  liveSessionId: number | null;
+  bookingId: number | null;
+  threadId: number | null;
+}
+
+interface OwnerDeskMobileData {
+  generatedAt: string;
+  summary: {
+    totalCases: number;
+    hotCases: number;
+    seniorCases: number;
+    paymentWatch: number;
+    liveNow: number;
+    mobileLinked: number;
+    alertingNow: number;
+    overdueFollowUps: number;
+  };
+  mobileDeck: {
+    headline: string;
+    criticalCount: number;
+    dueSoonCount: number;
+    linkedDevices: number;
+  };
+  alerts: OwnerDeskMobileAlert[];
+  followUps: OwnerDeskMobileFollowUp[];
 }
 
 interface FlightResult {
@@ -1696,8 +1772,267 @@ function AdminMessengerPanel({ onLogout }: { onLogout: () => void }) {
   );
 }
 
+function runOwnerMobileAction(action: OwnerDeskMobileAlert["action"] | OwnerDeskMobileFollowUp["channel"], payload: {
+  customerPhone?: string | null;
+  customerEmail?: string | null;
+  liveSessionId?: number | null;
+  actionUrl?: string;
+  customerName?: string | null;
+}) {
+  if (action === "call" && payload.customerPhone) {
+    window.location.href = `tel:${payload.customerPhone.replace(/[^\d+]/g, "")}`;
+    return;
+  }
+
+  if (action === "whatsapp" && payload.customerPhone) {
+    const digits = payload.customerPhone.replace(/\D+/g, "");
+    const intro = payload.customerName
+      ? `Oi ${payload.customerName}, aqui e a Michels Travel. Estou acompanhando seu atendimento e posso seguir com voce por aqui.`
+      : "Oi, aqui e a Michels Travel. Estou acompanhando seu atendimento e posso seguir com voce por aqui.";
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(intro)}`, "_blank", "noopener,noreferrer");
+    return;
+  }
+
+  if (action === "email" && payload.customerEmail) {
+    window.location.href = `mailto:${payload.customerEmail}`;
+    return;
+  }
+
+  if (action === "open-live-desk" && payload.liveSessionId) {
+    window.location.href = `/admin/live-chat?session=${payload.liveSessionId}`;
+    return;
+  }
+
+  window.location.href = payload.actionUrl || "/admin";
+}
+
+function OwnerAlertsPanel({ onLogout }: { onLogout: () => void }) {
+  const [data, setData] = useState<OwnerDeskMobileData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | "unsupported">(() => {
+    if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";
+    return Notification.permission;
+  });
+
+  const fetchOwnerDesk = useCallback(async () => {
+    try {
+      const res = await authFetch("/api/admin/owner-desk");
+      if (res.status === 401) {
+        clearToken();
+        onLogout();
+        return;
+      }
+      if (res.ok) {
+        setData(await res.json());
+      }
+    } catch {} finally {
+      setLoading(false);
+    }
+  }, [onLogout]);
+
+  useEffect(() => {
+    fetchOwnerDesk();
+    const interval = setInterval(fetchOwnerDesk, 15000);
+    return () => clearInterval(interval);
+  }, [fetchOwnerDesk]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      setNotificationPermission("unsupported");
+      return;
+    }
+    setNotificationPermission(Notification.permission);
+  }, []);
+
+  useEffect(() => {
+    if (notificationPermission !== "granted" || !data?.alerts?.length) return;
+    const key = "michels-owner-mobile-alerts";
+    const seen = new Set<string>(JSON.parse(localStorage.getItem(key) || "[]"));
+    const freshAlerts = data.alerts.filter((alert) => alert.level === "critical" && !seen.has(alert.id)).slice(0, 2);
+    if (freshAlerts.length === 0) return;
+
+    freshAlerts.forEach((alert) => {
+      const body = [alert.customerName, alert.route, alert.summary].filter(Boolean).join(" • ");
+      const notification = new Notification(alert.title, { body, tag: alert.id });
+      notification.onclick = () => {
+        window.focus();
+        window.location.href = alert.actionUrl;
+      };
+      seen.add(alert.id);
+    });
+
+    localStorage.setItem(key, JSON.stringify(Array.from(seen).slice(-40)));
+  }, [data?.alerts, notificationPermission]);
+
+  const enableNotifications = async () => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    const permission = await Notification.requestPermission();
+    setNotificationPermission(permission);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      <Card className="border border-[#0074DE]/15 bg-gradient-to-br from-white to-blue-50 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#0074DE]">Owner alerts</p>
+            <h2 className="mt-2 text-lg font-bold text-foreground">{data?.mobileDeck.headline || "Radar carregado"}</h2>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {data?.summary.alertingNow || 0} alertas ativos · {data?.summary.overdueFollowUps || 0} follow-ups vencidos · {data?.summary.liveNow || 0} ao vivo
+            </p>
+          </div>
+          {notificationPermission !== "granted" && notificationPermission !== "unsupported" ? (
+            <Button size="sm" variant="outline" className="gap-2" onClick={enableNotifications}>
+              <BellRing className="h-4 w-4" />
+              Alertas
+            </Button>
+          ) : (
+            <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
+              <BellRing className="h-3 w-3 mr-1" />
+              Ativos
+            </Badge>
+          )}
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-3">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-red-600">Criticos</p>
+            <p className="mt-1 text-2xl font-bold text-red-700">{data?.mobileDeck.criticalCount || 0}</p>
+          </div>
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-amber-700">Proximos</p>
+            <p className="mt-1 text-2xl font-bold text-amber-800">{data?.mobileDeck.dueSoonCount || 0}</p>
+          </div>
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-emerald-700">Quentes</p>
+            <p className="mt-1 text-2xl font-bold text-emerald-800">{data?.summary.hotCases || 0}</p>
+          </div>
+          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-3">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-blue-700">App</p>
+            <p className="mt-1 text-2xl font-bold text-blue-800">{data?.summary.mobileLinked || 0}</p>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-4">
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div>
+            <p className="text-sm font-semibold">Alertas do momento</p>
+            <p className="text-xs text-muted-foreground">Quem merece sua voz agora</p>
+          </div>
+          <Flame className="h-4 w-4 text-red-500" />
+        </div>
+        <div className="space-y-2">
+          {data?.alerts?.length ? data.alerts.slice(0, 5).map((alert) => (
+            <div key={alert.id} className="rounded-2xl border border-border p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-semibold">{alert.title}</p>
+                    <Badge className={
+                      alert.level === "critical"
+                        ? "bg-red-50 text-red-700 border-red-200"
+                        : alert.level === "attention"
+                          ? "bg-amber-50 text-amber-800 border-amber-200"
+                          : "bg-blue-50 text-blue-700 border-blue-200"
+                    }>
+                      {alert.level}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {(alert.customerName || "Cliente")} {alert.route ? `· ${alert.route}` : ""} · {formatRelativeMoment(alert.triggeredAt)}
+                  </p>
+                </div>
+                <Badge variant="secondary">{alert.heatScore}</Badge>
+              </div>
+              <p className="text-sm mt-2">{alert.summary}</p>
+              <div className="flex gap-2 mt-3 flex-wrap">
+                <Button size="sm" onClick={() => runOwnerMobileAction(alert.action, alert)}>
+                  {alert.actionLabel}
+                </Button>
+                {alert.customerPhone && (
+                  <>
+                    <Button size="sm" variant="outline" onClick={() => runOwnerMobileAction("call", alert)}>
+                      <Phone className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => runOwnerMobileAction("whatsapp", alert)}>
+                      <MessageSquare className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          )) : (
+            <p className="text-sm text-muted-foreground">Sem alertas fortes agora.</p>
+          )}
+        </div>
+      </Card>
+
+      <Card className="p-4">
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div>
+            <p className="text-sm font-semibold">Fila de follow-up</p>
+            <p className="text-xs text-muted-foreground">Quem voce deve tocar depois</p>
+          </div>
+          <Wallet className="h-4 w-4 text-amber-600" />
+        </div>
+        <div className="space-y-2">
+          {data?.followUps?.length ? data.followUps.slice(0, 6).map((item) => (
+            <div key={item.id} className="rounded-2xl border border-border p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-semibold">{item.customerName || "Cliente"}</p>
+                    <Badge className={
+                      item.urgency === "overdue"
+                        ? "bg-red-50 text-red-700 border-red-200"
+                        : item.urgency === "soon"
+                          ? "bg-amber-50 text-amber-800 border-amber-200"
+                          : "bg-slate-100 text-slate-600 border-slate-200"
+                    }>
+                      {item.urgency === "overdue" ? "Vencido" : item.urgency === "soon" ? "Agora" : "Planejado"}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {item.route || "Rota em aberto"} · {formatRelativeMoment(item.dueAt)}
+                  </p>
+                </div>
+                {item.customerPhone && <Phone className="h-4 w-4 text-muted-foreground" />}
+                {!item.customerPhone && item.customerEmail && <Mail className="h-4 w-4 text-muted-foreground" />}
+                {!item.customerPhone && !item.customerEmail && <Smartphone className="h-4 w-4 text-muted-foreground" />}
+              </div>
+              <p className="text-sm mt-2">{item.reason}</p>
+              <div className="flex gap-2 mt-3 flex-wrap">
+                <Button size="sm" onClick={() => runOwnerMobileAction(item.channel, item)}>
+                  {item.actionLabel}
+                </Button>
+                {item.customerPhone && (
+                  <Button size="sm" variant="outline" onClick={() => runOwnerMobileAction("whatsapp", item)}>
+                    <MessageSquare className="h-4 w-4 mr-1" />
+                    WhatsApp
+                  </Button>
+                )}
+              </div>
+            </div>
+          )) : (
+            <p className="text-sm text-muted-foreground">Sem fila pendente agora.</p>
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 function ChatApp({ onLogout }: { onLogout: () => void }) {
-  const [activeTab, setActiveTab] = useState<"chat" | "vendas" | "mensagens">("chat");
+  const [activeTab, setActiveTab] = useState<"chat" | "vendas" | "mensagens" | "alertas">("alertas");
   const [selectedConvId, setSelectedConvId] = useState<number | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedMessages, setSelectedMessages] = useState<Message[]>([]);
@@ -1990,6 +2325,17 @@ function ChatApp({ onLogout }: { onLogout: () => void }) {
         </div>
         <div className="flex px-3 pb-2 gap-1">
           <button
+            onClick={() => setActiveTab("alertas")}
+            className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-colors ${
+              activeTab === "alertas"
+                ? "bg-white/20 text-white"
+                : "text-white/60 hover:text-white/80"
+            }`}
+          >
+            <BellRing className="h-3.5 w-3.5 inline mr-1" />
+            Alertas
+          </button>
+          <button
             onClick={() => setActiveTab("chat")}
             className={`flex-1 text-xs font-medium py-1.5 rounded-md transition-colors ${
               activeTab === "chat"
@@ -2028,7 +2374,9 @@ function ChatApp({ onLogout }: { onLogout: () => void }) {
         </div>
       </div>
 
-      {activeTab === "vendas" ? (
+      {activeTab === "alertas" ? (
+        <OwnerAlertsPanel onLogout={onLogout} />
+      ) : activeTab === "vendas" ? (
         <LiveSalesPanel onLogout={onLogout} />
       ) : activeTab === "mensagens" ? (
         <AdminMessengerPanel onLogout={onLogout} />

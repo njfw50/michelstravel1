@@ -70,8 +70,58 @@ export interface OwnerDeskSnapshot {
     paymentWatch: number;
     liveNow: number;
     mobileLinked: number;
+    alertingNow: number;
+    overdueFollowUps: number;
+  };
+  alerts: OwnerDeskAlert[];
+  followUps: OwnerDeskFollowUp[];
+  mobileDeck: {
+    headline: string;
+    criticalCount: number;
+    dueSoonCount: number;
+    linkedDevices: number;
   };
   cases: OwnerDeskCase[];
+}
+
+export interface OwnerDeskAlert {
+  id: string;
+  level: "critical" | "attention" | "info";
+  title: string;
+  summary: string;
+  customerCaseId: string;
+  customerName: string | null;
+  route: string | null;
+  stageLabel: string;
+  heatScore: number;
+  triggeredAt: string | null;
+  action: OwnerDeskAction;
+  actionLabel: string;
+  actionUrl: string;
+  customerPhone: string | null;
+  customerEmail: string | null;
+  liveSessionId: number | null;
+  bookingId: number | null;
+  threadId: number | null;
+}
+
+export interface OwnerDeskFollowUp {
+  id: string;
+  customerCaseId: string;
+  customerName: string | null;
+  route: string | null;
+  dueAt: string;
+  overdue: boolean;
+  urgency: "overdue" | "soon" | "planned";
+  reason: string;
+  channel: OwnerDeskAction;
+  actionLabel: string;
+  actionUrl: string;
+  customerPhone: string | null;
+  customerEmail: string | null;
+  liveSessionId: number | null;
+  bookingId: number | null;
+  threadId: number | null;
 }
 
 interface CaseAccumulator {
@@ -408,6 +458,85 @@ function heatScoreFromCase(caseRef: CaseAccumulator, now: number) {
   }
 
   return Math.min(99, score);
+}
+
+function actionUrlFromCase(ownerCase: OwnerDeskCase, action: OwnerDeskAction) {
+  if (action === "open-live-desk" && ownerCase.liveSessionId) {
+    return `/admin/live-chat?session=${ownerCase.liveSessionId}`;
+  }
+
+  return "/admin";
+}
+
+function alertTitleFromCase(ownerCase: OwnerDeskCase) {
+  switch (ownerCase.stage) {
+    case "service-recovery":
+      return `${ownerCase.customerName} precisa de resgate imediato`;
+    case "respond-now":
+      return `${ownerCase.customerName} pediu humano agora`;
+    case "payment-follow-up":
+      return `${ownerCase.customerName} parou no pagamento`;
+    case "ticket-issue":
+      return `${ownerCase.customerName} esta com problema de ticket`;
+    case "active-live":
+      return `${ownerCase.customerName} esta em atendimento ao vivo`;
+    case "inbox-reply":
+      return `${ownerCase.customerName} esta aguardando resposta`;
+    case "senior-watch":
+      return `${ownerCase.customerName} pede conducao senior`;
+    default:
+      return `${ownerCase.customerName} entrou no radar`;
+  }
+}
+
+function followUpMinutesFromStage(stage: OwnerDeskCase["stage"]) {
+  switch (stage) {
+    case "service-recovery":
+      return 5;
+    case "respond-now":
+      return 2;
+    case "payment-follow-up":
+      return 30;
+    case "ticket-issue":
+      return 20;
+    case "inbox-reply":
+      return 15;
+    case "active-live":
+      return 10;
+    case "booking-follow-up":
+      return 120;
+    case "senior-watch":
+      return 180;
+    case "new-contact":
+      return 60;
+    case "post-sale":
+      return 720;
+    default:
+      return 90;
+  }
+}
+
+function followUpReasonFromCase(ownerCase: OwnerDeskCase) {
+  switch (ownerCase.stage) {
+    case "service-recovery":
+      return "Cliente em risco de perda ou desconfianca. Assuma o caso sem demora.";
+    case "respond-now":
+      return "Lead pediu humano e o melhor momento de resposta e agora.";
+    case "payment-follow-up":
+      return "Pagamento travou e o dinheiro ainda esta quente.";
+    case "ticket-issue":
+      return "Existe problema operacional que precisa ser resolvido antes de gerar ansiedade.";
+    case "inbox-reply":
+      return "Ha mensagem aberta esperando retorno humano.";
+    case "active-live":
+      return "Continue o atendimento vivo antes que o cliente esfrie.";
+    case "booking-follow-up":
+      return "Reserva segue aberta e ainda precisa de conducao.";
+    case "senior-watch":
+      return "Cliente senior pede contato calmo, claro e proativo.";
+    default:
+      return "Contato ainda pede uma proxima acao sua.";
+  }
 }
 
 export async function buildOwnerDeskSnapshot(): Promise<OwnerDeskSnapshot> {
@@ -828,6 +957,78 @@ export async function buildOwnerDeskSnapshot(): Promise<OwnerDeskSnapshot> {
       return toTimestamp(right.lastTouchAt) - toTimestamp(left.lastTouchAt);
     });
 
+  const alerts: OwnerDeskAlert[] = finalizedCases
+    .filter((ownerCase) =>
+      ownerCase.priorityBand === "hot" ||
+      ["respond-now", "service-recovery", "payment-follow-up", "ticket-issue", "active-live"].includes(ownerCase.stage),
+    )
+    .map((ownerCase) => {
+      const level: OwnerDeskAlert["level"] =
+        ownerCase.stage === "service-recovery" || ownerCase.stage === "respond-now" || ownerCase.openEscalations > 0
+          ? "critical"
+          : ownerCase.priorityBand === "hot" || ownerCase.stage === "payment-follow-up" || ownerCase.stage === "ticket-issue"
+            ? "attention"
+            : "info";
+
+      return {
+        id: `alert-${ownerCase.id}-${ownerCase.stage}`,
+        level,
+      title: alertTitleFromCase(ownerCase),
+      summary: ownerCase.latestSummary || ownerCase.nextBestAction.description,
+      customerCaseId: ownerCase.id,
+      customerName: ownerCase.customerName,
+      route: ownerCase.route,
+      stageLabel: ownerCase.stageLabel,
+      heatScore: ownerCase.heatScore,
+      triggeredAt: ownerCase.lastTouchAt,
+      action: ownerCase.nextBestAction.action,
+      actionLabel: ownerCase.nextBestAction.label,
+      actionUrl: actionUrlFromCase(ownerCase, ownerCase.nextBestAction.action),
+      customerPhone: ownerCase.customerPhone,
+      customerEmail: ownerCase.customerEmail,
+      liveSessionId: ownerCase.liveSessionId,
+      bookingId: ownerCase.bookingId,
+      threadId: ownerCase.threadId,
+      };
+    })
+    .slice(0, 8);
+
+  const followUps: OwnerDeskFollowUp[] = finalizedCases
+    .filter((ownerCase) => ownerCase.stage !== "post-sale" || ownerCase.unreadInboxCount > 0 || ownerCase.openEscalations > 0)
+    .map((ownerCase) => {
+      const dueMinutes = followUpMinutesFromStage(ownerCase.stage);
+      const anchorTs = toTimestamp(ownerCase.lastTouchAt) || nowTs;
+      const dueTs = anchorTs + (dueMinutes * 60 * 1000);
+      const dueAt = new Date(dueTs).toISOString();
+      const overdue = dueTs <= nowTs;
+      const urgency: OwnerDeskFollowUp["urgency"] =
+        overdue ? "overdue" : dueTs <= nowTs + (60 * 60 * 1000) ? "soon" : "planned";
+
+      return {
+        id: `follow-up-${ownerCase.id}-${ownerCase.stage}`,
+        customerCaseId: ownerCase.id,
+        customerName: ownerCase.customerName,
+        route: ownerCase.route,
+        dueAt,
+        overdue,
+        urgency,
+        reason: followUpReasonFromCase(ownerCase),
+        channel: ownerCase.nextBestAction.action,
+        actionLabel: ownerCase.nextBestAction.label,
+        actionUrl: actionUrlFromCase(ownerCase, ownerCase.nextBestAction.action),
+        customerPhone: ownerCase.customerPhone,
+        customerEmail: ownerCase.customerEmail,
+        liveSessionId: ownerCase.liveSessionId,
+        bookingId: ownerCase.bookingId,
+        threadId: ownerCase.threadId,
+      };
+    })
+    .sort((left, right) => toTimestamp(left.dueAt) - toTimestamp(right.dueAt))
+    .slice(0, 12);
+
+  const criticalAlertCount = alerts.filter((item) => item.level === "critical").length;
+  const dueSoonCount = followUps.filter((item) => item.urgency !== "planned").length;
+
   return {
     generatedAt: now.toISOString(),
     summary: {
@@ -837,6 +1038,16 @@ export async function buildOwnerDeskSnapshot(): Promise<OwnerDeskSnapshot> {
       paymentWatch: finalizedCases.filter((item) => item.stage === "payment-follow-up").length,
       liveNow: finalizedCases.filter((item) => item.liveRequests > 0 || item.activeLiveSessions > 0).length,
       mobileLinked: finalizedCases.filter((item) => item.appLinked).length,
+      alertingNow: alerts.length,
+      overdueFollowUps: followUps.filter((item) => item.overdue).length,
+    },
+    alerts,
+    followUps,
+    mobileDeck: {
+      headline: alerts[0]?.title || "Sem alertas criticos no momento",
+      criticalCount: criticalAlertCount,
+      dueSoonCount,
+      linkedDevices: finalizedCases.reduce((sum, item) => sum + item.deviceCount, 0),
     },
     cases: finalizedCases,
   };

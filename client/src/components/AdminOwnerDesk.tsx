@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { formatDistanceToNowStrict } from "date-fns";
 import {
   ArrowRight,
@@ -10,6 +10,7 @@ import {
   ScanLine,
   Smartphone,
   Wallet,
+  BellRing,
   Users,
 } from "lucide-react";
 
@@ -20,6 +21,8 @@ import type { AdminOwnerDeskData } from "@/hooks/use-admin";
 
 type OwnerDeskCase = AdminOwnerDeskData["cases"][number];
 type OwnerDeskAction = OwnerDeskCase["availableActions"][number];
+type OwnerDeskAlert = AdminOwnerDeskData["alerts"][number];
+type OwnerDeskFollowUp = AdminOwnerDeskData["followUps"][number];
 type FilterKey = "all" | "hot" | "senior" | "payment" | "live" | "mobile";
 
 const filterLabels: Array<{ key: FilterKey; label: string }> = [
@@ -63,6 +66,29 @@ function actionLabel(action: OwnerDeskAction) {
     default:
       return "Abrir";
   }
+}
+
+async function emitOwnerNotification(alert: OwnerDeskAlert) {
+  const body = [alert.customerName, alert.route, alert.summary].filter(Boolean).join(" • ");
+  if ("serviceWorker" in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.showNotification(alert.title, {
+        body,
+        tag: alert.id,
+        data: { url: alert.actionUrl },
+      });
+      return;
+    } catch {
+      // Fall back to direct notifications below.
+    }
+  }
+
+  const notification = new Notification(alert.title, { body, tag: alert.id });
+  notification.onclick = () => {
+    window.focus();
+    window.location.href = alert.actionUrl;
+  };
 }
 
 function stageTone(stage: OwnerDeskCase["stage"]) {
@@ -125,6 +151,10 @@ export function AdminOwnerDesk({
   onRunAction: (ownerCase: OwnerDeskCase, action: OwnerDeskAction) => void;
 }) {
   const [filter, setFilter] = useState<FilterKey>("all");
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | "unsupported">(() => {
+    if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";
+    return Notification.permission;
+  });
 
   const filteredCases = useMemo(() => {
     const source = data?.cases || [];
@@ -143,6 +173,43 @@ export function AdminOwnerDesk({
         return source;
     }
   }, [data?.cases, filter]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!("Notification" in window)) {
+      setNotificationPermission("unsupported");
+      return;
+    }
+    setNotificationPermission(Notification.permission);
+  }, []);
+
+  useEffect(() => {
+    if (notificationPermission !== "granted" || !data?.alerts?.length || typeof window === "undefined") {
+      return;
+    }
+
+    const key = "michels-owner-desk-notified-alerts";
+    const stored = window.localStorage.getItem(key);
+    const seen = new Set<string>(stored ? JSON.parse(stored) : []);
+    const freshAlerts = data.alerts
+      .filter((alert) => (alert.level === "critical" || alert.level === "attention") && !seen.has(alert.id))
+      .slice(0, 2);
+
+    if (freshAlerts.length === 0) return;
+
+    freshAlerts.forEach((alert) => {
+      void emitOwnerNotification(alert);
+      seen.add(alert.id);
+    });
+
+    window.localStorage.setItem(key, JSON.stringify(Array.from(seen).slice(-40)));
+  }, [data?.alerts, notificationPermission]);
+
+  const enableNotifications = async () => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    const permission = await Notification.requestPermission();
+    setNotificationPermission(permission);
+  };
 
   if (isLoading) {
     return (
@@ -193,6 +260,28 @@ export function AdminOwnerDesk({
       </CardHeader>
 
       <CardContent className="space-y-6 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Alerta principal</p>
+            <p className="mt-2 text-base font-semibold text-slate-900">{data.mobileDeck.headline}</p>
+            <p className="mt-1 text-sm text-slate-500">
+              {data.summary.alertingNow} alertas no radar · {data.summary.overdueFollowUps} follow-ups vencidos · {data.mobileDeck.linkedDevices} dispositivos ligados
+            </p>
+          </div>
+          {notificationPermission !== "granted" && notificationPermission !== "unsupported" && (
+            <Button variant="outline" className="gap-2" onClick={enableNotifications}>
+              <BellRing className="h-4 w-4" />
+              Ativar alertas no celular
+            </Button>
+          )}
+          {notificationPermission === "granted" && (
+            <Badge className="border border-emerald-200 bg-emerald-50 text-emerald-700">
+              <BellRing className="mr-1 h-3.5 w-3.5" />
+              Alertas ativos
+            </Badge>
+          )}
+        </div>
+
         <div className="flex flex-wrap gap-2">
           {filterLabels.map((item) => (
             <Button
@@ -205,6 +294,106 @@ export function AdminOwnerDesk({
               {item.label}
             </Button>
           ))}
+        </div>
+
+        <div className="grid gap-4 xl:grid-cols-[1.2fr,1fr]">
+          <div className="rounded-[30px] border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Owner alerts</p>
+                <p className="mt-2 text-xl font-semibold text-slate-900">O que pede sua atencao agora</p>
+              </div>
+              <Badge className="border border-red-200 bg-red-50 text-red-700">{data.summary.alertingNow} ativos</Badge>
+            </div>
+            <div className="mt-4 space-y-3">
+              {data.alerts.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                  Nenhum alerta forte no momento.
+                </div>
+              ) : (
+                data.alerts.slice(0, 5).map((alert) => (
+                  <div key={alert.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold text-slate-900">{alert.title}</p>
+                          <Badge className={`border ${
+                            alert.level === "critical"
+                              ? "border-red-200 bg-red-50 text-red-700"
+                              : alert.level === "attention"
+                                ? "border-amber-200 bg-amber-50 text-amber-800"
+                                : "border-blue-200 bg-blue-50 text-blue-700"
+                          }`}>
+                            {alert.level}
+                          </Badge>
+                        </div>
+                        <p className="mt-2 text-sm text-slate-600">{alert.summary}</p>
+                        <p className="mt-2 text-xs text-slate-500">
+                          {alert.customerName || "Cliente"}{alert.route ? ` · ${alert.route}` : ""} · {alert.stageLabel} · score {alert.heatScore}
+                        </p>
+                      </div>
+                      <Button variant="outline" onClick={() => onRunAction(
+                        data.cases.find((item) => item.id === alert.customerCaseId) || data.cases[0],
+                        alert.action,
+                      )}>
+                        {alert.actionLabel}
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-[30px] border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Follow-up automatico</p>
+                <p className="mt-2 text-xl font-semibold text-slate-900">Fila de proximos contatos</p>
+              </div>
+              <Badge className="border border-amber-200 bg-amber-50 text-amber-800">{data.summary.overdueFollowUps} vencidos</Badge>
+            </div>
+            <div className="mt-4 space-y-3">
+              {data.followUps.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                  Nenhum follow-up pendente.
+                </div>
+              ) : (
+                data.followUps.slice(0, 6).map((item) => {
+                  const ownerCase = data.cases.find((candidate) => candidate.id === item.customerCaseId);
+                  if (!ownerCase) return null;
+
+                  return (
+                    <div key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-semibold text-slate-900">{item.customerName || "Cliente"}</p>
+                            <Badge className={`border ${
+                              item.urgency === "overdue"
+                                ? "border-red-200 bg-red-50 text-red-700"
+                                : item.urgency === "soon"
+                                  ? "border-amber-200 bg-amber-50 text-amber-800"
+                                  : "border-slate-200 bg-slate-100 text-slate-600"
+                            }`}>
+                              {item.urgency === "overdue" ? "Vencido" : item.urgency === "soon" ? "Agora" : "Planejado"}
+                            </Badge>
+                          </div>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {item.route || "Rota em aberto"} · {formatMoment(item.dueAt)}
+                          </p>
+                          <p className="mt-2 text-sm text-slate-600">{item.reason}</p>
+                        </div>
+                        <Button variant="outline" onClick={() => onRunAction(ownerCase, item.channel)}>
+                          {item.actionLabel}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
 
         {filteredCases.length === 0 ? (
