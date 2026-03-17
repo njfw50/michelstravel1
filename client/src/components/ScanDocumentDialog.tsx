@@ -381,10 +381,10 @@ export function ScanDocumentDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg overflow-y-auto max-h-[90vh]">
+      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col p-4 sm:p-6 overflow-hidden">
         {step === "select" && (
           <>
-            <DialogHeader className="text-center items-center">
+            <DialogHeader className="text-center items-center shrink-0">
               <div className="mx-auto h-16 w-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-2">
                 <ScanLine className="h-8 w-8 text-blue-500" />
               </div>
@@ -396,91 +396,93 @@ export function ScanDocumentDialog({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-3 mt-4">
-              <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-2">
-                <h4 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-blue-500" />
-                  {t("scan.supported_docs")}
-                </h4>
-                <ul className="text-xs text-gray-500 space-y-1 ml-6 list-disc">
-                  <li>{t("scan.doc_passport")}</li>
-                  <li>{t("scan.doc_id_card")}</li>
-                  <li>{t("scan.doc_travel_doc")}</li>
-                  <li>{t("scan.doc_visa")}</li>
-                </ul>
-              </div>
+            <div className="flex-1 overflow-y-auto pr-1 -mr-1">
+              <div className="space-y-3 mt-4">
+                <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-2">
+                  <h4 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-blue-500" />
+                    {t("scan.supported_docs")}
+                  </h4>
+                  <ul className="text-xs text-gray-500 space-y-1 ml-6 list-disc">
+                    <li>{t("scan.doc_passport")}</li>
+                    <li>{t("scan.doc_id_card")}</li>
+                    <li>{t("scan.doc_travel_doc")}</li>
+                    <li>{t("scan.doc_visa")}</li>
+                  </ul>
+                </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <input
-                  ref={cameraInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                  onChange={handleFileSelect}
-                  data-testid={`input-scan-camera-${passengerIndex}`}
-                />
-                <Button
-                  variant="outline"
-                  className="h-auto py-4 flex flex-col items-center gap-2 border-gray-200 text-gray-600"
-                  onClick={() => cameraInputRef.current?.click()}
-                  data-testid={`button-scan-camera-${passengerIndex}`}
-                >
-                  <Camera className="h-6 w-6 text-blue-500" />
-                  <span className="text-sm font-medium">{t("scan.use_camera")}</span>
-                  <span className="text-[10px] text-gray-400">{t("scan.camera_tip")}</span>
-                </Button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input
+                    ref={cameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                    data-testid={`input-scan-camera-${passengerIndex}`}
+                  />
+                  <Button
+                    variant="outline"
+                    className="h-auto py-4 flex flex-col items-center gap-2 border-gray-200 text-gray-600"
+                    onClick={() => cameraInputRef.current?.click()}
+                    data-testid={`button-scan-camera-${passengerIndex}`}
+                  >
+                    <Camera className="h-6 w-6 text-blue-500" />
+                    <span className="text-sm font-medium">{t("scan.use_camera")}</span>
+                    <span className="text-[10px] text-gray-400">{t("scan.camera_tip")}</span>
+                  </Button>
 
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileSelect}
-                  data-testid={`input-scan-file-${passengerIndex}`}
-                />
-                <Button
-                  variant="outline"
-                  className="h-auto py-4 flex flex-col items-center gap-2 border-gray-200 text-gray-600"
-                  onClick={() => fileInputRef.current?.click()}
-                  data-testid={`button-scan-upload-${passengerIndex}`}
-                >
-                  <Upload className="h-6 w-6 text-blue-500" />
-                  <span className="text-sm font-medium">{t("scan.upload_photo")}</span>
-                  <span className="text-[10px] text-gray-400">{t("scan.upload_tip")}</span>
-                </Button>
-              </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                    data-testid={`input-scan-file-${passengerIndex}`}
+                  />
+                  <Button
+                    variant="outline"
+                    className="h-auto py-4 flex flex-col items-center gap-2 border-gray-200 text-gray-600"
+                    onClick={() => fileInputRef.current?.click()}
+                    data-testid={`button-scan-upload-${passengerIndex}`}
+                  >
+                    <Upload className="h-6 w-6 text-blue-500" />
+                    <span className="text-sm font-medium">{t("scan.upload_photo")}</span>
+                    <span className="text-[10px] text-gray-400">{t("scan.upload_tip")}</span>
+                  </Button>
+                </div>
 
-              <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 space-y-2">
-                <h4 className="text-xs font-bold text-blue-700 flex items-center gap-2">
-                  <Smartphone className="h-3.5 w-3.5" />
-                  {t("scan.photo_tips_title")}
-                </h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-start gap-2">
-                    <Sun className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
-                    <span className="text-[11px] text-blue-600">{t("scan.photo_tip_light")}</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Focus className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
-                    <span className="text-[11px] text-blue-600">{t("scan.photo_tip_focus")}</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Maximize2 className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
-                    <span className="text-[11px] text-blue-600">{t("scan.photo_tip_flat")}</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <ScanLine className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
-                    <span className="text-[11px] text-blue-600">{t("scan.photo_tip_mrz")}</span>
+                <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 space-y-2">
+                  <h4 className="text-xs font-bold text-blue-700 flex items-center gap-2">
+                    <Smartphone className="h-3.5 w-3.5" />
+                    {t("scan.photo_tips_title")}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-start gap-2">
+                      <Sun className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                      <span className="text-[11px] text-blue-600">{t("scan.photo_tip_light")}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Focus className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                      <span className="text-[11px] text-blue-600">{t("scan.photo_tip_focus")}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Maximize2 className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                      <span className="text-[11px] text-blue-600">{t("scan.photo_tip_flat")}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <ScanLine className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                      <span className="text-[11px] text-blue-600">{t("scan.photo_tip_mrz")}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-gray-50 border border-gray-100">
-                <Shield className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                <p className="text-[11px] text-gray-400 leading-relaxed">
-                  {t("scan.privacy_notice")}
-                </p>
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-gray-50 border border-gray-100">
+                  <Shield className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                  <p className="text-[11px] text-gray-400 leading-relaxed">
+                    {t("scan.privacy_notice")}
+                  </p>
+                </div>
               </div>
             </div>
           </>
@@ -534,177 +536,179 @@ export function ScanDocumentDialog({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 mt-2">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge className={`text-xs ${confidenceBg(editableData.confidence)}`}>
-                    {docTypeLabel(editableData.documentType)}
-                  </Badge>
-                  <Badge variant="outline" className="text-xs border-blue-200 text-blue-700 bg-blue-50">
-                    <Sparkles className="h-3 w-3 mr-1" />
-                    {sourceLabel(editableData.source)}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  {editableData.confidence >= 80 ? (
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                  ) : (
-                    <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                  )}
-                  <span className={`text-xs font-bold ${confidenceColor(editableData.confidence)}`}>
-                    {t("scan.confidence")}: {editableData.confidence}%
-                  </span>
-                </div>
-              </div>
-
-              {editableData.notes && (
-                <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
-                  <p className="text-xs font-bold text-blue-800 mb-1">{t("scan.ai_notes")}</p>
-                  <p className="text-xs text-blue-700 leading-relaxed">{editableData.notes}</p>
-                </div>
-              )}
-
-              {editableData.warnings.length > 0 && (
-                <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-                  <div className="text-xs text-amber-700">
-                    <p className="font-bold mb-1">{t("scan.warnings")}</p>
-                    <ul className="space-y-1 list-disc pl-4">
-                      {editableData.warnings.map((warning) => (
-                        <li key={warning}>{renderWarning(warning)}</li>
-                      ))}
-                    </ul>
+            <div className="flex-1 overflow-y-auto pr-1 -mr-1 mt-2">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge className={`text-xs ${confidenceBg(editableData.confidence)}`}>
+                      {docTypeLabel(editableData.documentType)}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs border-blue-200 text-blue-700 bg-blue-50">
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      {sourceLabel(editableData.source)}
+                    </Badge>
                   </div>
-                </div>
-              )}
-
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.family_name")}</Label>
-                    <Input
-                      value={editableData.familyName}
-                      onChange={(event) => setEditableData({ ...editableData, familyName: event.target.value })}
-                      className="bg-white border-gray-200 text-gray-900 text-sm"
-                      data-testid={`input-scan-family-name-${passengerIndex}`}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.given_name")}</Label>
-                    <Input
-                      value={editableData.givenName}
-                      onChange={(event) => setEditableData({ ...editableData, givenName: event.target.value })}
-                      className="bg-white border-gray-200 text-gray-900 text-sm"
-                      data-testid={`input-scan-given-name-${passengerIndex}`}
-                    />
+                  <div className="flex items-center gap-1.5">
+                    {editableData.confidence >= 80 ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                    ) : (
+                      <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                    )}
+                    <span className={`text-xs font-bold ${confidenceColor(editableData.confidence)}`}>
+                      {t("scan.confidence")}: {editableData.confidence}%
+                    </span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.date_of_birth")}</Label>
-                    <Input
-                      type="date"
-                      value={editableData.bornOn}
-                      onChange={(event) => setEditableData({ ...editableData, bornOn: event.target.value })}
-                      className="bg-white border-gray-200 text-gray-900 text-sm"
-                      data-testid={`input-scan-dob-${passengerIndex}`}
-                    />
+                {editableData.notes && (
+                  <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                    <p className="text-xs font-bold text-blue-800 mb-1">{t("scan.ai_notes")}</p>
+                    <p className="text-xs text-blue-700 leading-relaxed">{editableData.notes}</p>
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.gender")}</Label>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant={editableData.gender === "m" ? "default" : "outline"}
-                        className={`flex-1 text-xs ${editableData.gender === "m" ? "" : "border-gray-200 text-gray-500"}`}
-                        onClick={() => setEditableData({ ...editableData, gender: "m" })}
-                        data-testid={`button-scan-gender-m-${passengerIndex}`}
-                      >
-                        {t("booking.male")}
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant={editableData.gender === "f" ? "default" : "outline"}
-                        className={`flex-1 text-xs ${editableData.gender === "f" ? "" : "border-gray-200 text-gray-500"}`}
-                        onClick={() => setEditableData({ ...editableData, gender: "f" })}
-                        data-testid={`button-scan-gender-f-${passengerIndex}`}
-                      >
-                        {t("booking.female")}
-                      </Button>
+                )}
+
+                {editableData.warnings.length > 0 && (
+                  <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                    <div className="text-xs text-amber-700">
+                      <p className="font-bold mb-1">{t("scan.warnings")}</p>
+                      <ul className="space-y-1 list-disc pl-4">
+                        {editableData.warnings.map((warning) => (
+                          <li key={warning}>{renderWarning(warning)}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-3 pb-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.family_name")}</Label>
+                      <Input
+                        value={editableData.familyName}
+                        onChange={(event) => setEditableData({ ...editableData, familyName: event.target.value })}
+                        className="bg-white border-gray-200 text-gray-900 text-sm"
+                        data-testid={`input-scan-family-name-${passengerIndex}`}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.given_name")}</Label>
+                      <Input
+                        value={editableData.givenName}
+                        onChange={(event) => setEditableData({ ...editableData, givenName: event.target.value })}
+                        className="bg-white border-gray-200 text-gray-900 text-sm"
+                        data-testid={`input-scan-given-name-${passengerIndex}`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.date_of_birth")}</Label>
+                      <Input
+                        type="date"
+                        value={editableData.bornOn}
+                        onChange={(event) => setEditableData({ ...editableData, bornOn: event.target.value })}
+                        className="bg-white border-gray-200 text-gray-900 text-sm"
+                        data-testid={`input-scan-dob-${passengerIndex}`}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.gender")}</Label>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={editableData.gender === "m" ? "default" : "outline"}
+                          className={`flex-1 text-xs ${editableData.gender === "m" ? "" : "border-gray-200 text-gray-500"}`}
+                          onClick={() => setEditableData({ ...editableData, gender: "m" })}
+                          data-testid={`button-scan-gender-m-${passengerIndex}`}
+                        >
+                          {t("booking.male")}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={editableData.gender === "f" ? "default" : "outline"}
+                          className={`flex-1 text-xs ${editableData.gender === "f" ? "" : "border-gray-200 text-gray-500"}`}
+                          onClick={() => setEditableData({ ...editableData, gender: "f" })}
+                          data-testid={`button-scan-gender-f-${passengerIndex}`}
+                        >
+                          {t("booking.female")}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("scan.doc_number")}</Label>
+                      <Input
+                        value={editableData.passportNumber}
+                        onChange={(event) => setEditableData({ ...editableData, passportNumber: event.target.value.toUpperCase() })}
+                        className="bg-white border-gray-200 text-gray-900 text-sm"
+                        data-testid={`input-scan-doc-number-${passengerIndex}`}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.passport_expiry")}</Label>
+                      <Input
+                        type="date"
+                        value={editableData.passportExpiryDate}
+                        onChange={(event) => setEditableData({ ...editableData, passportExpiryDate: event.target.value })}
+                        className="bg-white border-gray-200 text-gray-900 text-sm"
+                        data-testid={`input-scan-expiry-${passengerIndex}`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.nationality")}</Label>
+                      <Input
+                        value={editableData.nationality}
+                        onChange={(event) => setEditableData({ ...editableData, nationality: event.target.value.toUpperCase() })}
+                        className="bg-white border-gray-200 text-gray-900 text-sm"
+                        maxLength={3}
+                        placeholder="BRA"
+                        data-testid={`input-scan-nationality-${passengerIndex}`}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.issuing_country")}</Label>
+                      <Input
+                        value={editableData.passportIssuingCountry}
+                        onChange={(event) => setEditableData({ ...editableData, passportIssuingCountry: event.target.value.toUpperCase() })}
+                        className="bg-white border-gray-200 text-gray-900 text-sm"
+                        maxLength={3}
+                        placeholder="BRA"
+                        data-testid={`input-scan-issuing-${passengerIndex}`}
+                      />
                     </div>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("scan.doc_number")}</Label>
-                    <Input
-                      value={editableData.passportNumber}
-                      onChange={(event) => setEditableData({ ...editableData, passportNumber: event.target.value.toUpperCase() })}
-                      className="bg-white border-gray-200 text-gray-900 text-sm"
-                      data-testid={`input-scan-doc-number-${passengerIndex}`}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.passport_expiry")}</Label>
-                    <Input
-                      type="date"
-                      value={editableData.passportExpiryDate}
-                      onChange={(event) => setEditableData({ ...editableData, passportExpiryDate: event.target.value })}
-                      className="bg-white border-gray-200 text-gray-900 text-sm"
-                      data-testid={`input-scan-expiry-${passengerIndex}`}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.nationality")}</Label>
-                    <Input
-                      value={editableData.nationality}
-                      onChange={(event) => setEditableData({ ...editableData, nationality: event.target.value.toUpperCase() })}
-                      className="bg-white border-gray-200 text-gray-900 text-sm"
-                      maxLength={3}
-                      placeholder="BRA"
-                      data-testid={`input-scan-nationality-${passengerIndex}`}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.issuing_country")}</Label>
-                    <Input
-                      value={editableData.passportIssuingCountry}
-                      onChange={(event) => setEditableData({ ...editableData, passportIssuingCountry: event.target.value.toUpperCase() })}
-                      className="bg-white border-gray-200 text-gray-900 text-sm"
-                      maxLength={3}
-                      placeholder="BRA"
-                      data-testid={`input-scan-issuing-${passengerIndex}`}
-                    />
-                  </div>
-                </div>
               </div>
+            </div>
 
-              <div className="flex gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 border-gray-200 text-gray-500"
-                  onClick={resetState}
-                  data-testid={`button-scan-retry-${passengerIndex}`}
-                >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  {t("scan.try_again")}
-                </Button>
-                <Button
-                  className="flex-1 gap-2"
-                  onClick={handleConfirm}
-                  data-testid={`button-scan-confirm-${passengerIndex}`}
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                  {t("scan.confirm_data")}
-                </Button>
-              </div>
+            <div className="flex gap-2 pt-4 mt-auto shrink-0 bg-white border-t sm:border-t-0 sm:pt-2 sm:mt-0 sm:bg-transparent -mx-4 px-4 sm:mx-0 sm:px-0">
+              <Button
+                variant="outline"
+                className="flex-1 border-gray-200 text-gray-500"
+                onClick={resetState}
+                data-testid={`button-scan-retry-${passengerIndex}`}
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                {t("scan.try_again")}
+              </Button>
+              <Button
+                className="flex-1 gap-2"
+                onClick={handleConfirm}
+                data-testid={`button-scan-confirm-${passengerIndex}`}
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                {t("scan.confirm_data")}
+              </Button>
             </div>
           </>
         )}
@@ -723,54 +727,56 @@ export function ScanDocumentDialog({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 mt-4">
-              {imagePreview && (
-                <div className="rounded-xl overflow-hidden border border-gray-200 max-h-32 flex items-center justify-center bg-gray-50">
-                  <img src={imagePreview} alt="Document" className="max-h-32 object-contain opacity-50" />
-                </div>
-              )}
+            <div className="flex-1 overflow-y-auto pr-1 -mr-1 mt-4">
+              <div className="space-y-4">
+                {imagePreview && (
+                  <div className="rounded-xl overflow-hidden border border-gray-200 max-h-32 flex items-center justify-center bg-gray-50">
+                    <img src={imagePreview} alt="Document" className="max-h-32 object-contain opacity-50" />
+                  </div>
+                )}
 
-              <div className="p-4 rounded-xl bg-white border border-gray-200 space-y-3">
-                <p className="text-xs font-bold text-gray-700">{t("scan.tips_title")}</p>
-                <div className="grid grid-cols-1 gap-2">
-                  <div className="flex items-start gap-2">
-                    <Sun className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
-                    <span className="text-[11px] text-gray-500">{t("scan.tip_1")}</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Focus className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
-                    <span className="text-[11px] text-gray-500">{t("scan.tip_2")}</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Maximize2 className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
-                    <span className="text-[11px] text-gray-500">{t("scan.tip_3")}</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <ScanLine className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
-                    <span className="text-[11px] text-gray-500">{t("scan.tip_4")}</span>
+                <div className="p-4 rounded-xl bg-white border border-gray-200 space-y-3 pb-2">
+                  <p className="text-xs font-bold text-gray-700">{t("scan.tips_title")}</p>
+                  <div className="grid grid-cols-1 gap-2">
+                    <div className="flex items-start gap-2">
+                      <Sun className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                      <span className="text-[11px] text-gray-500">{t("scan.tip_1")}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Focus className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                      <span className="text-[11px] text-gray-500">{t("scan.tip_2")}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Maximize2 className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                      <span className="text-[11px] text-gray-500">{t("scan.tip_3")}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <ScanLine className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                      <span className="text-[11px] text-gray-500">{t("scan.tip_4")}</span>
+                    </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 border-gray-200 text-gray-500"
-                  onClick={() => handleOpenChange(false)}
-                  data-testid={`button-scan-cancel-${passengerIndex}`}
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  {t("scan.cancel")}
-                </Button>
-                <Button
-                  className="flex-1 gap-2"
-                  onClick={resetState}
-                  data-testid={`button-scan-retry-error-${passengerIndex}`}
-                >
-                  <RotateCcw className="h-4 w-4" />
-                  {t("scan.try_again")}
-                </Button>
-              </div>
+            <div className="flex gap-2 pt-4 mt-auto shrink-0 bg-white border-t sm:border-t-0 sm:pt-2 sm:mt-0 sm:bg-transparent -mx-4 px-4 sm:mx-0 sm:px-0">
+              <Button
+                variant="outline"
+                className="flex-1 border-gray-200 text-gray-500"
+                onClick={() => handleOpenChange(false)}
+                data-testid={`button-scan-cancel-${passengerIndex}`}
+              >
+                <X className="h-4 w-4 mr-2" />
+                {t("scan.cancel")}
+              </Button>
+              <Button
+                className="flex-1 gap-2"
+                onClick={resetState}
+                data-testid={`button-scan-retry-error-${passengerIndex}`}
+              >
+                <RotateCcw className="h-4 w-4" />
+                {t("scan.try_again")}
+              </Button>
             </div>
           </>
         )}
