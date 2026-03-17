@@ -80,13 +80,13 @@ function SeniorHomeScreen() {
           {/* Botão Comprar / Planejar com Voz */}
           <TouchableOpacity
             className="rounded-[32px] border-2 border-primary bg-surface p-6 flex-row items-center justify-between shadow-sm"
-            onPress={() => router.push("/bookings")}
+            onPress={() => router.push("/search")}
             activeOpacity={0.8}
           >
             <View className="flex-1 mr-4">
-              <Text className="text-4xl mb-2">🎙️</Text>
+              <Text className="text-4xl mb-2">✈️</Text>
               <Text className="text-2xl font-bold text-slate-900">Nova Viagem</Text>
-              <Text className="text-lg text-slate-600 mt-1">Diga para onde quer ir e nós montamos para você</Text>
+              <Text className="text-lg text-slate-600 mt-1">Pesquise origens, destinos e compre agora</Text>
             </View>
           </TouchableOpacity>
 

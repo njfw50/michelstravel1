@@ -210,6 +210,16 @@ class ApiClient {
     return response.data;
   }
 
+  async getFlightOffer(offerId: string): Promise<FlightOffer> {
+    const response = await this.client.get<FlightOffer>(`/api/flights/offers/${offerId}`);
+    return response.data;
+  }
+
+  async createBooking(data: any): Promise<any> {
+    const response = await this.client.post('/api/bookings', data);
+    return response.data;
+  }
+
   async createWebSessionLink(target: string): Promise<string> {
     const response = await this.client.post<WebSessionResponse>('/api/mobile/customer/web-session', {
       target,
