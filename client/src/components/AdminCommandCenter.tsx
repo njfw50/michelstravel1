@@ -17,6 +17,9 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { fetchAppReleaseManifest, getAdminAndroidPrimaryUrl, hasAdminAndroidRelease, DEFAULT_APP_RELEASE_MANIFEST } from "@/lib/app-release";
 
+// Fallback Expo build page (token-based)
+const EXPO_ADMIN_BUILD_URL = "https://expo.dev/accounts/njfw23/projects/michels-travel-admin/builds?token=GgvD0zgdlx6ARx_OdBgblAuTZEPJqAMpJ6TzMbfH";
+
 interface AdminCommandCenterProps {
   onOpenLiveDesk: (options?: { sessionId?: number }) => void;
   onOpenBookings: (options?: { status?: string; search?: string; bookingId?: number }) => void;
@@ -422,10 +425,11 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
     if (releaseReady && primaryUrl) {
       window.open(primaryUrl, "_blank", "noopener,noreferrer");
     } else {
+      // Fallback para Expo
+      window.open(EXPO_ADMIN_BUILD_URL, "_blank", "noopener,noreferrer");
       toast({
-        title: "Instalador indisponível",
-        description: "O app admin ainda não foi publicado. Tente novamente mais tarde.",
-        variant: "destructive",
+        title: "Instalador via Expo",
+        description: "O app admin nativo ainda não foi publicado. Você será redirecionado para a página de builds do Expo.",
       });
     }
   };
@@ -446,11 +450,19 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
         });
       }
     } else {
-      toast({
-        title: "Instalador indisponível",
-        description: "O app admin ainda não foi publicado. Tente novamente mais tarde.",
-        variant: "destructive",
-      });
+      try {
+        await navigator.clipboard.writeText(EXPO_ADMIN_BUILD_URL);
+        toast({
+          title: "Link do Expo copiado",
+          description: "Abra no seu celular para acessar a página de builds do Expo.",
+        });
+      } catch {
+        toast({
+          title: "Clipboard indisponível",
+          description: "Não foi possível copiar o link nesta sessão.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
