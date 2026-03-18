@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect as useReactEffect, useMemo as useReactMemo } from "react";
 import { AlertTriangle, ArrowRight, CheckCircle2, Copy, DollarSign, ExternalLink, Loader2, Mail, MessageSquare, Phone, Plane, RefreshCw, Send, ShieldAlert, Smartphone, Sparkles, TrendingUp, Users } from "lucide-react";
 import { format, formatDistanceToNowStrict } from "date-fns";
 
@@ -14,6 +15,7 @@ import { AdminOwnerDesk } from "@/components/AdminOwnerDesk";
 import { useAdminCommandCenter, useAdminOwnerDesk, type AdminCommandCenterData, type AdminOwnerDeskData } from "@/hooks/use-admin";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { fetchAppReleaseManifest, getAdminAndroidPrimaryUrl, hasAdminAndroidRelease, DEFAULT_APP_RELEASE_MANIFEST } from "@/lib/app-release";
 
 interface AdminCommandCenterProps {
   onOpenLiveDesk: (options?: { sessionId?: number }) => void;
@@ -225,6 +227,15 @@ const replyMacros = [
 ];
 
 export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSettings }: AdminCommandCenterProps) {
+  // --- App Admin Download Integration ---
+  const { data: appRelease } = useQuery({
+    queryKey: ["/app-release.json"],
+    queryFn: fetchAppReleaseManifest,
+    staleTime: 30000,
+  });
+  const manifest = appRelease ?? DEFAULT_APP_RELEASE_MANIFEST;
+  const releaseReady = hasAdminAndroidRelease(manifest);
+  const primaryUrl = getAdminAndroidPrimaryUrl(manifest);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data, isLoading, isError, error } = useAdminCommandCenter();
@@ -407,26 +418,37 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
     }
   };
 
-  const getAdminInstallUrl = () => {
-    // URL exposta publicamente pelo Expo p/ projetos do usuário
-    return "https://expo.dev/accounts/njfw23/projects/michels-travel-senior/builds"; 
-  };
-
   const handleOpenAdminInstallPage = () => {
-    window.open(getAdminInstallUrl(), "_blank", "noopener,noreferrer");
+    if (releaseReady && primaryUrl) {
+      window.open(primaryUrl, "_blank", "noopener,noreferrer");
+    } else {
+      toast({
+        title: "Instalador indisponível",
+        description: "O app admin ainda não foi publicado. Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCopyAdminInstallLink = async () => {
-    try {
-      await navigator.clipboard.writeText(getAdminInstallUrl());
+    if (releaseReady && primaryUrl) {
+      try {
+        await navigator.clipboard.writeText(primaryUrl);
+        toast({
+          title: "Link de instalação copiado",
+          description: "Abra no seu celular para instalar o app admin.",
+        });
+      } catch {
+        toast({
+          title: "Clipboard indisponível",
+          description: "Não foi possível copiar o link nesta sessão.",
+          variant: "destructive",
+        });
+      }
+    } else {
       toast({
-        title: "Admin install link copied",
-        description: "Open it on your phone to install the Michels Travel Admin app when the build is ready.",
-      });
-    } catch {
-      toast({
-        title: "Clipboard unavailable",
-        description: "Copying the admin install link is not available in this browser session.",
+        title: "Instalador indisponível",
+        description: "O app admin ainda não foi publicado. Tente novamente mais tarde.",
         variant: "destructive",
       });
     }
