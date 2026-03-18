@@ -1,4 +1,3 @@
-
 import express, { type Express, type Request, type Response, type NextFunction } from 'express';
 import { storage } from './storage';
 import { stripeService } from './stripeService';
@@ -2180,471 +2179,6 @@ BOOKING LOOKUP:
       let clientDisconnected = false;
       req.on("close", () => { clientDisconnected = true; });
 
-      let fullResponse = "";
-
-      if (!chatbotAi.client) {
-        const fallback = buildBasicChatResponse(content, sessionLanguage);
-        fullResponse = fallback.message;
-
-        if (fullResponse && !clientDisconnected) {
-          writeChatEvent(res, { content: fullResponse });
-        }
-
-        await db.insert(messages).values({
-          conversationId: sessionId,
-          role: "assistant",
-          content: fullResponse,
-        });
-
-        if (fallback.escalate) {
-          await markConversationEscalated(sessionId);
-        }
-
-        writeChatEvent(res, { done: true, escalated: fallback.escalate });
-        res.end();
-        return;
-      }
-
-      try {
-        const completion = await chatbotAi.client.chat.completions.create({
-          model: chatbotAi.primaryModel!,
-          messages: chatHistory,
-          tools: CHATBOT_TOOLS,
-          max_tokens: 512,
-        });
-
-        const choice = completion.choices[0];
-
-        if (choice.finish_reason === "tool_calls" && choice.message.tool_calls) {
-          const toolCall = choice.message.tool_calls[0] as any;
-          if (toolCall.function?.name === "lookup_booking") {
-            let args: any;
-            try {
-              args = JSON.parse(toolCall.function.arguments);
-            } catch {
-              args = {};
-            }
-
-            if (args.reference && args.email) {
-              try {
-                const booking = await storage.getBookingByReferenceAndEmail(args.reference, args.email);
-                if (booking) {
-                  const fd = booking.flightData as any;
-                  const bookingInfo = {
-                    referenceCode: booking.referenceCode,
-                    status: booking.status,
-                    ticketStatus: (booking as any).ticketStatus || 'pending',
-                    ticketNumber: (booking as any).ticketNumber || null,
-                    airlineReference: (booking as any).duffelBookingReference || null,
-                    airline: fd?.airline || null,
-                    origin: fd?.origin || fd?.originCode || null,
-                    destination: fd?.destination || fd?.destinationCode || null,
-                    departureDate: fd?.departureTime || null,
-                    flightNumber: fd?.flightNumber || null,
-                    hasScheduleChange: (booking as any).ticketStatus === 'schedule_changed',
-                    passengerCount: Array.isArray(booking.passengerDetails) ? (booking.passengerDetails as any[]).length : 0,
-                  };
-
-                  chatHistory.push({
-                    role: "assistant",
-                    content: `[Function called: lookup_booking] Booking found: ${JSON.stringify(bookingInfo)}`,
-                  });
-
-                  const followUp = await chatbotAi.client.chat.completions.create({
-                    model: chatbotAi.primaryModel!,
-                    messages: [
-                      ...chatHistory,
-                      { role: "user" as const, content: `Based on the booking data above, write a helpful summary for the customer. Share status, flight details, ticket status, and airline reference if available. Respond in the same language the customer has been using. Do NOT share any internal IDs, prices, or email addresses.` },
-                    ],
-                    max_tokens: 512,
-                  });
-                  fullResponse = followUp.choices[0]?.message?.content || "";
-                } else {
-                  chatHistory.push({
-                    role: "assistant",
-                    content: `[Function called: lookup_booking] No booking found with reference "${args.reference}" and email "${args.email}".`,
-                  });
-                  const followUp = await chatbotAi.client.chat.completions.create({
-                    model: chatbotAi.primaryModel!,
-                    messages: [
-                      ...chatHistory,
-                      { role: "user" as const, content: `The booking was not found. Let the customer know politely and suggest they double-check their reference code (starts with MT-) and email. Respond in the same language they've been using.` },
-                    ],
-                    max_tokens: 256,
-                  });
-                  fullResponse = followUp.choices[0]?.message?.content || "";
-                }
-              } catch (lookupErr: any) {
-                console.error("Booking lookup error in chatbot:", lookupErr?.message);
-                fullResponse = buildBasicChatResponse(content, sessionLanguage).message;
-              }
-            } else {
-              fullResponse = choice.message.content || "I need both your reference code (starts with MT-) and your email address to look up your booking.";
-            }
-          }
-        } else {
-          fullResponse = choice.message.content || "";
-        }
-      } catch (modelError: any) {
-        console.error("Primary model failed, trying fallback:", modelError.message);
-        try {
-          const fallback = await chatbotAi.client.chat.completions.create({
-            model: chatbotAi.fallbackModel!,
-            messages: chatHistory,
-            max_tokens: 512,
-          });
-          fullResponse = fallback.choices[0]?.message?.content || "";
-        } catch (fallbackError: any) {
-          console.error("Fallback model also failed:", fallbackError.message);
-          fullResponse = buildBasicChatResponse(content, sessionLanguage).message;
-        }
-      }
-
-      if (fullResponse && !clientDisconnected) {
-        res.write(`data: ${JSON.stringify({ content: fullResponse })}\n\n`);
-        if (typeof (res as any).flush === "function") (res as any).flush();
-      }
-
-      await db.insert(messages).values({
-        conversationId: sessionId,
-        role: "assistant",
-        content: fullResponse,
-      });
-
-      const shouldEscalate = fullResponse.trimStart().startsWith("[ESCALATE]");
-      if (shouldEscalate) {
-        await markConversationEscalated(sessionId);
-      }
-
-      writeChatEvent(res, { done: true, escalated: shouldEscalate });
-      res.end();
-    } catch (error) {
-      console.error('Chatbot message error:', error);
-      if (res.headersSent) {
-        res.write(`data: ${JSON.stringify({ error: "Failed to process message" })}\n\n`);
-        res.end();
-      } else {
-        res.status(500).json({ error: "Failed to process message" });
-      }
-    }
-  });
-
-  app.get('/api/chatbot/history/:sessionId', async (req, res) => {
-    try {
-      const sessionId = parseInt(req.params.sessionId);
-      const chatMessages = await db.select().from(messages)
-        .where(eq(messages.conversationId, sessionId))
-        .orderBy(messages.createdAt);
-      res.json(chatMessages);
-    } catch (error) {
-      console.error('Chatbot history error:', error);
-      res.status(500).json({ error: "Failed to fetch chat history" });
-    }
-  });
-
-  const AGENT_SYSTEM_PROMPT = `${CHATBOT_SYSTEM_PROMPT}
-
-AGENT MODE - IMPORTANT:
-You are now in AGENT MODE. You have enhanced capabilities:
-
-1. SEARCH FLIGHTS (search_flights):
-- When a customer asks to find or search for flights
-- Extract: origin IATA code, destination IATA code, departure date
-- If customer provides city names, convert to IATA codes (e.g., "São Paulo" → "GRU", "New York" → "JFK", "Miami" → "MIA")
-- Default to 1 adult, economy class if not specified
-
-2. LOOKUP BOOKING (lookup_booking):
-- When a customer wants to check their booking status, ticket info, or flight details
-- Requires reference code (MT-...) and email
-- Share status, ticket status, airline reference, flight details
-- Never share internal IDs (Duffel Order ID)
-
-3. CANCEL BOOKING (cancel_booking):
-- When a customer or admin requests to cancel a booking
-- Requires the booking ID (get it from lookup_booking first)
-- ALWAYS confirm with the customer before cancelling
-- Inform them about refund processing
-
-AFTER SEARCH RESULTS:
-- Present results in a friendly way with airline, price, times, stops
-- Tell them they can click "Book" on any result
-
-IMPORTANT: Always use the appropriate function. Never make up data.`;
-
-  const AGENT_TOOLS: any[] = [
-    {
-      type: "function",
-      function: {
-        name: "search_flights",
-        description: "Search for real flight offers. Use this when a customer wants to find flights.",
-        parameters: {
-          type: "object",
-          properties: {
-            origin: {
-              type: "string",
-              description: "Origin airport IATA code (3 letters), e.g. GRU, JFK, MIA"
-            },
-            destination: {
-              type: "string",
-              description: "Destination airport IATA code (3 letters), e.g. MCO, LIS, CDG"
-            },
-            date: {
-              type: "string",
-              description: "Departure date in YYYY-MM-DD format"
-            },
-            returnDate: {
-              type: "string",
-              description: "Return date in YYYY-MM-DD format (optional, for round trips)"
-            },
-            adults: {
-              type: "string",
-              description: "Number of adult passengers, default '1'"
-            },
-            cabinClass: {
-              type: "string",
-              enum: ["economy", "premium_economy", "business", "first"],
-              description: "Cabin class preference, default 'economy'"
-            }
-          },
-          required: ["origin", "destination", "date"]
-        }
-      }
-    },
-    {
-      type: "function",
-      function: {
-        name: "lookup_booking",
-        description: "Look up a booking by reference code and email. Use when customer wants to check booking status, ticket info, or flight details.",
-        parameters: {
-          type: "object",
-          properties: {
-            reference: {
-              type: "string",
-              description: "Booking reference code (starts with MT-)"
-            },
-            email: {
-              type: "string",
-              description: "Email address used during booking"
-            }
-          },
-          required: ["reference", "email"]
-        }
-      }
-    },
-    {
-      type: "function",
-      function: {
-        name: "cancel_booking",
-        description: "Cancel a booking by its ID. ONLY use after: 1) looking up the booking first, 2) presenting booking details to customer, 3) customer explicitly confirms they want to cancel. Set confirmed=true only when the customer has explicitly said yes to cancellation.",
-        parameters: {
-          type: "object",
-          properties: {
-            bookingId: {
-              type: "integer",
-              description: "The numeric booking ID (obtained from lookup_booking)"
-            },
-            confirmed: {
-              type: "boolean",
-              description: "Must be true - indicates the customer has explicitly confirmed cancellation"
-            }
-          },
-          required: ["bookingId", "confirmed"]
-        }
-      }
-    }
-  ];
-
-  const handleAgentFallbackRequest = async (
-    res: Response,
-    sessionId: number,
-    content: string,
-    language: "pt" | "en" | "es",
-  ) => {
-    const action = parseAgentFallbackRequest(content, language);
-
-    if (action.type === "search_flights") {
-      writeChatEvent(res, { content: "🔍 ", type: "text" });
-
-      const searchNotice =
-        language === "en"
-          ? `Searching flights from ${action.args.origin} to ${action.args.destination}...`
-          : language === "es"
-            ? `Buscando vuelos de ${action.args.origin} a ${action.args.destination}...`
-            : `Buscando voos de ${action.args.origin} para ${action.args.destination}...`;
-
-      writeChatEvent(res, { content: searchNotice, type: "text" });
-
-      try {
-        const flights = await searchFlights({
-          origin: action.args.origin,
-          destination: action.args.destination,
-          date: action.args.date,
-          returnDate: action.args.returnDate,
-          adults: action.args.adults,
-          cabinClass: action.args.cabinClass,
-          passengers: action.args.adults,
-        });
-
-        const chatMarkupRate = await getCommissionRate();
-        const topFlights = flights.slice(0, 5).map((flight) => ({
-          id: flight.id,
-          airline: flight.airline,
-          flightNumber: flight.flightNumber,
-          departureTime: flight.departureTime,
-          arrivalTime: flight.arrivalTime,
-          duration: flight.duration,
-          price: parseFloat((flight.price * (1 + chatMarkupRate)).toFixed(2)),
-          currency: flight.currency,
-          stops: flight.stops,
-          logoUrl: flight.logoUrl,
-          originCode: flight.originCode || action.args.origin,
-          destinationCode: flight.destinationCode || action.args.destination,
-          originCity: flight.originCity,
-          destinationCity: flight.destinationCity,
-        }));
-
-        if (topFlights.length > 0) {
-          writeChatEvent(res, { flights: topFlights, type: "flights" });
-        }
-
-        const summary = buildAgentSearchSummary(
-          language,
-          topFlights,
-          action.args.origin,
-          action.args.destination,
-          action.args.date,
-        );
-
-        writeChatEvent(res, { content: summary, type: "text" });
-
-        await db.insert(messages).values({
-          conversationId: sessionId,
-          role: "assistant",
-          content: `[AGENT-FALLBACK: Searched ${action.args.origin}→${action.args.destination} on ${action.args.date}]\n${summary}`,
-        });
-      } catch (searchError) {
-        console.error("Fallback flight search error:", searchError);
-        const errorMessage = buildSearchErrorMessage(language);
-        writeChatEvent(res, { content: errorMessage, type: "text" });
-
-        await db.insert(messages).values({
-          conversationId: sessionId,
-          role: "assistant",
-          content: errorMessage,
-        });
-      }
-
-      writeChatEvent(res, { done: true, escalated: false });
-      res.end();
-      return;
-    }
-
-    if (action.type === "lookup_booking") {
-      try {
-        const booking = await storage.getBookingByReferenceAndEmail(action.args.reference, action.args.email);
-        if (!booking) {
-          const notFoundMessage = buildBookingNotFoundMessage(language, action.args.reference);
-          writeChatEvent(res, { content: notFoundMessage, type: "text" });
-
-          await db.insert(messages).values({
-            conversationId: sessionId,
-            role: "assistant",
-            content: notFoundMessage,
-          });
-        } else {
-          const flightData = booking.flightData as any;
-          const passengerDetails = Array.isArray(booking.passengerDetails) ? booking.passengerDetails : [];
-          const summary = buildAgentLookupSummary(language, {
-            referenceCode: booking.referenceCode || "MT-PENDING",
-            status: booking.status || "pending",
-            ticketStatus: (booking as any).ticketStatus || "pending",
-            airlineReference: (booking as any).duffelBookingReference || null,
-            airline: flightData?.airline || null,
-            origin: flightData?.origin || flightData?.originCode || null,
-            destination: flightData?.destination || flightData?.destinationCode || null,
-            departureDate: flightData?.departureTime || null,
-            passengerCount: passengerDetails.length,
-          });
-
-          writeChatEvent(res, { content: summary, type: "text" });
-
-          await db.insert(messages).values({
-            conversationId: sessionId,
-            role: "assistant",
-            content: `[AGENT-FALLBACK: Looked up booking ${action.args.reference}]\n${summary}`,
-          });
-        }
-      } catch (lookupError: any) {
-        console.error("Fallback booking lookup error:", lookupError?.message);
-        const errorMessage = buildBasicChatResponse(content, language).message;
-        writeChatEvent(res, { content: errorMessage, type: "text" });
-
-        await db.insert(messages).values({
-          conversationId: sessionId,
-          role: "assistant",
-          content: errorMessage,
-        });
-      }
-
-      writeChatEvent(res, { done: true, escalated: false });
-      res.end();
-      return;
-    }
-
-    const shouldEscalate = action.type === "escalate";
-    writeChatEvent(res, { content: action.message, type: "text" });
-
-    await db.insert(messages).values({
-      conversationId: sessionId,
-      role: "assistant",
-      content: action.message,
-    });
-
-    if (shouldEscalate) {
-      await markConversationEscalated(sessionId);
-    }
-
-    writeChatEvent(res, { done: true, escalated: shouldEscalate });
-    res.end();
-  };
-
-  app.post('/api/chatbot/agent-message', async (req, res) => {
-    try {
-      const { sessionId, content } = req.body;
-      if (!sessionId || !content) {
-        return res.status(400).json({ error: "sessionId and content are required" });
-      }
-
-      await db.insert(messages).values({
-        conversationId: sessionId,
-        role: "user",
-        content,
-      });
-
-      const existingMessages = await db.select().from(messages)
-        .where(eq(messages.conversationId, sessionId))
-        .orderBy(messages.createdAt);
-
-      const sessionLanguage = await getConversationLanguage(sessionId);
-
-      const chatHistory: { role: "system" | "user" | "assistant"; content: string }[] = [
-        { role: "system", content: AGENT_SYSTEM_PROMPT },
-        ...existingMessages.map(m => ({
-          role: m.role as "user" | "assistant",
-          content: m.content,
-        })),
-      ];
-
-      res.writeHead(200, {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache, no-store",
-        "Connection": "keep-alive",
-        "X-Accel-Buffering": "no",
-      });
-
-      let clientDisconnected = false;
-      req.on("close", () => { clientDisconnected = true; });
-
       if (!chatbotAi.client) {
         await handleAgentFallbackRequest(res, sessionId, content, sessionLanguage);
         return;
@@ -2698,21 +2232,21 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
             });
 
             const chatMarkupRate = await getCommissionRate();
-            const topFlights = flights.slice(0, 5).map(f => ({
-              id: f.id,
-              airline: f.airline,
-              flightNumber: f.flightNumber,
-              departureTime: f.departureTime,
-              arrivalTime: f.arrivalTime,
-              duration: f.duration,
-              price: parseFloat((f.price * (1 + chatMarkupRate)).toFixed(2)),
-              currency: f.currency,
-              stops: f.stops,
-              logoUrl: f.logoUrl,
-              originCode: f.originCode || args.origin,
-              destinationCode: f.destinationCode || args.destination,
-              originCity: f.originCity,
-              destinationCity: f.destinationCity,
+            const topFlights = flights.slice(0, 5).map((flight) => ({
+              id: flight.id,
+              airline: flight.airline,
+              flightNumber: flight.flightNumber,
+              departureTime: flight.departureTime,
+              arrivalTime: flight.arrivalTime,
+              duration: flight.duration,
+              price: parseFloat((flight.price * (1 + chatMarkupRate)).toFixed(2)),
+              currency: flight.currency,
+              stops: flight.stops,
+              logoUrl: flight.logoUrl,
+              originCode: flight.originCode || args.origin,
+              destinationCode: flight.destinationCode || args.destination,
+              originCity: flight.originCity,
+              destinationCity: flight.destinationCity,
             }));
 
             res.write(`data: ${JSON.stringify({ flights: topFlights, type: "flights" })}\n\n`);
@@ -2752,7 +2286,6 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
               role: "assistant",
               content: savedContent,
             });
-
           } catch (searchError) {
             console.error("Flight search error in agent mode:", searchError);
             const errorMsg = "I tried searching for flights but encountered an error. Please try using the search bar on our homepage, or I can try again with different details.";
@@ -2839,13 +2372,13 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
                   content: `[AGENT: Looked up booking ${args.reference}]\n${fullResponse}`,
                 });
               } else {
-                const notFoundMsg = `Booking not found with reference "${args.reference}" and email "${args.email}". Please verify the information.`;
-                res.write(`data: ${JSON.stringify({ content: notFoundMsg, type: "text" })}\n\n`);
+                const notFoundMessage = buildBookingNotFoundMessage(language, args.reference);
+                res.write(`data: ${JSON.stringify({ content: notFoundMessage, type: "text" })}\n\n`);
                 if (typeof (res as any).flush === "function") (res as any).flush();
                 await db.insert(messages).values({
                   conversationId: sessionId,
                   role: "assistant",
-                  content: notFoundMsg,
+                  content: notFoundMessage,
                 });
               }
             } catch (lookupErr: any) {
@@ -3971,4 +3504,15 @@ IMPORTANT: Always use the appropriate function. Never make up data.`;
     }
   });
 
+  // === SENIOR ALERTS API ===
+  app.get('/api/senior-alerts', requireAdmin, async (req, res) => {
+    try {
+      const alerts = await db.select().from(seniorAlerts).orderBy(desc(seniorAlerts.createdAt)).limit(100);
+      // Enriquecer com dados do passageiro e voo, se necessário
+      res.json(alerts);
+    } catch (error) {
+      console.error('Erro ao buscar senior alerts:', error);
+      res.status(500).json({ error: 'Erro ao buscar alertas sênior' });
+    }
+  });
 }
