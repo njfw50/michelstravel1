@@ -1,4 +1,5 @@
 import { FlightSearchForm } from "@/components/FlightSearchForm";
+import SeniorCardImage from "@/components/SeniorCardImage";
 import { usePopularFlights, useAirlines, useFeaturedAirports, useFeaturedDeals, type PublicFeaturedDeal } from "@/hooks/use-flights";
 import { FlightBoard } from "@/components/FlightBoard";
 import AppLaunchPromo from "@/components/AppLaunchPromo";
@@ -361,40 +362,9 @@ export default function Home() {
                 </div>
               </div>
 
-              <Card className="rounded-[24px] md:rounded-[28px] border border-slate-200 bg-slate-950 text-white shadow-[0_24px_80px_-40px_rgba(15,23,42,0.9)]">
-                <CardContent className="p-5 sm:p-6 md:p-7">
-                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-blue-200">Michels Travel</span>
-                  <h3 className="mt-3 text-[1.5rem] sm:text-2xl font-display font-extrabold">
-                    {language === "en" ? "Designed for people who prefer clarity over rush." : language === "es" ? "Pensado para quien prefiere claridad en lugar de prisa." : "Pensado para quem prefere clareza no lugar de pressa."}
-                  </h3>
-                  <div className="mt-6 space-y-3">
-                    {[1, 2, 3].map((item) => (
-                      <div key={item} className="flex items-start gap-3 rounded-2xl bg-white/5 px-4 py-3">
-                        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
-                        <span className="text-sm leading-relaxed text-slate-100">
-                          {language === "en"
-                            ? item === 1
-                              ? "Start with origin, destination, and date."
-                              : item === 2
-                                ? "See the flights and review calmly before paying."
-                                : "If anything feels confusing, open WhatsApp and continue with our team."
-                            : language === "es"
-                              ? item === 1
-                                ? "Empiece con origen, destino y fecha."
-                                : item === 2
-                                  ? "Vea los vuelos y revise todo con calma antes de pagar."
-                                  : "Si algo parece confuso, abra WhatsApp y siga con nuestro equipo."
-                              : item === 1
-                                ? "Comece por origem, destino e data."
-                                : item === 2
-                                  ? "Veja os voos e revise tudo com calma antes de pagar."
-                                  : "Se algo parecer confuso, abra o WhatsApp e siga com a nossa equipe."}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="rounded-[24px] md:rounded-[28px] overflow-hidden shadow-[0_24px_80px_-40px_rgba(15,23,42,0.9)] border border-slate-200">
+                <SeniorCardImage />
+              </div>
             </div>
           </motion.div>
         </div>

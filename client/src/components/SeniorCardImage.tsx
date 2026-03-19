@@ -1,16 +1,23 @@
 import React from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
-import { useI18n } from "@/lib/i18n";
+import seniorAirportImg from "@/assets/images/senior-airport.png";
 
-const SeniorCardImage = () => (
-  <div className="flex justify-center mb-4">
+const SeniorCardImage: React.FC = () => (
+  <div className="relative w-full overflow-hidden rounded-[20px] shadow-[0_8px_32px_-8px_rgba(15,23,42,0.45)]">
     <img
-      src="/assets/images/senior-airport.png"
-      alt="Idoso no aeroporto com bilhete na mão"
-      style={{ width: "100%", maxWidth: 420, height: "auto", borderRadius: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}
+      src={seniorAirportImg}
+      alt="Viajante sênior no aeroporto consultando o painel de voos"
+      className="w-full h-full object-cover object-center"
+      style={{ display: "block", aspectRatio: "4/5" }}
     />
+    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-900/10 to-transparent" />
+    <div className="absolute bottom-0 left-0 right-0 px-5 pb-5 pt-8">
+      <span className="inline-block rounded-full bg-blue-500/90 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white backdrop-blur-sm">
+        Michels Travel
+      </span>
+      <p className="mt-2 text-sm font-semibold leading-snug text-white/90">
+        Viaje com calma. Estamos aqui em cada etapa.
+      </p>
+    </div>
   </div>
 );
 
