@@ -54,6 +54,14 @@ export function SeniorFlightCard({
 
   return (
     <View className={`rounded-[28px] border bg-surface px-5 py-5 ${selected ? "border-primary" : "border-border"}`}>
+      {/* Imagem artística do idoso no aeroporto */}
+      <View style={{ alignItems: 'center', marginBottom: 16 }}>
+        <Image
+          source={require("@/assets/images/senior-airport.png")}
+          style={{ width: '100%', height: 140, borderRadius: 20, resizeMode: 'cover', shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}
+          accessibilityLabel="Idoso no aeroporto com bilhete na mão"
+        />
+      </View>
       <View className="flex-row items-start justify-between gap-4">
         <View className="flex-1">
           <View className={`self-start rounded-full border px-3 py-2 ${tone.badge}`}>
