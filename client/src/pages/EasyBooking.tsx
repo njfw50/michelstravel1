@@ -485,41 +485,44 @@ export default function EasyBooking() {
         </div>
 
         <div className="container mx-auto px-4 md:px-6 py-8 md:py-16 relative">
-          <div className="max-w-5xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/85 px-3.5 py-2 text-xs sm:px-4 sm:text-sm font-semibold text-blue-700 shadow-sm">
-              <HeartHandshake className="h-4 w-4" />
-              {copy.badge}
-            </span>
-            {/* Senior image at the top */}
-            <div className="mt-6">
-              <SeniorCardImage />
-            </div>
-            <h1 className="mt-5 text-[2.5rem] sm:text-5xl md:text-6xl font-display font-extrabold tracking-tight text-slate-950 leading-[0.95]">
-              {copy.title}
-            </h1>
-            <p className="mt-4 max-w-3xl text-base sm:text-lg md:text-2xl leading-relaxed text-slate-600">
-              {copy.subtitle}
-            </p>
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_260px] xl:grid-cols-[minmax(0,1fr)_300px] gap-8 md:gap-10 items-center max-w-5xl">
+            <div>
+              <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/85 px-3.5 py-2 text-xs sm:px-4 sm:text-sm font-semibold text-blue-700 shadow-sm">
+                <HeartHandshake className="h-4 w-4" />
+                {copy.badge}
+              </span>
+              <h1 className="mt-5 text-[2.5rem] sm:text-5xl md:text-6xl font-display font-extrabold tracking-tight text-slate-950 leading-[0.95]">
+                {copy.title}
+              </h1>
+              <p className="mt-4 max-w-3xl text-base sm:text-lg md:text-2xl leading-relaxed text-slate-600">
+                {copy.subtitle}
+              </p>
 
-            <div className="mt-7 flex flex-col sm:flex-row sm:flex-wrap gap-3">
-              <Button size="lg" onClick={openAssistant} className="min-h-14 w-full sm:w-auto rounded-2xl px-5 sm:px-6 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white">
-                <MessageCircle className="h-5 w-5" />
-                {copy.chat}
-              </Button>
-              <Button asChild size="lg" variant="outline" className="min-h-14 w-full sm:w-auto rounded-2xl px-5 sm:px-6 text-base font-bold border-slate-300 bg-white/90 text-slate-800">
-                <a href={whatsAppHref} target="_blank" rel="noreferrer">
+              <div className="mt-7 flex flex-col sm:flex-row sm:flex-wrap gap-3">
+                <Button size="lg" onClick={openAssistant} className="min-h-14 w-full sm:w-auto rounded-2xl px-5 sm:px-6 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white">
                   <MessageCircle className="h-5 w-5" />
-                  {copy.direct_call}
-                </a>
-              </Button>
-              <Button size="lg" variant="ghost" onClick={goToPlanner} className="min-h-14 w-full sm:w-auto rounded-2xl px-4 text-base font-bold text-blue-700 hover:bg-blue-50">
-                {currentLanguage === "en" ? "Answer the questions below" : currentLanguage === "es" ? "Responder las preguntas abajo" : "Responder as perguntas abaixo"}
-              </Button>
+                  {copy.chat}
+                </Button>
+                <Button asChild size="lg" variant="outline" className="min-h-14 w-full sm:w-auto rounded-2xl px-5 sm:px-6 text-base font-bold border-slate-300 bg-white/90 text-slate-800">
+                  <a href={whatsAppHref} target="_blank" rel="noreferrer">
+                    <MessageCircle className="h-5 w-5" />
+                    {copy.direct_call}
+                  </a>
+                </Button>
+                <Button size="lg" variant="ghost" onClick={goToPlanner} className="min-h-14 w-full sm:w-auto rounded-2xl px-4 text-base font-bold text-blue-700 hover:bg-blue-50">
+                  {currentLanguage === "en" ? "Answer the questions below" : currentLanguage === "es" ? "Responder las preguntas abajo" : "Responder as perguntas abaixo"}
+                </Button>
+              </div>
+
+              <div className="mt-6 inline-flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3.5 text-sm md:text-base text-emerald-900 shadow-sm">
+                <ShieldCheck className="h-5 w-5 mt-0.5 shrink-0 text-emerald-600" />
+                <span>{copy.trust}</span>
+              </div>
             </div>
 
-            <div className="mt-6 inline-flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3.5 text-sm md:text-base text-emerald-900 shadow-sm">
-              <ShieldCheck className="h-5 w-5 mt-0.5 shrink-0 text-emerald-600" />
-              <span>{copy.trust}</span>
+            {/* Senior image — compact, right column */}
+            <div className="hidden lg:block">
+              <SeniorCardImage />
             </div>
           </div>
         </div>
