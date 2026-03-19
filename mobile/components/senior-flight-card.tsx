@@ -57,7 +57,7 @@ export function SeniorFlightCard({
       {/* Imagem artística do idoso no aeroporto */}
       <View style={{ alignItems: 'center', marginBottom: 16 }}>
         <Image
-          source={require("@/assets/images/senior-airport.png")}
+          source={require("../assets/images/senior-airport.png")}
           style={{ width: '100%', height: 140, borderRadius: 20, resizeMode: 'cover', shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}
           accessibilityLabel="Idoso no aeroporto com bilhete na mão"
         />
