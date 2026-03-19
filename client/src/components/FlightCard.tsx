@@ -79,7 +79,18 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
                 const stopsLabel = stopsCount === 0 
                   ? t("flight.direct") 
                   : `${stopsCount} ${stopsCount > 1 ? t("flight.stops") : t("flight.stop")}`;
-
+                // List of connection airports/cities
+                let connectionCities = [];
+                if (stopsCount > 0) {
+                  for (let i = 0; i < slice.segments.length - 1; i++) {
+                    const seg = slice.segments[i];
+                    if (seg.destinationCity) {
+                      connectionCities.push(seg.destinationCity + (seg.destinationCode ? ` (${seg.destinationCode})` : ""));
+                    } else if (seg.destinationCode) {
+                      connectionCities.push(seg.destinationCode);
+                    }
+                  }
+                }
                 return (
                   <div key={index} className="border-b last:border-0 pb-3 last:pb-0">
                     <div className="text-xs font-semibold text-blue-600 mb-2 flex items-center gap-2">
@@ -115,6 +126,12 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
                         <div className={`text-xs font-medium mt-1 ${stopsCount === 0 ? "text-emerald-600" : "text-amber-600"}`}>
                           {stopsLabel}
                         </div>
+                        {/* Show connection cities if any */}
+                        {connectionCities.length > 0 && (
+                          <div className="mt-1 text-[11px] text-blue-700 font-semibold">
+                            Conexão em: {connectionCities.join(", ")}
+                          </div>
+                        )}
                       </div>
                       <div className="text-center">
                         <div className="text-xl font-bold text-gray-900 leading-none">

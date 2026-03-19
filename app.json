@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "b49b5672-7736-410d-ae0e-913e86be39bf"
+      }
+    },
+    "android": {
+      "package": "com.njfw23.restexpress"
+    },
+    "ios": {
+      "bundleIdentifier": "com.njfw23.restexpress",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

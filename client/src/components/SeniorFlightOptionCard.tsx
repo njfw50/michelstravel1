@@ -206,6 +206,19 @@ export default function SeniorFlightOptionCard({
               const firstSegment = slice.segments[0];
               const lastSegment = slice.segments[slice.segments.length - 1];
               const label = index === 0 ? copy.outbound : copy.inbound;
+              const stopsCount = slice.segments.length - 1;
+              // List of connection airports/cities
+              let connectionCities = [];
+              if (stopsCount > 0) {
+                for (let i = 0; i < slice.segments.length - 1; i++) {
+                  const seg = slice.segments[i];
+                  if (seg.destinationCity) {
+                    connectionCities.push(seg.destinationCity + (seg.destinationCode ? ` (${seg.destinationCode})` : ""));
+                  } else if (seg.destinationCode) {
+                    connectionCities.push(seg.destinationCode);
+                  }
+                }
+              }
               return (
                 <div key={`${label}-${firstSegment?.departureTime || index}`} className="rounded-[24px] border border-slate-200 bg-slate-50/70 px-4 py-4">
                   <div className="flex items-center justify-between gap-3">
@@ -229,6 +242,12 @@ export default function SeniorFlightOptionCard({
                       <p className="mt-3 text-sm font-semibold text-slate-700">
                         {slice.segments.length <= 1 ? copy.direct : copy.stops(slice.segments.length - 1)}
                       </p>
+                      {/* Show connection cities if any */}
+                      {connectionCities.length > 0 && (
+                        <div className="mt-1 text-[12px] text-blue-700 font-bold">
+                          Conexão em: {connectionCities.join(", ")}
+                        </div>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="text-[1.6rem] font-extrabold text-slate-950 sm:text-3xl">{formatRouteTime(lastSegment?.arrivalTime)}</p>

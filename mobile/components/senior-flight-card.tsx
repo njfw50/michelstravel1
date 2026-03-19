@@ -93,20 +93,31 @@ export function SeniorFlightCard({
         </View>
       </View>
 
-      <View className="mt-4 flex-row flex-wrap gap-2">
-        <View className="rounded-full border border-border bg-background px-3 py-2">
-          <Text className="text-xs font-semibold uppercase tracking-[0.8px] text-foreground">
-            {insight.totalStops === 0 ? "Sem conexao" : `${insight.totalStops} conexao${insight.totalStops > 1 ? "es" : ""}`}
+      {/* Área cognitiva clara para idosos: conexões, espera e bagagem */}
+      <View className="mt-4 flex-col gap-2">
+        <View className="rounded-2xl border-2 border-blue-400 bg-blue-50 px-3 py-3 mb-2">
+          <Text className="text-base font-bold text-blue-900 text-center">
+            {insight.totalStops === 0
+              ? "Voo direto, sem conexões."
+              : `Você fará conexão em: ${Array.isArray(flight.segments) && flight.segments.length > 1
+                  ? flight.segments.slice(0, -1).map(seg => seg.destinationCity || seg.destinationCode).filter(Boolean).join(", ")
+                  : "cidade(s) não informada(s)"}`}
           </Text>
         </View>
-        <View className="rounded-full border border-border bg-background px-3 py-2">
-          <Text className="text-xs font-semibold uppercase tracking-[0.8px] text-foreground">
-            Maior espera {formatMinutes(insight.longestLayoverMinutes)}
+        <View className="rounded-2xl border-2 border-amber-400 bg-amber-50 px-3 py-3 mb-2">
+          <Text className="text-base font-bold text-amber-900 text-center">
+            {insight.longestLayoverMinutes > 0
+              ? `Tempo de espera: ${formatMinutes(insight.longestLayoverMinutes)}`
+              : "Sem espera entre voos"}
           </Text>
         </View>
-        <View className="rounded-full border border-border bg-background px-3 py-2">
-          <Text className="text-xs font-semibold uppercase tracking-[0.8px] text-foreground">
-            {insight.hasCheckedBag ? "Mala incluida" : insight.hasCarryOn ? "Bagagem de mao" : "Sem bagagem incluida"}
+        <View className="rounded-2xl border-2 border-emerald-400 bg-emerald-50 px-3 py-3">
+          <Text className="text-base font-bold text-emerald-900 text-center">
+            {insight.hasCheckedBag
+              ? "Mala despachada incluída"
+              : insight.hasCarryOn
+                ? "Bagagem de mão incluída"
+                : "Sem bagagem incluída"}
           </Text>
         </View>
       </View>
