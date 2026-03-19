@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { CalendarDays, CheckCircle2, ChevronDown, MessageCircle, Search, ShieldCheck, UserRound, ArrowRight, HeartHandshake, BriefcaseBusiness, Package, Luggage } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import AppLaunchPromo from "@/components/AppLaunchPromo";
+import SeniorCardImage from "@/components/SeniorCardImage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -476,6 +477,7 @@ export default function EasyBooking() {
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.95),_rgba(241,245,249,0.96)_40%,_rgba(226,232,240,0.95)_100%)]">
       <SEO title={copy.seo_title} description={copy.seo_desc} path="/senior" />
 
+
       <section className="relative overflow-hidden border-b border-slate-200">
         <div className="absolute inset-0 opacity-60">
           <div className="absolute -top-24 left-12 h-56 w-56 rounded-full bg-blue-200/60 blur-3xl" />
@@ -488,6 +490,10 @@ export default function EasyBooking() {
               <HeartHandshake className="h-4 w-4" />
               {copy.badge}
             </span>
+            {/* Senior image at the top */}
+            <div className="mt-6">
+              <SeniorCardImage />
+            </div>
             <h1 className="mt-5 text-[2.5rem] sm:text-5xl md:text-6xl font-display font-extrabold tracking-tight text-slate-950 leading-[0.95]">
               {copy.title}
             </h1>
