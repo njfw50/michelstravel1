@@ -107,16 +107,13 @@ export function SeniorFlightCard({
           <Text className="text-base font-bold text-blue-900 text-center">
             {insight.totalStops === 0
               ? "Voo direto, sem conexões."
-              : `Você fará conexão em: ${Array.isArray(flight.segments) && flight.segments.length > 1
-                  ? flight.segments.slice(0, -1).map(seg => seg.destinationCity || seg.destinationCode).filter(Boolean).join(", ")
-                  : "cidade(s) não informada(s)"}`}
-          </Text>
-        </View>
-        <View className="rounded-2xl border-2 border-amber-400 bg-amber-50 px-3 py-3 mb-2">
-          <Text className="text-base font-bold text-amber-900 text-center">
-            {insight.longestLayoverMinutes > 0
-              ? `Tempo de espera: ${formatMinutes(insight.longestLayoverMinutes)}`
-              : "Sem espera entre voos"}
+              : (() => {
+                  const connections = Array.isArray(flight.segments) && flight.segments.length > 1
+                    ? flight.segments.slice(0, -1).map(seg => seg.destinationCity || seg.destinationCode).filter(Boolean)
+                    : [];
+                  const layover = insight.longestLayoverMinutes > 0 ? `Você ficará em ${connections[0] || "conexão"} por ${formatMinutes(insight.longestLayoverMinutes)}.` : "";
+                  return `Conexão em: ${connections.join(", ")}. ${layover}`;
+                })()}
           </Text>
         </View>
         <View className="rounded-2xl border-2 border-emerald-400 bg-emerald-50 px-3 py-3">
