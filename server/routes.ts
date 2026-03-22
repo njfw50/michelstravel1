@@ -159,25 +159,38 @@ export function registerRoutes(app: Express) {
         }
       }
 
-      // Call Duffel Service
-      const flights = await searchFlights(searchParams);
+      // Call Duffel Service (never throw to client)
+      let flights: any[] = [];
+      try {
+        flights = await searchFlights(searchParams);
+      } catch (err) {
+        console.error("Flight search provider failed, returning empty list:", err);
+        flights = [];
+      }
 
       // Log search for SEO/Analytics
       if (origin && destination && date) {
-        await storage.createFlightSearch({
+        storage.createFlightSearch({
           origin: origin as string,
           destination: destination as string,
           departureDate: date as string,
           passengers: passengers ? parseInt(passengers as string) : 1,
           cabinClass: (cabinClass as string) || 'economy'
-        });
+        }).catch(err => console.warn("createFlightSearch failed (ignored):", err));
       }
 
-      const rate = await getCommissionRate();
-      res.json(applyMarkupToFlights(flights, rate));
+      let responseFlights = flights;
+      try {
+        const rate = await getCommissionRate();
+        responseFlights = applyMarkupToFlights(flights, rate);
+      } catch (err) {
+        console.warn("applyMarkup failed, returning raw flights:", err);
+      }
+
+      res.json(responseFlights);
     } catch (error) {
-      console.error('Flight search error:', error);
-      res.status(500).json({ error: 'Failed to search flights' });
+      console.error('Flight search error (graceful fallback to empty list):', error);
+      res.json([]);
     }
   });
 
