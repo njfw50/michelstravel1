@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, X, Send, Loader2, User, Bot, AlertTriangle, Headphones, Plane, ToggleLeft, ToggleRight, Clock, ArrowRight, UserCheck, Video, MonitorPlay } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, User, Bot, AlertTriangle, Headphones, Plane, ToggleLeft, ToggleRight, Clock, ArrowRight, UserCheck, Video, MonitorPlay, ShieldCheck, Lock } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { buildLiveSessionRequestContext, getLiveSessionTheme, isSeniorServiceMode } from "@/lib/live-session-context";
-import { buildWhatsAppHref, buildWhatsAppMessage } from "@/lib/contact";
+import { buildWhatsAppMessage } from "@/lib/contact";
 
 interface FlightResult {
   id: string;
@@ -163,37 +163,6 @@ export function Chatbot() {
     [requestContext.serviceMode],
   );
   const isSeniorContext = isSeniorServiceMode(requestContext.serviceMode);
-
-  const openWhatsAppEscalation = useCallback(() => {
-    const latestUserMessage = [...chatMessages].reverse().find((msg) => msg.role === "user")?.content;
-    const context = requestContext.contextSnapshot;
-    const href = buildWhatsAppHref(
-      buildWhatsAppMessage({
-        language,
-        topic: isSeniorContext
-          ? language === "en"
-            ? "Senior specialist"
-            : language === "es"
-              ? "Especialista senior"
-              : "Especialista senior"
-          : language === "en"
-            ? "Live travel help"
-            : language === "es"
-              ? "Ayuda de viajes"
-              : "Ajuda de viagem",
-        details: [
-          context.origin ? `${language === "en" ? "Origin" : language === "es" ? "Origen" : "Origem"}: ${context.origin}` : null,
-          context.destination ? `${language === "en" ? "Destination" : language === "es" ? "Destino" : "Destino"}: ${context.destination}` : null,
-          context.date ? `${language === "en" ? "Departure" : language === "es" ? "Salida" : "Ida"}: ${context.date}` : null,
-          context.returnDate ? `${language === "en" ? "Return" : language === "es" ? "Vuelta" : "Volta"}: ${context.returnDate}` : null,
-          context.passengers ? `${language === "en" ? "Travelers" : language === "es" ? "Pasajeros" : "Passageiros"}: ${context.passengers}` : null,
-          latestUserMessage ? `${language === "en" ? "Last message" : language === "es" ? "Ultimo mensaje" : "Ultima mensagem"}: ${latestUserMessage}` : null,
-        ],
-      }),
-    );
-
-    window.open(href, "_blank", "noopener,noreferrer");
-  }, [chatMessages, isSeniorContext, language, requestContext]);
 
   const handleRequestLiveSession = async () => {
     setRequestingLive(true);
@@ -732,29 +701,21 @@ export function Chatbot() {
                       {t("chatbot.agent_mode")}
                     </span>
                   </button>
-                  <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <button
+                    onClick={handleRequestLiveSession}
+                    disabled={requestingLive}
+                    className={`flex items-center gap-1 text-[11px] font-medium transition-colors ${isSeniorContext ? "text-amber-700 hover:text-amber-900" : "text-[#0074DE] hover:text-[#005bb5]"}`}
+                    data-testid="button-chatbot-live-session"
+                  >
+                    {requestingLive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MonitorPlay className="h-3.5 w-3.5" />}
+                    <span>{liveHelpLabel}</span>
+                  </button>
+                  {!escalated && (
                     <button
-                      onClick={handleRequestLiveSession}
-                      disabled={requestingLive}
-                      className={`flex items-center gap-1 text-[11px] font-medium transition-colors ${isSeniorContext ? "text-amber-700 hover:text-amber-900" : "text-[#0074DE] hover:text-[#005bb5]"}`}
-                      data-testid="button-chatbot-live-session"
-                    >
-                      {requestingLive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MonitorPlay className="h-3.5 w-3.5" />}
-                      <span>{liveHelpLabel}</span>
-                    </button>
-                    <button
-                      onClick={openWhatsAppEscalation}
-                      className={`flex items-center gap-1 text-[11px] font-medium transition-colors ${isSeniorContext ? "text-amber-700 hover:text-amber-900" : "text-[#0074DE] hover:text-[#005bb5]"}`}
-                      data-testid="button-chatbot-whatsapp"
-                    >
-                      <MessageCircle className="h-3.5 w-3.5" />
-                      <span>{whatsappLabel}</span>
-                    </button>
-                    {!escalated && (
-                      <button
-                        onClick={handleAgentMode}
-                        disabled={isStreaming}
-                        className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={handleAgentMode}
+                      disabled={isStreaming}
+                      className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
                         data-testid="button-chatbot-human-agent"
                       >
                         <Headphones className="h-3.5 w-3.5" />
@@ -787,9 +748,13 @@ export function Chatbot() {
                     )}
                   </Button>
                 </div>
-                <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
-                  {t("chatbot.powered_by")} • {providerLabel}
-                </p>
+                <div className="mt-1.5 flex items-center justify-center gap-2 text-center text-[10px] text-muted-foreground">
+                  <ShieldCheck className="h-3 w-3 text-emerald-600" aria-hidden />
+                  <span>{t("chatbot.powered_by")} • {providerLabel}</span>
+                  <span className="mx-1 text-slate-300">|</span>
+                  <Lock className="h-3 w-3 text-slate-500" aria-hidden />
+                  <span>{t("chatbot.secure") ?? "Secure"} • HTTPS & SOC 2</span>
+                </div>
               </div>
             </Card>
           </motion.div>
