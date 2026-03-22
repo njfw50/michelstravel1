@@ -113,11 +113,10 @@ export function ScanDocumentDialog({
   const createOcrWorker = async (
     lang: "ocrb" | "eng",
     rangeRef: MutableRefObject<{ offset: number; span: number }>,
-  ): Promise<TesseractWorker> =>
-    Tesseract.createWorker(lang, Tesseract.OEM.LSTM_ONLY, {
-      // Higher‑quality language data
-      langPath: "https://tessdata.projectnaptha.com/4.0.0_best",
-      // Progress hook to keep the UI smooth
+  ): Promise<TesseractWorker> => {
+    const workerPromise = Tesseract.createWorker(lang, Tesseract.OEM.LSTM_ONLY, {
+      // Use lighter tessdata to load faster
+      langPath: "https://tessdata.projectnaptha.com/4.0.0",
       logger: (message) => {
         if (message.status === "recognizing text") {
           const nextValue = rangeRef.current.offset + Math.round(message.progress * rangeRef.current.span);
@@ -127,6 +126,14 @@ export function ScanDocumentDialog({
         }
       },
     });
+
+    // Bail out if OCR download is too slow
+    const timeoutMs = 8000;
+    return Promise.race([
+      workerPromise,
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("ocr_timeout")), timeoutMs)),
+    ]);
+  };
 
   const runMrzPass = async (
     worker: TesseractWorker,
@@ -318,8 +325,34 @@ export function ScanDocumentDialog({
       setStep("review");
     } catch (error) {
       console.error("[DOCUMENT SCANNER] Processing error:", error);
-      setErrorMessage(t("scan.ocr_error"));
-      setStep("error");
+      // Fallback: AI-only to evitar travamento quando OCR demora/timeout
+      try {
+        setProgressLabel(t("scan.step_ai_review"));
+        setProgressValue(70);
+        const { analysisPreview, analysisMrzPreview } = await preprocessForMRZ(file);
+        const [documentImageDataUrl, mrzImageDataUrl] = await Promise.all([
+          blobToDataUrl(analysisPreview),
+          blobToDataUrl(analysisMrzPreview),
+        ]);
+        const aiReview = await analyzeWithAi({
+          documentImageDataUrl,
+          mrzImageDataUrl,
+          rawOcrText: "",
+          mrzResult: null,
+        });
+        const merged = mergeDocumentScanCandidates({
+          mrz: null,
+          ai: aiReview?.candidate || null,
+        });
+        merged.warnings.push("ai_manual_review");
+        setEditableData(merged);
+        setProgressValue(100);
+        setStep("review");
+      } catch (fallbackError) {
+        console.error("[DOCUMENT SCANNER] Fallback AI review failed:", fallbackError);
+        setErrorMessage(t("scan.ocr_error"));
+        setStep("error");
+      }
     } finally {
       await Promise.allSettled([
         mrzWorker?.terminate(),
