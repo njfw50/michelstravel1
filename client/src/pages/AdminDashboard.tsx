@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Line, ComposedChart } from 'recharts';
 import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare, AlertTriangle, CheckCircle2, XCircle, Lock, Phone, Megaphone, Plus, Trash2, ExternalLink, Copy, Search, RefreshCw, ChevronDown, ChevronUp, Calendar, MapPin, ArrowRightLeft } from "lucide-react";
 import { VoiceEscalations } from "@/components/VoiceEscalations";
+import { DocumentScannerForm } from "@/components/document/DocumentScannerForm";
 import { AdminCommandCenter } from "@/components/AdminCommandCenter";
 import { SeniorCareDesk } from "@/components/SeniorCareDesk";
 import { useI18n } from "@/lib/i18n";
@@ -1324,6 +1325,20 @@ export default function AdminDashboard() {
             <CommissionControl />
             <FeaturedDealsManager />
             <VoiceEscalations />
+            <Card className="bg-white border border-gray-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-blue-500" />
+                  Verificador de Documentos (TSA)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Faça um teste rápido de leitura de documentos com seleção do tipo aceito pela TSA.
+                </p>
+                <DocumentScannerForm />
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
