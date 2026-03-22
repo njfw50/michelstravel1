@@ -109,6 +109,39 @@ export function ScanDocumentDialog({
     onOpenChange(newOpen);
   };
 
+  function extractLicenseFields(ocrText: string): DocumentAiCandidate | null {
+    if (!ocrText) return null;
+    const text = ocrText.replace(/\r/g, "").trim();
+    if (!text) return null;
+
+    const findDate = (pattern: RegExp) => {
+      const match = text.match(pattern);
+      if (!match) return "";
+      return `${match[3]}-${match[1]}-${match[2]}`;
+    };
+
+    const dob = findDate(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})/);
+    const exp = findDate(/exp|expires|expiry|exp date.*?(\d{2})[\/\-](\d{2})[\/\-](\d{4})/i) || findDate(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})/);
+
+    const licenseMatch = text.match(/([A-Z0-9]{7,})/);
+    const genderMatch = text.match(/\b(M|F)\b/);
+
+    return {
+      givenName: "",
+      familyName: "",
+      bornOn: dob,
+      gender: genderMatch ? genderMatch[1].toLowerCase() as any : "",
+      documentNumber: licenseMatch ? licenseMatch[1] : "",
+      passportExpiryDate: exp,
+      nationality: "USA",
+      passportIssuingCountry: "USA",
+      documentType: "drivers_license",
+      confidence: 55,
+      warnings: ["ai_manual_review"],
+      notes: "Leitura em modo carteira de motorista",
+    };
+  }
+
   /**
    * Builds an OCR worker with a language tuned for the task.
    * - We fetch tessdata from the "best" models (more accurate than default fast models).
@@ -211,7 +244,16 @@ export function ScanDocumentDialog({
     let generalWorker: TesseractWorker | null = null;
 
     try {
-      const { original, enhanced, mrzCropped, mrzWide, analysisPreview, analysisMrzPreview } = await preprocessForMRZ(file);
+      const {
+        original,
+        enhanced,
+        rotated90,
+        rotated270,
+        mrzCropped,
+        mrzWide,
+        analysisPreview,
+        analysisMrzPreview,
+      } = await preprocessForMRZ(file);
 
       setProgressValue(16);
       setProgressLabel(t("scan.step_enhancing"));
@@ -282,6 +324,34 @@ export function ScanDocumentDialog({
         }
       }
 
+      // Extra tentativas para DL/ID em modo paisagem
+      if (!generalOcrText && (declaredDocumentType || "").includes("license")) {
+        try {
+          generalOcrText = await runGeneralPass(
+            generalWorker,
+            rotated90,
+            t("scan.attempt_rotated"),
+            72,
+            10,
+          );
+        } catch (error) {
+          console.warn("[DOCUMENT SCANNER] Rotated90 OCR failed:", error);
+        }
+        if (!generalOcrText) {
+          try {
+            generalOcrText = await runGeneralPass(
+              generalWorker,
+              rotated270,
+              t("scan.attempt_rotated"),
+              72,
+              10,
+            );
+          } catch (error) {
+            console.warn("[DOCUMENT SCANNER] Rotated270 OCR failed:", error);
+          }
+        }
+      }
+
       setProgressValue(84);
       setProgressLabel(t("scan.step_ai_review"));
       setProgressHint(t("scan.hint_ai_review") || null);
@@ -291,17 +361,25 @@ export function ScanDocumentDialog({
         blobToDataUrl(analysisMrzPreview),
       ]);
 
-        const aiReview = await analyzeWithAi({
-          documentImageDataUrl,
-          mrzImageDataUrl,
-          rawOcrText: [generalOcrText, ...ocrSnapshots].filter(Boolean).join("\n\n"),
-          mrzResult: bestMrzResult,
-          declaredDocumentType,
-        });
+      const aiReview = await analyzeWithAi({
+        documentImageDataUrl,
+        mrzImageDataUrl,
+        rawOcrText: [generalOcrText, ...ocrSnapshots].filter(Boolean).join("\n\n"),
+        mrzResult: bestMrzResult,
+        declaredDocumentType,
+      });
+
+      let aiCandidate = aiReview?.candidate || null;
+      if ((!aiCandidate || !aiCandidate.documentNumber) && (declaredDocumentType || "").includes("license")) {
+        const dlCandidate = extractLicenseFields(generalOcrText);
+        if (dlCandidate) {
+          aiCandidate = dlCandidate;
+        }
+      }
 
       const merged = mergeDocumentScanCandidates({
         mrz: bestMrzResult,
-        ai: aiReview?.candidate || null,
+        ai: aiCandidate,
       });
 
       const warnings = [...merged.warnings];
