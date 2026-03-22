@@ -389,7 +389,7 @@ export default function SearchResults() {
   const [selectedOutboundKey, setSelectedOutboundKey] = useState<string | null>(null);
   const priceLocale = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
 
-  const FLIGHTS_PER_PAGE = 10;
+  const FLIGHTS_PER_PAGE = isEasyMode ? 1 : 10;
   const [visibleOneWayCount, setVisibleOneWayCount] = useState(FLIGHTS_PER_PAGE);
   const [visibleOutboundCount, setVisibleOutboundCount] = useState(FLIGHTS_PER_PAGE);
   const [visibleReturnCount, setVisibleReturnCount] = useState(FLIGHTS_PER_PAGE);
@@ -426,7 +426,7 @@ export default function SearchResults() {
     setVisibleOneWayCount(FLIGHTS_PER_PAGE);
     setVisibleOutboundCount(FLIGHTS_PER_PAGE);
     setVisibleReturnCount(FLIGHTS_PER_PAGE);
-  }, [sortBy, selectedStops, selectedAirlines, selectedDepartureTimes, selectedReturnTimes, priceRange]);
+  }, [sortBy, selectedStops, selectedAirlines, selectedDepartureTimes, selectedReturnTimes, priceRange, FLIGHTS_PER_PAGE]);
 
   useEffect(() => {
     if (!isEasyMode) return;
