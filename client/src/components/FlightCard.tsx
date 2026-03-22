@@ -1,7 +1,7 @@
 import { type FlightOffer } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plane, Clock, ArrowRight, Leaf } from "lucide-react";
+import { Plane, Clock, ArrowRight, Leaf, ArrowRightLeft } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Link } from "wouter";
 import { useI18n } from "@/lib/i18n";
