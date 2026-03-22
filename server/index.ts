@@ -48,15 +48,26 @@ async function initStripe() {
     const stripeSync = await getStripeSync();
 
     // Set up managed webhook
-    console.log('Setting up managed webhook...');
-    const webhookBaseUrl = (process.env.APP_URL || `http://127.0.0.1:${process.env.PORT || "5000"}`).replace(/\/$/, "");
-    const webhookResult = await stripeSync.findOrCreateManagedWebhook(
-      `${webhookBaseUrl}/api/stripe/webhook`);
-    
-    if (webhookResult && webhookResult.webhook) {
-        console.log(`Webhook configured: ${webhookResult.webhook.url}`);
+    const rawWebhookBase = (process.env.APP_URL || "").trim();
+    const webhookBaseUrl = (rawWebhookBase || `http://127.0.0.1:${process.env.PORT || "5000"}`).replace(/\/$/, "");
+    const isPublicWebhookHost = /^https?:\/\//i.test(rawWebhookBase) && !/localhost|127\.0\.0\.1/i.test(rawWebhookBase);
+
+    if (!isPublicWebhookHost) {
+      console.warn('[Stripe] Webhook setup skipped: APP_URL is missing or not publicly reachable.');
     } else {
-        console.warn('Webhook configuration returned no webhook object. This might be expected in some dev environments or if already configured.');
+      try {
+        console.log('Setting up managed webhook...');
+        const webhookResult = await stripeSync.findOrCreateManagedWebhook(
+          `${webhookBaseUrl}/api/stripe/webhook`);
+        
+        if (webhookResult && webhookResult.webhook) {
+            console.log(`Webhook configured: ${webhookResult.webhook.url}`);
+        } else {
+            console.warn('Webhook configuration returned no webhook object. This might be expected in some dev environments or if already configured.');
+        }
+      } catch (err) {
+        console.error('[Stripe] Managed webhook setup skipped due to error:', (err as Error).message);
+      }
     }
 
     // Sync all existing Stripe data
