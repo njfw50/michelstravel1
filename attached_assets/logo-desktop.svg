@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="110" viewBox="0 0 420 110" role="img" aria-labelledby="title desc">
+  <title id="title">Michel's Travel — desktop logo</title>
+  <desc id="desc">Wordmark with stylized wing and trail forming a check mark.</desc>
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0EA5E9"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0F172A" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <rect width="420" height="110" rx="18" fill="#0F172A"/>
+  <g transform="translate(20 22)" filter="url(#shadow)">
+    <!-- Wing/check icon -->
+    <path d="M0 48 Q24 14 70 4 L104 0 Q72 22 60 44 Q46 72 10 78 Z" fill="url(#g)"/>
+    <path d="M64 20 L142 62 Q130 66 118 66 L74 44 Z" fill="#FFFFFF" opacity="0.15"/>
+    <!-- Wordmark -->
+    <text x="150" y="48" font-family="Inter, 'Segoe UI', Arial" font-weight="700" font-size="36" fill="#FFFFFF">Michel's</text>
+    <text x="150" y="82" font-family="Inter, 'Segoe UI', Arial" font-weight="500" font-size="26" fill="#94A3B8">Travel</text>
+  </g>
+</svg>
