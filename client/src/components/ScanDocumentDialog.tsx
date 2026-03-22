@@ -104,10 +104,20 @@ export function ScanDocumentDialog({
     onOpenChange(newOpen);
   };
 
+  /**
+   * Builds an OCR worker with a language tuned for the task.
+   * - We fetch tessdata from the "best" models (more accurate than default fast models).
+   * - For MRZ we use the OCR-B traineddata ("ocrb") which is purpose-built for passports/IDs.
+   * - For general text we still use ENG but the best model.
+   */
   const createOcrWorker = async (
+    lang: "ocrb" | "eng",
     rangeRef: MutableRefObject<{ offset: number; span: number }>,
   ): Promise<TesseractWorker> =>
-    Tesseract.createWorker("eng", Tesseract.OEM.LSTM_ONLY, {
+    Tesseract.createWorker(lang, Tesseract.OEM.LSTM_ONLY, {
+      // Higher‑quality language data
+      langPath: "https://tessdata.projectnaptha.com/4.0.0_best",
+      // Progress hook to keep the UI smooth
       logger: (message) => {
         if (message.status === "recognizing text") {
           const nextValue = rangeRef.current.offset + Math.round(message.progress * rangeRef.current.span);
@@ -188,20 +198,15 @@ export function ScanDocumentDialog({
     let generalWorker: TesseractWorker | null = null;
 
     try {
-      const {
-        original,
-        enhanced,
-        mrzCropped,
-        mrzWide,
-        analysisPreview,
-        analysisMrzPreview,
-      } = await preprocessForMRZ(file);
+      const { original, enhanced, mrzCropped, mrzWide, analysisPreview, analysisMrzPreview } = await preprocessForMRZ(file);
 
       setProgressValue(16);
       setProgressLabel(t("scan.step_enhancing"));
 
-      mrzWorker = await createOcrWorker(mrzProgressRangeRef);
-      generalWorker = await createOcrWorker(generalProgressRangeRef);
+      // MRZ pass: use OCR-B model for better accuracy on passports/IDs
+      mrzWorker = await createOcrWorker("ocrb", mrzProgressRangeRef);
+      // General pass: keep English best model for names/addresses
+      generalWorker = await createOcrWorker("eng", generalProgressRangeRef);
 
       const mrzAttempts = [
         { blob: mrzCropped, label: t("scan.attempt_mrz_zone"), offset: 20, span: 14 },
