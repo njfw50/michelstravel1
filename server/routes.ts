@@ -112,6 +112,7 @@ export function registerRoutes(app: Express) {
         mrzImageDataUrl,
         rawOcrText,
         mrzResult,
+        declaredDocumentType,
       } = req.body ?? {};
 
       if (!documentImageDataUrl || typeof documentImageDataUrl !== "string") {
@@ -123,6 +124,7 @@ export function registerRoutes(app: Express) {
         mrzImageDataUrl: typeof mrzImageDataUrl === "string" ? mrzImageDataUrl : null,
         rawOcrText: typeof rawOcrText === "string" ? rawOcrText : null,
         mrzResult: mrzResult && typeof mrzResult === "object" ? mrzResult : null,
+        declaredDocumentType: typeof declaredDocumentType === "string" ? declaredDocumentType : null,
       });
 
       res.json(analysis);

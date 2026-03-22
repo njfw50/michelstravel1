@@ -1,11 +1,13 @@
 import { getChatbotAiClient } from "./chatbotAi";
 import { parse as parseMrz } from "mrz";
+import { docTypeFromMrzCode, isTsaAcceptedDocument, normalizeDocumentType } from "@shared/tsaAcceptedDocs";
 
 export interface DocumentScannerAiInput {
   documentImageDataUrl: string;
   mrzImageDataUrl?: string | null;
   rawOcrText?: string | null;
   mrzResult?: Record<string, unknown> | null;
+  declaredDocumentType?: string | null;
 }
 
 export interface DocumentScannerAiCandidate {
@@ -78,7 +80,7 @@ function parseMrzText(mrzText: string): { candidate: DocumentScannerAiCandidate 
       passportExpiryDate: f.expirationDate || "",
       nationality: (f.nationality || "").toUpperCase() || "",
       passportIssuingCountry: (f.country || "").toUpperCase() || "",
-      documentType: f.documentType || "",
+      documentType: docTypeFromMrzCode(f.documentType),
       confidence: checksumWarnings.length === 0 ? 85 : 70,
       warnings,
       notes: checksumWarnings.length ? "MRZ checksum warnings present" : "",
@@ -290,10 +292,28 @@ export async function analyzeDocumentScanWithAi(
   const engine: DocumentScannerAiResponse["engine"] =
     merged?.source === "merge" ? "merge" : merged?.source === "mrz" ? "mrz" : merged ? "ai" : "none";
 
+  const declaredType = normalizeDocumentType(input.declaredDocumentType);
+  const detectedType = normalizeDocumentType(merged?.documentType);
+
+  if (merged && detectedType !== "other") {
+    merged.documentType = detectedType;
+  }
+
+  if (declaredType !== "other" && detectedType !== "other" && declaredType !== detectedType) {
+    warnings.push("id_type_mismatch");
+  }
+
+  const effectiveType = detectedType !== "other" ? detectedType : declaredType;
+  if (effectiveType && !isTsaAcceptedDocument(effectiveType)) {
+    warnings.push("tsa_not_accepted");
+  }
+
+  const dedupedWarnings = Array.from(new Set(warnings));
+
   return {
     available: true,
     candidate: merged,
     engine,
-    warnings,
+    warnings: dedupedWarnings,
   };
 }
