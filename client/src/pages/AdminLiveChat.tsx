@@ -1651,6 +1651,8 @@ export default function AdminLiveChat() {
   const [selectedConvId, setSelectedConvId] = useState<number | null>(null);
   const [reply, setReply] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const autoScrollEnabledRef = useRef(true);
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
@@ -1735,7 +1737,9 @@ export default function AdminLiveChat() {
   });
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (autoScrollEnabledRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, []);
 
   useEffect(() => {
@@ -1925,7 +1929,16 @@ export default function AdminLiveChat() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3">
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3"
+        onScroll={() => {
+          const el = messagesContainerRef.current;
+          if (!el) return;
+          const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+          autoScrollEnabledRef.current = distanceFromBottom < 160;
+        }}
+      >
         {selectedMessages.map((msg) => (
           <div
             key={msg.id}
