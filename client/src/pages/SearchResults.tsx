@@ -749,14 +749,6 @@ export default function SearchResults() {
             <div className="rounded-[28px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_55%,rgba(219,234,254,0.96))] p-4 shadow-[0_24px_80px_-48px_rgba(37,99,235,0.42)] sm:p-5 md:rounded-[32px] md:p-7">
               <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                 <div className="max-w-3xl">
-                  {/* Imagem do idoso no topo do card principal */}
-                  <div className="flex justify-center mb-4">
-                    <img
-                      src="/assets/images/senior-airport.png"
-                      alt="Idoso no aeroporto com bilhete na mão"
-                      style={{ width: "100%", maxWidth: 420, height: "auto", borderRadius: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}
-                    />
-                  </div>
                   <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
                     <HeartHandshake className="h-4 w-4" />
                     {easyModeCopy.badge}

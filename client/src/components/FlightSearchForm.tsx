@@ -115,7 +115,7 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
     setMultiCityLegs(multiCityLegs.filter((_, i) => i !== index));
   };
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault();
 
     if (tripType === "multi-city") {
@@ -181,6 +181,16 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
     appendExtraSearchParams(params);
 
     setLocation(`/search?${params.toString()}`);
+    requestAnimationFrame(() => {
+      const form = document.getElementById("flight-search-form");
+      if (form) {
+        form.scrollIntoView({ behavior: "smooth", block: "start" });
+        const firstInput = form.querySelector("input");
+        if (firstInput instanceof HTMLInputElement) firstInput.focus({ preventScroll: true });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    });
   };
 
   return (
@@ -192,6 +202,7 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
         "relative z-10 mx-auto max-w-5xl rounded-[28px] border border-gray-200/90 bg-white shadow-[0_8px_40px_-8px_hsl(213_90%_50%/0.18)] md:rounded-2xl",
         className
       )}
+      id="flight-search-form"
     >
       <div className="flex flex-col gap-3 px-4 pb-3 pt-4 sm:px-6 md:flex-row md:items-center md:justify-between md:px-8 md:pt-6">
         <Tabs defaultValue="round-trip" value={tripType} onValueChange={setTripType}>
