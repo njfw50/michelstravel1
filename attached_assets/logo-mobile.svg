@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="60" viewBox="0 0 220 60" role="img" aria-labelledby="title desc">
+  <title id="title">Michel's Travel — mobile logo</title>
+  <desc id="desc">Compact wing icon with stacked wordmark.</desc>
+  <defs>
+    <linearGradient id="gm" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0EA5E9"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+  </defs>
+  <rect width="220" height="60" rx="14" fill="#0F172A"/>
+  <g transform="translate(14 10)">
+    <path d="M0 28 Q12 8 36 2 L60 0 Q42 14 34 28 Q24 46 4 50 Z" fill="url(#gm)"/>
+    <path d="M34 12 L74 36 Q68 38 62 38 L40 28 Z" fill="#FFFFFF" opacity="0.18"/>
+    <text x="86" y="24" font-family="Inter, 'Segoe UI', Arial" font-weight="700" font-size="18" fill="#FFFFFF">Michel's</text>
+    <text x="86" y="44" font-family="Inter, 'Segoe UI', Arial" font-weight="500" font-size="14" fill="#94A3B8">Travel</text>
+  </g>
+</svg>
