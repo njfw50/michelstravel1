@@ -28,6 +28,7 @@ import {
   Maximize2,
   Focus,
   Sparkles,
+  Timer,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { parseMRZ, type MRZResult } from "@/lib/mrz";
@@ -78,6 +79,7 @@ export function ScanDocumentDialog({
   const [step, setStep] = useState<Step>("select");
   const [progress, setProgress] = useState(0);
   const [progressLabel, setProgressLabel] = useState("");
+  const [progressHint, setProgressHint] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [editableData, setEditableData] = useState<MergedDocumentScanResult | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -96,6 +98,7 @@ export function ScanDocumentDialog({
     setStep("select");
     setProgressValue(0);
     setProgressLabel("");
+    setProgressHint(null);
     setImagePreview(null);
     setEditableData(null);
     setErrorMessage("");
@@ -117,8 +120,7 @@ export function ScanDocumentDialog({
     rangeRef: MutableRefObject<{ offset: number; span: number }>,
   ): Promise<TesseractWorker> => {
     const workerPromise = Tesseract.createWorker(lang, Tesseract.OEM.LSTM_ONLY, {
-      // Use lighter tessdata to load faster
-      langPath: "https://tessdata.projectnaptha.com/4.0.0",
+      langPath: "https://tessdata.projectnaptha.com/4.0.0", // mais leve
       logger: (message) => {
         if (message.status === "recognizing text") {
           const nextValue = rangeRef.current.offset + Math.round(message.progress * rangeRef.current.span);
@@ -200,6 +202,7 @@ export function ScanDocumentDialog({
     setStep("processing");
     setProgressValue(5);
     setProgressLabel(t("scan.step_preparing"));
+    setProgressHint(t("scan.hint_hold_still") || null);
 
     const preview = await createPreviewUrl(file);
     setImagePreview(preview);
@@ -212,6 +215,7 @@ export function ScanDocumentDialog({
 
       setProgressValue(16);
       setProgressLabel(t("scan.step_enhancing"));
+      setProgressHint(t("scan.hint_enhancing") || null);
 
       // MRZ pass: use OCR-B model for better accuracy on passports/IDs
       mrzWorker = await createOcrWorker("ocrb", mrzProgressRangeRef);
@@ -280,6 +284,7 @@ export function ScanDocumentDialog({
 
       setProgressValue(84);
       setProgressLabel(t("scan.step_ai_review"));
+      setProgressHint(t("scan.hint_ai_review") || null);
 
       const [documentImageDataUrl, mrzImageDataUrl] = await Promise.all([
         blobToDataUrl(analysisPreview),
@@ -329,9 +334,10 @@ export function ScanDocumentDialog({
       setStep("review");
     } catch (error) {
       console.error("[DOCUMENT SCANNER] Processing error:", error);
-      // Fallback: AI-only to evitar travamento quando OCR demora/timeout
+      // Fallback: AI-only para evitar travamento quando OCR demora/timeout
       try {
         setProgressLabel(t("scan.step_ai_review"));
+        setProgressHint(t("scan.hint_ai_fallback") || null);
         setProgressValue(70);
         const { analysisPreview, analysisMrzPreview } = await preprocessForMRZ(file);
         const [documentImageDataUrl, mrzImageDataUrl] = await Promise.all([
