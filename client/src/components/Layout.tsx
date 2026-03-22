@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { User, LogOut, Menu, X, Shield, ShieldCheck, Lock, Award, Building2, Briefcase, MessageSquare, Globe, Check, Mail, Phone } from "lucide-react";
+import { User, LogOut, Menu, X, Shield, ShieldCheck, Lock, Award, Building2, Briefcase, MessageSquare, Globe, Check, Mail } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -91,7 +91,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const isHome = location === "/";
   const easyModeLabel = language === "en" ? "Senior Support" : language === "es" ? "Atencion Senior" : "Atendimento Senior";
   const footerContactLabel = language === "en" ? "WhatsApp" : language === "es" ? "WhatsApp" : "WhatsApp";
-  const footerContactCta = language === "en" ? "Open WhatsApp" : language === "es" ? "Abrir WhatsApp" : "Abrir WhatsApp";
   const footerWhatsAppHref = buildWhatsAppHref(
     buildWhatsAppMessage({
       language,
@@ -362,79 +361,85 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <footer className="relative bg-white border-t border-gray-100">
         <div className="container mx-auto px-4 md:px-6 relative">
           <div className="py-12 md:py-16">
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-12 md:gap-12">
-              <div className="text-center md:col-span-4 md:text-left">
-                <div className="mb-5 flex items-center justify-center gap-2 md:justify-start">
+            <div className="grid grid-cols-1 gap-10 md:grid-cols-12 md:gap-12">
+              <div className="text-center md:col-span-5 md:text-left space-y-4">
+                <div className="flex items-center justify-center gap-2 md:justify-start">
                   <div className="brand-mark-shell brand-mark-shell--footer">
-                    <img 
-                      src={logo} 
-                      alt="Michels Travel" 
+                    <img
+                      src={logo}
+                      alt="Michels Travel"
                     />
                   </div>
+                  <span className="text-sm font-semibold text-gray-700 hidden sm:inline">
+                    Michels Travel
+                  </span>
                 </div>
-                <p className="mx-auto max-w-sm text-sm leading-relaxed text-gray-500 md:mx-0 md:max-w-xs">
+                <p className="mx-auto max-w-sm text-sm leading-relaxed text-gray-500 md:mx-0 md:max-w-md">
                   {t("footer.slogan")}
                 </p>
-              </div>
-              
-              <div className="md:col-span-2">
-                <h4 className="font-bold text-gray-900 text-xs mb-5 uppercase tracking-[0.15em]">{t("footer.company")}</h4>
-                <ul className="space-y-3 text-sm">
-                  <li><Link href="/about" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.about")}</Link></li>
-                  <li><Link href="/agencia-de-viagens-ironbound-newark" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">Ironbound Newark</Link></li>
-                  <li><Link href="/passagens-para-o-brasil-saindo-de-newark" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">Brasil saindo de Newark</Link></li>
-                  <li><Link href="/blog" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("nav.blog")}</Link></li>
-                </ul>
-              </div>
-
-              <div className="md:col-span-2">
-                <h4 className="font-bold text-gray-900 text-xs mb-5 uppercase tracking-[0.15em]">{t("footer.support")}</h4>
-                <ul className="space-y-3 text-sm">
-                  <li><a href="/help" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.help")}</a></li>
-                  <li><a href="/terms" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.terms")}</a></li>
-                  <li><a href="/privacy" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.privacy")}</a></li>
-                </ul>
+                <div className="flex flex-wrap items-center gap-3 pt-2">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-700">
+                    <ShieldCheck className="h-4 w-4 text-blue-500" />
+                    {t("footer.seal_ssl")}
+                  </div>
+                  <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-700">
+                    <Lock className="h-4 w-4 text-blue-500" />
+                    {t("footer.seal_stripe")}
+                  </div>
+                  <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-700">
+                    <Award className="h-4 w-4 text-blue-500" />
+                    {t("footer.seal_iata")}
+                  </div>
+                </div>
               </div>
 
-              <div className="md:col-span-4">
+              <div className="md:col-span-4 grid grid-cols-2 gap-8">
+                <div>
+                  <h4 className="font-bold text-gray-900 text-xs mb-5 uppercase tracking-[0.15em]">{t("footer.company")}</h4>
+                  <ul className="space-y-3 text-sm">
+                    <li><Link href="/about" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.about")}</Link></li>
+                    <li><Link href="/agencia-de-viagens-ironbound-newark" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">Ironbound Newark</Link></li>
+                    <li><Link href="/passagens-para-o-brasil-saindo-de-newark" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">Brasil saindo de Newark</Link></li>
+                    <li><Link href="/blog" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("nav.blog")}</Link></li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900 text-xs mb-5 uppercase tracking-[0.15em]">{t("footer.support")}</h4>
+                  <ul className="space-y-3 text-sm">
+                    <li><a href="/help" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.help")}</a></li>
+                    <li><a href="/terms" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.terms")}</a></li>
+                    <li><a href="/privacy" className="text-gray-500 hover:text-blue-600 transition-colors duration-200">{t("footer.privacy")}</a></li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="md:col-span-3">
                 <h4 className="font-bold text-gray-900 text-xs mb-5 uppercase tracking-[0.15em]">{t("footer.contact_title")}</h4>
-                <p className="text-sm text-gray-500 mb-5 max-w-sm">{t("footer.contact_desc")}</p>
-                <div className="space-y-3">
-                  <a
-                    href={footerWhatsAppHref}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 hover:border-blue-200 hover:bg-blue-50/40 transition-colors duration-200"
-                  >
+                <p className="text-sm text-gray-500 mb-4 max-w-sm">{t("footer.contact_desc")}</p>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-center gap-3 text-gray-700">
                     <div className="h-9 w-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                       <MessageSquare className="h-4 w-4" />
                     </div>
                     <div>
                       <span className="block text-xs uppercase tracking-[0.14em] text-gray-400 font-semibold">{footerContactLabel}</span>
-                      <span className="font-semibold">{AGENCY_WHATSAPP_DISPLAY}</span>
+                      <a href={footerWhatsAppHref} target="_blank" rel="noreferrer" className="font-semibold hover:text-blue-600 transition-colors duration-200">
+                        {AGENCY_WHATSAPP_DISPLAY}
+                      </a>
                     </div>
-                  </a>
-                  <a
-                    href={`mailto:${AGENCY_EMAIL}`}
-                    className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 hover:border-blue-200 hover:bg-blue-50/40 transition-colors duration-200"
-                  >
+                  </li>
+                  <li className="flex items-center gap-3 text-gray-700">
                     <div className="h-9 w-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                       <Mail className="h-4 w-4" />
                     </div>
                     <div>
                       <span className="block text-xs uppercase tracking-[0.14em] text-gray-400 font-semibold">{t("footer.email_label")}</span>
-                      <span className="font-semibold">{AGENCY_EMAIL}</span>
+                      <a href={`mailto:${AGENCY_EMAIL}`} className="font-semibold hover:text-blue-600 transition-colors duration-200">
+                        {AGENCY_EMAIL}
+                      </a>
                     </div>
-                  </a>
-                </div>
-                <div className="pt-5">
-                  <a href={footerWhatsAppHref} target="_blank" rel="noreferrer">
-                    <Button className="w-full rounded-xl bg-blue-500 text-white shadow-sm shadow-blue-500/20 hover:bg-blue-600 sm:w-auto" data-testid="button-footer-contact">
-                      <MessageSquare className="mr-2 h-4 w-4" />
-                      {footerContactCta}
-                    </Button>
-                  </a>
-                </div>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
