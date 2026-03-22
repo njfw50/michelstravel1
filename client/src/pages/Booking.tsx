@@ -227,6 +227,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
     givenName: t("booking.given_name"),
     familyName: t("booking.family_name"),
   };
+  const declaredDocType = getValues(`passengers.${index}.documentType`);
 
   const getPassengerNameValues = () => {
     const givenName = String(getValues(`passengers.${index}.givenName`) || "").trim();
@@ -391,6 +392,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
             onOpenChange={setScanOpen}
             onConfirm={handleScanConfirm}
             passengerIndex={index}
+            declaredDocumentType={declaredDocType}
           />
 
           {isEasyMode && (

@@ -52,6 +52,7 @@ interface ScanDocumentDialogProps {
   onOpenChange: (open: boolean) => void;
   onConfirm: (data: MergedDocumentScanResult) => void;
   passengerIndex: number;
+  declaredDocumentType?: string | null;
 }
 
 function createWarningLabels(t: (key: string) => string) {
@@ -70,6 +71,7 @@ export function ScanDocumentDialog({
   onOpenChange,
   onConfirm,
   passengerIndex,
+  declaredDocumentType,
 }: ScanDocumentDialogProps) {
   const { t } = useI18n();
   const warningLabels = createWarningLabels(t);
@@ -176,6 +178,7 @@ export function ScanDocumentDialog({
     mrzImageDataUrl: string;
     rawOcrText: string;
     mrzResult: MRZResult | null;
+    declaredDocumentType?: string | null;
   }): Promise<ScanAnalyzeResponse | null> => {
     const response = await fetch("/api/document-scanner/analyze", {
       method: "POST",
@@ -283,12 +286,13 @@ export function ScanDocumentDialog({
         blobToDataUrl(analysisMrzPreview),
       ]);
 
-      const aiReview = await analyzeWithAi({
-        documentImageDataUrl,
-        mrzImageDataUrl,
-        rawOcrText: [generalOcrText, ...ocrSnapshots].filter(Boolean).join("\n\n"),
-        mrzResult: bestMrzResult,
-      });
+        const aiReview = await analyzeWithAi({
+          documentImageDataUrl,
+          mrzImageDataUrl,
+          rawOcrText: [generalOcrText, ...ocrSnapshots].filter(Boolean).join("\n\n"),
+          mrzResult: bestMrzResult,
+          declaredDocumentType,
+        });
 
       const merged = mergeDocumentScanCandidates({
         mrz: bestMrzResult,
@@ -339,6 +343,7 @@ export function ScanDocumentDialog({
           mrzImageDataUrl,
           rawOcrText: "",
           mrzResult: null,
+          declaredDocumentType,
         });
         const merged = mergeDocumentScanCandidates({
           mrz: null,
