@@ -165,8 +165,6 @@ export default function SeniorFlightOptionCard({
   return (
     <Card className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_24px_80px_-46px_rgba(15,23,42,0.32)] md:rounded-[30px]">
       <div className="p-4 sm:p-5 md:p-7">
-        {/* Imagem do idoso no aeroporto */}
-        <SeniorCardImage />
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-3">
             <span className={`inline-flex items-center rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] ${getKindTone(kind)}`}>
