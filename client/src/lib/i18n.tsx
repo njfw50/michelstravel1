@@ -24,7 +24,7 @@ const I18nContext = createContext<I18nContextType | undefined>(undefined);
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   // default language so nada fica null
   const [language, setLanguageState] = useState<Language>("pt");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("michels-travel-lang") as Language | null;
@@ -39,7 +39,6 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
             : "pt";
     setLanguageState(inferred);
     document.documentElement.lang = inferred === "pt" ? "pt-BR" : inferred === "es" ? "es" : "en";
-    setIsLoading(false);
   }, []);
 
   const setLanguage = (lang: Language) => {
