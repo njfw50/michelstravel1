@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { api, buildUrl } from "@shared/routes";
-import type { FlightSearchParams } from "@shared/schema";
+import { api } from "@shared/routes";
+import type { FlightOffer, FlightSearchParams } from "@shared/schema";
+import { z } from "zod";
 
 interface DuffelAirline {
   id: string;
@@ -58,7 +59,22 @@ interface PublicFeaturedDealsResponse {
 export type FlightSearchQuery = Omit<Partial<FlightSearchParams>, "legs"> & {
   legs?: string;
   tripType?: string;
+  page?: number;
+  pageSize?: number;
+  ui?: string;
+  mode?: string;
+  senior?: string;
 };
+
+export interface FlightSearchResponse {
+  flights: FlightOffer[];
+  bestOffer: FlightOffer | null;
+  total: number;
+  hasMore: boolean;
+  page: number;
+  pageSize: number;
+  preferredCabin?: string | null;
+}
 
 export function useFlightSearch(params: FlightSearchQuery) {
   const isEnabled = !!(params.origin && params.destination && params.date);
@@ -83,14 +99,14 @@ export function useFlightSearch(params: FlightSearchQuery) {
         throw new Error("Failed to search flights");
       }
       
-      const data = api.flights.search.responses[200].parse(await res.json());
+      const data = api.flights.search.responses[200].parse(await res.json()) as z.infer<typeof api.flights.search.responses[200]>;
 
       const elapsed = Date.now() - startTime;
       if (elapsed < MIN_SEARCH_TIME) {
         await new Promise(resolve => setTimeout(resolve, MIN_SEARCH_TIME - elapsed));
       }
 
-      return data;
+      return data as FlightSearchResponse;
     },
     enabled: isEnabled,
   });

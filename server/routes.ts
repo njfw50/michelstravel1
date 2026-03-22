@@ -32,6 +32,8 @@ import {
   normalizeChatLanguage,
   parseAgentFallbackRequest,
 } from "./services/chatbotFallback";
+import { AGENT_TOOLS, handleAgentFallbackRequest } from "./services/agentTools";
+import { seniorAlerts } from "@shared/schema";
 import { buildOwnerDeskSnapshot } from "./services/ownerDesk";
 import { buildRedactedDocumentPayload } from "./services/passengerPrivacy";
 import { analyzeDocumentScanWithAi } from "./services/documentScannerAi";
@@ -136,7 +138,24 @@ export function registerRoutes(app: Express) {
   app.get('/api/flights/search', async (req, res) => {
     try {
       await ensureTestModeLoaded();
-      const { origin, destination, date, passengers, cabinClass, returnDate, adults, children, infants, tripType, legs } = req.query;
+      const {
+        origin,
+        destination,
+        date,
+        passengers,
+        cabinClass,
+        returnDate,
+        adults,
+        children,
+        infants,
+        tripType,
+        legs,
+        page: pageRaw,
+        pageSize: pageSizeRaw,
+        ui,
+        senior,
+        mode,
+      } = req.query;
 
       const searchParams: FlightSearchParams = {
         origin: origin as string,
@@ -174,7 +193,40 @@ export function registerRoutes(app: Express) {
       }
 
       const rate = await getCommissionRate();
-      res.json(applyMarkupToFlights(flights, rate));
+      const markedUpFlights = applyMarkupToFlights(flights, rate);
+
+      const preferredCabin = typeof cabinClass === "string" ? cabinClass.toLowerCase() : null;
+      const isSeniorMode = ui === "easy" || senior === "true" || mode === "senior";
+      const parsedPage = Number.parseInt((pageRaw as string) || "1", 10);
+      const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+      const parsedPageSize = Number.parseInt((pageSizeRaw as string) || "", 10);
+      const defaultPageSize = isSeniorMode ? 1 : 50;
+      const pageSize = Math.min(
+        50,
+        Math.max(1, Number.isFinite(parsedPageSize) && parsedPageSize > 0 ? parsedPageSize : defaultPageSize),
+      );
+
+      const sortedFlights = [...markedUpFlights].sort((a, b) => {
+        const aCabinMatch = preferredCabin ? (a.cabinClass || "").toLowerCase() === preferredCabin : true;
+        const bCabinMatch = preferredCabin ? (b.cabinClass || "").toLowerCase() === preferredCabin : true;
+        if (aCabinMatch !== bCabinMatch) return aCabinMatch ? -1 : 1;
+        if (a.price !== b.price) return a.price - b.price;
+        return (a.duration || "").localeCompare(b.duration || "");
+      });
+
+      const total = sortedFlights.length;
+      const start = (page - 1) * pageSize;
+      const flightsPage = sortedFlights.slice(start, start + pageSize);
+
+      res.json({
+        flights: flightsPage,
+        bestOffer: sortedFlights[0] || null,
+        total,
+        hasMore: start + pageSize < total,
+        page,
+        pageSize,
+        preferredCabin: preferredCabin || null,
+      });
     } catch (error) {
       console.error('Flight search error:', error);
       res.status(500).json({ error: 'Failed to search flights' });

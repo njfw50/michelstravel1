@@ -269,7 +269,18 @@ export default function SearchResults() {
     returnDate: searchParams.get('returnDate') || undefined,
   };
 
-  const { data: flights, isLoading, isFetching, error } = useFlightSearch(params);
+  const [seniorPage, setSeniorPage] = useState(1);
+  const [accumulatedFlights, setAccumulatedFlights] = useState<FlightOffer[]>([]);
+
+  const paramsWithPaging = useMemo<FlightSearchQuery>(() => ({
+    ...params,
+    page: isEasyMode ? seniorPage : undefined,
+    pageSize: isEasyMode ? 1 : undefined,
+    ui: isEasyMode ? "easy" : undefined,
+    mode: isEasyMode ? "senior" : undefined,
+  }), [params, isEasyMode, seniorPage]);
+
+  const { data: flightResponse, isLoading, isFetching, error } = useFlightSearch(paramsWithPaging);
 
   const searchKey = `${params.origin}-${params.destination}-${params.date}-${(params as any).returnDate || ''}-${params.passengers}-${params.adults}-${params.children}-${params.infants}-${params.cabinClass}-${(params as any).tripType || ''}-${(params as any).legs || ''}`;
   const [showAnimation, setShowAnimation] = useState(true);
@@ -280,6 +291,8 @@ export default function SearchResults() {
     if (searchKey !== lastSearchKey) {
       setShowAnimation(true);
       setLastSearchKey(searchKey);
+      setSeniorPage(1);
+      setAccumulatedFlights([]);
     }
   }, [searchKey, lastSearchKey]);
 
@@ -290,7 +303,35 @@ export default function SearchResults() {
     }
   }, [isLoading, isFetching, showAnimation]);
 
-  const isSearching = (isLoading || isFetching) || showAnimation;
+  useEffect(() => {
+    if (!flightResponse) {
+      if (!isEasyMode) setAccumulatedFlights([]);
+      return;
+    }
+
+    if (!isEasyMode) {
+      setAccumulatedFlights(flightResponse.flights || []);
+      return;
+    }
+
+    setAccumulatedFlights((prev) => {
+      if (seniorPage === 1) return flightResponse.flights || [];
+      const existingIds = new Set(prev.map((flight) => flight.id));
+      const next = [...prev];
+      (flightResponse.flights || []).forEach((flight) => {
+        if (!existingIds.has(flight.id)) next.push(flight);
+      });
+      return next;
+    });
+  }, [flightResponse, isEasyMode, seniorPage]);
+
+  const flights = useMemo(
+    () => (isEasyMode ? accumulatedFlights : (flightResponse?.flights || [])),
+    [accumulatedFlights, flightResponse, isEasyMode],
+  );
+  const hasMoreFlights = isEasyMode ? Boolean(flightResponse?.hasMore) : false;
+
+  const isSearching = (isLoading || showAnimation) || (isFetching && flights.length === 0);
   const whatsAppHref = buildWhatsAppHref(
     buildWhatsAppMessage({
       language,
@@ -334,10 +375,15 @@ export default function SearchResults() {
         ? `Mia, help me compare the calmest flight options for ${tripSummary}.`
         : language === "es"
           ? `Mia, ayúdeme a comparar las opciones de vuelo mas tranquilas para ${tripSummary}.`
-          : `Mia, me ajude a comparar as opcoes de voo mais tranquilas para ${tripSummary}.`;
+      : `Mia, me ajude a comparar as opcoes de voo mais tranquilas para ${tripSummary}.`;
 
     openChatbotAssistant({ message: starter, autoSend: true });
   }, [language, params]);
+
+  const handleLoadMoreSenior = useCallback(() => {
+    if (!hasMoreFlights || isFetching) return;
+    setSeniorPage((prev) => prev + 1);
+  }, [hasMoreFlights, isFetching]);
 
   const defaultValues = useMemo(() => ({
     origin: params.origin ?? "",
@@ -865,7 +911,13 @@ export default function SearchResults() {
                       </div>
                       <Button
                         variant="outline"
-                        onClick={() => setShowEasyExtraOptions((value) => !value)}
+                        onClick={() => {
+                          const next = !showEasyExtraOptions;
+                          setShowEasyExtraOptions(next);
+                          if (next && hasMoreFlights) {
+                            handleLoadMoreSenior();
+                          }
+                        }}
                         className="rounded-full border-slate-300 bg-white text-slate-800"
                         data-testid="button-toggle-easy-extra-options"
                       >
@@ -879,6 +931,19 @@ export default function SearchResults() {
                       {easyRecommendations.rankedFlights.slice(0, 6).map((item) => (
                         <FlightCard key={`easy-extra-${item.flight.id}`} flight={item.flight} simplified />
                       ))}
+                      {hasMoreFlights && (
+                        <div className="flex justify-end">
+                          <Button
+                            variant="ghost"
+                            onClick={handleLoadMoreSenior}
+                            disabled={isFetching}
+                            className="text-amber-800"
+                            data-testid="button-senior-load-more"
+                          >
+                            {isFetching ? (t("results.loading") || "Carregando...") : easyModeCopy.showMore}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </>
