@@ -291,6 +291,8 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
 
   const cabinClassName = flight.passengers?.[0]?.cabinClassName;
   const fareBrand = flight.passengers?.[0]?.fareBrandName;
+  const changeAllowed = flight.conditions?.changeBeforeDeparture?.allowed;
+  const refundAllowed = flight.conditions?.refundBeforeDeparture?.allowed;
 
   const currentSearch =
     typeof window !== "undefined" ? window.location.search : "";
@@ -405,8 +407,30 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
           </div>
         </div>
 
-        {/* Price and Select Button */}
+        {/* Fare Conditions + Price and Select Button */}
         <div className="mt-1 flex flex-col items-stretch justify-center gap-3 rounded-[22px] border border-gray-100 bg-slate-50/80 px-4 py-4 md:col-span-4 md:mt-0 md:items-end md:rounded-none md:border-0 md:border-l md:border-gray-200 md:bg-transparent md:px-0 md:py-0 md:pl-6">
+          <div className="flex w-full flex-wrap items-center justify-between gap-2 text-left md:block md:w-auto md:text-right">
+            {fareBrand && (
+              <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-700">
+                {fareBrand}
+              </span>
+            )}
+            <div className="flex flex-wrap gap-2 md:justify-end">
+              {typeof changeAllowed === "boolean" && (
+                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium ${changeAllowed ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-slate-50 text-slate-600 border border-slate-200"}`}>
+                  <ArrowRightLeft className="h-3 w-3" />
+                  {changeAllowed ? (t("flight.changeable") || "Changeable") : (t("flight.not_changeable") || "Not changeable")}
+                </span>
+              )}
+              {typeof refundAllowed === "boolean" && (
+                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium ${refundAllowed ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-slate-50 text-slate-600 border border-slate-200"}`}>
+                  <ArrowRightLeft className="h-3 w-3 rotate-45" />
+                  {refundAllowed ? (t("flight.refundable") || "Refundable") : (t("flight.non_refundable") || "Non refundable")}
+                </span>
+              )}
+            </div>
+          </div>
+
           <div className="flex w-full items-center justify-between text-left md:block md:w-auto md:text-right">
             <span className="hidden text-xs font-medium text-gray-500 md:block">
               {t("flight.total_price")}
