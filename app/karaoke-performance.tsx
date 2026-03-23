@@ -19,7 +19,6 @@ export default function KaraokePerformanceScreen() {
   const [currentLyricIndex, setCurrentLyricIndex] = useState(0);
   const [volume] = useState(80);
   const scrollViewRef = useRef<ScrollView>(null);
-  const playerRef = useRef<any>(null);
 
   useEffect(() => {
     if (songId) {
