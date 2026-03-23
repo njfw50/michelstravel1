@@ -6,6 +6,8 @@ import { format } from "date-fns";
 import { Loader2, ArrowRight, BookOpen, Clock } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { SEO } from "@/components/SEO";
+import { useDestinationHighlights } from "@/hooks/use-destinations";
+import { Globe2, MapPin, Navigation2, ArrowUpRight } from "lucide-react";
 
 function estimateReadTime(content: string | null | undefined): number {
   if (!content) return 3;
@@ -15,7 +17,26 @@ function estimateReadTime(content: string | null | undefined): number {
 
 export default function BlogList() {
   const { data: posts, isLoading } = useBlogPosts();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+
+  const destinations = [
+    { city: "Orlando", country: "us", label: "Orlando, EUA" },
+    { city: "Miami", country: "us", label: "Miami, EUA" },
+    { city: "New York", country: "us", label: "Nova York, EUA" },
+    { city: "Boston", country: "us", label: "Boston, EUA" },
+    { city: "Rio de Janeiro", country: "br", label: "Rio de Janeiro, Brasil" },
+    { city: "São Paulo", country: "br", label: "São Paulo, Brasil" },
+    { city: "Salvador", country: "br", label: "Salvador, Brasil" },
+    { city: "Brasília", country: "br", label: "Brasília, Brasil" },
+  ];
+
+  const primaryDest = destinations[0];
+  const { data: highlights, isLoading: loadingHighlights } = useDestinationHighlights({
+    city: primaryDest.city,
+    country: primaryDest.country,
+    lang: language || "pt",
+    limit: 24,
+  });
 
   const featuredPost = posts?.[0];
   const remainingPosts = posts?.slice(1) || [];
@@ -27,6 +48,93 @@ export default function BlogList() {
       <div className="bg-white border-b border-gray-200 py-16 md:py-20 px-4 text-center">
         <h1 className="text-4xl md:text-5xl font-display font-bold text-gray-900 mb-4">{t("nav.blog")}</h1>
         <p className="text-gray-500 text-lg max-w-2xl mx-auto">{t("blog.subtitle")}</p>
+      </div>
+
+      {/* Destinos em destaque */}
+      <div className="container mx-auto px-4 py-12 max-w-6xl">
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+          <div>
+            <p className="text-sm font-semibold text-blue-600 uppercase flex items-center gap-2">
+              <Globe2 className="h-4 w-4" /> Destinos em alta
+            </p>
+            <h2 className="text-2xl font-display font-bold text-gray-900">Guia rápido EUA + Brasil</h2>
+            <p className="text-gray-500 text-sm">Atrações, museus e restaurantes úteis para planejar sua viagem.</p>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {destinations.slice(0, 4).map((d) => (
+              <span key={d.city} className="px-3 py-1 rounded-full text-sm bg-blue-50 text-blue-700 border border-blue-100">
+                {d.label}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {loadingHighlights ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="animate-pulse h-32 rounded-2xl bg-gray-100" />
+            ))}
+          </div>
+        ) : highlights?.items?.length ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {highlights.items.map((place) => (
+              <Card key={place.id} className="p-4 border border-gray-200 rounded-2xl hover-elevate transition-all">
+                <div className="flex items-start gap-3">
+                  <div className="h-10 w-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <MapPin className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <h3 className="text-base font-semibold text-gray-900 line-clamp-2">{place.name || "Ponto de interesse"}</h3>
+                      {place.distance_m && (
+                        <span className="text-xs text-gray-500">{Math.round(place.distance_m)} m</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500 line-clamp-2">
+                      {place.address || `${place.city || ""} ${place.country || ""}`}
+                    </p>
+                    <div className="mt-2 flex items-center gap-2 flex-wrap text-xs text-gray-500">
+                      {place.website && (
+                        <a className="text-blue-600 font-semibold inline-flex items-center gap-1" href={place.website} target="_blank" rel="noreferrer">
+                          Site <ArrowUpRight className="h-3 w-3" />
+                        </a>
+                      )}
+                      {place.wikipedia && (
+                        <a className="text-blue-600 font-semibold inline-flex items-center gap-1" href={`https://wikipedia.org/wiki/${place.wikipedia}`} target="_blank" rel="noreferrer">
+                          Wikipedia <ArrowUpRight className="h-3 w-3" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center text-gray-500">Nenhuma atração retornada. Tente outra cidade.</div>
+        )}
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          {destinations.map((d) => {
+            const qs = new URLSearchParams({
+              city: d.city,
+              country: d.country,
+              lang: language || "pt",
+            }).toString();
+            return (
+              <Link key={d.city} href={`/blog?city=${encodeURIComponent(d.city)}&country=${d.country}`}>
+                <button className="px-3 py-2 rounded-full text-sm border border-gray-200 hover:border-blue-400 hover:text-blue-700 transition">
+                  {d.label}
+                </button>
+              </Link>
+            );
+          })}
+          <Link href="/search">
+            <button className="px-4 py-2 rounded-full text-sm bg-blue-600 text-white inline-flex items-center gap-2">
+              <Navigation2 className="h-4 w-4" /> Buscar voos para estes destinos
+            </button>
+          </Link>
+        </div>
       </div>
 
       <div className="container mx-auto px-4 py-10 pb-20 max-w-6xl">
