@@ -710,6 +710,81 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // === DESTINATION HIGHLIGHTS (Geoapify) ===
+  const GEOAPIFY_API_KEY = process.env.GEOAPIFY_API_KEY || process.env.VITE_GEOAPIFY_API_KEY || "";
+
+  async function fetchJson(url: string) {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
+    return await resp.json();
+  }
+
+  app.get('/api/destinations/highlights', async (req, res) => {
+    try {
+      if (!GEOAPIFY_API_KEY) {
+        return res.status(500).json({ error: "Geoapify API key missing (set GEOAPIFY_API_KEY)" });
+      }
+
+      const {
+        city = "",
+        country = "us",
+        lat,
+        lon,
+        radius = "20000",
+        limit = "20",
+        categories = "tourism.sights,tourism.attraction,tourism.museum,catering.restaurant,catering.cafe",
+        lang = "en",
+      } = req.query as Record<string, string>;
+
+      let centerLat = lat ? parseFloat(lat) : null;
+      let centerLon = lon ? parseFloat(lon) : null;
+
+      // Geocode city if lat/lon not provided
+      if ((!centerLat || !centerLon) && city) {
+        const geoUrl = `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(
+          city,
+        )}&lang=${lang}&filter=countrycode:${country}&limit=1&apiKey=${GEOAPIFY_API_KEY}`;
+        const geo = await fetchJson(geoUrl);
+        const feature = geo?.features?.[0];
+        if (feature?.properties?.lat && feature?.properties?.lon) {
+          centerLat = feature.properties.lat;
+          centerLon = feature.properties.lon;
+        }
+      }
+
+      if (!centerLat || !centerLon) {
+        return res.status(400).json({ error: "Provide lat/lon or a valid city" });
+      }
+
+      const placesUrl = `https://api.geoapify.com/v2/places?categories=${encodeURIComponent(
+        categories,
+      )}&filter=circle:${centerLon},${centerLat},${radius}&bias=proximity:${centerLon},${centerLat}&lang=${lang}&limit=${limit}&apiKey=${GEOAPIFY_API_KEY}`;
+
+      const data = await fetchJson(placesUrl);
+      const items =
+        data?.features?.map((f: any) => ({
+          id: f.properties.place_id || f.properties.osm_id,
+          name: f.properties.name || f.properties.address_line1,
+          category: f.properties.categories,
+          address: f.properties.formatted,
+          city: f.properties.city || f.properties.county,
+          country: f.properties.country,
+          lat: f.properties.lat,
+          lon: f.properties.lon,
+          website: f.properties.website,
+          wikipedia: f.properties.datasource?.raw?.wikipedia,
+          rating: f.properties.rank || null,
+          kinds: f.properties.kinds || null,
+          distance_m: f.properties.distance || null,
+        })) || [];
+
+      res.json({ center: { lat: centerLat, lon: centerLon }, total: items.length, items });
+    } catch (error: any) {
+      console.error("destinations/highlights error:", error?.message || error);
+      res.status(500).json({ error: "Failed to fetch destination highlights" });
+    }
+  });
+
   app.post('/api/bookings/:id/cancel', async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
