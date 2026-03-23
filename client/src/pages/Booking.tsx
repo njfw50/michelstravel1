@@ -1095,12 +1095,58 @@ export default function Booking() {
         if (attempts < maxAttempts) {
           await new Promise((r) => setTimeout(r, 1000 * attempts));
         } else {
+          // Fallback: re-search using URL params and pick a fresh offer
+          const origin = searchParams.get("origin");
+          const destination = searchParams.get("destination");
+          const date = searchParams.get("date");
+          const tripType = searchParams.get("tripType") || "one-way";
+          const adults = searchParams.get("adults") || "1";
+          const children = searchParams.get("children") || "0";
+          const infants = searchParams.get("infants") || "0";
+          const cabinClass = searchParams.get("cabinClass") || "economy";
+
+          if (origin && destination && date) {
+            try {
+              const qs = new URLSearchParams({
+                origin,
+                destination,
+                date,
+                tripType,
+                adults,
+                children,
+                infants,
+                passengers: (
+                  (parseInt(adults, 10) || 0) +
+                  (parseInt(children, 10) || 0) +
+                  (parseInt(infants, 10) || 0) ||
+                  1
+                ).toString(),
+                cabinClass,
+              });
+
+              const altRes = await fetch(`/api/flights/search?${qs.toString()}`);
+              const altData = await altRes.json();
+              if (Array.isArray(altData) && altData.length > 0) {
+                const best = altData[0];
+                setFlight(best);
+                setFlightLoading(false);
+                setFlightError(null);
+                if (best.id && best.id !== params?.id) {
+                  setLocation(`/book/${best.id}?${qs.toString()}`);
+                }
+                return;
+              }
+            } catch (searchErr) {
+              console.warn("Fallback search failed:", searchErr);
+            }
+          }
+
           setFlightError(err.message || t("booking.flight_unavailable_desc") || "Could not load flight details.");
           setFlightLoading(false);
         }
       }
     }
-  }, [t]);
+  }, [t, searchParams, params?.id, setLocation, validateFlightPrice]);
 
   const validateFlightPrice = useCallback(async (flightId: string, currentFlight: FlightOffer) => {
     try {
