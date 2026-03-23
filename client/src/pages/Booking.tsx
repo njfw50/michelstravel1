@@ -38,6 +38,8 @@ import {
 } from "@/lib/contact";
 import { openChatbotAssistant } from "@/lib/chatbot";
 import { useVoiceGuide } from "@/hooks/use-voice-guide";
+import { Switch } from "@/components/ui/switch";
+import { Headphones } from "lucide-react";
 
 const passengerSchema = z.object({
   title: z.enum(["mr", "mrs", "ms", "miss", "dr"]).default("mr"),
@@ -298,6 +300,14 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
       fullName: currentValues.fullName,
     });
   };
+
+  // Voice guide (modo sênior)
+  const { speak, stop, speaking, supported } = useVoiceGuide();
+  const audioText = language === "pt"
+    ? "Vamos preencher juntos. Primeiro confira nome e sobrenome como está no documento. Depois data de nascimento e país emissor. Se algo estiver errado, toque em voltar. Quando terminar, marque que ouviu e entendeu."
+    : language === "es"
+      ? "Vamos a completar juntos. Primero confirma nombre y apellido como está en el documento. Luego fecha de nacimiento y país emisor. Si algo está mal, toca volver. Al final, marca que escuchaste y entendiste."
+      : "Let's fill this together. First confirm given and family names as in the document. Then birth date and issuing country. If something is wrong, tap back. When done, mark that you listened and understood.";
 
   const givenNameField = register(`passengers.${index}.givenName`);
   const familyNameField = register(`passengers.${index}.familyName`);
@@ -1418,6 +1428,51 @@ export default function Booking() {
                   </div>
                 </CardContent>
               </Card>
+
+              {isEasyMode && (
+                <Card className="border border-blue-100 bg-blue-50/80 shadow-sm rounded-2xl">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-blue-900">
+                      <Headphones className="h-5 w-5 text-blue-600" />
+                      {t("booking.audio_guide_title", { defaultValue: "Guia por Áudio" })}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0 space-y-3 text-blue-900">
+                    <p className="text-sm leading-relaxed">
+                      {t("booking.audio_guide_hint", { defaultValue: "Toque em ouvir para receber instruções passo a passo. Marque que ouviu e entendeu antes de confirmar." })}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="border-blue-200 text-blue-700"
+                        disabled={!supported}
+                        onClick={() => {
+                          if (speaking) stop();
+                          else speak(audioText);
+                        }}
+                        data-testid="button-audio-guide"
+                      >
+                        {speaking ? t("booking.audio_stop", { defaultValue: "Parar" }) : t("booking.audio_play", { defaultValue: "Ouvir" })}
+                      </Button>
+                      {!supported && <span className="text-xs text-blue-800">{t("booking.audio_not_supported", { defaultValue: "Áudio não suportado neste dispositivo" })}</span>}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Switch
+                        checked={form.watch("audioGuideConfirmed")}
+                        onCheckedChange={(val) => form.setValue("audioGuideConfirmed", val, { shouldDirty: true, shouldValidate: true })}
+                        id="audio-guide-confirm"
+                      />
+                      <Label htmlFor="audio-guide-confirm" className="text-sm text-blue-900">
+                        {t("booking.audio_confirm", { defaultValue: "Ouvi e entendi as instruções" })}
+                      </Label>
+                    </div>
+                    {form.formState.errors.audioGuideConfirmed && (
+                      <p className="text-xs text-red-500">{form.formState.errors.audioGuideConfirmed.message as string}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
               <Card className="border border-gray-200 shadow-sm rounded-2xl bg-white">
                 <CardHeader className="border-b border-gray-100 gap-2">
