@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
-import { CalendarDays, CheckCircle2, ChevronDown, MessageCircle, Search, ShieldCheck, UserRound, ArrowRight, HeartHandshake, BriefcaseBusiness, Package, Luggage } from "lucide-react";
+import { CalendarDays, CheckCircle2, ChevronDown, MessageCircle, Search, ShieldCheck, UserRound, ArrowRight, HeartHandshake, BriefcaseBusiness, Package, Luggage, Headphones } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import AppLaunchPromo from "@/components/AppLaunchPromo";
 import SeniorCardImage from "@/components/SeniorCardImage";
@@ -19,6 +19,8 @@ import {
   buildWhatsAppMessage,
 } from "@/lib/contact";
 import { openChatbotAssistant } from "@/lib/chatbot";
+import { Switch } from "@/components/ui/switch";
+import { useVoiceGuide } from "@/hooks/use-voice-guide";
 
 type EasyLanguage = "pt" | "en" | "es";
 type TripType = "round-trip" | "one-way";
@@ -229,6 +231,7 @@ export default function EasyBooking() {
   const [children, setChildren] = useState(0);
   const [infants, setInfants] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
+  const [audioGuideConfirmed, setAudioGuideConfirmed] = useState(false);
   const [priority, setPriority] = useState<SeniorPriority>("comfort");
   const [connections, setConnections] = useState<SeniorConnections>("one");
   const [bags, setBags] = useState<SeniorBags>("flexible");
@@ -366,6 +369,13 @@ export default function EasyBooking() {
     .filter(Boolean)
     .join(" · ");
 
+  const { speak, stop, speaking, supported } = useVoiceGuide();
+  const audioText = currentLanguage === "en"
+    ? "Let's pick your trip together. Choose origin and destination, then dates. Pick your priority like fewer stops or cheaper price. At the end we review everything calmly before paying."
+    : currentLanguage === "es"
+      ? "Vamos a elegir su viaje juntos. Primero origen y destino, luego fechas. Elija su prioridad como menos conexiones o mejor precio. Al final revisamos todo con calma antes de pagar."
+      : "Vamos escolher sua viagem juntos. Primeiro origem e destino, depois as datas. Escolha sua prioridade como menos conexões ou melhor preço. No final revisamos tudo com calma antes de pagar.";
+
   useEffect(() => {
     setInfants((value) => Math.min(value, adults));
   }, [adults]);
@@ -444,6 +454,18 @@ export default function EasyBooking() {
       toast({
         title: copy.missing_title,
         description: copy.missing_desc,
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!audioGuideConfirmed) {
+      toast({
+        title: currentLanguage === "en" ? "Listen to the guide first" : currentLanguage === "es" ? "Escuche la guía primero" : "Ouça o guia primeiro",
+        description: currentLanguage === "en"
+          ? "Tap play on the audio guide and confirm you understood to continue safely."
+          : currentLanguage === "es"
+            ? "Toque en reproducir la guía de audio y confirme que entendió para seguir con seguridad."
+            : "Toque em ouvir o guia e confirme que entendeu antes de continuar com segurança.",
         variant: "destructive",
       });
       return;
@@ -562,6 +584,54 @@ export default function EasyBooking() {
                             ? wizardCopy.connectionDesc
                             : wizardCopy.bagDesc}
                   </p>
+                  <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50/70 p-4 flex flex-col gap-3">
+                    <div className="flex items-center gap-2 text-blue-900 font-semibold">
+                      <Headphones className="h-5 w-5 text-blue-600" />
+                      <span>{currentLanguage === "en" ? "Audio guide" : currentLanguage === "es" ? "Guía de audio" : "Guia por áudio"}</span>
+                    </div>
+                    <p className="text-sm text-blue-900 leading-relaxed">
+                      {currentLanguage === "en"
+                        ? "Tap play to listen step by step, then confirm you understood to continue safely."
+                        : currentLanguage === "es"
+                          ? "Toque reproducir para escuchar paso a paso y confirme que entendió para seguir con seguridad."
+                          : "Toque em ouvir para receber o passo a passo e confirme que entendeu antes de seguir."}
+                    </p>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="border-blue-200 text-blue-700"
+                        disabled={!supported}
+                        onClick={() => {
+                          if (speaking) stop();
+                          else speak(audioText);
+                        }}
+                      >
+                        {speaking
+                          ? currentLanguage === "en" ? "Stop" : currentLanguage === "es" ? "Detener" : "Parar"
+                          : currentLanguage === "en" ? "Play" : currentLanguage === "es" ? "Reproducir" : "Ouvir"}
+                      </Button>
+                      {!supported && (
+                        <span className="text-xs text-blue-800">
+                          {currentLanguage === "en" ? "Audio not supported on this device" : currentLanguage === "es" ? "Audio no disponible en este dispositivo" : "Áudio não suportado neste dispositivo"}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Switch
+                        checked={audioGuideConfirmed}
+                        onCheckedChange={(val) => setAudioGuideConfirmed(val)}
+                        id="easy-audio-confirm"
+                      />
+                      <label htmlFor="easy-audio-confirm" className="text-sm text-blue-900">
+                        {currentLanguage === "en"
+                          ? "I listened and understood the instructions"
+                          : currentLanguage === "es"
+                            ? "Escuché y entendí las instrucciones"
+                            : "Ouvi e entendi as instruções"}
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
