@@ -37,6 +37,7 @@ import {
   buildWhatsAppMessage,
 } from "@/lib/contact";
 import { openChatbotAssistant } from "@/lib/chatbot";
+import { useVoiceGuide } from "@/hooks/use-voice-guide";
 
 const passengerSchema = z.object({
   title: z.enum(["mr", "mrs", "ms", "miss", "dr"]).default("mr"),
@@ -61,6 +62,7 @@ function createBookingSchema(isDocRequired: boolean) {
     passengers: z.array(passengerSchema).min(1),
     contactEmail: z.string().email("Invalid email"),
     contactPhone: z.string().min(7, "Min 7 digits").max(20),
+    audioGuideConfirmed: z.boolean().optional(),
   });
 
   if (!isDocRequired) return baseSchema;
@@ -96,6 +98,14 @@ function createBookingSchema(isDocRequired: boolean) {
         });
       }
     });
+
+    if (data.audioGuideConfirmed === false) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Confirme o guia de áudio antes de prosseguir",
+        path: ["audioGuideConfirmed"],
+      });
+    }
   });
 }
 
@@ -103,6 +113,7 @@ type BookingFormValues = {
   passengers: z.infer<typeof passengerSchema>[];
   contactEmail: string;
   contactPhone: string;
+  audioGuideConfirmed?: boolean;
 };
 
 const formatDuration = (duration: string) => {
@@ -1038,6 +1049,7 @@ export default function Booking() {
       passengers: buildDefaultPassengers(),
       contactEmail: user?.email || "",
       contactPhone: "",
+      audioGuideConfirmed: false,
     },
   });
 
