@@ -18,12 +18,6 @@ export default function SettingsScreen() {
     setLocalPrefs(preferences);
   }, [preferences]);
 
-  const handleVolumeChange = async (value: number) => {
-    const updated = { ...localPrefs, volume: value };
-    setLocalPrefs(updated);
-    await updatePreferences(updated);
-  };
-
   const handleLyricsSize = async (size: 'small' | 'medium' | 'large') => {
     const updated = { ...localPrefs, lyricsSize: size };
     setLocalPrefs(updated);
