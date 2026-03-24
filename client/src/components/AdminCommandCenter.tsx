@@ -259,6 +259,15 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
   const [dealOffers, setDealOffers] = useState<DealSearchOffer[]>([]);
   const [dealSearchLoading, setDealSearchLoading] = useState(false);
   const [dealSearchError, setDealSearchError] = useState<string | null>(null);
+  const [dealSearchParams, setDealSearchParams] = useState({
+    tripType: "one-way",
+    departureDate: "",
+    returnDate: "",
+    adults: "1",
+    children: "0",
+    infants: "0",
+    cabinClass: "economy",
+  });
 
   const { data: threads = [] } = useQuery<AdminThread[]>({
     queryKey: ["/api/admin/messenger/threads"],
@@ -1252,7 +1261,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                 <div>
                   <p className="font-semibold">Buscar tarifas para pré-preencher</p>
                   <p className="text-xs text-blue-800">
-                    Buscamos voos em tempo real (ida, econômica, 1 adulto, +30 dias). Escolha e edite antes de publicar.
+                    Configure datas, cabine e passageiros. Buscamos voos em tempo real e você edita antes de publicar.
                   </p>
                 </div>
                 <Button
@@ -1266,19 +1275,29 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                     setDealSearchError(null);
                     setDealOffers([]);
                     try {
-                      const date = new Date();
-                      date.setDate(date.getDate() + 30);
+                      const date = dealSearchParams.departureDate
+                        ? new Date(dealSearchParams.departureDate)
+                        : (() => { const d = new Date(); d.setDate(d.getDate() + 30); return d; })();
                       const dateStr = date.toISOString().slice(0, 10);
+                      const returnStr = dealSearchParams.tripType === "round-trip" && dealSearchParams.returnDate
+                        ? dealSearchParams.returnDate
+                        : "";
                       const qs = new URLSearchParams({
                         origin: dealDraft.origin,
                         destination: dealDraft.destination,
                         date: dateStr,
-                        passengers: "1",
-                        adults: "1",
-                        children: "0",
-                        infants: "0",
-                        cabinClass: dealDraft.cabinClass || "economy",
-                        tripType: "one-way",
+                        returnDate: returnStr,
+                        passengers: (
+                          (parseInt(dealSearchParams.adults, 10) || 0) +
+                          (parseInt(dealSearchParams.children, 10) || 0) +
+                          (parseInt(dealSearchParams.infants, 10) || 0) ||
+                          1
+                        ).toString(),
+                        adults: dealSearchParams.adults,
+                        children: dealSearchParams.children,
+                        infants: dealSearchParams.infants,
+                        cabinClass: dealSearchParams.cabinClass || dealDraft.cabinClass || "economy",
+                        tripType: dealSearchParams.tripType,
                       });
                       const res = await fetch(`/api/flights/search?${qs.toString()}`);
                       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1323,6 +1342,77 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                   {dealSearchError}
                 </div>
               )}
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Tipo</Label>
+                  <select
+                    className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm"
+                    value={dealSearchParams.tripType}
+                    onChange={(e) => setDealSearchParams((s) => ({ ...s, tripType: e.target.value }))}
+                  >
+                    <option value="one-way">Só ida</option>
+                    <option value="round-trip">Ida e volta</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Ida</Label>
+                  <Input
+                    type="date"
+                    value={dealSearchParams.departureDate}
+                    onChange={(e) => setDealSearchParams((s) => ({ ...s, departureDate: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Volta</Label>
+                  <Input
+                    type="date"
+                    disabled={dealSearchParams.tripType !== "round-trip"}
+                    value={dealSearchParams.returnDate}
+                    onChange={(e) => setDealSearchParams((s) => ({ ...s, returnDate: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Cabine</Label>
+                  <select
+                    className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm"
+                    value={dealSearchParams.cabinClass}
+                    onChange={(e) => setDealSearchParams((s) => ({ ...s, cabinClass: e.target.value }))}
+                  >
+                    <option value="economy">Econômica</option>
+                    <option value="premium_economy">Premium</option>
+                    <option value="business">Executiva</option>
+                    <option value="first">Primeira</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Adultos</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={dealSearchParams.adults}
+                    onChange={(e) => setDealSearchParams((s) => ({ ...s, adults: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Crianças</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={dealSearchParams.children}
+                    onChange={(e) => setDealSearchParams((s) => ({ ...s, children: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Infantes</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={dealSearchParams.infants}
+                    onChange={(e) => setDealSearchParams((s) => ({ ...s, infants: e.target.value }))}
+                  />
+                </div>
+              </div>
 
               {dealOffers.length > 0 && (
                 <div className="space-y-2">
