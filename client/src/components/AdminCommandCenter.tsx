@@ -60,6 +60,16 @@ interface QuickDealDraft {
   description: string;
 }
 
+type DealSearchOffer = {
+  id: string;
+  airline?: string;
+  price?: number;
+  currency?: string;
+  departureTime?: string;
+  origin?: string;
+  destination?: string;
+};
+
 function formatCurrency(amount: number, currency = "USD") {
   try {
     return new Intl.NumberFormat("en-US", {
@@ -246,6 +256,9 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
   const [selectedThreadId, setSelectedThreadId] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
   const [dealDraft, setDealDraft] = useState<QuickDealDraft | null>(null);
+  const [dealOffers, setDealOffers] = useState<DealSearchOffer[]>([]);
+  const [dealSearchLoading, setDealSearchLoading] = useState(false);
+  const [dealSearchError, setDealSearchError] = useState<string | null>(null);
 
   const { data: threads = [] } = useQuery<AdminThread[]>({
     queryKey: ["/api/admin/messenger/threads"],
@@ -546,6 +559,8 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
 
   const openDealLaunchpad = (route: { route: string; routeKey: string }) => {
     setDealDraft(buildQuickDealDraft(route));
+    setDealOffers([]);
+    setDealSearchError(null);
   };
 
   const copyCampaignBrief = async (route: { route: string; searches: number; bookings: number }) => {
@@ -1233,6 +1248,122 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
 
           {dealDraft && (
             <div className="space-y-4">
+              <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900 flex items-center justify-between gap-3">
+                <div>
+                  <p className="font-semibold">Buscar tarifas para pré-preencher</p>
+                  <p className="text-xs text-blue-800">
+                    Buscamos voos em tempo real (ida, econômica, 1 adulto, +30 dias). Escolha e edite antes de publicar.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-blue-300 text-blue-900"
+                  disabled={dealSearchLoading || !dealDraft.origin || !dealDraft.destination}
+                  onClick={async () => {
+                    if (!dealDraft.origin || !dealDraft.destination) return;
+                    setDealSearchLoading(true);
+                    setDealSearchError(null);
+                    setDealOffers([]);
+                    try {
+                      const date = new Date();
+                      date.setDate(date.getDate() + 30);
+                      const dateStr = date.toISOString().slice(0, 10);
+                      const qs = new URLSearchParams({
+                        origin: dealDraft.origin,
+                        destination: dealDraft.destination,
+                        date: dateStr,
+                        passengers: "1",
+                        adults: "1",
+                        children: "0",
+                        infants: "0",
+                        cabinClass: dealDraft.cabinClass || "economy",
+                        tripType: "one-way",
+                      });
+                      const res = await fetch(`/api/flights/search?${qs.toString()}`);
+                      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                      const json = await res.json();
+                      const offers: DealSearchOffer[] = (json || []).slice(0, 8).map((f: any) => ({
+                        id: f.id,
+                        airline: f.airline || f.owner?.name,
+                        price: f.price,
+                        currency: f.currency || "USD",
+                        departureTime: f.departureTime,
+                        origin: f.originCode || f.origin,
+                        destination: f.destinationCode || f.destination,
+                      }));
+                      setDealOffers(offers);
+                      if (offers.length > 0) {
+                        const best = offers[0];
+                        setDealDraft((current) =>
+                          current
+                            ? {
+                                ...current,
+                                price: best.price ? String(best.price) : current.price,
+                                currency: best.currency || current.currency,
+                                headline: `${best.airline || "Oferta"} ${best.origin} → ${best.destination} desde ${best.currency || "USD"} ${best.price ?? ""}`,
+                              }
+                            : current,
+                        );
+                      }
+                    } catch (err: any) {
+                      setDealSearchError(err.message || "Falha ao buscar tarifas");
+                    } finally {
+                      setDealSearchLoading(false);
+                    }
+                  }}
+                >
+                  {dealSearchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                  Buscar tarifas
+                </Button>
+              </div>
+
+              {dealSearchError && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                  {dealSearchError}
+                </div>
+              )}
+
+              {dealOffers.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-gray-700">Sugestões de tarifa (clique para aplicar):</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {dealOffers.map((offer) => (
+                      <button
+                        key={offer.id}
+                        type="button"
+                        className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-left hover:border-blue-300 hover:shadow-sm transition"
+                        onClick={() => {
+                          setDealDraft((current) =>
+                            current
+                              ? {
+                                  ...current,
+                                  price: offer.price ? String(offer.price) : current.price,
+                                  currency: offer.currency || current.currency,
+                                  headline: `${offer.airline || "Tarifa especial"} ${offer.origin} → ${offer.destination}`,
+                                  description: `${offer.airline || "Companhia"} a partir de ${offer.currency || "USD"} ${offer.price ?? ""}. Ajuste o valor e publique.`,
+                                }
+                              : current,
+                          );
+                        }}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">
+                              {offer.origin} → {offer.destination}
+                            </p>
+                            <p className="text-xs text-gray-500">{offer.airline || "—"}</p>
+                          </div>
+                          <p className="text-sm font-bold text-blue-700">
+                            {offer.currency || "USD"} {offer.price ?? "—"}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">Origin</Label>
