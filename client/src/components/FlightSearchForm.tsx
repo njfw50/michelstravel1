@@ -63,6 +63,7 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
   const [children, setChildren] = useState(Number(defaultValues?.children || "0"));
   const [infants, setInfants] = useState(Number(defaultValues?.infants || "0"));
   const [cabinClass, setCabinClass] = useState(defaultValues?.cabinClass || "economy");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const totalPassengers = adults + children + infants;
 
@@ -115,8 +116,23 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
     setMultiCityLegs(multiCityLegs.filter((_, i) => i !== index));
   };
 
-  const handleSearch = (e: React.FormEvent | React.MouseEvent) => {
+  const resolveToIata = async (text: string) => {
+    const query = text.trim();
+    if (!query) return null;
+    try {
+      const res = await fetch(`/api/places/search?query=${encodeURIComponent(query)}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      const firstAirport = (data || []).find((p: any) => p.iataCode);
+      return firstAirport?.iataCode || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const handleSearch = async (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
     if (tripType === "multi-city") {
       for (let i = 0; i < multiCityLegs.length; i++) {
@@ -152,13 +168,38 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
       return;
     }
     
-    if (!origin) {
+    let originCode = origin?.trim();
+    let destinationCode = destination?.trim();
+
+    if (!originCode) {
         toast({ title: t("search.origin"), description: t("search.city_placeholder"), variant: "destructive" });
         return;
     }
-    if (!destination) {
+    if (!destinationCode) {
         toast({ title: t("search.destination"), description: t("search.city_placeholder"), variant: "destructive" });
         return;
+    }
+
+    if (!/^[A-Z]{3}$/i.test(originCode)) {
+        setIsSubmitting(true);
+        originCode = await resolveToIata(originCode);
+        setIsSubmitting(false);
+        if (!originCode) {
+            toast({ title: t("search.origin"), description: t("search.city_placeholder"), variant: "destructive" });
+            return;
+        }
+        setOrigin(originCode);
+    }
+
+    if (!/^[A-Z]{3}$/i.test(destinationCode)) {
+        setIsSubmitting(true);
+        destinationCode = await resolveToIata(destinationCode);
+        setIsSubmitting(false);
+        if (!destinationCode) {
+            toast({ title: t("search.destination"), description: t("search.city_placeholder"), variant: "destructive" });
+            return;
+        }
+        setDestination(destinationCode);
     }
     if (!date) {
         toast({ title: t("search.departure"), description: t("search.date_placeholder"), variant: "destructive" });
@@ -166,8 +207,8 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
     }
 
     const params = new URLSearchParams();
-    params.set("origin", origin);
-    params.set("destination", destination);
+    params.set("origin", originCode.toUpperCase());
+    params.set("destination", destinationCode.toUpperCase());
     params.set("date", format(date, "yyyy-MM-dd"));
     params.set("tripType", tripType);
     if (tripType === "round-trip" && returnDate) {
