@@ -932,7 +932,7 @@ export default function Booking() {
     speak: speakPage,
     stop: stopPage,
     speaking: speakingPage,
-    supported: supportedPage,
+    supported: isVoiceSupported,
   } = useVoiceGuide();
   const audioLang = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
   const contactAudio = language === "pt"
@@ -1453,7 +1453,7 @@ export default function Booking() {
                       variant="ghost"
                       size="sm"
                       className="text-blue-700 hover:bg-blue-50"
-                      disabled={!supportedPage}
+                      disabled={!isVoiceSupported}
                       onClick={() => {
                         if (speakingPage) stopPage();
                         else speakPage(paymentAudio, audioLang);
@@ -1493,7 +1493,7 @@ export default function Booking() {
                       variant="ghost"
                       size="sm"
                       className="text-blue-700 hover:bg-blue-50"
-                      disabled={!supportedPage}
+                      disabled={!isVoiceSupported}
                       onClick={() => {
                         if (speakingPage) stopPage();
                         else speakPage(contactAudio, audioLang);
