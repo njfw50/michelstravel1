@@ -302,7 +302,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
   };
 
   // Voice guide (modo sênior)
-  const { speak, stop, speaking, supported } = useVoiceGuide();
+  const { speak, stop, speaking, supported: audioSupported } = useVoiceGuide();
   const audioLang = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
   const audioText = language === "pt"
     ? "Vamos preencher juntos. Primeiro confira nome e sobrenome como está no documento. Depois data de nascimento e país emissor. Se algo estiver errado, toque em voltar. Quando terminar, marque que ouviu e entendeu."
@@ -1553,7 +1553,7 @@ export default function Booking() {
                         type="button"
                         variant="outline"
                         className="border-blue-200 text-blue-700"
-                        disabled={!supported}
+                        disabled={!audioSupported}
                         onClick={() => {
                           if (speaking) stop();
                           else speak(audioText, audioLang);
@@ -1562,7 +1562,7 @@ export default function Booking() {
                       >
                         {speaking ? t("booking.audio_stop", { defaultValue: "Parar" }) : t("booking.audio_play", { defaultValue: "Ouvir" })}
                       </Button>
-                      {!supported && <span className="text-xs text-blue-800">{t("booking.audio_not_supported", { defaultValue: "Áudio não suportado neste dispositivo" })}</span>}
+                      {!audioSupported && <span className="text-xs text-blue-800">{t("booking.audio_not_supported", { defaultValue: "Áudio não suportado neste dispositivo" })}</span>}
                     </div>
                     <div className="flex items-center gap-3">
                       <Switch

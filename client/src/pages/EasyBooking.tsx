@@ -369,7 +369,7 @@ export default function EasyBooking() {
     .filter(Boolean)
     .join(" · ");
 
-  const { speak, stop, speaking, supported } = useVoiceGuide();
+  const { speak, stop, speaking, supported: audioSupported } = useVoiceGuide();
 
   const stepAudio = useMemo(() => {
     const people =
@@ -641,7 +641,7 @@ export default function EasyBooking() {
                         type="button"
                         variant="outline"
                         className="border-blue-200 text-blue-700"
-                        disabled={!supported}
+                        disabled={!audioSupported}
                         onClick={() => {
                           if (speaking) stop();
                           else speak(stepAudio, audioLang);
@@ -651,7 +651,7 @@ export default function EasyBooking() {
                           ? currentLanguage === "en" ? "Stop" : currentLanguage === "es" ? "Detener" : "Parar"
                           : currentLanguage === "en" ? "Play" : currentLanguage === "es" ? "Reproducir" : "Ouvir"}
                       </Button>
-                      {!supported && (
+                      {!audioSupported && (
                         <span className="text-xs text-blue-800">
                           {currentLanguage === "en" ? "Audio not supported on this device" : currentLanguage === "es" ? "Audio no disponible en este dispositivo" : "Áudio não suportado neste dispositivo"}
                         </span>
