@@ -81,7 +81,7 @@ const getConnectionCities = (slice: FlightSliceLike) => {
     return [];
   }
 
-  const connections: { city?: string; code?: string; label: string }[] = [];
+  const connections: { city?: string; code?: string; label: string; airport?: string }[] = [];
 
   for (let i = 0; i < slice.segments.length - 1; i++) {
     const segment = slice.segments[i];
@@ -100,7 +100,7 @@ const getConnectionCities = (slice: FlightSliceLike) => {
           : airport
         : code || "Conexão";
 
-    connections.push({ city, code, label });
+    connections.push({ city, code, label, airport });
   }
 
   return connections;
@@ -192,18 +192,24 @@ function SliceTimeline({
           </div>
 
           {connectionCities.length > 0 && (
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-blue-700">
-              <span className="font-semibold">
+            <div className="mt-2 space-y-1">
+              <div className="text-[11px] font-semibold text-blue-700">
                 {t("flight.connection_in") || "Conexão em"}
-              </span>
-              {connectionCities.map((conn, idx) => (
-                <span
-                  key={`${conn.code || conn.label}-${idx}`}
-                  className="rounded-full border border-blue-100 bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-800"
-                >
-                  {conn.label}
-                </span>
-              ))}
+              </div>
+              <div className="flex flex-wrap items-start gap-2">
+                {connectionCities.map((conn, idx) => (
+                  <div key={`${conn.code || conn.label}-${idx}`} className="flex flex-col">
+                    <span className="rounded-full border border-blue-100 bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-800">
+                      {conn.label}
+                    </span>
+                    {conn.airport && conn.airport !== conn.city && (
+                      <span className="mt-0.5 text-[10px] text-gray-500">
+                        {conn.airport}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
