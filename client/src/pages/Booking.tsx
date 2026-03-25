@@ -19,7 +19,7 @@ import {
 import { CheckCircle2, Plane, Clock, ArrowRight, Shield, Luggage, User, ChevronDown, ChevronUp, RefreshCw, X as XIcon, Briefcase, ScanLine, CreditCard, Lock, ArrowLeft, AlertTriangle, Loader2, HeartHandshake, MessageCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 import { useI18n } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
@@ -948,7 +948,8 @@ export default function Booking() {
   const lastSubmitDataRef = useRef<BookingFormValues | null>(null);
 
   const isDocRequired = flight?.passengerIdentityDocumentsRequired ?? false;
-  const searchParams = new URLSearchParams(window.location.search);
+  const searchParamsString = typeof window !== "undefined" ? window.location.search : "";
+  const searchParams = useMemo(() => new URLSearchParams(searchParamsString), [searchParamsString]);
   const isEasyMode = searchParams.get("ui") === "easy";
   const numAdults = parseInt(searchParams.get("adults") || "1", 10);
   const numChildren = parseInt(searchParams.get("children") || "0", 10);
@@ -1099,7 +1100,7 @@ export default function Booking() {
     } catch (err) {
       console.warn("Could not validate price on load:", err);
     }
-  }, [t, toast, searchParams, setLocation]);
+  }, [t, toast, searchParamsString, setLocation]);
 
   const fetchFlight = useCallback(async (flightId: string) => {
     setFlightLoading(true);
@@ -1180,7 +1181,7 @@ export default function Booking() {
         }
       }
     }
-  }, [t, searchParams, params?.id, setLocation, validateFlightPrice]);
+  }, [t, searchParamsString, params?.id, setLocation, validateFlightPrice]);
 
   useEffect(() => {
     if (params?.id) {
