@@ -17,6 +17,7 @@ type FlightSegmentLike = {
   arrivalTime: string;
   destinationCity?: string;
   destinationCode?: string;
+  destinationAirportName?: string;
 };
 
 type FlightSliceLike = {
@@ -80,20 +81,26 @@ const getConnectionCities = (slice: FlightSliceLike) => {
     return [];
   }
 
-  const connections: string[] = [];
+  const connections: { city?: string; code?: string; label: string }[] = [];
 
   for (let i = 0; i < slice.segments.length - 1; i++) {
     const segment = slice.segments[i];
 
-    if (segment.destinationCity) {
-      connections.push(
-        segment.destinationCode
-          ? `${segment.destinationCity} (${segment.destinationCode})`
-          : segment.destinationCity,
-      );
-    } else if (segment.destinationCode) {
-      connections.push(segment.destinationCode);
-    }
+    const city = segment.destinationCity;
+    const code = segment.destinationCode;
+    const airport = segment.destinationAirportName;
+
+    const label = city
+      ? code
+        ? `${city} (${code})`
+        : city
+      : airport
+        ? code
+          ? `${airport} (${code})`
+          : airport
+        : code || "Conexão";
+
+    connections.push({ city, code, label });
   }
 
   return connections;
@@ -185,8 +192,18 @@ function SliceTimeline({
           </div>
 
           {connectionCities.length > 0 && (
-            <div className="mt-1 text-[11px] font-semibold text-blue-700">
-              Conexão em: {connectionCities.join(", ")}
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-blue-700">
+              <span className="font-semibold">
+                {t("flight.connection_in") || "Conexão em"}
+              </span>
+              {connectionCities.map((conn, idx) => (
+                <span
+                  key={`${conn.code || conn.label}-${idx}`}
+                  className="rounded-full border border-blue-100 bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-800"
+                >
+                  {conn.label}
+                </span>
+              ))}
             </div>
           )}
         </div>
