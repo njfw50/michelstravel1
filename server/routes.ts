@@ -1742,6 +1742,30 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Lightweight system health snapshot (for admin "painel elétrico")
+  app.get('/api/admin/system-health', requireAdmin, (_req, res) => {
+    try {
+      const mem = process.memoryUsage();
+      const uptimeSec = process.uptime();
+      const now = new Date().toISOString();
+      res.json({
+        timestamp: now,
+        uptimeSec,
+        nodeVersion: process.version,
+        env: process.env.NODE_ENV || "development",
+        memory: {
+          rss: mem.rss,
+          heapTotal: mem.heapTotal,
+          heapUsed: mem.heapUsed,
+          external: mem.external,
+        },
+      });
+    } catch (error: any) {
+      console.error("system-health error:", error?.message || error);
+      res.status(500).json({ error: "Could not compute system health" });
+    }
+  });
+
   app.get('/api/admin/owner-desk', requireAdmin, async (_req, res) => {
     try {
       const snapshot = await buildOwnerDeskSnapshot();

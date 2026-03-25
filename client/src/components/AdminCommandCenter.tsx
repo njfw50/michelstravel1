@@ -16,6 +16,7 @@ import { useAdminCommandCenter, useAdminOwnerDesk, type AdminCommandCenterData, 
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { fetchAppReleaseManifest, getAdminAndroidPrimaryUrl, hasAdminAndroidRelease, DEFAULT_APP_RELEASE_MANIFEST } from "@/lib/app-release";
+import { formatBytes } from "@/lib/formatBytes";
 
 // Fallback Expo build page (token-based)
 const EXPO_ADMIN_BUILD_URL = "https://expo.dev/accounts/njfw23/projects/michels-travel-admin/builds?token=GgvD0zgdlx6ARx_OdBgblAuTZEPJqAMpJ6TzMbfH";
@@ -59,6 +60,19 @@ interface QuickDealDraft {
   headline: string;
   description: string;
 }
+
+type SystemHealth = {
+  timestamp: string;
+  uptimeSec: number;
+  nodeVersion: string;
+  env: string;
+  memory: {
+    rss: number;
+    heapTotal: number;
+    heapUsed: number;
+    external: number;
+  };
+};
 
 type DealSearchOffer = {
   id: string;
@@ -259,6 +273,8 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
   const [dealOffers, setDealOffers] = useState<DealSearchOffer[]>([]);
   const [dealSearchLoading, setDealSearchLoading] = useState(false);
   const [dealSearchError, setDealSearchError] = useState<string | null>(null);
+  const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
+  const [systemHealthLoading, setSystemHealthLoading] = useState(false);
   const [dealSearchParams, setDealSearchParams] = useState({
     tripType: "one-way",
     departureDate: "",
@@ -289,6 +305,30 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
     enabled: Boolean(selectedThreadId),
     refetchInterval: 8000,
   });
+
+  // System health polling (30s)
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        setSystemHealthLoading(true);
+        const res = await fetch("/api/admin/system-health", { credentials: "include" });
+        if (!res.ok) throw new Error("failed");
+        const json = await res.json();
+        if (mounted) setSystemHealth(json);
+      } catch (err) {
+        if (mounted) setSystemHealth(null);
+      } finally {
+        if (mounted) setSystemHealthLoading(false);
+      }
+    };
+    load();
+    const id = window.setInterval(load, 30000);
+    return () => {
+      mounted = false;
+      window.clearInterval(id);
+    };
+  }, []);
 
   useEffect(() => {
     if (!selectedThreadId && threads.length > 0) {
@@ -729,6 +769,52 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
           status="Separado do admin"
           icon={<Plane className="h-5 w-5" />}
         />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-gray-900">
+              <ShieldAlert className="h-4 w-4 text-blue-500" />
+              Painel elétrico
+            </CardTitle>
+            <CardDescription className="text-xs text-gray-500">
+              Estado do runtime Node/Render
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-gray-700">
+            {systemHealthLoading && <div className="text-gray-500 text-xs">Carregando...</div>}
+            {systemHealth ? (
+              <>
+                <div className="flex justify-between">
+                  <span>Uptime</span>
+                  <span className="font-semibold">{Math.round(systemHealth.uptimeSec / 60)} min</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Memória (RSS)</span>
+                  <span className="font-semibold">{formatBytes(systemHealth.memory.rss)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Heap usado</span>
+                  <span className="font-semibold">{formatBytes(systemHealth.memory.heapUsed)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Node</span>
+                  <span className="font-semibold">{systemHealth.nodeVersion}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Env</span>
+                  <span className="font-semibold uppercase">{systemHealth.env}</span>
+                </div>
+                <p className="text-[11px] text-gray-400">
+                  Atualizado {formatDistanceToNowStrict(new Date(systemHealth.timestamp), { addSuffix: true })}
+                </p>
+              </>
+            ) : !systemHealthLoading ? (
+              <div className="text-xs text-red-500">Falha ao obter saúde do sistema</div>
+            ) : null}
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
