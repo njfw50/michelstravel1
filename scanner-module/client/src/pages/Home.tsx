@@ -1,7 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { DocumentScanner } from "@/components/DocumentScanner";
 import { BookingForm } from "@/components/BookingForm";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import type { MergedDocumentScanResult } from "@/lib/documentScan";
+import { useLocale } from "@/contexts/LocaleContext";
+import {
+  generateSessionId,
+  buildScannerUrl,
+  listenForScanResult,
+  cleanupOldSessions,
+} from "@/lib/scannerBridge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,23 +23,61 @@ import {
   FileText,
   Users,
   Sparkles,
+  QrCode,
+  Smartphone,
+  Loader2,
+  X,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-type AppStep = "landing" | "scanning" | "booking";
+type AppStep = "landing" | "scanning" | "qrcode" | "booking";
 
 export default function Home() {
+  const { t, locale } = useLocale();
   const [appStep, setAppStep] = useState<AppStep>("landing");
   const [scanData, setScanData] = useState<MergedDocumentScanResult | null>(null);
+  const [qrSessionId, setQrSessionId] = useState("");
+  const [qrUrl, setQrUrl] = useState("");
+  const [waitingForMobile, setWaitingForMobile] = useState(false);
 
-  const handleScanConfirm = (data: MergedDocumentScanResult) => {
+  // Cleanup old sessions on mount
+  useEffect(() => {
+    cleanupOldSessions();
+  }, []);
+
+  const handleScanConfirm = useCallback((data: MergedDocumentScanResult) => {
     setScanData(data);
     setAppStep("booking");
-  };
+    setWaitingForMobile(false);
+  }, []);
 
   const handleStartScan = () => {
     setAppStep("scanning");
   };
+
+  const handleStartQrScan = () => {
+    const sessionId = generateSessionId();
+    setQrSessionId(sessionId);
+
+    // Build scanner URL — uses current origin for same-device, or deployed URL
+    const scannerBaseUrl = window.location.origin + "/scan";
+    const url = buildScannerUrl(scannerBaseUrl, {
+      sessionId,
+      lang: locale,
+      callback: window.location.origin + "/?session=" + sessionId,
+      origin: window.location.origin,
+    });
+    setQrUrl(url);
+    setAppStep("qrcode");
+    setWaitingForMobile(true);
+  };
+
+  // Listen for scan results when in QR mode
+  useEffect(() => {
+    if (!waitingForMobile || !qrSessionId) return;
+    const cleanup = listenForScanResult(qrSessionId, handleScanConfirm);
+    return cleanup;
+  }, [waitingForMobile, qrSessionId, handleScanConfirm]);
 
   const handleSkipScan = () => {
     setScanData(null);
@@ -41,6 +87,7 @@ export default function Home() {
   const handleBackToLanding = () => {
     setAppStep("landing");
     setScanData(null);
+    setWaitingForMobile(false);
   };
 
   // ─── LANDING ─────────────────────────────────────────────
@@ -55,20 +102,23 @@ export default function Home() {
                 <Plane className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="text-lg font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
-                Michels Travel
+                {t.appName}
               </span>
             </div>
-            <Badge variant="secondary" className="text-xs">
-              <Shield className="h-3 w-3 mr-1" />
-              Seguro e Privado
-            </Badge>
+            <div className="flex items-center gap-3">
+              <LanguageSwitcher />
+              <Badge variant="secondary" className="text-xs hidden sm:flex">
+                <Shield className="h-3 w-3 mr-1" />
+                {t.securePrivate}
+              </Badge>
+            </div>
           </div>
         </header>
 
         {/* Hero */}
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/10 pointer-events-none" />
-          <div className="container py-16 sm:py-24 relative">
+          <div className="container py-12 sm:py-24 relative">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
@@ -77,71 +127,63 @@ export default function Home() {
             >
               <div className="section-eyebrow mx-auto w-fit">
                 <Sparkles className="h-3.5 w-3.5" />
-                Scanner Inteligente
+                {t.heroEyebrow}
               </div>
               <h1 className="text-3xl sm:text-5xl font-extrabold text-foreground leading-tight mt-4" style={{ fontFamily: "var(--font-display)" }}>
-                Escaneie seu documento,{" "}
-                <span className="text-primary">preencha tudo automaticamente</span>
+                {t.heroTitle1}{" "}
+                <span className="text-primary">{t.heroTitle2}</span>
               </h1>
               <p className="text-lg sm:text-xl text-muted-foreground mt-5 leading-relaxed">
-                Tire uma foto do seu passaporte, identidade ou carteira de motorista.
-                Nosso scanner lê os dados e preenche o formulário de reserva para você.
+                {t.heroDesc}
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
                 <button
                   onClick={handleStartScan}
-                  className="btn-guide-primary text-lg px-8 py-4 animate-pulse-glow"
+                  className="btn-guide-primary text-lg px-8 py-4 animate-pulse-glow w-full sm:w-auto"
                 >
                   <ScanLine className="h-5 w-5" />
-                  Escanear Documento
+                  {t.scanDocument}
                 </button>
                 <Button
                   variant="outline"
                   size="lg"
-                  className="h-14 px-8 text-base border-border"
-                  onClick={handleSkipScan}
+                  className="h-14 px-8 text-base border-border w-full sm:w-auto"
+                  onClick={handleStartQrScan}
                 >
-                  <FileText className="h-5 w-5 mr-2" />
-                  Preencher Manualmente
+                  <QrCode className="h-5 w-5 mr-2" />
+                  <Smartphone className="h-4 w-4 mr-1" />
+                  Scanner Mobile
                 </Button>
               </div>
+
+              <Button
+                variant="ghost"
+                className="mt-3 text-muted-foreground"
+                onClick={handleSkipScan}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                {t.fillManually}
+              </Button>
             </motion.div>
           </div>
         </section>
 
         {/* How it works */}
-        <section className="py-16 sm:py-20">
+        <section className="py-12 sm:py-20">
           <div className="container">
-            <div className="text-center mb-12">
-              <div className="section-eyebrow mx-auto w-fit">
-                Como Funciona
-              </div>
+            <div className="text-center mb-10 sm:mb-12">
+              <div className="section-eyebrow mx-auto w-fit">{t.howItWorks}</div>
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground mt-3" style={{ fontFamily: "var(--font-display)" }}>
-                Simples como 1, 2, 3
+                {t.simpleAs123}
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6 max-w-4xl mx-auto">
               {[
-                {
-                  step: "1",
-                  icon: ScanLine,
-                  title: "Escaneie",
-                  desc: "Tire uma foto ou envie uma imagem do seu documento de identidade",
-                },
-                {
-                  step: "2",
-                  icon: Zap,
-                  title: "Leitura Automática",
-                  desc: "Nosso scanner inteligente lê e extrai todos os dados do documento",
-                },
-                {
-                  step: "3",
-                  icon: CheckCircle2,
-                  title: "Confirme e Pronto",
-                  desc: "Revise os dados, corrija se necessário, e o formulário é preenchido",
-                },
+                { step: "1", icon: ScanLine, title: t.step1Title, desc: t.step1Desc },
+                { step: "2", icon: Zap, title: t.step2Title, desc: t.step2Desc },
+                { step: "3", icon: CheckCircle2, title: t.step3Title, desc: t.step3Desc },
               ].map((item, i) => (
                 <motion.div
                   key={i}
@@ -151,7 +193,7 @@ export default function Home() {
                   className="step-card"
                 >
                   <div className="text-xs font-bold text-primary mb-3 tracking-widest">
-                    PASSO {item.step}
+                    {item.step}
                   </div>
                   <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                     <item.icon className="h-7 w-7 text-primary" />
@@ -169,62 +211,34 @@ export default function Home() {
         </section>
 
         {/* Features */}
-        <section className="py-16 sm:py-20 bg-white">
+        <section className="py-12 sm:py-20 bg-white">
           <div className="container">
-            <div className="text-center mb-12">
-              <div className="section-eyebrow mx-auto w-fit">
-                Recursos
-              </div>
+            <div className="text-center mb-10 sm:mb-12">
+              <div className="section-eyebrow mx-auto w-fit">{t.featuresEyebrow}</div>
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground mt-3" style={{ fontFamily: "var(--font-display)" }}>
-                Feito para todos
+                {t.featuresTitle}
               </h2>
-              <p className="text-muted-foreground mt-2 max-w-lg mx-auto">
-                Interface intuitiva pensada para todas as idades e níveis de experiência com tecnologia.
-              </p>
+              <p className="text-muted-foreground mt-2 max-w-lg mx-auto">{t.featuresDesc}</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-5xl mx-auto">
               {[
-                {
-                  icon: Globe,
-                  title: "Documentos de Qualquer País",
-                  desc: "Passaportes, identidades e carteiras de motorista de todo o mundo. Suporte a MRZ internacional.",
-                },
-                {
-                  icon: Shield,
-                  title: "Processamento Local",
-                  desc: "Seus dados são processados no seu dispositivo. Nenhuma imagem é enviada para servidores externos.",
-                },
-                {
-                  icon: Users,
-                  title: "Acessível para Todos",
-                  desc: "Textos grandes, botões amplos, instruções claras. Pensado para idosos e todas as idades.",
-                },
-                {
-                  icon: Zap,
-                  title: "Rápido e Preciso",
-                  desc: "Leitura em segundos com múltiplas tentativas automáticas para máxima precisão.",
-                },
-                {
-                  icon: FileText,
-                  title: "Revisão Editável",
-                  desc: "Todos os campos podem ser corrigidos antes de confirmar. Você tem controle total.",
-                },
-                {
-                  icon: CheckCircle2,
-                  title: "Preenchimento Automático",
-                  desc: "Os dados confirmados são inseridos automaticamente no formulário de reserva.",
-                },
+                { icon: Globe, title: t.feat1Title, desc: t.feat1Desc },
+                { icon: Shield, title: t.feat2Title, desc: t.feat2Desc },
+                { icon: Users, title: t.feat3Title, desc: t.feat3Desc },
+                { icon: Zap, title: t.feat4Title, desc: t.feat4Desc },
+                { icon: FileText, title: t.feat5Title, desc: t.feat5Desc },
+                { icon: CheckCircle2, title: t.feat6Title, desc: t.feat6Desc },
               ].map((feature, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.08 * i }}
-                  className="guide-card p-6"
+                  className="guide-card p-5 sm:p-6"
                 >
                   <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                    <feature.icon className="h-5.5 w-5.5 text-primary" />
+                    <feature.icon className="h-5 w-5 text-primary" />
                   </div>
                   <h3 className="text-base font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
                     {feature.title}
@@ -239,7 +253,7 @@ export default function Home() {
         </section>
 
         {/* CTA */}
-        <section className="py-16 sm:py-20">
+        <section className="py-12 sm:py-20">
           <div className="container">
             <div className="max-w-3xl mx-auto rounded-3xl overflow-hidden relative" style={{
               background: "linear-gradient(135deg, oklch(0.205 0.015 247) 0%, oklch(0.38 0.15 262) 100%)",
@@ -249,10 +263,10 @@ export default function Home() {
               }} />
               <div className="relative p-8 sm:p-12 text-center">
                 <h2 className="text-2xl sm:text-3xl font-bold text-white" style={{ fontFamily: "var(--font-display)" }}>
-                  Pronto para começar?
+                  {t.ctaTitle}
                 </h2>
                 <p className="text-white/80 mt-3 text-base sm:text-lg max-w-md mx-auto">
-                  Escaneie seu documento agora e preencha sua reserva em segundos.
+                  {t.ctaDesc}
                 </p>
                 <button
                   onClick={handleStartScan}
@@ -260,7 +274,7 @@ export default function Home() {
                   style={{ fontFamily: "var(--font-display)" }}
                 >
                   <ScanLine className="h-5 w-5" />
-                  Escanear Agora
+                  {t.ctaButton}
                   <ArrowRight className="h-5 w-5" />
                 </button>
               </div>
@@ -276,14 +290,99 @@ export default function Home() {
                 <Plane className="h-4 w-4 text-primary-foreground" />
               </div>
               <span className="text-sm font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
-                Michels Travel
+                {t.appName}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Scanner de Documentos — Processamento 100% local e seguro
-            </p>
+            <p className="text-xs text-muted-foreground">{t.footerNote}</p>
           </div>
         </footer>
+      </div>
+    );
+  }
+
+  // ─── QR CODE MODE ────────────────────────────────────────
+  if (appStep === "qrcode") {
+    return (
+      <div className="min-h-screen">
+        <header className="sticky top-0 z-50 glass border-b border-white/20">
+          <div className="container flex items-center justify-between h-16">
+            <button
+              onClick={handleBackToLanding}
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowRight className="h-4 w-4 rotate-180" />
+              {t.back}
+            </button>
+            <LanguageSwitcher />
+          </div>
+        </header>
+        <main className="container py-8 sm:py-12 max-w-xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="mx-auto h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
+              <Smartphone className="h-8 w-8 text-primary" />
+            </div>
+
+            <h2 className="text-2xl font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
+              Scanner Mobile
+            </h2>
+            <p className="text-muted-foreground mt-2 text-base max-w-md mx-auto">
+              {t.scannerSessionDesc}
+            </p>
+
+            {/* QR Code */}
+            <div className="mt-8 guide-card p-6 sm:p-8 max-w-sm mx-auto">
+              <div className="bg-white rounded-2xl p-4 border border-border">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}&format=svg`}
+                  alt="QR Code"
+                  className="w-full max-w-[220px] mx-auto"
+                />
+              </div>
+
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <Badge variant="secondary" className="text-xs font-mono">
+                  ID: {qrSessionId}
+                </Badge>
+              </div>
+
+              {/* Copy link */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4 w-full border-border"
+                onClick={() => {
+                  navigator.clipboard.writeText(qrUrl);
+                  import("sonner").then(({ toast }) => {
+                    toast.success("Link copiado!");
+                  });
+                }}
+              >
+                <FileText className="h-3.5 w-3.5 mr-1.5" />
+                {locale === "pt" ? "Copiar Link" : locale === "es" ? "Copiar Enlace" : "Copy Link"}
+              </Button>
+            </div>
+
+            {/* Waiting indicator */}
+            <div className="mt-8 flex items-center justify-center gap-3 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <span className="text-sm">{t.waitingReturn}</span>
+            </div>
+
+            {/* Cancel */}
+            <Button
+              variant="ghost"
+              className="mt-4 text-muted-foreground"
+              onClick={handleBackToLanding}
+            >
+              <X className="h-4 w-4 mr-2" />
+              {t.cancel}
+            </Button>
+          </motion.div>
+        </main>
       </div>
     );
   }
@@ -299,15 +398,18 @@ export default function Home() {
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowRight className="h-4 w-4 rotate-180" />
-              Voltar
+              {t.back}
             </button>
-            <Badge variant="secondary" className="text-xs">
-              <Shield className="h-3 w-3 mr-1" />
-              Processamento Local
-            </Badge>
+            <div className="flex items-center gap-3">
+              <LanguageSwitcher />
+              <Badge variant="secondary" className="text-xs hidden sm:flex">
+                <Shield className="h-3 w-3 mr-1" />
+                {t.localProcessing}
+              </Badge>
+            </div>
           </div>
         </header>
-        <main className="container py-8 sm:py-12 max-w-2xl mx-auto">
+        <main className="container py-6 sm:py-12 max-w-2xl mx-auto">
           <DocumentScanner
             onConfirm={handleScanConfirm}
             onCancel={handleBackToLanding}
@@ -328,17 +430,20 @@ export default function Home() {
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowRight className="h-4 w-4 rotate-180" />
-              Voltar ao Início
+              {t.backToStart}
             </button>
-            {scanData && (
-              <Badge className="text-xs bg-green-50 text-green-700 border-green-200">
-                <CheckCircle2 className="h-3 w-3 mr-1" />
-                Dados do scanner aplicados
-              </Badge>
-            )}
+            <div className="flex items-center gap-3">
+              <LanguageSwitcher />
+              {scanData && (
+                <Badge className="text-xs bg-green-50 text-green-700 border-green-200 hidden sm:flex">
+                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                  {t.scannerApplied}
+                </Badge>
+              )}
+            </div>
           </div>
         </header>
-        <main className="container py-8 sm:py-12 max-w-3xl mx-auto">
+        <main className="container py-6 sm:py-12 max-w-3xl mx-auto">
           <BookingForm
             scanData={scanData}
             onRescan={() => setAppStep("scanning")}

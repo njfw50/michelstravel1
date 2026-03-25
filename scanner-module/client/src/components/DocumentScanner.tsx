@@ -25,6 +25,8 @@ import {
   extractLicenseFields,
   type MergedDocumentScanResult,
 } from "@/lib/documentScan";
+import { useLocale } from "@/contexts/LocaleContext";
+import { getWarningLabel } from "@/lib/i18n";
 import Tesseract from "tesseract.js";
 
 type Step = "select" | "processing" | "review" | "error";
@@ -35,15 +37,8 @@ interface DocumentScannerProps {
   onCancel?: () => void;
 }
 
-const WARNING_LABELS: Record<string, string> = {
-  doc_number_check_failed: "Verificação do número do documento falhou",
-  birth_date_check_failed: "Verificação da data de nascimento falhou",
-  expiry_date_check_failed: "Verificação da data de validade falhou",
-  unexpected_doc_type: "Tipo de documento inesperado",
-  low_confidence: "Confiança baixa — confira os dados manualmente",
-};
-
 export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
+  const { t } = useLocale();
   const [step, setStep] = useState<Step>("select");
   const [progress, setProgress] = useState(0);
   const [progressLabel, setProgressLabel] = useState("");
@@ -87,7 +82,6 @@ export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
         }
       },
     });
-
     const timeoutMs = 12000;
     return Promise.race([
       workerPromise,
@@ -134,8 +128,8 @@ export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
   const processImage = async (file: File) => {
     setStep("processing");
     setProgressValue(5);
-    setProgressLabel("Preparando imagem...");
-    setProgressHint("Segure firme enquanto processamos");
+    setProgressLabel(t.preparingImage);
+    setProgressHint(t.holdSteady);
 
     const preview = await createPreviewUrl(file);
     setImagePreview(preview);
@@ -148,16 +142,16 @@ export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
         await preprocessForMRZ(file);
 
       setProgressValue(16);
-      setProgressLabel("Melhorando qualidade...");
-      setProgressHint("Aplicando filtros de contraste");
+      setProgressLabel(t.enhancingQuality);
+      setProgressHint(t.applyingFilters);
 
       mrzWorker = await createOcrWorker("ocrb", mrzProgressRangeRef);
       generalWorker = await createOcrWorker("eng", generalProgressRangeRef);
 
       const mrzAttempts = [
-        { blob: mrzCropped, label: "Lendo zona MRZ...", offset: 20, span: 14 },
-        { blob: mrzWide, label: "Tentativa ampliada...", offset: 35, span: 14 },
-        { blob: enhanced, label: "Leitura completa...", offset: 50, span: 10 },
+        { blob: mrzCropped, label: t.readingMrz, offset: 20, span: 14 },
+        { blob: mrzWide, label: t.expandedAttempt, offset: 35, span: 14 },
+        { blob: enhanced, label: t.fullRead, offset: 50, span: 10 },
       ];
 
       let bestMrzResult: MRZResult | null = null;
@@ -177,33 +171,32 @@ export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
 
       let generalOcrText = "";
       try {
-        generalOcrText = await runGeneralPass(generalWorker, enhanced, "Lendo texto geral...", 62, 10);
+        generalOcrText = await runGeneralPass(generalWorker, enhanced, t.readingGeneral, 62, 10);
       } catch (error) {
         console.warn("[SCANNER] Enhanced OCR pass failed:", error);
       }
 
       if (!generalOcrText) {
         try {
-          generalOcrText = await runGeneralPass(generalWorker, original, "Lendo documento completo...", 72, 10);
+          generalOcrText = await runGeneralPass(generalWorker, original, t.readingFull, 72, 10);
         } catch (error) {
           console.warn("[SCANNER] Original OCR pass failed:", error);
         }
       }
 
-      // Extra rotated attempts for landscape docs (DL/ID)
       if (!generalOcrText && !bestMrzResult) {
         try {
-          generalOcrText = await runGeneralPass(generalWorker, rotated90, "Tentando rotação...", 72, 10);
+          generalOcrText = await runGeneralPass(generalWorker, rotated90, t.tryingRotation, 72, 10);
         } catch { /* skip */ }
         if (!generalOcrText) {
           try {
-            generalOcrText = await runGeneralPass(generalWorker, rotated270, "Tentando rotação...", 72, 10);
+            generalOcrText = await runGeneralPass(generalWorker, rotated270, t.tryingRotation, 72, 10);
           } catch { /* skip */ }
         }
       }
 
       setProgressValue(88);
-      setProgressLabel("Finalizando análise...");
+      setProgressLabel(t.finalizing);
       setProgressHint(null);
 
       let merged: MergedDocumentScanResult | null = null;
@@ -215,11 +208,7 @@ export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
       }
 
       if (!merged || (!merged.givenName && !merged.familyName && !merged.passportNumber)) {
-        setErrorMessage(
-          bestMrzResult
-            ? "Conseguimos ler parcialmente, mas os dados estão incompletos. Tente novamente com melhor iluminação."
-            : "Não foi possível identificar dados no documento. Verifique se a imagem está nítida e bem iluminada."
-        );
+        setErrorMessage(bestMrzResult ? t.errorPartial : t.errorNoData);
         setStep("error");
         return;
       }
@@ -229,7 +218,7 @@ export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
       setStep("review");
     } catch (error) {
       console.error("[SCANNER] Processing error:", error);
-      setErrorMessage("Ocorreu um erro durante o processamento. Tente novamente.");
+      setErrorMessage(t.errorGeneric);
       setStep("error");
     } finally {
       try { await mrzWorker?.terminate(); } catch { /* ignore */ }
@@ -254,116 +243,15 @@ export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
   }
 
   function confidenceLabel(c: number) {
-    if (c >= 80) return "Alta";
-    if (c >= 60) return "Média";
-    return "Baixa";
+    if (c >= 80) return t.confidenceHigh;
+    if (c >= 60) return t.confidenceMedium;
+    return t.confidenceLow;
   }
 
   // ─── STEP: SELECT ────────────────────────────────────────
   if (step === "select") {
     return (
-      <div className="animate-fade-in-up">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="section-eyebrow mx-auto w-fit">
-            <ScanLine className="h-3.5 w-3.5" />
-            Scanner de Documentos
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mt-3" style={{ fontFamily: "var(--font-display)" }}>
-            Escaneie seu documento
-          </h2>
-          <p className="text-muted-foreground mt-2 text-base sm:text-lg max-w-lg mx-auto leading-relaxed">
-            Tire uma foto ou envie uma imagem do seu passaporte, identidade ou carteira de motorista.
-            Os dados serão preenchidos automaticamente.
-          </p>
-        </div>
-
-        {/* Action cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto">
-          {/* Camera */}
-          <button
-            onClick={() => cameraInputRef.current?.click()}
-            className="guide-card p-6 sm:p-8 flex flex-col items-center gap-4 text-center group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            aria-label="Tirar foto do documento com a câmera"
-          >
-            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
-              <Camera className="h-8 w-8 text-primary" />
-            </div>
-            <div>
-              <p className="font-bold text-lg text-foreground" style={{ fontFamily: "var(--font-display)" }}>
-                Tirar Foto
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Use a câmera do celular
-              </p>
-            </div>
-          </button>
-
-          {/* Upload */}
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="guide-card p-6 sm:p-8 flex flex-col items-center gap-4 text-center group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            aria-label="Enviar imagem do documento do dispositivo"
-          >
-            <div className="h-16 w-16 rounded-2xl bg-accent flex items-center justify-center group-hover:bg-accent/80 transition-colors">
-              <Upload className="h-8 w-8 text-accent-foreground" />
-            </div>
-            <div>
-              <p className="font-bold text-lg text-foreground" style={{ fontFamily: "var(--font-display)" }}>
-                Enviar Imagem
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Selecione do dispositivo
-              </p>
-            </div>
-          </button>
-        </div>
-
-        {/* Tips */}
-        <div className="mt-8 max-w-lg mx-auto">
-          <div className="guide-card p-5">
-            <p className="text-sm font-bold text-foreground mb-3" style={{ fontFamily: "var(--font-display)" }}>
-              Dicas para uma boa leitura
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="flex items-start gap-2.5">
-                <Sun className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                <span className="text-sm text-muted-foreground">Boa iluminação, sem sombras</span>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <Focus className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                <span className="text-sm text-muted-foreground">Imagem nítida e focada</span>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <Maximize2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                <span className="text-sm text-muted-foreground">Documento inteiro visível</span>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <FileText className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                <span className="text-sm text-muted-foreground">Superfície plana, sem dobras</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Supported docs */}
-        <div className="mt-6 text-center">
-          <p className="text-xs text-muted-foreground mb-2">Documentos aceitos de qualquer país</p>
-          <div className="flex flex-wrap justify-center gap-2">
-            <Badge variant="secondary" className="text-xs">Passaporte</Badge>
-            <Badge variant="secondary" className="text-xs">Carteira de Identidade</Badge>
-            <Badge variant="secondary" className="text-xs">Carteira de Motorista</Badge>
-            <Badge variant="secondary" className="text-xs">Visto</Badge>
-            <Badge variant="secondary" className="text-xs">Documento de Viagem</Badge>
-          </div>
-        </div>
-
-        {/* Security note */}
-        <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-          <Shield className="h-3.5 w-3.5" />
-          <span>Seus dados são processados localmente e nunca são armazenados</span>
-        </div>
-
+      <div className="animate-fade-in-up flex flex-col min-h-[calc(100vh-5rem)] sm:min-h-0">
         {/* Hidden inputs */}
         <input
           ref={cameraInputRef}
@@ -382,6 +270,95 @@ export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
           onChange={handleFileSelect}
           aria-hidden="true"
         />
+
+        {/* Header */}
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="section-eyebrow mx-auto w-fit">
+            <ScanLine className="h-3.5 w-3.5" />
+            {t.scannerEyebrow}
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mt-3" style={{ fontFamily: "var(--font-display)" }}>
+            {t.scannerTitle}
+          </h2>
+          <p className="text-muted-foreground mt-2 text-base sm:text-lg max-w-lg mx-auto leading-relaxed">
+            {t.scannerDesc}
+          </p>
+        </div>
+
+        {/* Action cards — large touch targets for mobile */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto w-full flex-1 sm:flex-none">
+          {/* Camera — primary action on mobile */}
+          <button
+            onClick={() => cameraInputRef.current?.click()}
+            className="guide-card p-6 sm:p-8 flex flex-col items-center gap-4 text-center group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary min-h-[140px] active:scale-[0.98] transition-transform"
+            aria-label={t.takePhoto}
+          >
+            <div className="h-16 w-16 sm:h-14 sm:w-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
+              <Camera className="h-8 w-8 sm:h-7 sm:w-7 text-primary" />
+            </div>
+            <div>
+              <p className="text-lg sm:text-base font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
+                {t.takePhoto}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">{t.takePhotoDesc}</p>
+            </div>
+          </button>
+
+          {/* Upload */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="guide-card p-6 sm:p-8 flex flex-col items-center gap-4 text-center group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary min-h-[140px] active:scale-[0.98] transition-transform"
+            aria-label={t.uploadImage}
+          >
+            <div className="h-16 w-16 sm:h-14 sm:w-14 rounded-2xl bg-accent flex items-center justify-center group-hover:bg-accent/80 transition-colors">
+              <Upload className="h-8 w-8 sm:h-7 sm:w-7 text-primary" />
+            </div>
+            <div>
+              <p className="text-lg sm:text-base font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
+                {t.uploadImage}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">{t.uploadImageDesc}</p>
+            </div>
+          </button>
+        </div>
+
+        {/* Tips — collapsible on mobile */}
+        <div className="mt-6 sm:mt-8 guide-card p-4 sm:p-5 max-w-lg mx-auto w-full">
+          <p className="text-sm font-bold text-foreground mb-3" style={{ fontFamily: "var(--font-display)" }}>
+            {t.tipsTitle}
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { icon: Sun, text: t.tipLight },
+              { icon: Focus, text: t.tipFocus },
+              { icon: Maximize2, text: t.tipFull },
+              { icon: FileText, text: t.tipFlat },
+            ].map((tip, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <tip.icon className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <span className="text-sm text-muted-foreground">{tip.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Accepted docs */}
+        <div className="mt-4 text-center max-w-lg mx-auto w-full">
+          <p className="text-xs text-muted-foreground mb-2">{t.acceptedDocs}</p>
+          <div className="flex flex-wrap justify-center gap-1.5">
+            {[t.passport, t.nationalId, t.driversLicense, t.visa].map((doc) => (
+              <Badge key={doc} variant="secondary" className="text-xs">
+                {doc}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        {/* Security note */}
+        <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground max-w-lg mx-auto">
+          <Shield className="h-3.5 w-3.5" />
+          <span>{t.securityLocal}</span>
+        </div>
       </div>
     );
   }
@@ -389,39 +366,34 @@ export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
   // ─── STEP: PROCESSING ────────────────────────────────────
   if (step === "processing") {
     return (
-      <div className="animate-fade-in-up text-center">
-        <div className="max-w-md mx-auto">
-          {/* Scanner viewfinder */}
+      <div className="animate-fade-in-up flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] sm:min-h-[400px]">
+        <div className="max-w-md mx-auto text-center w-full">
+          {/* Preview */}
           {imagePreview && (
-            <div className="scanner-viewfinder mb-6 relative">
-              <img
-                src={imagePreview}
-                alt="Documento sendo processado"
-                className="w-full max-h-56 object-contain rounded-xl"
-              />
-              {/* Scan line animation */}
-              <div className="absolute left-3 right-3 h-0.5 bg-primary/80 animate-scan-line rounded-full shadow-[0_0_8px_2px] shadow-primary/40" />
-              {/* Corner markers */}
-              <div className="scanner-corner scanner-corner-tl" />
-              <div className="scanner-corner scanner-corner-tr" />
-              <div className="scanner-corner scanner-corner-bl" />
-              <div className="scanner-corner scanner-corner-br" />
+            <div className="mb-6 rounded-2xl overflow-hidden border border-border max-h-48 flex items-center justify-center bg-gray-50">
+              <img src={imagePreview} alt="Document" className="max-h-48 object-contain" />
             </div>
           )}
 
-          <div className="mb-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-3" />
-            <h3 className="text-xl font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
-              Processando documento
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1">{progressLabel}</p>
-            {progressHint && (
-              <p className="text-xs text-muted-foreground/70 mt-1">{progressHint}</p>
-            )}
+          {/* Spinner */}
+          <div className="mx-auto h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
+            <Loader2 className="h-8 w-8 text-primary animate-spin" />
           </div>
 
-          <Progress value={progress} className="h-2.5 rounded-full" />
-          <p className="text-xs text-muted-foreground mt-2">{progress}% concluído</p>
+          <h3 className="text-xl font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
+            {t.processingTitle}
+          </h3>
+
+          <div className="mt-4 space-y-2">
+            <Progress value={progress} className="h-3 rounded-full" />
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-muted-foreground">{progressLabel}</p>
+              <span className="text-sm font-mono text-primary font-bold">{progress}%</span>
+            </div>
+            {progressHint && (
+              <p className="text-xs text-muted-foreground/70">{progressHint}</p>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -431,77 +403,69 @@ export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
   if (step === "review" && editableData) {
     return (
       <div className="animate-fade-in-up">
-        {/* Header */}
+        {/* Success header */}
         <div className="text-center mb-6">
           <div className="mx-auto h-14 w-14 rounded-2xl bg-green-50 border border-green-100 flex items-center justify-center mb-3">
             <CheckCircle2 className="h-7 w-7 text-green-600" />
           </div>
           <h3 className="text-xl font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
-            Documento lido com sucesso
+            {t.reviewSuccess}
           </h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            Confira os dados abaixo e corrija se necessário
-          </p>
-          <div className="flex items-center justify-center gap-2 mt-2">
-            <Sparkles className={`h-4 w-4 ${confidenceColor(editableData.confidence)}`} />
-            <span className={`text-sm font-semibold ${confidenceColor(editableData.confidence)}`}>
-              Confiança: {confidenceLabel(editableData.confidence)} ({editableData.confidence}%)
-            </span>
+          <p className="text-sm text-muted-foreground mt-1">{t.reviewDesc}</p>
+
+          {/* Confidence */}
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <Badge className={confidenceColor(editableData.confidence)}>
+              <Sparkles className="h-3 w-3 mr-1" />
+              {t.confidenceLabel}: {confidenceLabel(editableData.confidence)} ({editableData.confidence}%)
+            </Badge>
           </div>
+
+          {/* Warnings */}
+          {editableData.warnings && editableData.warnings.length > 0 && (
+            <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+              {editableData.warnings.map((w, i) => (
+                <Badge key={i} variant="outline" className="text-xs border-amber-300 text-amber-700 bg-amber-50">
+                  <AlertTriangle className="h-3 w-3 mr-1" />
+                  {getWarningLabel(w, t)}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Warnings */}
-        {editableData.warnings.length > 0 && (
-          <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 mb-5">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-amber-800">Atenção</p>
-                <ul className="text-xs text-amber-700 mt-1 space-y-0.5">
-                  {editableData.warnings.map((w, i) => (
-                    <li key={i}>{WARNING_LABELS[w] || w}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+        {/* Preview */}
+        {imagePreview && (
+          <div className="mb-5 rounded-xl overflow-hidden border border-border max-h-32 flex items-center justify-center bg-gray-50">
+            <img src={imagePreview} alt="Document" className="max-h-32 object-contain" />
           </div>
         )}
 
-        {/* Preview + Data */}
-        <div className="guide-card overflow-hidden">
-          {imagePreview && (
-            <div className="bg-gray-50 border-b border-border p-3 flex justify-center">
-              <img
-                src={imagePreview}
-                alt="Documento escaneado"
-                className="max-h-32 object-contain rounded-lg"
-              />
-            </div>
-          )}
-
-          <div className="p-5 space-y-4">
-            {/* Name row */}
+        {/* Editable fields — large inputs for mobile */}
+        <div className="guide-card p-4 sm:p-5">
+          <div className="space-y-4">
+            {/* Names */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Nome
+                  {t.firstName}
                 </label>
                 <input
                   value={editableData.givenName}
                   onChange={(e) => setEditableData({ ...editableData, givenName: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                  placeholder="Nome"
+                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-3 sm:py-2.5 text-base sm:text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                  placeholder={t.firstName}
                 />
               </div>
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Sobrenome
+                  {t.lastName}
                 </label>
                 <input
                   value={editableData.familyName}
                   onChange={(e) => setEditableData({ ...editableData, familyName: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                  placeholder="Sobrenome"
+                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-3 sm:py-2.5 text-base sm:text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                  placeholder={t.lastName}
                 />
               </div>
             </div>
@@ -510,24 +474,24 @@ export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Número do Documento
+                  {t.documentNumber}
                 </label>
                 <input
                   value={editableData.passportNumber}
                   onChange={(e) => setEditableData({ ...editableData, passportNumber: e.target.value.toUpperCase() })}
-                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground font-mono focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-3 sm:py-2.5 text-base sm:text-sm text-foreground font-mono focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                   placeholder="AB1234567"
                 />
               </div>
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Validade
+                  {t.expiryDate}
                 </label>
                 <input
                   type="date"
                   value={editableData.passportExpiryDate}
                   onChange={(e) => setEditableData({ ...editableData, passportExpiryDate: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-3 sm:py-2.5 text-base sm:text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                 />
               </div>
             </div>
@@ -536,27 +500,27 @@ export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Data de Nascimento
+                  {t.birthDate}
                 </label>
                 <input
                   type="date"
                   value={editableData.bornOn}
                   onChange={(e) => setEditableData({ ...editableData, bornOn: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-3 sm:py-2.5 text-base sm:text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                 />
               </div>
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Sexo
+                  {t.gender}
                 </label>
                 <select
                   value={editableData.gender}
                   onChange={(e) => setEditableData({ ...editableData, gender: e.target.value as "m" | "f" | "" })}
-                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-3 sm:py-2.5 text-base sm:text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                 >
-                  <option value="">Selecione</option>
-                  <option value="m">Masculino</option>
-                  <option value="f">Feminino</option>
+                  <option value="">{t.genderSelect}</option>
+                  <option value="m">{t.genderMale}</option>
+                  <option value="f">{t.genderFemale}</option>
                 </select>
               </div>
             </div>
@@ -565,24 +529,24 @@ export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Nacionalidade
+                  {t.nationality}
                 </label>
                 <input
                   value={editableData.nationality}
                   onChange={(e) => setEditableData({ ...editableData, nationality: e.target.value.toUpperCase() })}
-                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-3 sm:py-2.5 text-base sm:text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                   maxLength={3}
                   placeholder="BRA"
                 />
               </div>
               <div>
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  País Emissor
+                  {t.issuingCountry}
                 </label>
                 <input
                   value={editableData.passportIssuingCountry}
                   onChange={(e) => setEditableData({ ...editableData, passportIssuingCountry: e.target.value.toUpperCase() })}
-                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                  className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-3 sm:py-2.5 text-base sm:text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                   maxLength={3}
                   placeholder="BRA"
                 />
@@ -591,22 +555,22 @@ export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
           </div>
         </div>
 
-        {/* Actions */}
+        {/* Actions — large touch targets */}
         <div className="flex gap-3 mt-6">
           <Button
             variant="outline"
-            className="flex-1 h-12 text-base border-border"
+            className="flex-1 h-14 sm:h-12 text-base border-border"
             onClick={resetState}
           >
             <RotateCcw className="h-4 w-4 mr-2" />
-            Tentar Novamente
+            {t.tryAgain}
           </Button>
           <Button
-            className="flex-1 h-12 text-base"
+            className="flex-1 h-14 sm:h-12 text-base"
             onClick={handleConfirm}
           >
             <CheckCircle2 className="h-4 w-4 mr-2" />
-            Confirmar Dados
+            {t.confirmData}
           </Button>
         </div>
       </div>
@@ -616,13 +580,13 @@ export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
   // ─── STEP: ERROR ─────────────────────────────────────────
   if (step === "error") {
     return (
-      <div className="animate-fade-in-up text-center">
+      <div className="animate-fade-in-up text-center flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] sm:min-h-0">
         <div className="max-w-md mx-auto">
           <div className="mx-auto h-14 w-14 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mb-4">
             <AlertTriangle className="h-7 w-7 text-red-500" />
           </div>
           <h3 className="text-xl font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
-            Não foi possível ler o documento
+            {t.errorTitle}
           </h3>
           <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto">
             {errorMessage}
@@ -630,32 +594,27 @@ export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
 
           {imagePreview && (
             <div className="mt-4 rounded-xl overflow-hidden border border-border max-h-32 flex items-center justify-center bg-gray-50">
-              <img src={imagePreview} alt="Documento" className="max-h-32 object-contain opacity-50" />
+              <img src={imagePreview} alt="Document" className="max-h-32 object-contain opacity-50" />
             </div>
           )}
 
           {/* Tips */}
           <div className="mt-5 guide-card p-4 text-left">
             <p className="text-sm font-bold text-foreground mb-3" style={{ fontFamily: "var(--font-display)" }}>
-              Dicas para tentar novamente
+              {t.retryTipsTitle}
             </p>
             <div className="grid grid-cols-1 gap-2">
-              <div className="flex items-start gap-2">
-                <Sun className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                <span className="text-sm text-muted-foreground">Use boa iluminação, sem reflexos</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <Focus className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                <span className="text-sm text-muted-foreground">Mantenha o documento em foco</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <Maximize2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                <span className="text-sm text-muted-foreground">Enquadre o documento inteiro</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <ScanLine className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                <span className="text-sm text-muted-foreground">Para passaportes, mostre a página com MRZ (códigos na parte inferior)</span>
-              </div>
+              {[
+                { icon: Sun, text: t.retryTipLight },
+                { icon: Focus, text: t.retryTipFocus },
+                { icon: Maximize2, text: t.retryTipFull },
+                { icon: ScanLine, text: t.retryTipMrz },
+              ].map((tip, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <tip.icon className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                  <span className="text-sm text-muted-foreground">{tip.text}</span>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -663,19 +622,19 @@ export function DocumentScanner({ onConfirm, onCancel }: DocumentScannerProps) {
             {onCancel && (
               <Button
                 variant="outline"
-                className="flex-1 h-12 text-base border-border"
+                className="flex-1 h-14 sm:h-12 text-base border-border"
                 onClick={onCancel}
               >
                 <X className="h-4 w-4 mr-2" />
-                Cancelar
+                {t.cancel}
               </Button>
             )}
             <Button
-              className="flex-1 h-12 text-base"
+              className="flex-1 h-14 sm:h-12 text-base"
               onClick={resetState}
             >
               <RotateCcw className="h-4 w-4 mr-2" />
-              Tentar Novamente
+              {t.tryAgain}
             </Button>
           </div>
         </div>

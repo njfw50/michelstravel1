@@ -269,6 +269,14 @@
 .confidence-medium { color: oklch(0.75 0.17 75); }
 .confidence-low { color: oklch(0.577 0.245 27.325); }
 
+/* Safe area for mobile notch */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 @layer components {
   .container {
     width: 100%;

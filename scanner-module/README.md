@@ -1,73 +1,59 @@
 # Michels Travel — Scanner de Documentos
 
-Módulo de scanner de documentos inteligente para o site Michels Travel. Permite que clientes escaneiem passaportes, identidades e carteiras de motorista de qualquer país diretamente pelo celular, preenchendo automaticamente o formulário de reserva.
+Módulo de scanner de documentos inteligente para a plataforma Michels Travel. Permite que clientes escaneiem passaportes, identidades e carteiras de motorista de qualquer país diretamente pelo navegador do celular, sem instalar nada.
 
 ## Funcionalidades
 
-- **Scanner OCR com Tesseract.js** — Leitura automática de texto em documentos
-- **Parser MRZ completo** — Suporte a TD1, TD2, TD3, MRVA e MRVB (passaportes, identidades, vistos)
-- **Documentos de qualquer país** — Suporte internacional universal
-- **Preprocessamento de imagem** — Binarização, contraste, rotação automática para melhor leitura
-- **Formulário com auto-preenchimento** — Dados extraídos são inseridos automaticamente
-- **Revisão editável** — O usuário pode corrigir qualquer campo antes de confirmar
+- **OCR com Tesseract.js** — Leitura de documentos com modelo OCR-B para MRZ e modelo ENG para texto geral
+- **Parser MRZ completo** — Suporte a TD1, TD2, TD3, MRVA, MRVB (passaportes, identidades, vistos de qualquer país)
+- **Suporte trilíngue** — Português, Inglês e Espanhol com detecção automática
+- **Mobile-first** — Interface otimizada para tela touch, botões grandes, instruções claras
+- **Acessibilidade** — Projetado para idosos e pessoas com baixo teor cognitivo
 - **Processamento 100% local** — Nenhuma imagem é enviada para servidores externos
-- **Acessível para idosos** — Textos grandes, botões amplos, instruções claras
+- **Auto-preenchimento** — Dados confirmados preenchem automaticamente o formulário de reserva
+- **Scanner remoto via QR Code** — O site gera um QR code, o celular escaneia e envia os dados de volta
 
-## Stack Técnica
+## Fluxo de Acionamento
+
+1. No site principal, o cliente clica em "Escanear Documento" ou "Scanner Mobile"
+2. **Mesmo dispositivo**: Abre o scanner diretamente na página
+3. **Dispositivo diferente (QR Code)**: Gera um QR code com sessão única, celular abre o scanner no navegador, escaneia, dados retornam via BroadcastChannel / localStorage / callback URL
+
+## Rotas
+
+| Rota | Descrição |
+|------|-----------|
+| `/` | Landing page + scanner + formulário de reserva |
+| `/scan?mode=scan&session=ID&lang=pt` | Scanner mobile acionado pelo site |
+
+## Parâmetros da URL /scan
+
+| Parâmetro | Descrição |
+|-----------|-----------|
+| `mode` | `scan` para modo acionado pelo site |
+| `session` | ID da sessão (6 caracteres) |
+| `lang` | Idioma: `pt`, `en` ou `es` |
+| `callback` | URL de retorno (para cross-device) |
+| `origin` | Origem do site principal |
+
+## Stack
 
 - React 19 + TypeScript
 - Tailwind CSS 4
-- Tesseract.js 7 (OCR)
+- Tesseract.js (OCR)
 - Framer Motion (animações)
 - shadcn/ui (componentes)
 
-## Estrutura
-
-```
-scanner-module/
-├── client/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── DocumentScanner.tsx    # Componente principal do scanner
-│   │   │   └── BookingForm.tsx        # Formulário de reserva com auto-fill
-│   │   ├── lib/
-│   │   │   ├── mrz.ts                # Parser MRZ (TD1/TD2/TD3/MRVA/MRVB)
-│   │   │   ├── imagePreprocess.ts    # Preprocessamento de imagem para OCR
-│   │   │   └── documentScan.ts       # Merge e normalização de dados
-│   │   ├── pages/
-│   │   │   └── Home.tsx              # Página principal com fluxo completo
-│   │   ├── App.tsx
-│   │   └── index.css                 # Estilos seguindo identidade Michels Travel
-│   └── index.html
-├── server/
-│   └── index.ts                      # Servidor estático
-├── package.json
-└── README.md
-```
-
-## Instalação
+## Desenvolvimento
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-## Fluxo do Usuário
+## Deploy via Render
 
-1. O cliente acessa a página e clica em "Escanear Documento"
-2. Tira uma foto com a câmera do celular ou envia uma imagem
-3. O scanner processa a imagem localmente com OCR
-4. Os dados extraídos são exibidos para revisão e edição
-5. Ao confirmar, os dados preenchem automaticamente o formulário de reserva
-6. O cliente completa os dados de contato e envia a reserva
-
-## Documentos Suportados
-
-| Tipo | Formato MRZ | Países |
-|------|-------------|--------|
-| Passaporte | TD3 (2x44) | Todos |
-| Carteira de Identidade | TD1 (3x30) | Todos |
-| Documento de Viagem | TD2 (2x36) | Todos |
-| Visto Tipo A | MRVA (2x44) | Todos |
-| Visto Tipo B | MRVB (2x36) | Todos |
-| Carteira de Motorista | OCR geral | Todos |
+1. Conecte o repositório ao Render
+2. Build command: `pnpm install && pnpm build`
+3. Start command: `pnpm start`
+4. Porta: `3000`
