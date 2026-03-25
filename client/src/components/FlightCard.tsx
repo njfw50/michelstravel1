@@ -202,11 +202,11 @@ function SliceTimeline({
                     <span className="rounded-full border border-blue-100 bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-800">
                       {conn.label}
                     </span>
-                    {conn.airport && conn.airport !== conn.city && (
+                    {conn.airport || conn.city || conn.code ? (
                       <span className="mt-0.5 text-[10px] text-gray-500">
-                        {conn.airport}
+                        {conn.airport || conn.city || conn.code}
                       </span>
-                    )}
+                    ) : null}
                   </div>
                 ))}
               </div>
