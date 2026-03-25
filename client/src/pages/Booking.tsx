@@ -303,6 +303,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
 
   // Voice guide (modo sênior)
   const { speak, stop, speaking, supported } = useVoiceGuide();
+  const audioLang = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
   const audioText = language === "pt"
     ? "Vamos preencher juntos. Primeiro confira nome e sobrenome como está no documento. Depois data de nascimento e país emissor. Se algo estiver errado, toque em voltar. Quando terminar, marque que ouviu e entendeu."
     : language === "es"
@@ -1503,7 +1504,7 @@ export default function Booking() {
                         disabled={!supported}
                         onClick={() => {
                           if (speaking) stop();
-                          else speak(audioText);
+                          else speak(audioText, audioLang);
                         }}
                         data-testid="button-audio-guide"
                       >

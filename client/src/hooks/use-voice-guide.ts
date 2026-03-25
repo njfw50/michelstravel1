@@ -11,11 +11,11 @@ export function useVoiceGuide() {
     setSpeaking(false);
   }, []);
 
-  const speak = useCallback((text: string) => {
+  const speak = useCallback((text: string, lang?: string) => {
     if (!synthRef.current) return;
     stop();
     const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = "pt-BR";
+    utter.lang = lang || "pt-BR";
     utter.rate = 0.95;
     utter.pitch = 1;
     utter.onend = () => setSpeaking(false);

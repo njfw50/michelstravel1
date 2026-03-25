@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { CalendarDays, CheckCircle2, ChevronDown, MessageCircle, Search, ShieldCheck, UserRound, ArrowRight, HeartHandshake, BriefcaseBusiness, Package, Luggage, Headphones } from "lucide-react";
@@ -370,11 +370,51 @@ export default function EasyBooking() {
     .join(" · ");
 
   const { speak, stop, speaking, supported } = useVoiceGuide();
-  const audioText = currentLanguage === "en"
-    ? "Let's pick your trip together. Choose origin and destination, then dates. Pick your priority like fewer stops or cheaper price. At the end we review everything calmly before paying."
-    : currentLanguage === "es"
-      ? "Vamos a elegir su viaje juntos. Primero origen y destino, luego fechas. Elija su prioridad como menos conexiones o mejor precio. Al final revisamos todo con calma antes de pagar."
-      : "Vamos escolher sua viagem juntos. Primeiro origem e destino, depois as datas. Escolha sua prioridade como menos conexões ou melhor preço. No final revisamos tudo com calma antes de pagar.";
+
+  const stepAudio = useMemo(() => {
+    const people =
+      currentLanguage === "en"
+        ? `${adults + children + infants} traveler${adults + children + infants === 1 ? "" : "s"}`
+        : currentLanguage === "es"
+          ? `${adults + children + infants} pasajer${adults + children + infants === 1 ? "o" : "os"}`
+          : `${adults + children + infants} passageir${adults + children + infants === 1 ? "o" : "os"}`;
+
+    switch (currentStep) {
+      case 0:
+        return currentLanguage === "en"
+          ? "Step one: choose origin and destination. Type the airport or city. I highlight matches as you type."
+          : currentLanguage === "es"
+            ? "Paso uno: elija origen y destino. Escriba la ciudad o aeropuerto; le muestro sugerencias mientras escribe."
+            : "Passo um: escolha origem e destino. Digite a cidade ou aeroporto; eu mostro sugestões enquanto você digita.";
+      case 1:
+        return currentLanguage === "en"
+          ? `Now pick the dates. ${tripType === "round-trip" ? "Select both departure and return." : "Only the departure date is needed."}`
+          : currentLanguage === "es"
+            ? `Ahora elija las fechas. ${tripType === "round-trip" ? "Seleccione salida y regreso." : "Solo necesita la fecha de salida."}`
+            : `Agora escolha as datas. ${tripType === "round-trip" ? "Selecione ida e volta." : "Só precisa da data de ida."}`;
+      case 2:
+        return currentLanguage === "en"
+          ? "Choose what matters most: fastest, balanced, cheapest, or more comfort. I’ll search flights favoring that choice."
+          : currentLanguage === "es"
+            ? "Elija lo que más importa: más rápido, equilibrado, más barato o más cómodo. Buscaré vuelos priorizando esto."
+            : "Escolha o que importa mais: mais rápido, equilibrado, mais barato ou mais conforto. Vou priorizar essa preferência.";
+      case 3:
+        return currentLanguage === "en"
+          ? "Decide the baggage and connections tolerance. Tell me if you accept stops and whether you need carry-on or checked bags."
+          : currentLanguage === "es"
+            ? "Defina equipaje y tolerancia a conexiones. Diga si acepta escalas y si necesita bolso de mano o equipaje facturado."
+            : "Defina bagagem e tolerância a conexões. Diga se aceita escalas e se precisa de bagagem de mão ou despachada.";
+      case 4:
+      default:
+        return currentLanguage === "en"
+          ? `Review summary: ${origin || "origin"}, ${destination || "destination"}, dates chosen, priority ${priority}, connections ${connections}, bags ${bags}, ${people}.`
+          : currentLanguage === "es"
+            ? `Revise el resumen: ${origin || "origen"}, ${destination || "destino"}, fechas elegidas, prioridad ${priority}, conexiones ${connections}, equipaje ${bags}, ${people}.`
+            : `Revise o resumo: ${origin || "origem"}, ${destination || "destino"}, datas escolhidas, prioridade ${priority}, conexões ${connections}, bagagem ${bags}, ${people}.`;
+    }
+  }, [adults, bags, children, connections, currentLanguage, currentStep, destination, infants, origin, priority, tripType]);
+
+  const audioLang = currentLanguage === "en" ? "en-US" : currentLanguage === "es" ? "es-ES" : "pt-BR";
 
   useEffect(() => {
     setInfants((value) => Math.min(value, adults));
@@ -604,7 +644,7 @@ export default function EasyBooking() {
                         disabled={!supported}
                         onClick={() => {
                           if (speaking) stop();
-                          else speak(audioText);
+                          else speak(stepAudio, audioLang);
                         }}
                       >
                         {speaking
