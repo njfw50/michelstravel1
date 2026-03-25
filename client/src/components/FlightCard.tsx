@@ -17,7 +17,7 @@ type FlightSegmentLike = {
   arrivalTime: string;
   destinationCity?: string;
   destinationCode?: string;
-  destinationAirportName?: string;
+  destinationName?: string;
 };
 
 type FlightSliceLike = {
@@ -88,7 +88,7 @@ const getConnectionCities = (slice: FlightSliceLike) => {
 
     const city = segment.destinationCity;
     const code = segment.destinationCode;
-    const airport = segment.destinationAirportName;
+    const airport = segment.destinationName;
 
     const label = city
       ? code
