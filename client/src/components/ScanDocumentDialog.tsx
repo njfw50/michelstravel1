@@ -118,6 +118,8 @@ export function ScanDocumentDialog({
 
   // Listen for messages coming back from the mobile app
   useEffect(() => {
+    if (!open) return;
+
     const onMessage = (event: MessageEvent) => {
       let data: any = event.data;
       if (typeof data === "string") {
@@ -159,7 +161,17 @@ export function ScanDocumentDialog({
 
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [declaredDocumentType, t]);
+  }, [declaredDocumentType, open, t]);
+
+  // Safety net: if the mobile bridge never responds, surface an error so the user can retry
+  useEffect(() => {
+    if (!open || step !== "processing" || !isMobileBridge) return;
+    const timeout = window.setTimeout(() => {
+      setErrorMessage(t("scan.mobile_timeout") || t("scan.ocr_error") || "No response from mobile scanner.");
+      setStep("error");
+    }, 15000);
+    return () => window.clearTimeout(timeout);
+  }, [isMobileBridge, open, step, t]);
 
   const requestMobileScan = () => {
     if (!isMobileBridge) return false;
@@ -728,6 +740,28 @@ export function ScanDocumentDialog({
               <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                 <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
                 <span>{t("scan.multi_attempt_notice")}</span>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-gray-200 text-gray-600"
+                  onClick={() => {
+                    resetState();
+                    cameraInputRef.current?.click();
+                  }}
+                  data-testid={`button-scan-switch-camera-${passengerIndex}`}
+                >
+                  {t("scan.use_camera")}
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="flex-1 text-gray-500"
+                  onClick={resetState}
+                  data-testid={`button-scan-cancel-processing-${passengerIndex}`}
+                >
+                  {t("scan.cancel")}
+                </Button>
               </div>
             </div>
           </>
