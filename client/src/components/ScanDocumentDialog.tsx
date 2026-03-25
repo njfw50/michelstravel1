@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, type ChangeEvent, type MutableRefObject } from "react";
+import { useState, useRef, useCallback, useEffect, type ChangeEvent, type MutableRefObject } from "react";
 import {
   Dialog,
   DialogContent,
@@ -56,6 +56,10 @@ interface ScanDocumentDialogProps {
   declaredDocumentType?: string | null;
 }
 
+type MobileScannerMessage =
+  | { type: "DOCUMENT_SCANNER_RESULT"; payload: Partial<MergedDocumentScanResult> }
+  | { type: "DOCUMENT_SCANNER_ERROR"; message?: string };
+
 function createWarningLabels(t: (key: string) => string) {
   return {
     doc_number_check_failed: t("scan.warning_doc_number"),
@@ -89,6 +93,9 @@ export function ScanDocumentDialog({
   const mrzProgressRangeRef = useRef({ offset: 20, span: 14 });
   const generalProgressRangeRef = useRef({ offset: 62, span: 10 });
 
+  const isMobileBridge =
+    typeof window !== "undefined" && typeof (window as any).ReactNativeWebView !== "undefined";
+
   const setProgressValue = (value: number) => {
     progressRef.current = value;
     setProgress(value);
@@ -107,6 +114,72 @@ export function ScanDocumentDialog({
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) resetState();
     onOpenChange(newOpen);
+  };
+
+  // Listen for messages coming back from the mobile app
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      let data: any = event.data;
+      if (typeof data === "string") {
+        try {
+          data = JSON.parse(data);
+        } catch {
+          return;
+        }
+      }
+      if (!data || typeof data !== "object") return;
+      const msg = data as MobileScannerMessage;
+
+      if (msg.type === "DOCUMENT_SCANNER_RESULT" && msg.payload) {
+        const merged: MergedDocumentScanResult = {
+          givenName: msg.payload.givenName || "",
+          familyName: msg.payload.familyName || "",
+          bornOn: msg.payload.bornOn || "",
+          gender: (msg.payload.gender as any) || "",
+          passportNumber: msg.payload.passportNumber || msg.payload.documentNumber || "",
+          passportExpiryDate: msg.payload.passportExpiryDate || "",
+          nationality: (msg.payload.nationality || msg.payload.passportIssuingCountry || "").toUpperCase(),
+          passportIssuingCountry: (msg.payload.passportIssuingCountry || msg.payload.nationality || "").toUpperCase(),
+          documentType: msg.payload.documentType || declaredDocumentType || "passport",
+          confidence: msg.payload.confidence ?? 80,
+          warnings: msg.payload.warnings || [],
+          notes: msg.payload.notes || t("scan.ai_review_ready"),
+          source: msg.payload.source || "ai-assisted",
+        };
+        setEditableData(merged);
+        setProgressValue(100);
+        setStep("review");
+      }
+
+      if (msg.type === "DOCUMENT_SCANNER_ERROR") {
+        setErrorMessage(msg.message || t("scan.ocr_error"));
+        setStep("error");
+      }
+    };
+
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [declaredDocumentType, t]);
+
+  const requestMobileScan = () => {
+    if (!isMobileBridge) return false;
+    try {
+      setStep("processing");
+      setProgressValue(5);
+      setProgressLabel(t("scan.step_enhancing"));
+      setProgressHint(t("scan.hint_mobile") || t("scan.hint_hold_still") || null);
+      (window as any).ReactNativeWebView.postMessage(
+        JSON.stringify({
+          type: "OPEN_DOCUMENT_SCANNER",
+          passengerIndex,
+          declaredDocumentType: declaredDocumentType || null,
+        }),
+      );
+      return true;
+    } catch (err) {
+      console.error("Failed to call mobile scanner bridge:", err);
+      return false;
+    }
   };
 
   function extractLicenseFields(ocrText: string): DocumentAiCandidate | null {
@@ -551,12 +624,23 @@ export function ScanDocumentDialog({
                   <Button
                     variant="outline"
                     className="h-auto py-4 flex flex-col items-center gap-2 border-gray-200 text-gray-600"
-                    onClick={() => cameraInputRef.current?.click()}
+                    onClick={() => {
+                      if (requestMobileScan()) return;
+                      cameraInputRef.current?.click();
+                    }}
                     data-testid={`button-scan-camera-${passengerIndex}`}
                   >
                     <Camera className="h-6 w-6 text-blue-500" />
-                    <span className="text-sm font-medium">{t("scan.use_camera")}</span>
-                    <span className="text-[10px] text-gray-400">{t("scan.camera_tip")}</span>
+                    <span className="text-sm font-medium">
+                      {isMobileBridge
+                        ? t("scan.use_mobile_scanner") || t("scan.use_camera")
+                        : t("scan.use_camera")}
+                    </span>
+                    <span className="text-[10px] text-gray-400">
+                      {isMobileBridge
+                        ? t("scan.mobile_tip") || t("scan.camera_tip")
+                        : t("scan.camera_tip")}
+                    </span>
                   </Button>
 
                   <input
