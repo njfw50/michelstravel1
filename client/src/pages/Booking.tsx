@@ -1100,6 +1100,7 @@ export default function Booking() {
           const destination = searchParams.get("destination");
           const date = searchParams.get("date");
           const tripType = searchParams.get("tripType") || "one-way";
+          const returnDate = searchParams.get("returnDate");
           const adults = searchParams.get("adults") || "1";
           const children = searchParams.get("children") || "0";
           const infants = searchParams.get("infants") || "0";
@@ -1123,6 +1124,9 @@ export default function Booking() {
                 ).toString(),
                 cabinClass,
               });
+              if (tripType === "round-trip" && returnDate) {
+                qs.set("returnDate", returnDate);
+              }
 
               const altRes = await fetch(`/api/flights/search?${qs.toString()}`);
               const altData = await altRes.json();
@@ -1154,11 +1158,14 @@ export default function Booking() {
       const refreshData = await refreshRes.json();
       
       if (!refreshData.valid) {
+        setFlightError(t("booking.offer_expired_desc") || "This flight offer has expired. Please search again.");
         toast({
           title: t("booking.offer_expired") || "Offer Expired",
           description: t("booking.offer_expired_desc") || "This flight offer has expired. Please search again.",
           variant: "destructive",
         });
+        const qs = searchParams.toString();
+        setLocation(qs ? `/search?${qs}` : "/search");
         return;
       }
 
@@ -1173,7 +1180,7 @@ export default function Booking() {
     } catch (err) {
       console.warn("Could not validate price on load:", err);
     }
-  }, [t, toast]);
+  }, [t, toast, searchParams, setLocation]);
 
   useEffect(() => {
     if (params?.id) {
