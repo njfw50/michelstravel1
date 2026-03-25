@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: michels-scanner
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: scanner-module
+    buildCommand: pnpm install && pnpm build
+    startCommand: pnpm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 22.13.0
+    healthCheckPath: /health

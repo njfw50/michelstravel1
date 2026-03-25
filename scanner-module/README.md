@@ -71,7 +71,43 @@ O módulo é composto por três camadas principais:
 - Tesseract.js (OCR)
 - Framer Motion (animações)
 - shadcn/ui (componentes)
+- Express (servidor de produção)
 - Fontes: Outfit (display) + DM Sans (body)
+
+## Deploy no Render
+
+### Configuração Manual
+
+| Campo | Valor |
+|-------|-------|
+| **Root Directory** | `scanner-module` |
+| **Build Command** | `pnpm install && pnpm build` |
+| **Start Command** | `pnpm start` |
+| **Environment** | Node |
+| **Node Version** | 22.13.0 |
+
+### Variáveis de Ambiente
+
+| Variável | Valor |
+|----------|-------|
+| `NODE_ENV` | `production` |
+| `NODE_VERSION` | `22.13.0` |
+
+### Ou via Blueprint (render.yaml)
+
+O arquivo `render.yaml` na raiz do scanner-module configura o deploy automaticamente.
+
+### Health Check
+
+O endpoint `/health` retorna `{"status":"ok","timestamp":"..."}` e pode ser configurado no Render para monitoramento.
+
+## Segurança em Produção
+
+- Headers de segurança (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, CSP)
+- CORS configurado para aceitar requisições do site principal
+- Cache agressivo para assets com hash (1 ano, immutable)
+- Cache de 1 hora para arquivos estáticos
+- Trust proxy habilitado para Render
 
 ## Estrutura de Arquivos
 
@@ -105,26 +141,24 @@ scanner-module/
 │   │       ├── ScannerMobile.tsx       ← Página mobile do scanner
 │   │       └── NotFound.tsx
 ├── server/
-│   └── index.ts
+│   └── index.ts                        ← Servidor Express para produção
 ├── shared/
 │   └── const.ts
 ├── package.json
+├── pnpm-lock.yaml                      ← Lock file para builds reproduzíveis
+├── render.yaml                         ← Blueprint do Render
+├── .nvmrc                              ← Versão do Node
 ├── tsconfig.json
 ├── vite.config.ts
 └── README.md
 ```
 
-## Desenvolvimento
+## Desenvolvimento Local
 
 ```bash
+cd scanner-module
 pnpm install
 pnpm dev
 ```
 
-## Deploy via Render
-
-1. Conecte o repositório ao Render
-2. Root Directory: `scanner-module`
-3. Build Command: `pnpm install && pnpm build`
-4. Start Command: `pnpm start`
-5. Porta: `3000`
+O servidor de desenvolvimento inicia em `http://localhost:3000`.
