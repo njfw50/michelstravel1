@@ -1,4 +1,21 @@
-import { useState, useEffect } from "react";
+/**
+ * ═══════════════════════════════════════════════════════════════
+ *  BookingForm — Formulário de Reserva com Módulo de Recepção
+ * ═══════════════════════════════════════════════════════════════
+ *
+ * Design: Michels Travel (Outfit + DM Sans, guide-card, section-eyebrow)
+ * Acessibilidade: Textos grandes, botões amplos, instruções claras
+ *
+ * FLUXO:
+ * 1. Recebe MergedDocumentScanResult do scanner
+ * 2. Passa pelo módulo de Constatação (verifyDocument)
+ * 3. Exibe o VerificationPanel com resultado da constatação
+ * 4. Módulo de Recepção distribui dados nos inputs (distributeToForm)
+ * 5. Cada campo mostra status visual (verde/amarelo/vermelho)
+ * 6. Animação sequencial de preenchimento
+ */
+
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,32 +28,36 @@ import {
   Shield,
   Sparkles,
   RotateCcw,
+  AlertTriangle,
+  XCircle,
+  Brain,
+  Loader2,
+  ArrowRight,
 } from "lucide-react";
 import type { MergedDocumentScanResult } from "@/lib/documentScan";
+import { verifyDocument, type VerifiedDocumentPayload } from "@/lib/documentVerification";
+import {
+  distributeToForm,
+  toFormData,
+  getFieldStatusMap,
+  getFieldStatusClass,
+  type FormFieldKey,
+  type FormDistributionResult,
+  type PassengerFormData,
+} from "@/lib/formReceiver";
+import { VerificationPanel } from "@/components/VerificationPanel";
 import { useLocale } from "@/contexts/LocaleContext";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface BookingFormProps {
   scanData: MergedDocumentScanResult | null;
   onRescan: () => void;
 }
 
-interface PassengerData {
-  title: string;
-  givenName: string;
-  familyName: string;
-  bornOn: string;
-  gender: string;
-  email: string;
-  phoneNumber: string;
-  documentType: string;
-  documentNumber: string;
-  documentExpiryDate: string;
-  documentIssuingCountry: string;
-  nationality: string;
-}
+type FormPhase = "idle" | "verifying" | "verified" | "distributing" | "ready" | "submitted";
 
-const EMPTY_PASSENGER: PassengerData = {
+const EMPTY_PASSENGER: PassengerFormData = {
   title: "mr",
   givenName: "",
   familyName: "",
@@ -51,247 +72,438 @@ const EMPTY_PASSENGER: PassengerData = {
   nationality: "",
 };
 
-function mapDocType(raw: string): string {
-  switch (raw) {
-    case "passport": return "passport";
-    case "national_id": return "national_id";
-    case "drivers_license": return "drivers_license";
-    case "travel_document": return "travel_document";
-    default: return "passport";
-  }
+function StatusIndicator({ status }: { status: "verified" | "warning" | "error" | "empty" }) {
+  if (status === "verified") return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+  if (status === "warning") return <AlertTriangle className="h-4 w-4 text-amber-500" />;
+  if (status === "error") return <XCircle className="h-4 w-4 text-red-500" />;
+  return null;
 }
 
 export function BookingForm({ scanData, onRescan }: BookingFormProps) {
   const { t } = useLocale();
-  const [passenger, setPassenger] = useState<PassengerData>(EMPTY_PASSENGER);
-  const [contactEmail, setContactEmail] = useState("");
-  const [contactPhone, setContactPhone] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [filledFromScan, setFilledFromScan] = useState(false);
+  const [phase, setPhase] = useState<FormPhase>("idle");
+  const [passenger, setPassenger] = useState<PassengerFormData>({ ...EMPTY_PASSENGER });
+  const [verification, setVerification] = useState<VerifiedDocumentPayload | null>(null);
+  const [distribution, setDistribution] = useState<FormDistributionResult | null>(null);
+  const [fieldStatuses, setFieldStatuses] = useState<Record<FormFieldKey, "verified" | "warning" | "error" | "empty">>({} as any);
+  const [animatingField, setAnimatingField] = useState<FormFieldKey | null>(null);
+  const [showVerificationPanel, setShowVerificationPanel] = useState(false);
+  const hasScanData = useRef(false);
 
+  // ─── PIPELINE: scanData → Constatação → Recepção → Distribuição ───
   useEffect(() => {
-    if (scanData) {
-      setPassenger((prev) => ({
-        ...prev,
-        givenName: scanData.givenName || prev.givenName,
-        familyName: scanData.familyName || prev.familyName,
-        bornOn: scanData.bornOn || prev.bornOn,
-        gender: scanData.gender || prev.gender,
-        documentType: mapDocType(scanData.documentType) || prev.documentType,
-        documentNumber: scanData.passportNumber || prev.documentNumber,
-        documentExpiryDate: scanData.passportExpiryDate || prev.documentExpiryDate,
-        documentIssuingCountry: scanData.passportIssuingCountry || prev.documentIssuingCountry,
-        nationality: scanData.nationality || prev.nationality,
-      }));
-      setFilledFromScan(true);
-      toast.success(t.scanAppliedBanner, {
-        description: t.bookingDescScan,
-        duration: 4000,
-      });
-    }
+    if (!scanData || hasScanData.current) return;
+    hasScanData.current = true;
+
+    const runPipeline = async () => {
+      // FASE 1: Verificação (Constatação)
+      setPhase("verifying");
+      await new Promise((r) => setTimeout(r, 800)); // Simular processamento AI
+
+      const verified = verifyDocument(scanData);
+      setVerification(verified);
+      setPhase("verified");
+      setShowVerificationPanel(true);
+
+      await new Promise((r) => setTimeout(r, 1500)); // Tempo para o usuário ver a constatação
+
+      // FASE 2: Distribuição (Recepção)
+      setPhase("distributing");
+      const dist = distributeToForm(verified);
+      setDistribution(dist);
+      const formData = toFormData(dist);
+      const statusMap = getFieldStatusMap(dist);
+      setFieldStatuses(statusMap);
+
+      // FASE 3: Animação sequencial de preenchimento
+      for (let i = 0; i < dist.animationSequence.length; i++) {
+        const fieldKey = dist.animationSequence[i];
+        setAnimatingField(fieldKey);
+        await new Promise((r) => setTimeout(r, 200));
+
+        setPassenger((prev) => ({
+          ...prev,
+          [fieldKey]: formData[fieldKey] || prev[fieldKey as keyof PassengerFormData],
+        }));
+
+        await new Promise((r) => setTimeout(r, 150));
+      }
+
+      setAnimatingField(null);
+      setPhase("ready");
+
+      // Toast de resultado
+      if (dist.overallStatus === "success") {
+        toast.success(t.autoFillComplete);
+      } else if (dist.overallStatus === "partial") {
+        toast.warning(t.autoFillPartial);
+      } else {
+        toast.error(t.autoFillFailed);
+      }
+    };
+
+    runPipeline();
   }, [scanData, t]);
 
-  const updateField = (field: keyof PassengerData, value: string) => {
+  // Reset quando scanData muda para null
+  useEffect(() => {
+    if (!scanData) {
+      hasScanData.current = false;
+      setPhase("idle");
+      setPassenger({ ...EMPTY_PASSENGER });
+      setVerification(null);
+      setDistribution(null);
+      setFieldStatuses({} as any);
+      setShowVerificationPanel(false);
+    }
+  }, [scanData]);
+
+  const handleChange = useCallback((field: keyof PassengerFormData, value: string) => {
     setPassenger((prev) => ({ ...prev, [field]: value }));
+  }, []);
+
+  const handleSubmit = useCallback(() => {
+    if (!passenger.givenName || !passenger.familyName) {
+      toast.error(t.firstName + " / " + t.lastName);
+      return;
+    }
+    setPhase("submitted");
+    toast.success(t.bookingSent);
+  }, [passenger, t]);
+
+  const handleRescan = useCallback(() => {
+    hasScanData.current = false;
+    setPhase("idle");
+    setPassenger({ ...EMPTY_PASSENGER });
+    setVerification(null);
+    setDistribution(null);
+    setFieldStatuses({} as any);
+    setShowVerificationPanel(false);
+    onRescan();
+  }, [onRescan]);
+
+  const getInputClass = (fieldKey: FormFieldKey) => {
+    const base = "w-full rounded-xl border px-4 py-3 text-base transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/40";
+    const isAnimating = animatingField === fieldKey;
+    const status = fieldStatuses[fieldKey];
+
+    if (isAnimating) return `${base} border-primary bg-primary/5 ring-2 ring-primary/30 scale-[1.02]`;
+    if (status) return `${base} ${getFieldStatusClass(status)}`;
+    return `${base} border-border bg-white`;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitted(true);
-    toast.success(t.bookingSent, {
-      description: t.bookingSentDesc,
-      duration: 5000,
-    });
+  const getSelectClass = (fieldKey: FormFieldKey) => {
+    const base = "w-full rounded-xl border px-4 py-3 text-base transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/40 appearance-none bg-no-repeat bg-[right_0.75rem_center] bg-[length:1rem]";
+    const isAnimating = animatingField === fieldKey;
+    const status = fieldStatuses[fieldKey];
+
+    if (isAnimating) return `${base} border-primary bg-primary/5 ring-2 ring-primary/30`;
+    if (status) return `${base} ${getFieldStatusClass(status)}`;
+    return `${base} border-border bg-white`;
   };
 
-  const inputClass = (filled: boolean) =>
-    `mt-1 w-full rounded-lg border px-3 py-3 sm:py-2.5 text-base sm:text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors ${
-      filled ? "border-green-300 bg-green-50/50" : "border-border bg-white"
-    }`;
-
-  if (submitted) {
+  // ─── FASE: SUBMITTED ────────────────────────────────────────
+  if (phase === "submitted") {
     return (
-      <div className="animate-fade-in-up text-center py-12">
-        <div className="mx-auto h-20 w-20 rounded-3xl bg-green-50 border border-green-100 flex items-center justify-center mb-6">
-          <CheckCircle2 className="h-10 w-10 text-green-600" />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="guide-card p-6 sm:p-8 text-center"
+      >
+        <div className="h-16 w-16 rounded-2xl bg-green-100 flex items-center justify-center mx-auto mb-4">
+          <CheckCircle2 className="h-8 w-8 text-green-600" />
         </div>
-        <h2 className="text-2xl sm:text-3xl font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
+        <h3 className="text-2xl font-bold text-foreground mb-2" style={{ fontFamily: "var(--font-display)" }}>
           {t.bookingSent}
-        </h2>
-        <p className="text-muted-foreground mt-3 text-base max-w-md mx-auto">
-          {t.bookingSentDesc}
-        </p>
-        <div className="guide-card p-5 mt-8 max-w-sm mx-auto text-left">
-          <p className="text-sm font-bold text-foreground mb-2" style={{ fontFamily: "var(--font-display)" }}>
-            {t.passengerSummary}
-          </p>
-          <div className="space-y-1 text-sm text-muted-foreground">
-            <p><span className="font-medium text-foreground">{t.nameLabel}:</span> {passenger.givenName} {passenger.familyName}</p>
-            <p><span className="font-medium text-foreground">{t.docLabel}:</span> {passenger.documentNumber}</p>
-            <p><span className="font-medium text-foreground">{t.natLabel}:</span> {passenger.nationality}</p>
+        </h3>
+        <p className="text-muted-foreground mb-6">{t.bookingSentDesc}</p>
+
+        <div className="guide-card p-4 text-left mb-6">
+          <h4 className="text-sm font-bold text-muted-foreground mb-3">{t.passengerSummary}</h4>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{t.nameLabel}</span>
+              <span className="font-medium">{passenger.givenName} {passenger.familyName}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{t.docLabel}</span>
+              <span className="font-medium">{passenger.documentNumber}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{t.natLabel}</span>
+              <span className="font-medium">{passenger.nationality}</span>
+            </div>
           </div>
         </div>
-        <Button
-          className="mt-8 h-14 sm:h-12 px-8 text-base"
-          onClick={() => {
-            setSubmitted(false);
-            setPassenger(EMPTY_PASSENGER);
-            setFilledFromScan(false);
-            setContactEmail("");
-            setContactPhone("");
-          }}
-        >
-          <RotateCcw className="h-4 w-4 mr-2" />
+
+        <Button onClick={handleRescan} className="btn-guide-primary w-full text-base py-3">
+          <Plane className="h-5 w-5 mr-2" />
           {t.newBooking}
         </Button>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="animate-fade-in-up">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="mb-6 sm:mb-8">
-        <div className="section-eyebrow w-fit">
-          <Plane className="h-3.5 w-3.5" />
+      <div className="text-center">
+        <div className="section-eyebrow mx-auto w-fit">
+          <FileText className="h-3.5 w-3.5" />
           {t.bookingEyebrow}
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold text-foreground mt-3" style={{ fontFamily: "var(--font-display)" }}>
           {t.bookingTitle}
         </h2>
-        <p className="text-muted-foreground mt-2">
-          {filledFromScan ? t.bookingDescScan : t.bookingDescManual}
+        <p className="text-muted-foreground mt-2 text-base max-w-lg mx-auto">
+          {scanData ? t.bookingDescScan : t.bookingDescManual}
         </p>
       </div>
 
-      {/* Scan status banner */}
-      {filledFromScan && (
-        <div className="rounded-xl bg-green-50 border border-green-200 p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-green-600" />
-            <span className="text-sm font-medium text-green-800">
-              {t.scanAppliedBanner} ({scanData?.confidence}% {t.confidenceLabel})
-            </span>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-green-300 text-green-700 hover:bg-green-100"
-            onClick={onRescan}
+      {/* Status banner — Verifying / Distributing */}
+      <AnimatePresence mode="wait">
+        {phase === "verifying" && (
+          <motion.div
+            key="verifying"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="guide-card p-4 border-primary/30 bg-primary/5"
           >
-            <ScanLine className="h-3.5 w-3.5 mr-1.5" />
-            {t.rescan}
-          </Button>
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Brain className="h-5 w-5 text-primary animate-pulse" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
+                  {t.verifyingData}
+                </p>
+                <p className="text-xs text-muted-foreground">{t.securityNote}</p>
+              </div>
+              <Loader2 className="h-5 w-5 text-primary animate-spin ml-auto" />
+            </div>
+          </motion.div>
+        )}
+
+        {phase === "distributing" && distribution && (
+          <motion.div
+            key="distributing"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="guide-card p-4 border-green-300 bg-green-50"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-green-100 flex items-center justify-center">
+                <Sparkles className="h-5 w-5 text-green-600 animate-pulse" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
+                  {t.distributingFields}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {distribution.filledCount} {t.fieldsFilled}
+                </p>
+              </div>
+              <ArrowRight className="h-5 w-5 text-green-600 ml-auto animate-bounce" />
+            </div>
+          </motion.div>
+        )}
+
+        {phase === "ready" && distribution && (
+          <motion.div
+            key="ready"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className={`guide-card p-4 ${
+              distribution.overallStatus === "success"
+                ? "border-green-300 bg-green-50"
+                : distribution.overallStatus === "partial"
+                ? "border-amber-300 bg-amber-50"
+                : "border-red-300 bg-red-50"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${
+                distribution.overallStatus === "success" ? "bg-green-100" :
+                distribution.overallStatus === "partial" ? "bg-amber-100" : "bg-red-100"
+              }`}>
+                {distribution.overallStatus === "success" ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                ) : distribution.overallStatus === "partial" ? (
+                  <AlertTriangle className="h-5 w-5 text-amber-600" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-red-600" />
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
+                  {distribution.overallStatus === "success" ? t.autoFillComplete :
+                   distribution.overallStatus === "partial" ? t.autoFillPartial : t.autoFillFailed}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {distribution.filledCount} {t.fieldsFilled}
+                  {distribution.skippedCount > 0 && ` · ${distribution.skippedCount} ${t.fieldsNeedReview}`}
+                </p>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleRescan} className="text-xs">
+                <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                {t.rescan}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Verification Panel (Constatação) */}
+      <AnimatePresence>
+        {showVerificationPanel && verification && (phase === "verified" || phase === "distributing" || phase === "ready") && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <VerificationPanel verification={verification} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* No scan data banner */}
+      {!scanData && phase === "idle" && (
+        <div className="guide-card p-4 border-primary/20 bg-primary/5">
+          <div className="flex items-center gap-3">
+            <ScanLine className="h-5 w-5 text-primary" />
+            <p className="text-sm text-foreground">{t.scanFasterBanner}</p>
+          </div>
         </div>
       )}
 
-      {!filledFromScan && (
-        <div className="rounded-xl bg-accent/50 border border-primary/10 p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-2">
-            <ScanLine className="h-4 w-4 text-primary" />
-            <span className="text-sm text-foreground">{t.scanFasterBanner}</span>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-primary/20 text-primary hover:bg-primary/5"
-            onClick={onRescan}
-          >
-            <ScanLine className="h-3.5 w-3.5 mr-1.5" />
-            {t.scanDocument}
-          </Button>
+      {/* ─── FORM ──────────────────────────────────────────── */}
+      <div className="guide-card p-5 sm:p-6">
+        {/* Personal Info Section */}
+        <div className="flex items-center gap-2 mb-4">
+          <User className="h-4.5 w-4.5 text-primary" />
+          <h3 className="text-base font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
+            {t.personalInfo}
+          </h3>
         </div>
-      )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Personal Information */}
-        <div className="guide-card p-4 sm:p-6">
-          <div className="flex items-center gap-2 mb-5">
-            <User className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
-              {t.personalInfo}
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t.title}</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          {/* Title */}
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">{t.title}</label>
+            <div className="relative">
               <select
                 value={passenger.title}
-                onChange={(e) => updateField("title", e.target.value)}
-                className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-3 sm:py-2.5 text-base sm:text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                onChange={(e) => handleChange("title", e.target.value)}
+                className={getSelectClass("title")}
               >
                 <option value="mr">{t.titleMr}</option>
                 <option value="mrs">{t.titleMrs}</option>
                 <option value="ms">{t.titleMs}</option>
                 <option value="dr">{t.titleDr}</option>
               </select>
-            </div>
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t.firstName} *</label>
-              <input
-                required
-                value={passenger.givenName}
-                onChange={(e) => updateField("givenName", e.target.value)}
-                className={inputClass(filledFromScan && !!passenger.givenName)}
-                placeholder={t.firstName}
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t.lastName} *</label>
-              <input
-                required
-                value={passenger.familyName}
-                onChange={(e) => updateField("familyName", e.target.value)}
-                className={inputClass(filledFromScan && !!passenger.familyName)}
-                placeholder={t.lastName}
-              />
+              {fieldStatuses.title && <div className="absolute right-10 top-1/2 -translate-y-1/2"><StatusIndicator status={fieldStatuses.title} /></div>}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t.birthDate} *</label>
-              <input
-                required
-                type="date"
-                value={passenger.bornOn}
-                onChange={(e) => updateField("bornOn", e.target.value)}
-                className={inputClass(filledFromScan && !!passenger.bornOn)}
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t.gender} *</label>
+          {/* Gender */}
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">{t.gender}</label>
+            <div className="relative">
               <select
-                required
                 value={passenger.gender}
-                onChange={(e) => updateField("gender", e.target.value)}
-                className={inputClass(filledFromScan && !!passenger.gender)}
+                onChange={(e) => handleChange("gender", e.target.value)}
+                className={getSelectClass("gender")}
               >
                 <option value="">{t.genderSelect}</option>
                 <option value="m">{t.genderMale}</option>
                 <option value="f">{t.genderFemale}</option>
               </select>
+              {fieldStatuses.gender && <div className="absolute right-10 top-1/2 -translate-y-1/2"><StatusIndicator status={fieldStatuses.gender} /></div>}
+            </div>
+          </div>
+
+          {/* Given Name */}
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">{t.firstName}</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={passenger.givenName}
+                onChange={(e) => handleChange("givenName", e.target.value)}
+                className={getInputClass("givenName")}
+                placeholder="John"
+              />
+              {fieldStatuses.givenName && <div className="absolute right-3 top-1/2 -translate-y-1/2"><StatusIndicator status={fieldStatuses.givenName} /></div>}
+            </div>
+          </div>
+
+          {/* Family Name */}
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">{t.lastName}</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={passenger.familyName}
+                onChange={(e) => handleChange("familyName", e.target.value)}
+                className={getInputClass("familyName")}
+                placeholder="Doe"
+              />
+              {fieldStatuses.familyName && <div className="absolute right-3 top-1/2 -translate-y-1/2"><StatusIndicator status={fieldStatuses.familyName} /></div>}
+            </div>
+          </div>
+
+          {/* Birth Date */}
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">{t.birthDate}</label>
+            <div className="relative">
+              <input
+                type="date"
+                value={passenger.bornOn}
+                onChange={(e) => handleChange("bornOn", e.target.value)}
+                className={getInputClass("bornOn")}
+              />
+              {fieldStatuses.bornOn && <div className="absolute right-10 top-1/2 -translate-y-1/2"><StatusIndicator status={fieldStatuses.bornOn} /></div>}
+            </div>
+          </div>
+
+          {/* Nationality */}
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">{t.nationality}</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={passenger.nationality}
+                onChange={(e) => handleChange("nationality", e.target.value)}
+                className={getInputClass("nationality")}
+                placeholder="BRA"
+                maxLength={3}
+              />
+              {fieldStatuses.nationality && <div className="absolute right-3 top-1/2 -translate-y-1/2"><StatusIndicator status={fieldStatuses.nationality} /></div>}
             </div>
           </div>
         </div>
 
-        {/* Document Information */}
-        <div className="guide-card p-4 sm:p-6">
-          <div className="flex items-center gap-2 mb-5">
-            <FileText className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
-              {t.documentInfo}
-            </h3>
-          </div>
+        {/* Document Info Section */}
+        <div className="flex items-center gap-2 mb-4">
+          <FileText className="h-4.5 w-4.5 text-primary" />
+          <h3 className="text-base font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
+            {t.documentInfo}
+          </h3>
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t.documentType}</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          {/* Document Type */}
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">{t.documentType}</label>
+            <div className="relative">
               <select
                 value={passenger.documentType}
-                onChange={(e) => updateField("documentType", e.target.value)}
-                className={inputClass(filledFromScan && passenger.documentType !== "passport")}
+                onChange={(e) => handleChange("documentType", e.target.value)}
+                className={getSelectClass("documentType")}
               >
                 <option value="passport">{t.passportType}</option>
                 <option value="national_id">{t.nationalIdType}</option>
@@ -299,105 +511,112 @@ export function BookingForm({ scanData, onRescan }: BookingFormProps) {
                 <option value="travel_document">{t.travelDocType}</option>
                 <option value="other">{t.otherType}</option>
               </select>
-            </div>
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t.documentNumber} *</label>
-              <input
-                required
-                value={passenger.documentNumber}
-                onChange={(e) => updateField("documentNumber", e.target.value.toUpperCase())}
-                className={`${inputClass(filledFromScan && !!passenger.documentNumber)} font-mono`}
-                placeholder="AB1234567"
-              />
+              {fieldStatuses.documentType && <div className="absolute right-10 top-1/2 -translate-y-1/2"><StatusIndicator status={fieldStatuses.documentType} /></div>}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t.expiryDate}</label>
+          {/* Document Number */}
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">{t.documentNumber}</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={passenger.documentNumber}
+                onChange={(e) => handleChange("documentNumber", e.target.value)}
+                className={getInputClass("documentNumber")}
+                placeholder="AB1234567"
+              />
+              {fieldStatuses.documentNumber && <div className="absolute right-3 top-1/2 -translate-y-1/2"><StatusIndicator status={fieldStatuses.documentNumber} /></div>}
+            </div>
+          </div>
+
+          {/* Expiry Date */}
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">{t.expiryDate}</label>
+            <div className="relative">
               <input
                 type="date"
                 value={passenger.documentExpiryDate}
-                onChange={(e) => updateField("documentExpiryDate", e.target.value)}
-                className={inputClass(filledFromScan && !!passenger.documentExpiryDate)}
+                onChange={(e) => handleChange("documentExpiryDate", e.target.value)}
+                className={getInputClass("documentExpiryDate")}
               />
+              {fieldStatuses.documentExpiryDate && <div className="absolute right-10 top-1/2 -translate-y-1/2"><StatusIndicator status={fieldStatuses.documentExpiryDate} /></div>}
             </div>
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t.nationality}</label>
+          </div>
+
+          {/* Issuing Country */}
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">{t.issuingCountry}</label>
+            <div className="relative">
               <input
-                value={passenger.nationality}
-                onChange={(e) => updateField("nationality", e.target.value.toUpperCase())}
-                maxLength={3}
-                className={inputClass(filledFromScan && !!passenger.nationality)}
-                placeholder="BRA"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t.issuingCountry}</label>
-              <input
+                type="text"
                 value={passenger.documentIssuingCountry}
-                onChange={(e) => updateField("documentIssuingCountry", e.target.value.toUpperCase())}
-                maxLength={3}
-                className={inputClass(filledFromScan && !!passenger.documentIssuingCountry)}
+                onChange={(e) => handleChange("documentIssuingCountry", e.target.value)}
+                className={getInputClass("documentIssuingCountry")}
                 placeholder="BRA"
+                maxLength={3}
               />
+              {fieldStatuses.documentIssuingCountry && <div className="absolute right-3 top-1/2 -translate-y-1/2"><StatusIndicator status={fieldStatuses.documentIssuingCountry} /></div>}
             </div>
           </div>
         </div>
 
-        {/* Contact Information */}
-        <div className="guide-card p-4 sm:p-6">
-          <div className="flex items-center gap-2 mb-5">
-            <Mail className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
-              {t.contact}
-            </h3>
-          </div>
+        {/* Contact Section */}
+        <div className="flex items-center gap-2 mb-4">
+          <Mail className="h-4.5 w-4.5 text-primary" />
+          <h3 className="text-base font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
+            {t.contact}
+          </h3>
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t.email} *</label>
-              <input
-                required
-                type="email"
-                value={contactEmail}
-                onChange={(e) => setContactEmail(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-3 sm:py-2.5 text-base sm:text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                placeholder="email@example.com"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t.phone} *</label>
-              <input
-                required
-                type="tel"
-                value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-3 sm:py-2.5 text-base sm:text-sm text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-                placeholder="+55 11 99999-9999"
-              />
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">{t.email}</label>
+            <input
+              type="email"
+              value={passenger.email}
+              onChange={(e) => handleChange("email", e.target.value)}
+              className={getInputClass("email")}
+              placeholder="email@example.com"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">{t.phone}</label>
+            <input
+              type="tel"
+              value={passenger.phoneNumber}
+              onChange={(e) => handleChange("phoneNumber", e.target.value)}
+              className={getInputClass("phoneNumber")}
+              placeholder="+55 11 99999-9999"
+            />
           </div>
         </div>
 
         {/* Security note */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-5">
           <Shield className="h-3.5 w-3.5" />
           <span>{t.encryptionNote}</span>
         </div>
 
         {/* Submit */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button
-            type="submit"
-            className="flex-1 h-16 sm:h-14 text-lg font-bold"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            <CheckCircle2 className="h-5 w-5 mr-2" />
-            {t.submitBooking}
-          </Button>
-        </div>
-      </form>
+        <Button
+          onClick={handleSubmit}
+          disabled={phase === "verifying" || phase === "distributing"}
+          className="btn-guide-primary w-full text-base py-3 h-auto"
+        >
+          {phase === "verifying" || phase === "distributing" ? (
+            <>
+              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+              {phase === "verifying" ? t.verifyingData : t.distributingFields}
+            </>
+          ) : (
+            <>
+              <Plane className="h-5 w-5 mr-2" />
+              {t.submitBooking}
+            </>
+          )}
+        </Button>
+      </div>
     </div>
   );
 }

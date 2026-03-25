@@ -157,6 +157,24 @@ export interface Translations {
   warnDocType: string;
   warnLowConf: string;
 
+  // Verification module
+  verificationTitle: string;
+  verificationApproved: string;
+  verificationReview: string;
+  verificationRejected: string;
+  verified: string;
+  warnings: string;
+  errors: string;
+  verificationFooter: string;
+  verifyingData: string;
+  verificationComplete: string;
+  distributingFields: string;
+  fieldsFilled: string;
+  fieldsNeedReview: string;
+  autoFillComplete: string;
+  autoFillPartial: string;
+  autoFillFailed: string;
+
   // Scanner session
   scannerSessionTitle: string;
   scannerSessionDesc: string;
@@ -316,6 +334,23 @@ const pt: Translations = {
   warnDocType: "Tipo de documento inesperado",
   warnLowConf: "Confiança baixa — confira os dados manualmente",
 
+  verificationTitle: "Constatação do Documento",
+  verificationApproved: "Documento Verificado",
+  verificationReview: "Revisão Necessária",
+  verificationRejected: "Verificação Falhou",
+  verified: "verificados",
+  warnings: "alertas",
+  errors: "erros",
+  verificationFooter: "Verificação realizada localmente por IA — nenhum dado enviado a servidores",
+  verifyingData: "Verificando dados com IA...",
+  verificationComplete: "Verificação concluída",
+  distributingFields: "Distribuindo dados nos campos...",
+  fieldsFilled: "campos preenchidos automaticamente",
+  fieldsNeedReview: "campos precisam de revisão",
+  autoFillComplete: "Todos os campos foram preenchidos e verificados com sucesso.",
+  autoFillPartial: "Alguns campos foram preenchidos. Revise os campos destacados.",
+  autoFillFailed: "Não foi possível preencher os campos automaticamente. Preencha manualmente.",
+
   scannerSessionTitle: "Scanner para Reserva",
   scannerSessionDesc: "Escaneie seu documento aqui. Os dados serão enviados de volta para o formulário de reserva no computador.",
   sendToSite: "Enviar para o Formulário",
@@ -474,6 +509,23 @@ const en: Translations = {
   warnDocType: "Unexpected document type",
   warnLowConf: "Low confidence — check data manually",
 
+  verificationTitle: "Document Verification",
+  verificationApproved: "Document Verified",
+  verificationReview: "Review Needed",
+  verificationRejected: "Verification Failed",
+  verified: "verified",
+  warnings: "warnings",
+  errors: "errors",
+  verificationFooter: "Verification performed locally by AI — no data sent to servers",
+  verifyingData: "Verifying data with AI...",
+  verificationComplete: "Verification complete",
+  distributingFields: "Distributing data to fields...",
+  fieldsFilled: "fields auto-filled",
+  fieldsNeedReview: "fields need review",
+  autoFillComplete: "All fields were filled and verified successfully.",
+  autoFillPartial: "Some fields were filled. Review the highlighted fields.",
+  autoFillFailed: "Could not auto-fill the fields. Please fill manually.",
+
   scannerSessionTitle: "Scanner for Booking",
   scannerSessionDesc: "Scan your document here. The data will be sent back to the booking form on your computer.",
   sendToSite: "Send to Form",
@@ -631,6 +683,23 @@ const es: Translations = {
   warnExpiryDate: "Verificación de la fecha de vencimiento falló",
   warnDocType: "Tipo de documento inesperado",
   warnLowConf: "Confianza baja — verifique los datos manualmente",
+
+  verificationTitle: "Constatación del Documento",
+  verificationApproved: "Documento Verificado",
+  verificationReview: "Revisión Necesaria",
+  verificationRejected: "Verificación Falló",
+  verified: "verificados",
+  warnings: "alertas",
+  errors: "errores",
+  verificationFooter: "Verificación realizada localmente por IA — ningún dato enviado a servidores",
+  verifyingData: "Verificando datos con IA...",
+  verificationComplete: "Verificación completada",
+  distributingFields: "Distribuyendo datos en los campos...",
+  fieldsFilled: "campos completados automáticamente",
+  fieldsNeedReview: "campos necesitan revisión",
+  autoFillComplete: "Todos los campos fueron completados y verificados con éxito.",
+  autoFillPartial: "Algunos campos fueron completados. Revise los campos destacados.",
+  autoFillFailed: "No fue posible completar los campos automáticamente. Complete manualmente.",
 
   scannerSessionTitle: "Escáner para Reserva",
   scannerSessionDesc: "Escanee su documento aquí. Los datos se enviarán de vuelta al formulario de reserva en su computadora.",
