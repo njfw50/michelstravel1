@@ -928,6 +928,23 @@ export default function Booking() {
   const { toast } = useToast();
   const { user } = useAuth();
   const { t, language } = useI18n();
+  const {
+    speak: speakPage,
+    stop: stopPage,
+    speaking: speakingPage,
+    supported: supportedPage,
+  } = useVoiceGuide();
+  const audioLang = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
+  const contactAudio = language === "pt"
+    ? "Preencha o e-mail e o telefone para receber o bilhete e avisos. Use um número com WhatsApp se possível."
+    : language === "es"
+      ? "Complete correo y teléfono para recibir su billete y avisos. Use un número con WhatsApp si es posible."
+      : "Fill in email and phone so we can send your ticket and updates. Use a WhatsApp-capable number if possible.";
+  const paymentAudio = language === "pt"
+    ? "Revise o valor total e finalize o pagamento com segurança. Tenha o cartão em mãos; o código de segurança será solicitado."
+    : language === "es"
+      ? "Revise el total y complete el pago con seguridad. Tenga la tarjeta a mano; se pedirá el código de seguridad."
+      : "Review the total and complete payment securely. Keep your card handy; we will ask for the security code.";
   
   const createBooking = useCreateBooking();
 
@@ -1427,6 +1444,25 @@ export default function Booking() {
             {paymentStep && paymentData ? (
               <Card className="border border-gray-200 shadow-sm rounded-2xl bg-white">
                 <CardContent className="p-5 md:p-6">
+                  <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {t("payment.title") || "Pagamento"}
+                    </h2>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-700 hover:bg-blue-50"
+                      disabled={!supportedPage}
+                      onClick={() => {
+                        if (speakingPage) stopPage();
+                        else speakPage(paymentAudio, audioLang);
+                      }}
+                    >
+                      <Headphones className="h-4 w-4 mr-2" />
+                      {speakingPage ? t("booking.audio_stop", { defaultValue: "Parar" }) : t("booking.audio_play", { defaultValue: "Ouvir dica" })}
+                    </Button>
+                  </div>
                   <PaymentForm
                     clientSecret={paymentData.clientSecret}
                     bookingId={paymentData.bookingId}
@@ -1447,10 +1483,26 @@ export default function Booking() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <Card className="border border-gray-200 shadow-sm rounded-2xl bg-white">
                 <CardHeader className="border-b border-gray-100 gap-2">
-                  <CardTitle className="flex items-center gap-2 text-gray-900">
-                    <User className="h-5 w-5 text-blue-500" />
-                    {t("booking.contact_info")}
-                  </CardTitle>
+                  <div className="flex flex-wrap items-center gap-3 justify-between">
+                    <CardTitle className="flex items-center gap-2 text-gray-900">
+                      <User className="h-5 w-5 text-blue-500" />
+                      {t("booking.contact_info")}
+                    </CardTitle>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-700 hover:bg-blue-50"
+                      disabled={!supportedPage}
+                      onClick={() => {
+                        if (speakingPage) stopPage();
+                        else speakPage(contactAudio, audioLang);
+                      }}
+                    >
+                      <Headphones className="h-4 w-4 mr-2" />
+                      {speakingPage ? t("booking.audio_stop", { defaultValue: "Parar" }) : t("booking.audio_play", { defaultValue: "Ouvir dica" })}
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="p-5 md:p-6 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
