@@ -41,6 +41,10 @@ yarn-error.log*
 *.sqlite
 *.db
 
+# Local mobile scaffolds not part of the shipped app
+mobile/
+tempnative/
+
 # Replit specific (keep for Replit compatibility)
 .config
 .local

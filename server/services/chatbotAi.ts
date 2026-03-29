@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 
-export type ChatbotAiProvider = "openai" | "gemini" | "none";
+export type ChatbotAiProvider = "gemini" | "cerebras" | "none";
 
 export interface ChatbotAiStatus {
   provider: ChatbotAiProvider;
@@ -17,15 +17,23 @@ export interface ChatbotAiClientConfig extends ChatbotAiStatus {
   baseURL: string | null;
 }
 
-const DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1";
 const DEFAULT_GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/";
+const DEFAULT_CEREBRAS_BASE_URL = "https://api.cerebras.ai/v1";
 
 let cachedConfig: ChatbotAiClientConfig | null = null;
 
 function pickProvider(): { provider: ChatbotAiProvider; apiKey: string | null; baseURL: string | null } {
   const requestedProvider = (process.env.AI_PROVIDER || "auto").trim().toLowerCase();
-  const openaiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY?.trim() || null;
   const geminiKey = process.env.GEMINI_API_KEY?.trim() || null;
+  const cerebrasKey = process.env.CEREBRAS_API_KEY?.trim() || null;
+
+  if (requestedProvider === "cerebras" && cerebrasKey) {
+    return {
+      provider: "cerebras",
+      apiKey: cerebrasKey,
+      baseURL: process.env.CEREBRAS_BASE_URL?.trim() || DEFAULT_CEREBRAS_BASE_URL,
+    };
+  }
 
   if (requestedProvider === "gemini" && geminiKey) {
     return {
@@ -35,11 +43,11 @@ function pickProvider(): { provider: ChatbotAiProvider; apiKey: string | null; b
     };
   }
 
-  if (requestedProvider === "openai" && openaiKey) {
+  if (cerebrasKey) {
     return {
-      provider: "openai",
-      apiKey: openaiKey,
-      baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL?.trim() || DEFAULT_OPENAI_BASE_URL,
+      provider: "cerebras",
+      apiKey: cerebrasKey,
+      baseURL: process.env.CEREBRAS_BASE_URL?.trim() || DEFAULT_CEREBRAS_BASE_URL,
     };
   }
 
@@ -48,14 +56,6 @@ function pickProvider(): { provider: ChatbotAiProvider; apiKey: string | null; b
       provider: "gemini",
       apiKey: geminiKey,
       baseURL: process.env.GEMINI_BASE_URL?.trim() || DEFAULT_GEMINI_BASE_URL,
-    };
-  }
-
-  if (openaiKey) {
-    return {
-      provider: "openai",
-      apiKey: openaiKey,
-      baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL?.trim() || DEFAULT_OPENAI_BASE_URL,
     };
   }
 
@@ -96,12 +96,19 @@ export function getChatbotAiClient(): ChatbotAiClientConfig {
           fallbackModel: process.env.CHATBOT_FALLBACK_MODEL?.trim() || "gemini-2.5-flash-lite",
           agentModel: process.env.CHATBOT_AGENT_MODEL?.trim() || process.env.CHATBOT_PRIMARY_MODEL?.trim() || "gemini-2.5-flash",
         }
-      : {
-          label: "OpenAI",
-          primaryModel: process.env.CHATBOT_PRIMARY_MODEL?.trim() || "gpt-4o-mini",
-          fallbackModel: process.env.CHATBOT_FALLBACK_MODEL?.trim() || "gpt-4o-mini",
-          agentModel: process.env.CHATBOT_AGENT_MODEL?.trim() || process.env.CHATBOT_PRIMARY_MODEL?.trim() || "gpt-4o-mini",
-        };
+      : providerSelection.provider === "cerebras"
+        ? {
+            label: "Cerebras",
+            primaryModel: process.env.CHATBOT_PRIMARY_MODEL?.trim() || "llama3.1-8b",
+            fallbackModel: process.env.CHATBOT_FALLBACK_MODEL?.trim() || "llama3.1-8b",
+            agentModel: process.env.CHATBOT_AGENT_MODEL?.trim() || "llama3.1-8b",
+          }
+        : {
+            label: "Basic",
+            primaryModel: null,
+            fallbackModel: null,
+            agentModel: null,
+          };
 
   cachedConfig = {
     provider: providerSelection.provider,

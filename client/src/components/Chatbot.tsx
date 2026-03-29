@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { buildLiveSessionRequestContext, getLiveSessionTheme, isSeniorServiceMode } from "@/lib/live-session-context";
 import { buildWhatsAppMessage } from "@/lib/contact";
+import { emitChatbotBookingPrefill } from "@/lib/chatbot";
 
 interface FlightResult {
   id: string;
@@ -36,7 +37,7 @@ interface ChatMessage {
 }
 
 interface ChatbotStatus {
-  provider: "openai" | "gemini" | "none";
+  provider: "gemini" | "cerebras" | "none";
   available: boolean;
   agentMode: "ai" | "basic";
   label: string;
@@ -223,6 +224,14 @@ export function Chatbot() {
     return "Ol\u00e1! Eu sou a Mia, sua assistente de viagens na Michels Travel. Como posso te ajudar hoje? Posso ajudar com busca de voos, reservas, d\u00favidas sobre bagagem e muito mais!";
   };
 
+  const handleActionEvent = useCallback((action: any) => {
+    if (!action || typeof action !== "object") return;
+
+    if (action.type === "prefill_booking_form" && action.payload) {
+      emitChatbotBookingPrefill(action.payload);
+    }
+  }, []);
+
   const sendMessage = useCallback(async (overrideContent?: string) => {
     const messageContent = (overrideContent ?? input).trim();
     if (!messageContent || isStreaming) return;
@@ -264,6 +273,10 @@ export function Chatbot() {
           if (!jsonStr) return;
           try {
             const event = JSON.parse(jsonStr);
+
+            if (event.type === "action" && event.action) {
+              handleActionEvent(event.action);
+            }
 
             if (event.type === "flights" && event.flights) {
               collectedFlights = event.flights;
@@ -336,7 +349,15 @@ export function Chatbot() {
         xhr.ontimeout = () => reject(new Error("Request timeout"));
         xhr.timeout = 60000;
 
-        xhr.send(JSON.stringify({ sessionId: currentSessionId, content: userMessage.content }));
+        xhr.send(JSON.stringify({
+          sessionId: currentSessionId,
+          content: userMessage.content,
+          context: {
+            pathname: window.location.pathname,
+            search: window.location.search,
+            serviceMode: requestContext.serviceMode,
+          },
+        }));
       });
 
     } catch (error) {
@@ -355,7 +376,7 @@ export function Chatbot() {
     } finally {
       setIsStreaming(false);
     }
-  }, [createSession, input, isStreaming, sessionId, t, agentMode]);
+  }, [agentMode, createSession, handleActionEvent, input, isStreaming, requestContext.serviceMode, sessionId, t]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -442,11 +463,11 @@ export function Chatbot() {
   };
 
   const providerLabel =
-    status?.provider === "gemini"
+    status?.provider === "cerebras"
+      ? "Cerebras"
+      : status?.provider === "gemini"
       ? "Gemini"
-      : status?.provider === "openai"
-        ? "OpenAI"
-        : language === "pt"
+      : language === "pt"
           ? "Modo básico"
           : language === "es"
             ? "Modo básico"

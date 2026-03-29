@@ -152,7 +152,15 @@ let airportsCacheMap: Map<string, DuffelAirport> = new Map();
 let airportsCacheTime = 0;
 let aircraftCache: DuffelAircraft[] = [];
 let aircraftCacheTime = 0;
+let placeSuggestionsCache: Map<string, { timestamp: number; results: any[] }> = new Map();
 const CACHE_TTL = 24 * 60 * 60 * 1000;
+const PLACE_SUGGESTIONS_TTL = 6 * 60 * 60 * 1000;
+const OFFER_EXPIRY_GRACE_MS = 45 * 1000;
+const CATALOG_VALIDATION_BATCH_SIZE = 6;
+const CATALOG_DEFAULT_LIMIT = 50;
+const CATALOG_REFRESH_LIMIT = 14;
+const SPIRIT_PRICE_WINDOW_ABSOLUTE = 35;
+const SPIRIT_PRICE_WINDOW_RATIO = 0.08;
 
 async function duffelGet(path: string) {
   const res = await fetch(`${DUFFEL_BASE}${path}`, { headers: headers() });
@@ -300,6 +308,7 @@ export function clearReferenceDataCache() {
   airportsCacheTime = 0;
   aircraftCache = [];
   aircraftCacheTime = 0;
+  placeSuggestionsCache = new Map();
   console.log("Duffel reference data cache cleared (token switch)");
 }
 
@@ -344,6 +353,105 @@ function formatCabinClass(cabinClass: string): string {
     first: "First Class",
   };
   return map[cabinClass] || cabinClass;
+}
+
+function parseIsoDurationToMinutes(duration?: string | null): number {
+  if (!duration) return Number.MAX_SAFE_INTEGER;
+
+  const match = duration.match(/^P(?:\d+D)?T(?:(\d+)H)?(?:(\d+)M)?/);
+  if (!match) return Number.MAX_SAFE_INTEGER;
+
+  const hours = Number.parseInt(match[1] || "0", 10);
+  const minutes = Number.parseInt(match[2] || "0", 10);
+  return (hours * 60) + minutes;
+}
+
+function isSpiritAirlines(offer: FlightOffer): boolean {
+  const airline = (offer.airline || "").toLowerCase();
+  return airline.includes("spirit");
+}
+
+function hasFreshAvailabilityWindow(offer: FlightOffer): boolean {
+  if (!offer.expiresAt) return true;
+
+  const expiresAtMs = new Date(offer.expiresAt).getTime();
+  if (!Number.isFinite(expiresAtMs)) return true;
+  return expiresAtMs > Date.now() + OFFER_EXPIRY_GRACE_MS;
+}
+
+function buildFlightCatalogOrder(offers: FlightOffer[]): FlightOffer[] {
+  const validOffers = offers.filter((offer) => Number.isFinite(offer.price) && offer.price > 0 && hasFreshAvailabilityWindow(offer));
+  if (validOffers.length === 0) return [];
+
+  const cheapestPrice = Math.min(...validOffers.map((offer) => offer.price));
+  const spiritWindow = cheapestPrice + Math.max(SPIRIT_PRICE_WINDOW_ABSOLUTE, cheapestPrice * SPIRIT_PRICE_WINDOW_RATIO);
+
+  return [...validOffers].sort((left, right) => {
+    const leftSpiritPreferred = isSpiritAirlines(left) && left.price <= spiritWindow;
+    const rightSpiritPreferred = isSpiritAirlines(right) && right.price <= spiritWindow;
+
+    if (leftSpiritPreferred !== rightSpiritPreferred) {
+      return leftSpiritPreferred ? -1 : 1;
+    }
+
+    if (left.price !== right.price) {
+      return left.price - right.price;
+    }
+
+    if (left.stops !== right.stops) {
+      return left.stops - right.stops;
+    }
+
+    const leftDuration = parseIsoDurationToMinutes(left.duration);
+    const rightDuration = parseIsoDurationToMinutes(right.duration);
+    if (leftDuration !== rightDuration) {
+      return leftDuration - rightDuration;
+    }
+
+    return new Date(left.departureTime).getTime() - new Date(right.departureTime).getTime();
+  });
+}
+
+export async function catalogAvailableOffers(
+  offers: FlightOffer[],
+  options?: { limit?: number; validationLimit?: number },
+): Promise<FlightOffer[]> {
+  const limit = options?.limit ?? CATALOG_DEFAULT_LIMIT;
+  const rankedOffers = buildFlightCatalogOrder(offers);
+  const validationLimit = Math.min(
+    Math.max(options?.validationLimit ?? CATALOG_REFRESH_LIMIT, 0),
+    rankedOffers.length,
+    limit,
+  );
+  const validatedOffers: FlightOffer[] = [];
+
+  for (let index = 0; index < validationLimit && validatedOffers.length < validationLimit; index += CATALOG_VALIDATION_BATCH_SIZE) {
+    const batch = rankedOffers.slice(index, Math.min(index + CATALOG_VALIDATION_BATCH_SIZE, validationLimit));
+    const results = await Promise.allSettled(
+      batch.map(async (offer) => {
+        const refreshed = await refreshOffer(offer.id);
+        if (!refreshed.valid) {
+          return null;
+        }
+
+        return {
+          ...offer,
+          price: refreshed.price ?? offer.price,
+          currency: refreshed.currency ?? offer.currency,
+          expiresAt: refreshed.expiresAt ?? offer.expiresAt ?? null,
+        } satisfies FlightOffer;
+      }),
+    );
+
+    for (const result of results) {
+      if (result.status !== "fulfilled" || !result.value) continue;
+      if (!hasFreshAvailabilityWindow(result.value)) continue;
+      validatedOffers.push(result.value);
+    }
+  }
+
+  const trustedTail = rankedOffers.slice(validationLimit, limit).filter(hasFreshAvailabilityWindow);
+  return buildFlightCatalogOrder([...validatedOffers, ...trustedTail]).slice(0, limit);
 }
 
 export async function searchFlights(params: FlightSearchParams): Promise<FlightOffer[]> {
@@ -483,6 +591,7 @@ export async function searchFlights(params: FlightSearchParams): Promise<FlightO
         price: parseFloat(offer.total_amount),
         currency: offer.total_currency,
         stops: slice.segments.length - 1,
+        expiresAt: (offer as any).expires_at || null,
         logoUrl,
         aircraftType: aircraftInfo?.name || null,
         originCity: getCityName(segment.origin.iata_code || params.origin, originAirport),
@@ -545,6 +654,7 @@ export async function getFlight(id: string): Promise<FlightOffer | null> {
         price: 450,
         currency: "USD",
         stops: 0,
+        expiresAt: null,
         logoUrl: null,
       };
     }
@@ -647,6 +757,7 @@ export async function getFlight(id: string): Promise<FlightOffer | null> {
       price: parseFloat(offerData.total_amount),
       currency: offerData.total_currency,
       stops: slice.segments.length - 1,
+      expiresAt: offerData.expires_at || null,
       logoUrl,
       aircraftType: aircraftInfo?.name || null,
       originCity: getCityName(segment.origin.iata_code || "", originAirport),
@@ -685,6 +796,12 @@ export async function searchPlaces(query: string) {
   try {
     if (!getActiveToken()) return [];
 
+    const normalizedQuery = query.trim().toLowerCase();
+    const cached = placeSuggestionsCache.get(normalizedQuery);
+    if (cached && Date.now() - cached.timestamp < PLACE_SUGGESTIONS_TTL) {
+      return cached.results;
+    }
+
     const response = await fetch(
       `https://api.duffel.com/places/suggestions?query=${encodeURIComponent(query)}`,
       { headers: headers() }
@@ -698,7 +815,7 @@ export async function searchPlaces(query: string) {
     }
 
     const data = await response.json();
-    return data.data.map((place: any) => ({
+    const results = data.data.map((place: any) => ({
       id: place.id,
       name: place.name,
       iataCode: place.iata_code,
@@ -706,6 +823,8 @@ export async function searchPlaces(query: string) {
       countryName: place.country_name,
       type: place.type 
     }));
+    placeSuggestionsCache.set(normalizedQuery, { timestamp: Date.now(), results });
+    return results;
   } catch (error) {
     console.error("Duffel searchPlaces Error:", error);
     return [];

@@ -311,6 +311,7 @@ export interface FlightOffer {
   price: number;
   currency: string;
   stops: number;
+  expiresAt?: string | null;
   logoUrl?: string | null;
   aircraftType?: string | null;
   originCity?: string | null;

@@ -27,8 +27,11 @@ import {
   Clock,
   Shield,
   Globe,
+  Bot,
+  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { openChatbotAssistant } from "@/lib/chatbot";
 
 function FAQItem({ question, answer }: { question: string; answer: string }) {
   const [open, setOpen] = useState(false);
@@ -65,7 +68,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
 }
 
 export default function HelpCenter() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const whatsAppHref = buildWhatsAppHref(
@@ -150,6 +153,34 @@ export default function HelpCenter() {
     ? categories.find((c) => c.id === activeCategory)
     : null;
 
+  const chatbotCopy =
+    language === "en"
+      ? {
+          eyebrow: "AI travel desk",
+          title: "Chat with Mia inside Help",
+          description:
+            "Use Mia here to search flights, check a booking, or ask for guided help before payment.",
+          primaryCta: "Open Mia",
+          secondaryCta: "Check my booking",
+        }
+      : language === "es"
+        ? {
+            eyebrow: "Asistente de viajes con IA",
+            title: "Hable con Mia dentro de Ayuda",
+            description:
+              "Use Mia aquí para buscar vuelos, consultar una reserva o recibir ayuda guiada antes del pago.",
+            primaryCta: "Abrir Mia",
+            secondaryCta: "Consultar mi reserva",
+          }
+        : {
+            eyebrow: "Assistente de viagem com IA",
+            title: "Fale com a Mia dentro da Ajuda",
+            description:
+              "Use a Mia aqui para buscar voos, consultar uma reserva ou receber ajuda guiada antes do pagamento.",
+            primaryCta: "Abrir Mia",
+            secondaryCta: "Consultar minha reserva",
+          };
+
   const faqStructuredData = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -182,6 +213,55 @@ export default function HelpCenter() {
           </div>
           <p className="text-sm text-muted-foreground">{t("help.subtitle")}</p>
         </div>
+
+        <Card className="mb-6 overflow-hidden border-blue-200 bg-gradient-to-br from-blue-50 via-white to-slate-50 shadow-sm">
+          <div className="p-5 sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="max-w-xl">
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-700">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>{chatbotCopy.eyebrow}</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm">
+                    <Bot className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-950">{chatbotCopy.title}</h2>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-600">{chatbotCopy.description}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex w-full flex-col gap-2 sm:w-auto">
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={() => openChatbotAssistant()}
+                  data-testid="button-help-open-chatbot"
+                >
+                  <Bot className="mr-2 h-4 w-4" />
+                  {chatbotCopy.primaryCta}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    openChatbotAssistant({
+                      message:
+                        language === "en"
+                          ? "I want to check my booking. My reference starts with MT-."
+                          : language === "es"
+                            ? "Quiero consultar mi reserva. Mi referencia empieza con MT-."
+                            : "Quero consultar minha reserva. Minha referência começa com MT-.",
+                    })
+                  }
+                  data-testid="button-help-booking-chatbot"
+                >
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  {chatbotCopy.secondaryCta}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
 
         <div className="relative mb-8">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

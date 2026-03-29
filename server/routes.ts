@@ -20,18 +20,26 @@ function generateReferenceCode(): string {
   }
   return `MT-${code}`;
 }
-import { searchFlights, getFlight, searchPlaces, getAirlines, getAirports, getAircraft, initializeReferenceData, isTestMode, activeTokenIsTest, hasLiveToken, hasTestToken, setTestModeCache, clearReferenceDataCache, loadTestModeSetting, ensureTestModeLoaded, refreshOffer } from "./services/duffel";
+import { searchFlights, getFlight, searchPlaces, getAirlines, getAirports, getAircraft, initializeReferenceData, isTestMode, activeTokenIsTest, hasLiveToken, hasTestToken, setTestModeCache, clearReferenceDataCache, loadTestModeSetting, ensureTestModeLoaded, refreshOffer, catalogAvailableOffers } from "./services/duffel";
 import { sendBookingConfirmationEmail, sendChatEscalationEmail } from "./services/emailService";
-import { getChatbotAiClient, getChatbotAiStatus } from "./services/chatbotAi";
 import {
   buildAgentLookupSummary,
   buildAgentSearchSummary,
-  buildBasicChatResponse,
   buildBookingNotFoundMessage,
   buildSearchErrorMessage,
   normalizeChatLanguage,
   parseAgentFallbackRequest,
 } from "./services/chatbotFallback";
+import {
+  buildServiceAiFallback,
+  buildServiceAiHistory,
+  createServiceAiCompletionWithFallback,
+  createServiceAiSession,
+  createServiceAiStreamingCompletionWithFallback,
+  getServiceAiClient,
+  getServiceAiStatus,
+  SERVICE_AI_AGENT_TOOLS,
+} from "./services/serviceAi";
 import { buildOwnerDeskSnapshot } from "./services/ownerDesk";
 import { buildRedactedDocumentPayload } from "./services/passengerPrivacy";
 import { analyzeDocumentScanWithAi } from "./services/documentScannerAi";
@@ -183,8 +191,9 @@ export function registerRoutes(app: Express) {
 
       let responseFlights = flights;
       try {
+        responseFlights = await catalogAvailableOffers(responseFlights, { limit: 50 });
         const rate = await getCommissionRate();
-        responseFlights = applyMarkupToFlights(flights, rate);
+        responseFlights = applyMarkupToFlights(responseFlights, rate);
       } catch (err) {
         console.warn("applyMarkup failed, returning raw flights:", err);
       }
@@ -350,8 +359,10 @@ export function registerRoutes(app: Express) {
             cabinClass: "economy",
           });
 
-          if (offers.length > 0) {
-            const sorted = offers.sort((a, b) => a.price - b.price);
+          const catalogedOffers = await catalogAvailableOffers(offers, { limit: 4 });
+
+          if (catalogedOffers.length > 0) {
+            const sorted = catalogedOffers.sort((a, b) => a.price - b.price);
             const cheapest = sorted[0];
             results.push({
               id: cheapest.id,
@@ -457,8 +468,32 @@ export function registerRoutes(app: Express) {
         }
 
         const bookingData = req.body;
-        
         const commissionRate = settings?.commissionPercentage ? parseFloat(settings.commissionPercentage) / 100 : 0.085;
+        const requestedOfferId = typeof bookingData?.flightData?.id === "string" ? bookingData.flightData.id : null;
+
+        if (requestedOfferId) {
+          const refreshedOffer = await refreshOffer(requestedOfferId);
+          if (!refreshedOffer.valid) {
+            return res.status(409).json({
+              error: "This fare is no longer available. Please search again.",
+              code: "offer_unavailable",
+            });
+          }
+
+          if (typeof refreshedOffer.price === "number" && Number.isFinite(refreshedOffer.price)) {
+            const refreshedMarkedUpPrice = parseFloat((refreshedOffer.price * (1 + commissionRate)).toFixed(2));
+            const requestedTotalPrice = parseFloat(bookingData.totalPrice);
+            if (Number.isFinite(requestedTotalPrice) && Math.abs(refreshedMarkedUpPrice - requestedTotalPrice) > 0.01) {
+              return res.status(409).json({
+                error: "This fare changed before checkout. Please review the updated price.",
+                code: "offer_price_changed",
+                updatedPrice: refreshedMarkedUpPrice,
+                currency: refreshedOffer.currency || bookingData.currency || "USD",
+              });
+            }
+          }
+        }
+
         const price = parseFloat(bookingData.totalPrice);
         const commissionAmount = (price * (commissionRate / (1 + commissionRate))).toFixed(2);
 
@@ -2127,8 +2162,8 @@ Sitemap: ${SITE_URL}/sitemap.xml
 
   // === AI CHATBOT ROUTES ===
 
-  const chatbotAi = getChatbotAiClient();
-  const chatbotAiStatus = getChatbotAiStatus();
+  const chatbotAi = getServiceAiClient();
+  const chatbotAiStatus = getServiceAiStatus();
 
   const writeChatEvent = (res: Response, payload: Record<string, unknown>) => {
     res.write(`data: ${JSON.stringify(payload)}\n\n`);
@@ -2211,29 +2246,523 @@ BOOKING LOOKUP:
 - If ticket status is "failed", reassure them that our team has been notified and will help
 - Never share the Duffel Order ID or internal system IDs with customers`;
 
-  const CHATBOT_TOOLS: any[] = [
+  const AGENT_TOOLS: any[] = [
+    {
+      type: "function",
+      function: {
+        name: "search_flights",
+        description: "Search flights when the customer provides origin, destination, and date.",
+        parameters: {
+          type: "object",
+          properties: {
+            origin: { type: "string", description: "3-letter origin airport code, for example EWR" },
+            destination: { type: "string", description: "3-letter destination airport code, for example MCO" },
+            date: { type: "string", description: "Departure date in YYYY-MM-DD format" },
+            returnDate: { type: "string", description: "Return date in YYYY-MM-DD format, when round-trip" },
+            adults: { type: "string", description: "Number of adults" },
+            cabinClass: {
+              type: "string",
+              enum: ["economy", "premium_economy", "business", "first"],
+              description: "Cabin class",
+            },
+          },
+          required: ["origin", "destination", "date"],
+        },
+      },
+    },
     {
       type: "function",
       function: {
         name: "lookup_booking",
-        description: "Look up a customer booking by reference code and email. Use this when a customer wants to check their booking status, flight details, or ticket information.",
+        description: "Look up a customer booking by reference code and email.",
         parameters: {
           type: "object",
           properties: {
             reference: {
               type: "string",
-              description: "Booking reference code (starts with MT-, e.g. MT-ABC123)"
+              description: "Booking reference code that starts with MT-",
             },
             email: {
               type: "string",
-              description: "Email address used during booking"
-            }
+              description: "Email address used during booking",
+            },
           },
-          required: ["reference", "email"]
-        }
+          required: ["reference", "email"],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "fill_booking_form",
+        description: "Prefill the booking form with passenger and contact information when the customer is already on a /book/... page and explicitly asks for help filling the form.",
+        parameters: {
+          type: "object",
+          properties: {
+            contactEmail: { type: "string", description: "Contact email for the reservation" },
+            contactPhone: { type: "string", description: "Contact phone for the reservation" },
+            passengers: {
+              type: "array",
+              description: "Passenger details to prefill into the booking form",
+              items: {
+                type: "object",
+                properties: {
+                  title: { type: "string", enum: ["mr", "mrs", "ms", "miss", "dr"] },
+                  givenName: { type: "string" },
+                  familyName: { type: "string" },
+                  bornOn: { type: "string", description: "Date of birth in YYYY-MM-DD format" },
+                  gender: { type: "string", enum: ["m", "f"] },
+                  email: { type: "string" },
+                  phoneNumber: { type: "string" },
+                  documentType: { type: "string", enum: ["passport", "national_id", "drivers_license", "travel_document", "other"] },
+                  documentNumber: { type: "string" },
+                  documentExpiryDate: { type: "string", description: "Document expiry date in YYYY-MM-DD format" },
+                  documentIssuingCountry: { type: "string" },
+                  nationality: { type: "string" },
+                },
+                required: ["givenName", "familyName"],
+              },
+            },
+          },
+          required: ["passengers"],
+        },
+      },
+    },
+  ];
+
+  type ChatbotRequestContext = {
+    pathname?: string | null;
+    search?: string | null;
+    serviceMode?: string | null;
+  };
+
+  const AGENT_SYSTEM_PROMPT = `${CHATBOT_SYSTEM_PROMPT}
+
+FORM FILLING RULES:
+- Never ask for or collect full credit card numbers, CVV codes, Stripe secrets, passwords, or government IDs inside chat unless the booking form itself requires the customer to type the document number into our secure site form.
+- If the customer is already on a /book/... page and explicitly asks you to help complete the reservation form, you may use fill_booking_form for contact and passenger fields only.
+- Only use fill_booking_form when you have structured passenger/contact data. If information is incomplete, ask short follow-up questions.
+- After prefilling the booking form, remind the customer to review every field before paying.`;
+
+  const validPassengerTitles = new Set(["mr", "mrs", "ms", "miss", "dr"]);
+  const validPassengerGenders = new Set(["m", "f"]);
+  const validDocumentTypes = new Set(["passport", "national_id", "drivers_license", "travel_document", "other"]);
+
+  const createChatHeaders = (res: Response) => {
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-store",
+      Connection: "keep-alive",
+      "X-Accel-Buffering": "no",
+    });
+  };
+
+  const finishChatResponse = (res: Response, escalated = false) => {
+    writeChatEvent(res, { done: true, escalated });
+    res.end();
+  };
+
+  const createCompletionWithFallback = async (options: Record<string, unknown>) => {
+    const { model, fallbackModel, ...rest } = options as { model?: string | null; fallbackModel?: string | null } & Record<string, unknown>;
+    const candidates = [model, fallbackModel].filter((candidate, index, all): candidate is string => Boolean(candidate) && all.indexOf(candidate) === index);
+    let lastError: unknown = null;
+
+    for (const candidate of candidates) {
+      try {
+        return await chatbotAi.client!.chat.completions.create({
+          ...rest,
+          model: candidate,
+        } as any);
+      } catch (error) {
+        lastError = error;
       }
     }
-  ];
+
+    throw lastError || new Error("No chatbot model configured");
+  };
+
+  const createStreamingCompletionWithFallback = async (options: Record<string, unknown>) => {
+    const { model, fallbackModel, ...rest } = options as { model?: string | null; fallbackModel?: string | null } & Record<string, unknown>;
+    const candidates = [model, fallbackModel].filter((candidate, index, all): candidate is string => Boolean(candidate) && all.indexOf(candidate) === index);
+    let lastError: unknown = null;
+
+    for (const candidate of candidates) {
+      try {
+        return await chatbotAi.client!.chat.completions.create({
+          ...rest,
+          model: candidate,
+          stream: true,
+        } as any);
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError || new Error("No chatbot model configured");
+  };
+
+  const buildContextPrompt = (context?: ChatbotRequestContext | null) => {
+    const pathname = typeof context?.pathname === "string" ? context.pathname.trim() : "";
+    const search = typeof context?.search === "string" ? context.search.trim() : "";
+    const serviceMode = typeof context?.serviceMode === "string" ? context.serviceMode.trim() : "";
+
+    if (!pathname && !search && !serviceMode) {
+      return null;
+    }
+
+    const lines = ["CURRENT PAGE CONTEXT:"];
+
+    if (pathname) lines.push(`- Pathname: ${pathname}`);
+    if (search) lines.push(`- Query string: ${search}`);
+    if (serviceMode) lines.push(`- Service mode: ${serviceMode}`);
+
+    if (pathname.startsWith("/book/")) {
+      lines.push("- The customer is already on the booking form.");
+      lines.push("- You may use fill_booking_form if the customer explicitly asks for agent help and provides passenger/contact details.");
+    } else if (pathname.startsWith("/search")) {
+      lines.push("- The customer is on the flight results page.");
+      lines.push("- Searching again is allowed if the customer wants better dates, airports, or cabin options.");
+    } else {
+      lines.push("- Keep your answer aligned with the current page when relevant.");
+    }
+
+    return lines.join("\n");
+  };
+
+  const buildChatHistory = (
+    existingMessages: Array<{ role: string; content: string }>,
+    systemPrompt: string,
+    context?: ChatbotRequestContext | null,
+  ) => {
+    const history: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
+      { role: "system", content: systemPrompt },
+    ];
+    const contextPrompt = buildContextPrompt(context);
+    if (contextPrompt) {
+      history.push({ role: "system", content: contextPrompt });
+    }
+    history.push(
+      ...existingMessages
+        .filter((message) => message.role === "user" || message.role === "assistant")
+        .map((message) => ({
+          role: message.role as "user" | "assistant",
+          content: message.content,
+        })),
+    );
+    return history;
+  };
+
+  const persistAssistantMessage = async (sessionId: number, content: string) => {
+    await db.insert(messages).values({
+      conversationId: sessionId,
+      role: "assistant",
+      content,
+    });
+  };
+
+  const streamCompletionText = async (
+    res: Response,
+    stream: AsyncIterable<any>,
+    isDisconnected: () => boolean,
+  ) => {
+    let fullResponse = "";
+
+    for await (const chunk of stream) {
+      if (isDisconnected()) break;
+      const text = chunk.choices?.[0]?.delta?.content || "";
+      if (!text) continue;
+      fullResponse += text;
+      writeChatEvent(res, { content: text, type: "text" });
+    }
+
+    return fullResponse;
+  };
+
+  const normalizeIsoDate = (value: unknown) => {
+    if (typeof value !== "string") return undefined;
+    const trimmed = value.trim();
+    return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : undefined;
+  };
+
+  const normalizeText = (value: unknown) => {
+    if (typeof value !== "string") return undefined;
+    const trimmed = value.trim();
+    return trimmed || undefined;
+  };
+
+  const buildPrefillPayload = (rawArgs: Record<string, unknown>) => {
+    const contactEmail = normalizeText(rawArgs.contactEmail);
+    const contactPhone = normalizeText(rawArgs.contactPhone);
+    const passengers = Array.isArray(rawArgs.passengers)
+      ? rawArgs.passengers
+          .map((item) => {
+            const rawPassenger = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+            const givenName = normalizeText(rawPassenger.givenName);
+            const familyName = normalizeText(rawPassenger.familyName);
+            if (!givenName || !familyName) return null;
+
+            const title = normalizeText(rawPassenger.title)?.toLowerCase();
+            const gender = normalizeText(rawPassenger.gender)?.toLowerCase();
+            const documentType = normalizeText(rawPassenger.documentType)?.toLowerCase();
+
+            return {
+              title: title && validPassengerTitles.has(title) ? title : undefined,
+              givenName,
+              familyName,
+              bornOn: normalizeIsoDate(rawPassenger.bornOn),
+              gender: gender && validPassengerGenders.has(gender) ? gender : undefined,
+              email: normalizeText(rawPassenger.email),
+              phoneNumber: normalizeText(rawPassenger.phoneNumber),
+              documentType: documentType && validDocumentTypes.has(documentType) ? documentType : undefined,
+              documentNumber: normalizeText(rawPassenger.documentNumber),
+              documentExpiryDate: normalizeIsoDate(rawPassenger.documentExpiryDate),
+              documentIssuingCountry: normalizeText(rawPassenger.documentIssuingCountry),
+              nationality: normalizeText(rawPassenger.nationality),
+            };
+          })
+          .filter(Boolean)
+      : [];
+
+    return {
+      contactEmail,
+      contactPhone,
+      passengers,
+    };
+  };
+
+  const buildPrefillConfirmation = (languageInput: string | null | undefined, passengerCount: number) => {
+    const language = normalizeChatLanguage(languageInput);
+    if (language === "en") {
+      return passengerCount > 0
+        ? `I filled the booking form with ${passengerCount} passenger${passengerCount === 1 ? "" : "s"}. Please review each field calmly before payment.`
+        : "I updated the contact fields in the booking form. Please review everything before payment.";
+    }
+    if (language === "es") {
+      return passengerCount > 0
+        ? `Completé el formulario de reserva con ${passengerCount} pasajero${passengerCount === 1 ? "" : "s"}. Revise cada campo con calma antes del pago.`
+        : "Actualicé los datos de contacto en el formulario de reserva. Revíselo todo antes del pago.";
+    }
+    return passengerCount > 0
+      ? `Preenchi o formulário da reserva com ${passengerCount} passageiro${passengerCount === 1 ? "" : "s"}. Revise cada campo com calma antes do pagamento.`
+      : "Atualizei os dados de contato no formulário da reserva. Revise tudo antes do pagamento.";
+  };
+
+  const buildPrefillUnavailableMessage = (languageInput: string | null | undefined) => {
+    const language = normalizeChatLanguage(languageInput);
+    if (language === "en") {
+      return "To fill the reservation form automatically, open the booking page first and then ask me to help with the passenger details.";
+    }
+    if (language === "es") {
+      return "Para completar el formulario de reserva automáticamente, abre primero la página de reserva y luego pídeme ayuda con los datos de los pasajeros.";
+    }
+    return "Para preencher o formulário da reserva automaticamente, abra primeiro a página de reserva e depois me peça ajuda com os dados dos passageiros.";
+  };
+
+  const buildMissingPrefillMessage = (languageInput: string | null | undefined) => {
+    const language = normalizeChatLanguage(languageInput);
+    if (language === "en") {
+      return "I can fill the booking form once you send at least the passenger first and last name, plus contact email or phone if available.";
+    }
+    if (language === "es") {
+      return "Puedo completar el formulario cuando envíes al menos el nombre y apellido del pasajero, además del correo o teléfono de contacto si ya lo tienes.";
+    }
+    return "Posso preencher o formulário quando você enviar pelo menos nome e sobrenome do passageiro, além do e-mail ou telefone de contato se já tiver.";
+  };
+
+  const handleFlightSearchResult = async (
+    res: Response,
+    sessionId: number,
+    languageInput: string | null | undefined,
+    args: Record<string, unknown>,
+  ) => {
+    try {
+      const origin = normalizeText(args.origin)?.toUpperCase();
+      const destination = normalizeText(args.destination)?.toUpperCase();
+      const date = normalizeIsoDate(args.date);
+
+      if (!origin || !destination || !date) {
+        const invalidMessage = buildSearchErrorMessage(languageInput);
+        writeChatEvent(res, { content: invalidMessage, type: "text" });
+        await persistAssistantMessage(sessionId, invalidMessage);
+        return false;
+      }
+
+      const flights = await searchFlights({
+        origin,
+        destination,
+        date,
+        returnDate: normalizeIsoDate(args.returnDate),
+        adults: normalizeText(args.adults) || "1",
+        passengers: normalizeText(args.adults) || "1",
+        cabinClass: normalizeText(args.cabinClass) || "economy",
+      } as any);
+
+      const chatMarkupRate = await getCommissionRate();
+      const topFlights = flights.slice(0, 5).map((flight) => ({
+        id: flight.id,
+        airline: flight.airline,
+        flightNumber: flight.flightNumber,
+        departureTime: flight.departureTime,
+        arrivalTime: flight.arrivalTime,
+        duration: flight.duration,
+        price: parseFloat((flight.price * (1 + chatMarkupRate)).toFixed(2)),
+        currency: flight.currency,
+        stops: flight.stops,
+        logoUrl: flight.logoUrl,
+        originCode: flight.originCode || origin,
+        destinationCode: flight.destinationCode || destination,
+        originCity: flight.originCity,
+        destinationCity: flight.destinationCity,
+      }));
+
+      writeChatEvent(res, { flights: topFlights, type: "flights" });
+      const summary = buildAgentSearchSummary(languageInput, topFlights, origin, destination, date);
+      writeChatEvent(res, { content: summary, type: "text" });
+      await persistAssistantMessage(sessionId, `[AGENT: Searched ${origin}→${destination} on ${date}]
+${summary}`);
+      return false;
+    } catch (error) {
+      console.error("Flight search error in chatbot agent mode:", error);
+      const errorMessage = buildSearchErrorMessage(languageInput);
+      writeChatEvent(res, { content: errorMessage, type: "text" });
+      await persistAssistantMessage(sessionId, errorMessage);
+      return false;
+    }
+  };
+
+  const handleBookingLookupResult = async (
+    res: Response,
+    sessionId: number,
+    languageInput: string | null | undefined,
+    args: Record<string, unknown>,
+  ) => {
+    const reference = normalizeText(args.reference)?.toUpperCase();
+    const email = normalizeText(args.email)?.toLowerCase();
+
+    if (!reference || !email) {
+      const askMessage =
+        normalizeChatLanguage(languageInput) === "en"
+          ? "I need both the MT reference code and the booking email to find a reservation."
+          : normalizeChatLanguage(languageInput) === "es"
+            ? "Necesito el código MT y el correo de la reserva para encontrarla."
+            : "Preciso do código MT e do e-mail da reserva para localizar o pedido.";
+      writeChatEvent(res, { content: askMessage, type: "text" });
+      await persistAssistantMessage(sessionId, askMessage);
+      return false;
+    }
+
+    try {
+      const booking = await storage.getBookingByReferenceAndEmail(reference, email);
+      const summary = booking
+        ? buildAgentLookupSummary(languageInput, {
+            referenceCode: booking.referenceCode || reference,
+            status: booking.status || "pending",
+            ticketStatus: (booking as any).ticketStatus || null,
+            airlineReference: (booking as any).duffelBookingReference || null,
+            airline: (booking.flightData as any)?.airline || null,
+            origin: (booking.flightData as any)?.origin || (booking.flightData as any)?.originCode || null,
+            destination: (booking.flightData as any)?.destination || (booking.flightData as any)?.destinationCode || null,
+            departureDate: (booking.flightData as any)?.departureTime || null,
+            passengerCount: Array.isArray(booking.passengerDetails) ? booking.passengerDetails.length : 0,
+          })
+        : buildBookingNotFoundMessage(languageInput, reference);
+
+      writeChatEvent(res, { content: summary, type: "text" });
+      await persistAssistantMessage(sessionId, booking ? `[AGENT: Looked up booking ${reference}]
+${summary}` : summary);
+      return false;
+    } catch (error) {
+      console.error("Booking lookup error in chatbot agent mode:", error);
+      const fallbackMessage =
+        normalizeChatLanguage(languageInput) === "en"
+          ? "I could not check the booking right now. Please try again in a moment."
+          : normalizeChatLanguage(languageInput) === "es"
+            ? "No pude consultar la reserva ahora mismo. Inténtalo de nuevo en un momento."
+            : "Não consegui consultar a reserva agora. Tente novamente em instantes.";
+      writeChatEvent(res, { content: fallbackMessage, type: "text" });
+      await persistAssistantMessage(sessionId, fallbackMessage);
+      return false;
+    }
+  };
+
+  const handleBookingFormPrefill = async (
+    res: Response,
+    sessionId: number,
+    languageInput: string | null | undefined,
+    args: Record<string, unknown>,
+    context?: ChatbotRequestContext | null,
+  ) => {
+    if (!context?.pathname?.startsWith("/book/")) {
+      const unavailableMessage = buildPrefillUnavailableMessage(languageInput);
+      writeChatEvent(res, { content: unavailableMessage, type: "text" });
+      await persistAssistantMessage(sessionId, unavailableMessage);
+      return false;
+    }
+
+    const payload = buildPrefillPayload(args);
+    if (!payload.contactEmail && !payload.contactPhone && payload.passengers.length === 0) {
+      const missingMessage = buildMissingPrefillMessage(languageInput);
+      writeChatEvent(res, { content: missingMessage, type: "text" });
+      await persistAssistantMessage(sessionId, missingMessage);
+      return false;
+    }
+
+    writeChatEvent(res, {
+      type: "action",
+      action: {
+        type: "prefill_booking_form",
+        payload,
+      },
+    });
+
+    const confirmation = buildPrefillConfirmation(languageInput, payload.passengers.length);
+    writeChatEvent(res, { content: confirmation, type: "text" });
+    await persistAssistantMessage(sessionId, `[AGENT: Prefilled booking form]
+${confirmation}`);
+    return false;
+  };
+
+  const handleAgentFallbackRequest = async (
+    res: Response,
+    sessionId: number,
+    content: string,
+    languageInput?: string | null,
+    context?: ChatbotRequestContext | null,
+  ) => {
+    const action = parseAgentFallbackRequest(content, languageInput);
+
+    if (action.type === "reply") {
+      writeChatEvent(res, { content: action.message, type: "text" });
+      await persistAssistantMessage(sessionId, action.message);
+      finishChatResponse(res, false);
+      return;
+    }
+
+    if (action.type === "escalate") {
+      writeChatEvent(res, { content: action.message, type: "text" });
+      await persistAssistantMessage(sessionId, action.message);
+      await markConversationEscalated(sessionId);
+      finishChatResponse(res, true);
+      return;
+    }
+
+    if (action.type === "lookup_booking") {
+      await handleBookingLookupResult(res, sessionId, languageInput, action.args);
+      finishChatResponse(res, false);
+      return;
+    }
+
+    if (action.type === "search_flights") {
+      await handleFlightSearchResult(res, sessionId, languageInput, action.args);
+      finishChatResponse(res, false);
+      return;
+    }
+
+    const fallbackMessage = buildServiceAiFallback(content, languageInput, context).message;
+    writeChatEvent(res, { content: fallbackMessage, type: "text" });
+    await persistAssistantMessage(sessionId, fallbackMessage);
+    finishChatResponse(res, false);
+  };
 
   app.get('/api/chatbot/status', (_req, res) => {
     res.json(chatbotAiStatus);
@@ -2242,14 +2771,8 @@ BOOKING LOOKUP:
   app.post('/api/chatbot/session', async (req, res) => {
     try {
       const { visitorId, language } = req.body;
-      const [conversation] = await db.insert(conversations).values({
-        title: "Customer Support Chat",
-        visitorId: visitorId || nanoid(10),
-        language: language || "pt",
-        escalated: false,
-        resolved: false,
-      }).returning();
-      res.json({ sessionId: conversation.id, visitorId: conversation.visitorId });
+      const session = await createServiceAiSession({ visitorId, language });
+      res.json(session);
     } catch (error) {
       console.error('Chatbot session creation error:', error);
       res.status(500).json({ error: "Failed to create chat session" });
@@ -2258,7 +2781,7 @@ BOOKING LOOKUP:
 
   app.post('/api/chatbot/message', async (req, res) => {
     try {
-      const { sessionId, content } = req.body;
+      const { sessionId, content, context } = req.body ?? {};
       if (!sessionId || !content) {
         return res.status(400).json({ error: "sessionId and content are required" });
       }
@@ -2275,398 +2798,161 @@ BOOKING LOOKUP:
 
       const sessionLanguage = await getConversationLanguage(sessionId);
 
-      const chatHistory: { role: "system" | "user" | "assistant"; content: string }[] = [
-        { role: "system", content: CHATBOT_SYSTEM_PROMPT },
-        ...existingMessages.map(m => ({
-          role: m.role as "user" | "assistant",
-          content: m.content,
-        })),
-      ];
-
-      res.writeHead(200, {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache, no-store",
-        "Connection": "keep-alive",
-        "X-Accel-Buffering": "no",
-      });
-
+      createChatHeaders(res);
       let clientDisconnected = false;
       req.on("close", () => { clientDisconnected = true; });
 
       if (!chatbotAi.client) {
-        await handleAgentFallbackRequest(res, sessionId, content, sessionLanguage);
+        const fallback = buildServiceAiFallback(content, sessionLanguage, context as ChatbotRequestContext | undefined);
+        writeChatEvent(res, { content: fallback.message, type: "text" });
+        await persistAssistantMessage(sessionId, fallback.message);
+        if (fallback.escalate) {
+          await markConversationEscalated(sessionId);
+        }
+        finishChatResponse(res, fallback.escalate);
         return;
       }
 
-      let initialResponse;
+      const chatHistory = buildServiceAiHistory(existingMessages, "support", context as ChatbotRequestContext | undefined);
+
       try {
-        initialResponse = await chatbotAi.client.chat.completions.create({
-          model: chatbotAi.agentModel!,
+        const stream = await createServiceAiStreamingCompletionWithFallback({
+          model: chatbotAi.primaryModel,
+          fallbackModel: chatbotAi.fallbackModel,
           messages: chatHistory,
-          tools: AGENT_TOOLS,
-          max_completion_tokens: 512,
-        });
-      } catch (agentModelError) {
-        console.error("Primary agent model failed, using fallback rules:", agentModelError);
-        await handleAgentFallbackRequest(res, sessionId, content, sessionLanguage);
+          max_tokens: 300,
+        }) as unknown as AsyncIterable<any>;
+
+        const fullResponse = await streamCompletionText(res, stream, () => clientDisconnected);
+        const savedResponse = fullResponse.trim() || buildServiceAiFallback(content, sessionLanguage, context as ChatbotRequestContext | undefined).message;
+        await persistAssistantMessage(sessionId, savedResponse);
+
+        const shouldEscalate = savedResponse.startsWith("[ESCALATE]");
+        if (shouldEscalate) {
+          await markConversationEscalated(sessionId);
+        }
+
+        finishChatResponse(res, shouldEscalate);
+      } catch (error) {
+        console.error('Chatbot message error, using basic fallback:', error);
+        const fallback = buildServiceAiFallback(content, sessionLanguage, context as ChatbotRequestContext | undefined);
+        writeChatEvent(res, { content: fallback.message, type: "text" });
+        await persistAssistantMessage(sessionId, fallback.message);
+        if (fallback.escalate) {
+          await markConversationEscalated(sessionId);
+        }
+        finishChatResponse(res, fallback.escalate);
+      }
+    } catch (error) {
+      console.error('Chatbot message route failed:', error);
+      if (res.headersSent) {
+        writeChatEvent(res, { error: "Failed to process message" });
+        res.end();
+      } else {
+        res.status(500).json({ error: "Failed to process message" });
+      }
+    }
+  });
+
+  app.post('/api/chatbot/agent-message', async (req, res) => {
+    try {
+      const { sessionId, content, context } = req.body ?? {};
+      if (!sessionId || !content) {
+        return res.status(400).json({ error: "sessionId and content are required" });
+      }
+
+      await db.insert(messages).values({
+        conversationId: sessionId,
+        role: "user",
+        content,
+      });
+
+      const existingMessages = await db.select().from(messages)
+        .where(eq(messages.conversationId, sessionId))
+        .orderBy(messages.createdAt);
+
+      const sessionLanguage = await getConversationLanguage(sessionId);
+
+      createChatHeaders(res);
+      let clientDisconnected = false;
+      req.on("close", () => { clientDisconnected = true; });
+
+      if (!chatbotAi.client) {
+        await handleAgentFallbackRequest(res, sessionId, content, sessionLanguage, context as ChatbotRequestContext | undefined);
         return;
       }
 
-      const choice = initialResponse.choices[0];
+      const chatHistory = buildServiceAiHistory(existingMessages, "agent", context as ChatbotRequestContext | undefined);
 
-      if (choice.finish_reason === "tool_calls" && choice.message.tool_calls) {
-        const toolCall = choice.message.tool_calls[0] as any;
-        if (toolCall.function?.name === "search_flights") {
-          let args: any;
+      try {
+        const initialResponse = await createServiceAiCompletionWithFallback({
+          model: chatbotAi.agentModel,
+          fallbackModel: chatbotAi.fallbackModel,
+          messages: chatHistory,
+          tools: SERVICE_AI_AGENT_TOOLS,
+          tool_choice: "auto",
+          max_tokens: 512,
+        });
+
+        const choice = initialResponse.choices?.[0];
+        const toolCall = choice?.message?.tool_calls?.[0] as any;
+
+        if (toolCall?.function?.name === "search_flights") {
+          let args: Record<string, unknown> = {};
           try {
-            args = JSON.parse(toolCall.function.arguments);
+            args = JSON.parse(toolCall.function.arguments || "{}");
           } catch {
             args = {};
           }
-
-          res.write(`data: ${JSON.stringify({ content: "🔍 ", type: "text" })}\n\n`);
-          if (typeof (res as any).flush === "function") (res as any).flush();
-
-          const searchingMsg = args.origin && args.destination
-            ? `Searching flights from ${args.origin} to ${args.destination}...`
-            : "Searching flights...";
-          res.write(`data: ${JSON.stringify({ content: searchingMsg, type: "text" })}\n\n`);
-          if (typeof (res as any).flush === "function") (res as any).flush();
-
-          try {
-            const { searchFlights } = await import("./services/duffel");
-            const flights = await searchFlights({
-              origin: args.origin,
-              destination: args.destination,
-              date: args.date,
-              returnDate: args.returnDate,
-              adults: args.adults || "1",
-              cabinClass: args.cabinClass || "economy",
-              passengers: args.adults || "1",
-            });
-
-            const chatMarkupRate = await getCommissionRate();
-            const topFlights = flights.slice(0, 5).map((flight) => ({
-              id: flight.id,
-              airline: flight.airline,
-              flightNumber: flight.flightNumber,
-              departureTime: flight.departureTime,
-              arrivalTime: flight.arrivalTime,
-              duration: flight.duration,
-              price: parseFloat((flight.price * (1 + chatMarkupRate)).toFixed(2)),
-              currency: flight.currency,
-              stops: flight.stops,
-              logoUrl: flight.logoUrl,
-              originCode: flight.originCode || args.origin,
-              destinationCode: flight.destinationCode || args.destination,
-              originCity: flight.originCity,
-              destinationCity: flight.destinationCity,
-            }));
-
-            res.write(`data: ${JSON.stringify({ flights: topFlights, type: "flights" })}\n\n`);
-            if (typeof (res as any).flush === "function") (res as any).flush();
-
-            chatHistory.push({
-              role: "assistant",
-              content: `[Function called: search_flights] Found ${flights.length} flights from ${args.origin} to ${args.destination} on ${args.date}. Top ${topFlights.length} results shown to customer with prices ranging from ${topFlights.length > 0 ? topFlights[0].currency + ' ' + Math.min(...topFlights.map(f => f.price)) : 'N/A'} to ${topFlights.length > 0 ? topFlights[0].currency + ' ' + Math.max(...topFlights.map(f => f.price)) : 'N/A'}.`,
-            });
-
-            const followUpMessages = [
-              ...chatHistory,
-              { role: "user" as const, content: `The search results are now displayed to the customer. Write a brief friendly summary message about the results found. Mention how many flights were found and the price range. Tell them they can click "Book" on any option. Respond in the same language the customer has been using.` },
-            ];
-
-            const followUp = await chatbotAi.client!.chat.completions.create({
-              model: chatbotAi.agentModel!,
-              messages: followUpMessages,
-              stream: true,
-              max_completion_tokens: 256,
-            });
-
-            let fullResponse = "";
-            for await (const chunk of followUp) {
-              if (clientDisconnected) break;
-              const text = chunk.choices[0]?.delta?.content || "";
-              if (text) {
-                fullResponse += text;
-                res.write(`data: ${JSON.stringify({ content: text, type: "text" })}\n\n`);
-                if (typeof (res as any).flush === "function") (res as any).flush();
-              }
-            }
-
-            const savedContent = `[AGENT: Searched ${args.origin}→${args.destination} on ${args.date}, found ${flights.length} results]\n${fullResponse}`;
-            await db.insert(messages).values({
-              conversationId: sessionId,
-              role: "assistant",
-              content: savedContent,
-            });
-          } catch (searchError) {
-            console.error("Flight search error in agent mode:", searchError);
-            const errorMsg = "I tried searching for flights but encountered an error. Please try using the search bar on our homepage, or I can try again with different details.";
-            res.write(`data: ${JSON.stringify({ content: errorMsg, type: "text" })}\n\n`);
-            if (typeof (res as any).flush === "function") (res as any).flush();
-
-            await db.insert(messages).values({
-              conversationId: sessionId,
-              role: "assistant",
-              content: errorMsg,
-            });
-          }
-        } else if (toolCall.function?.name === "lookup_booking") {
-          let args: any;
-          try {
-            args = JSON.parse(toolCall.function.arguments);
-          } catch {
-            args = {};
-          }
-
-          if (args.reference && args.email) {
-            try {
-              const booking = await storage.getBookingByReferenceAndEmail(args.reference, args.email);
-              if (booking) {
-                const fd = booking.flightData as any;
-                const passengers = booking.passengerDetails as any[];
-                const bookingInfo = {
-                  id: booking.id,
-                  referenceCode: booking.referenceCode,
-                  status: booking.status,
-                  totalPrice: booking.totalPrice,
-                  currency: booking.currency,
-                  contactEmail: booking.contactEmail,
-                  contactPhone: booking.contactPhone,
-                  ticketStatus: (booking as any).ticketStatus || 'pending',
-                  ticketNumber: (booking as any).ticketNumber || null,
-                  airlineReference: (booking as any).duffelBookingReference || null,
-                  airline: fd?.airline || null,
-                  origin: fd?.origin || fd?.originCode || null,
-                  destination: fd?.destination || fd?.destinationCode || null,
-                  departureDate: fd?.departureTime || null,
-                  flightNumber: fd?.flightNumber || null,
-                  stripePaymentStatus: booking.stripePaymentStatus,
-                  createdAt: booking.createdAt,
-                  hasScheduleChange: (booking as any).ticketStatus === 'schedule_changed',
-                  airlineChanges: (booking as any).airlineInitiatedChanges || null,
-                  passengerCount: passengers?.length || 0,
-                  passengers: passengers?.map((p: any) => ({
-                    name: `${p.givenName || p.firstName || ''} ${p.familyName || p.lastName || ''}`.trim(),
-                    type: p.type || 'adult',
-                    email: p.email,
-                  })),
-                };
-
-                chatHistory.push({
-                  role: "assistant",
-                  content: `[Function called: lookup_booking] Booking found: ${JSON.stringify(bookingInfo)}`,
-                });
-
-                const followUp = await chatbotAi.client!.chat.completions.create({
-                  model: chatbotAi.agentModel!,
-                  messages: [
-                    ...chatHistory,
-                    { role: "user" as const, content: `Present this booking information clearly. Include: status, ticket status, airline reference, passenger info, payment status, flight details. Do NOT share internal system IDs. Respond in the same language the customer has been using.` },
-                  ],
-                  stream: true,
-                  max_completion_tokens: 512,
-                });
-
-                let fullResponse = "";
-                for await (const chunk of followUp) {
-                  if (clientDisconnected) break;
-                  const text = chunk.choices[0]?.delta?.content || "";
-                  if (text) {
-                    fullResponse += text;
-                    res.write(`data: ${JSON.stringify({ content: text, type: "text" })}\n\n`);
-                    if (typeof (res as any).flush === "function") (res as any).flush();
-                  }
-                }
-
-                await db.insert(messages).values({
-                  conversationId: sessionId,
-                  role: "assistant",
-                  content: `[AGENT: Looked up booking ${args.reference}]\n${fullResponse}`,
-                });
-              } else {
-                const notFoundMessage = buildBookingNotFoundMessage(language, args.reference);
-                res.write(`data: ${JSON.stringify({ content: notFoundMessage, type: "text" })}\n\n`);
-                if (typeof (res as any).flush === "function") (res as any).flush();
-                await db.insert(messages).values({
-                  conversationId: sessionId,
-                  role: "assistant",
-                  content: notFoundMessage,
-                });
-              }
-            } catch (lookupErr: any) {
-              console.error("Booking lookup error in agent mode:", lookupErr?.message);
-              const errorMsg = "Failed to look up the booking. Please try again or check the booking directly in the admin dashboard.";
-              res.write(`data: ${JSON.stringify({ content: errorMsg, type: "text" })}\n\n`);
-              if (typeof (res as any).flush === "function") (res as any).flush();
-              await db.insert(messages).values({
-                conversationId: sessionId,
-                role: "assistant",
-                content: errorMsg,
-              });
-            }
-          } else {
-            const askMsg = "I need both the reference code (starts with MT-) and the email address to look up a booking.";
-            res.write(`data: ${JSON.stringify({ content: askMsg, type: "text" })}\n\n`);
-            if (typeof (res as any).flush === "function") (res as any).flush();
-            await db.insert(messages).values({
-              conversationId: sessionId,
-              role: "assistant",
-              content: askMsg,
-            });
-          }
-        } else if (toolCall.function?.name === "cancel_booking") {
-          let args: any;
-          try {
-            args = JSON.parse(toolCall.function.arguments);
-          } catch {
-            args = {};
-          }
-
-          if (args.bookingId && args.confirmed === true) {
-            try {
-              const booking = await storage.getBooking(args.bookingId);
-              if (!booking) {
-                const notFoundMsg = `Booking #${args.bookingId} not found.`;
-                res.write(`data: ${JSON.stringify({ content: notFoundMsg, type: "text" })}\n\n`);
-                if (typeof (res as any).flush === "function") (res as any).flush();
-                await db.insert(messages).values({
-                  conversationId: sessionId,
-                  role: "assistant",
-                  content: notFoundMsg,
-                });
-              } else if (booking.status === 'cancelled' || booking.status === 'refunded') {
-                const alreadyMsg = `Booking ${booking.referenceCode} is already ${booking.status}.`;
-                res.write(`data: ${JSON.stringify({ content: alreadyMsg, type: "text" })}\n\n`);
-                if (typeof (res as any).flush === "function") (res as any).flush();
-                await db.insert(messages).values({
-                  conversationId: sessionId,
-                  role: "assistant",
-                  content: alreadyMsg,
-                });
-              } else {
-                await db.update(bookings)
-                  .set({ status: 'cancelled' })
-                  .where(eq(bookings.id, args.bookingId));
-
-                const fd = booking.flightData as any;
-                const duffelOrderId = (booking as any).duffelOrderId || fd?.duffelOrderId;
-                let refundInfo = "";
-
-                if (duffelOrderId) {
-                  try {
-                    const { cancelDuffelOrder } = await import("./services/duffel");
-                    if (typeof cancelDuffelOrder === 'function') {
-                      await cancelDuffelOrder(duffelOrderId);
-                      refundInfo = " Duffel order cancellation initiated.";
-                    }
-                  } catch (duffelErr: any) {
-                    console.error("Duffel cancel error:", duffelErr?.message);
-                    refundInfo = " Note: Duffel cancellation may need manual processing.";
-                  }
-                }
-
-                if (booking.stripePaymentIntentId) {
-                  try {
-                    const { getUncachableStripeClient } = await import('./stripeClient');
-                    const stripe = await getUncachableStripeClient();
-                    await stripe.refunds.create({ payment_intent: booking.stripePaymentIntentId });
-                    refundInfo += " Stripe refund initiated.";
-                    await db.update(bookings)
-                      .set({ status: 'refunded', stripePaymentStatus: 'refunded' })
-                      .where(eq(bookings.id, args.bookingId));
-                  } catch (stripeErr: any) {
-                    console.error("Stripe refund error:", stripeErr?.message);
-                    refundInfo += " Note: Stripe refund may need manual processing.";
-                  }
-                }
-
-                chatHistory.push({
-                  role: "assistant",
-                  content: `[Function called: cancel_booking] Booking ${booking.referenceCode} has been cancelled.${refundInfo}`,
-                });
-
-                const followUp = await chatbotAi.client!.chat.completions.create({
-                  model: chatbotAi.agentModel!,
-                  messages: [
-                    ...chatHistory,
-                    { role: "user" as const, content: `Confirm the cancellation to the customer. Mention the reference code, and any refund info. Be empathetic. Respond in the same language they've been using.` },
-                  ],
-                  stream: true,
-                  max_completion_tokens: 256,
-                });
-
-                let fullResponse = "";
-                for await (const chunk of followUp) {
-                  if (clientDisconnected) break;
-                  const text = chunk.choices[0]?.delta?.content || "";
-                  if (text) {
-                    fullResponse += text;
-                    res.write(`data: ${JSON.stringify({ content: text, type: "text" })}\n\n`);
-                    if (typeof (res as any).flush === "function") (res as any).flush();
-                  }
-                }
-
-                await db.insert(messages).values({
-                  conversationId: sessionId,
-                  role: "assistant",
-                  content: `[AGENT: Cancelled booking ${booking.referenceCode}${refundInfo}]\n${fullResponse}`,
-                });
-              }
-            } catch (cancelErr: any) {
-              console.error("Cancel booking error in agent mode:", cancelErr?.message);
-              const errorMsg = "Failed to cancel the booking. Please try through the admin dashboard.";
-              res.write(`data: ${JSON.stringify({ content: errorMsg, type: "text" })}\n\n`);
-              if (typeof (res as any).flush === "function") (res as any).flush();
-              await db.insert(messages).values({
-                conversationId: sessionId,
-                role: "assistant",
-                content: errorMsg,
-              });
-            }
-          } else if (args.bookingId && !args.confirmed) {
-            const confirmMsg = "I need explicit confirmation from the customer before proceeding with the cancellation. Please confirm that you'd like to cancel this booking.";
-            res.write(`data: ${JSON.stringify({ content: confirmMsg, type: "text" })}\n\n`);
-            if (typeof (res as any).flush === "function") (res as any).flush();
-            await db.insert(messages).values({
-              conversationId: sessionId,
-              role: "assistant",
-              content: confirmMsg,
-            });
-          } else {
-            const askMsg = "I need the booking ID to cancel. Please look up the booking first using the reference code and email.";
-            res.write(`data: ${JSON.stringify({ content: askMsg, type: "text" })}\n\n`);
-            if (typeof (res as any).flush === "function") (res as any).flush();
-            await db.insert(messages).values({
-              conversationId: sessionId,
-              role: "assistant",
-              content: askMsg,
-            });
-          }
+          await handleFlightSearchResult(res, sessionId, sessionLanguage, args);
+          finishChatResponse(res, false);
+          return;
         }
-      } else {
-        const textContent = choice.message.content || "";
-        if (textContent) {
-          res.write(`data: ${JSON.stringify({ content: textContent, type: "text" })}\n\n`);
-          if (typeof (res as any).flush === "function") (res as any).flush();
 
-          await db.insert(messages).values({
-            conversationId: sessionId,
-            role: "assistant",
-            content: textContent,
-          });
+        if (toolCall?.function?.name === "lookup_booking") {
+          let args: Record<string, unknown> = {};
+          try {
+            args = JSON.parse(toolCall.function.arguments || "{}");
+          } catch {
+            args = {};
+          }
+          await handleBookingLookupResult(res, sessionId, sessionLanguage, args);
+          finishChatResponse(res, false);
+          return;
         }
+
+        if (toolCall?.function?.name === "fill_booking_form") {
+          let args: Record<string, unknown> = {};
+          try {
+            args = JSON.parse(toolCall.function.arguments || "{}");
+          } catch {
+            args = {};
+          }
+          await handleBookingFormPrefill(res, sessionId, sessionLanguage, args, context as ChatbotRequestContext | undefined);
+          finishChatResponse(res, false);
+          return;
+        }
+
+        const textContent = choice?.message?.content?.trim() || buildServiceAiFallback(content, sessionLanguage, context as ChatbotRequestContext | undefined).message;
+        if (!clientDisconnected) {
+          writeChatEvent(res, { content: textContent, type: "text" });
+        }
+        await persistAssistantMessage(sessionId, textContent);
+
+        const shouldEscalate = textContent.startsWith("[ESCALATE]");
+        if (shouldEscalate) {
+          await markConversationEscalated(sessionId);
+        }
+
+        finishChatResponse(res, shouldEscalate);
+      } catch (error) {
+        console.error('Agent message error, using local fallback:', error);
+        await handleAgentFallbackRequest(res, sessionId, content, sessionLanguage, context as ChatbotRequestContext | undefined);
       }
-
-      const shouldEscalate = false;
-      res.write(`data: ${JSON.stringify({ done: true, escalated: shouldEscalate })}\n\n`);
-      if (typeof (res as any).flush === "function") (res as any).flush();
-      res.end();
     } catch (error) {
-      console.error('Agent message error:', error);
+      console.error('Agent message route failed:', error);
       if (res.headersSent) {
-        res.write(`data: ${JSON.stringify({ error: "Failed to process agent message" })}\n\n`);
+        writeChatEvent(res, { error: "Failed to process agent message" });
         res.end();
       } else {
         res.status(500).json({ error: "Failed to process agent message" });
@@ -3155,8 +3441,9 @@ BOOKING LOOKUP:
             date: legs[0].date,
           };
           const flights = await searchFlights(searchParams);
+          const catalogedFlights = await catalogAvailableOffers(flights, { limit: 6 });
           const rate = await getCommissionRate();
-          const markedUpFlights = applyMarkupToFlights(flights, rate);
+          const markedUpFlights = applyMarkupToFlights(catalogedFlights, rate);
           return res.json(markedUpFlights);
         } catch (parseErr) {
           return res.status(400).json({ error: "Invalid legs format" });
@@ -3168,8 +3455,9 @@ BOOKING LOOKUP:
       }
 
       const flights = await searchFlights(params);
+      const catalogedFlights = await catalogAvailableOffers(flights, { limit: 50 });
       const rate = await getCommissionRate();
-      const markedUpFlights = applyMarkupToFlights(flights, rate);
+      const markedUpFlights = applyMarkupToFlights(catalogedFlights, rate);
       res.json(markedUpFlights);
     } catch (error) {
       console.error("Live session flight search error:", error);

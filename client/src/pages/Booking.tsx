@@ -36,7 +36,11 @@ import {
   buildWhatsAppHref,
   buildWhatsAppMessage,
 } from "@/lib/contact";
-import { openChatbotAssistant } from "@/lib/chatbot";
+import {
+  CHATBOT_PREFILL_BOOKING_EVENT,
+  openChatbotAssistant,
+  type ChatbotBookingPrefillPayload,
+} from "@/lib/chatbot";
 import { useVoiceGuide } from "@/hooks/use-voice-guide";
 import { Switch } from "@/components/ui/switch";
 import { Headphones } from "lucide-react";
@@ -1077,6 +1081,75 @@ export default function Booking() {
     control: form.control,
     name: "passengers",
   });
+
+  useEffect(() => {
+    const handleChatbotPrefill = (event: Event) => {
+      const payload = (event as CustomEvent<ChatbotBookingPrefillPayload>).detail;
+      if (!payload) return;
+
+      if (payload.contactEmail) {
+        form.setValue("contactEmail", payload.contactEmail, {
+          shouldDirty: true,
+          shouldTouch: true,
+        });
+      }
+
+      if (payload.contactPhone) {
+        form.setValue("contactPhone", payload.contactPhone, {
+          shouldDirty: true,
+          shouldTouch: true,
+        });
+      }
+
+      const passengersFilled = Math.min(payload.passengers?.length || 0, fields.length);
+      for (let index = 0; index < passengersFilled; index += 1) {
+        const passenger = payload.passengers[index];
+        const updates = {
+          title: passenger.title,
+          givenName: passenger.givenName,
+          familyName: passenger.familyName,
+          bornOn: passenger.bornOn,
+          gender: passenger.gender,
+          email: passenger.email,
+          phoneNumber: passenger.phoneNumber,
+          documentType: passenger.documentType,
+          documentNumber: passenger.documentNumber,
+          documentExpiryDate: passenger.documentExpiryDate,
+          documentIssuingCountry: passenger.documentIssuingCountry,
+          nationality: passenger.nationality,
+        } satisfies Record<string, string | undefined>;
+
+        for (const [field, value] of Object.entries(updates)) {
+          if (!value) continue;
+          form.setValue(`passengers.${index}.${field}` as any, value as any, {
+            shouldDirty: true,
+            shouldTouch: true,
+          });
+        }
+      }
+
+      toast({
+        title: t("booking.passenger_details") || "Passenger details",
+        description:
+          passengersFilled > 0
+            ? language === "en"
+              ? `Mia filled ${passengersFilled} passenger field${passengersFilled === 1 ? "" : "s"}. Please review the details before payment.`
+              : language === "es"
+                ? `Mia completó ${passengersFilled} pasajero${passengersFilled === 1 ? "" : "s"}. Revise los datos antes del pago.`
+                : `Mia preencheu ${passengersFilled} passageiro${passengersFilled === 1 ? "" : "s"}. Revise os dados antes do pagamento.`
+            : language === "en"
+              ? "Mia updated the contact details. Please review everything before payment."
+              : language === "es"
+                ? "Mia actualizó los datos de contacto. Revise todo antes del pago."
+                : "Mia atualizou os dados de contato. Revise tudo antes do pagamento.",
+      });
+    };
+
+    window.addEventListener(CHATBOT_PREFILL_BOOKING_EVENT, handleChatbotPrefill as EventListener);
+    return () => {
+      window.removeEventListener(CHATBOT_PREFILL_BOOKING_EVENT, handleChatbotPrefill as EventListener);
+    };
+  }, [fields.length, form, language, t, toast]);
 
   const baggageExtras = baggageSelections.reduce((sum, s) => sum + (s.price || 0) * (s.quantity || 0), 0);
   const grandTotal = (flight?.price || 0) + baggageExtras;

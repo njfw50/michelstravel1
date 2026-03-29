@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "jsx": "react-jsx",
+    "moduleResolution": "bundler",
+    "allowJs": false,
+    "noEmit": true,
+    "isolatedModules": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "baseUrl": "./src",
+    "types": ["react", "react-native"],
+    "paths": {
+      "@theme/*": ["theme/*"],
+      "@components/*": ["components/*"],
+      "@screens/*": ["screens/*"],
+      "@store/*": ["store/*"],
+      "@lib/*": ["lib/*"]
+    }
+  },
+  "include": ["App.tsx", "src/**/*"]
+}
