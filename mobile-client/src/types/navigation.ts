@@ -17,6 +17,7 @@ export type SeniorTabParamList = {
 
 export type RootStackParamList = {
   Splash: undefined;
+  AppStatus: { environment: "test" | "production"; language?: "pt" | "en" | "es" };
   LanguageSelect: undefined;
   Login: undefined;
   Terms: undefined;

@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StatusBar } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { TabBarIcon } from "./src/components/TabBarIcon";
+import { AppStatusScreen } from "./src/screens/AppStatusScreen";
 import { DestinationsScreen } from "./src/screens/DestinationsScreen";
 import { HelpScreen } from "./src/screens/HelpScreen";
 import { LanguageSelectScreen } from "./src/screens/LanguageSelectScreen";
@@ -191,6 +192,7 @@ export default function App() {
         <StatusBar barStyle="dark-content" />
         <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
           <Stack.Screen name="Splash" component={SplashScreen} />
+          <Stack.Screen name="AppStatus" component={AppStatusScreen} />
           <Stack.Screen name="LanguageSelect" component={LanguageSelectScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Terms" component={TermsScreen} />

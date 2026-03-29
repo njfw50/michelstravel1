@@ -5,6 +5,9 @@ const API_BASE = "https://michelstravel.agency";
 export const api = axios.create({
   baseURL: API_BASE,
   timeout: 8000,
+  headers: {
+    "x-michels-client": "mobile-consumer",
+  },
 });
 
 api.interceptors.response.use(

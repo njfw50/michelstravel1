@@ -83,6 +83,26 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
   return res.status(401).json({ error: "Admin authentication required" });
 }
 
+function isMobileConsumerRequest(req: Request) {
+  const clientHeader = String(req.headers["x-michels-client"] || "").toLowerCase();
+  return clientHeader === "mobile-consumer";
+}
+
+function getMobileAppAvailability(settings?: { testMode?: boolean | null; mobileAppTestEnabled?: boolean | null; mobileAppProductionEnabled?: boolean | null }) {
+  const testModeActive = settings?.testMode ?? true;
+  const environment = testModeActive ? "test" as const : "production" as const;
+  const enabled = testModeActive
+    ? settings?.mobileAppTestEnabled ?? true
+    : settings?.mobileAppProductionEnabled ?? true;
+
+  return {
+    environment,
+    enabled,
+    testEnabled: settings?.mobileAppTestEnabled ?? true,
+    productionEnabled: settings?.mobileAppProductionEnabled ?? true,
+  };
+}
+
 /**
  * Register all application routes
  *
@@ -93,6 +113,45 @@ export function registerRoutes(app: Express) {
 
   app.get('/atendimento', (_req, res) => {
     res.redirect(301, '/admin/live-chat');
+  });
+
+  app.get('/api/mobile/config', async (_req, res) => {
+    const settings = await storage.getSiteSettings();
+    const availability = getMobileAppAvailability(settings);
+
+    res.json({
+      environment: availability.environment,
+      appEnabled: availability.enabled,
+      appTestEnabled: availability.testEnabled,
+      appProductionEnabled: availability.productionEnabled,
+      sharedResultsApi: true,
+      sharedCheckoutApi: true,
+      supportEmail: process.env.SUPPORT_EMAIL || "support@michelstravel.agency",
+      supportWhatsApp: process.env.WHATSAPP_NUMBER || null,
+    });
+  });
+
+  app.use('/api', async (req, res, next) => {
+    if (!isMobileConsumerRequest(req)) {
+      return next();
+    }
+
+    if (req.path === '/mobile/config') {
+      return next();
+    }
+
+    const settings = await storage.getSiteSettings();
+    const availability = getMobileAppAvailability(settings);
+
+    if (availability.enabled) {
+      return next();
+    }
+
+    return res.status(503).json({
+      error: `Mobile app access is disabled in ${availability.environment} mode.`,
+      code: 'mobile_app_disabled',
+      environment: availability.environment,
+    });
   });
 
   // === FLIGHT ROUTES ===
@@ -1822,6 +1881,8 @@ export function registerRoutes(app: Express) {
         heroTitle: "Find Your Next Adventure",
         heroSubtitle: "Best prices on flights worldwide.",
         testMode: true,
+        mobileAppTestEnabled: true,
+        mobileAppProductionEnabled: true,
         updatedAt: new Date(),
       });
     }

@@ -20,6 +20,8 @@ ios/.xcode.env
 /after-guest-multicity.png
 /after-language.png
 /after-language.xml
+/android-*.png
+/app-*.png
 /compact-cards.png
 /current-emulator-clean.png
 /current-emulator.png

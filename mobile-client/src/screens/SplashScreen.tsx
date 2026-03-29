@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { getMobileAppConfig } from "../services/appConfig";
 import { theme } from "../theme/theme";
 
 const logo = require("../assets/logo.png");
@@ -13,7 +14,20 @@ export function SplashScreen({ navigation }: { navigation: any }) {
       setSecondsLeft((current) => (current > 0 ? current - 1 : 0));
     }, 1000);
 
-    const timeout = setTimeout(() => {
+    const timeout = setTimeout(async () => {
+      try {
+        const config = await getMobileAppConfig();
+        if (!config.appEnabled) {
+          navigation.replace("AppStatus", {
+            environment: config.environment,
+            language: "pt",
+          });
+          return;
+        }
+      } catch {
+        // If config fails, do not hard-block the app start.
+      }
+
       navigation.replace("LanguageSelect");
     }, 5200);
 

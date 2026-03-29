@@ -62,6 +62,8 @@ export const siteSettings = pgTable("site_settings", {
   heroTitle: text("hero_title").default("Find Your Next Adventure"),
   heroSubtitle: text("hero_subtitle").default("Best prices on flights worldwide."),
   testMode: boolean("test_mode").default(true).notNull(),
+  mobileAppTestEnabled: boolean("mobile_app_test_enabled").default(true).notNull(),
+  mobileAppProductionEnabled: boolean("mobile_app_production_enabled").default(true).notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 

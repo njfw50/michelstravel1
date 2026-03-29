@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Line, ComposedChart } from 'recharts';
-import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare, AlertTriangle, CheckCircle2, XCircle, Lock, Phone, Megaphone, Plus, Trash2, ExternalLink, Copy, Search, RefreshCw, ChevronDown, ChevronUp, Calendar, MapPin, ArrowRightLeft } from "lucide-react";
+import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare, AlertTriangle, CheckCircle2, XCircle, Lock, Phone, Smartphone, Megaphone, Plus, Trash2, ExternalLink, Copy, Search, RefreshCw, ChevronDown, ChevronUp, Calendar, MapPin, ArrowRightLeft } from "lucide-react";
 import { VoiceEscalations } from "@/components/VoiceEscalations";
 import { DocumentScannerForm } from "@/components/document/DocumentScannerForm";
 import { AdminCommandCenter } from "@/components/AdminCommandCenter";
@@ -434,6 +434,115 @@ function CommissionControl() {
           <p className="text-xs text-gray-400">
             {t("admin.commission_example")} {commissionValue ? `$${(1000 * parseFloat(commissionValue || "0") / 100).toFixed(2)}` : "$0.00"}
           </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function MobileAppChannelControl() {
+  const { toast } = useToast();
+  const { data: settings, isLoading } = useSiteSettings();
+  const updateSettings = useUpdateSettings();
+
+  const currentEnvironment = settings?.testMode ? "test" : "production";
+
+  const updateChannel = async (field: "mobileAppTestEnabled" | "mobileAppProductionEnabled", value: boolean) => {
+    if (!settings) return;
+
+    try {
+      await updateSettings.mutateAsync({
+        siteName: settings.siteName || undefined,
+        commissionPercentage: settings.commissionPercentage || undefined,
+        heroTitle: settings.heroTitle || undefined,
+        heroSubtitle: settings.heroSubtitle || undefined,
+        testMode: settings.testMode ?? true,
+        mobileAppTestEnabled: field === "mobileAppTestEnabled" ? value : settings.mobileAppTestEnabled ?? true,
+        mobileAppProductionEnabled: field === "mobileAppProductionEnabled" ? value : settings.mobileAppProductionEnabled ?? true,
+      });
+
+      toast({
+        title: "App mobile atualizado",
+        description: field === "mobileAppTestEnabled"
+          ? `Canal de teste ${value ? "ativado" : "desativado"}.`
+          : `Canal de produção ${value ? "ativado" : "desativado"}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao atualizar o app mobile",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="bg-white border border-gray-200 shadow-sm">
+        <CardContent className="p-6 flex items-center justify-center">
+          <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="bg-white border border-gray-200 shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-xl border flex items-center justify-center shadow-inner text-blue-500 bg-blue-50 border-blue-200">
+            <Smartphone className="h-6 w-6" />
+          </div>
+          <div>
+            <CardTitle className="text-lg text-gray-900">Canal do app mobile</CardTitle>
+            <p className="text-xs text-gray-500 mt-1">
+              O app usa a mesma API de voos, reservas e pagamentos do site. Aqui voce controla a abertura por ambiente.
+            </p>
+          </div>
+        </div>
+        <Badge className={currentEnvironment === "test" ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-emerald-100 text-emerald-700 border-emerald-200"}>
+          Ambiente ativo: {currentEnvironment === "test" ? "TESTE" : "PRODUCAO"}
+        </Badge>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-gray-900">App mobile em teste</p>
+                <p className="text-xs text-gray-500 mt-1">Permite acesso do app quando o backend estiver em modo teste.</p>
+              </div>
+              <Button
+                variant={(settings?.mobileAppTestEnabled ?? true) ? "default" : "outline"}
+                size="sm"
+                disabled={updateSettings.isPending}
+                onClick={() => updateChannel("mobileAppTestEnabled", !(settings?.mobileAppTestEnabled ?? true))}
+              >
+                {(settings?.mobileAppTestEnabled ?? true) ? "Ativo" : "Desativado"}
+              </Button>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-gray-900">App mobile em producao</p>
+                <p className="text-xs text-gray-500 mt-1">Permite acesso do app quando o backend estiver em modo producao.</p>
+              </div>
+              <Button
+                variant={(settings?.mobileAppProductionEnabled ?? true) ? "default" : "outline"}
+                size="sm"
+                disabled={updateSettings.isPending}
+                onClick={() => updateChannel("mobileAppProductionEnabled", !(settings?.mobileAppProductionEnabled ?? true))}
+              >
+                {(settings?.mobileAppProductionEnabled ?? true) ? "Ativo" : "Desativado"}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
+          O app consumer usa a mesma API compartilhada do site. Se este canal for desativado no ambiente atual, o app recebe bloqueio server-side e mostra indisponibilidade antes da busca.
         </div>
       </CardContent>
     </Card>
@@ -1322,6 +1431,7 @@ export default function AdminDashboard() {
 
           <TabsContent value="settings" className="space-y-6 mt-6">
             <TestModeControl />
+            <MobileAppChannelControl />
             <CommissionControl />
             <FeaturedDealsManager />
             <VoiceEscalations />
