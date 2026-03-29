@@ -20,6 +20,7 @@ export type RootStackParamList = {
   AppStatus: { environment: "test" | "production"; language?: "pt" | "en" | "es" };
   LanguageSelect: undefined;
   Login: undefined;
+  Register: undefined;
   Terms: undefined;
   Privacy: undefined;
   Onboarding: undefined;

@@ -62,6 +62,11 @@ export const customerMobileDevices = pgTable(
     osVersion: text("os_version"),
     appVersion: text("app_version"),
     pushToken: text("push_token"),
+    biometricPublicKey: text("biometric_public_key"),
+    biometricKeyAlias: text("biometric_key_alias"),
+    biometricKeyType: text("biometric_key_type"),
+    biometricRegisteredAt: timestamp("biometric_registered_at"),
+    biometricLastValidatedAt: timestamp("biometric_last_validated_at"),
     trustedAt: timestamp("trusted_at"),
     lastSeenAt: timestamp("last_seen_at"),
     revokedAt: timestamp("revoked_at"),
@@ -70,6 +75,24 @@ export const customerMobileDevices = pgTable(
   },
   (table) => [
     index("IDX_customer_mobile_devices_user_id").on(table.userId),
+  ],
+);
+
+export const customerMobileBiometricChallenges = pgTable(
+  "customer_mobile_biometric_challenges",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    deviceId: uuid("device_id").notNull().references(() => customerMobileDevices.id, { onDelete: "cascade" }),
+    challengeHash: text("challenge_hash").notNull().unique(),
+    purpose: text("purpose").notNull().default("login"),
+    expiresAt: timestamp("expires_at").notNull(),
+    consumedAt: timestamp("consumed_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("IDX_customer_mobile_biometric_challenges_user_id").on(table.userId),
+    index("IDX_customer_mobile_biometric_challenges_device_id").on(table.deviceId),
   ],
 );
 
@@ -187,6 +210,8 @@ export type CustomerProfile = typeof customerProfiles.$inferSelect;
 export type InsertCustomerProfile = typeof customerProfiles.$inferInsert;
 export type CustomerMobileDevice = typeof customerMobileDevices.$inferSelect;
 export type InsertCustomerMobileDevice = typeof customerMobileDevices.$inferInsert;
+export type CustomerMobileBiometricChallenge = typeof customerMobileBiometricChallenges.$inferSelect;
+export type InsertCustomerMobileBiometricChallenge = typeof customerMobileBiometricChallenges.$inferInsert;
 export type CustomerMobileRefreshToken = typeof customerMobileRefreshTokens.$inferSelect;
 export type InsertCustomerMobileRefreshToken = typeof customerMobileRefreshTokens.$inferInsert;
 export type DocumentScanSession = typeof documentScanSessions.$inferSelect;

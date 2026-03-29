@@ -1,5 +1,9 @@
-import React, { useMemo, useState } from "react";
-import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { signBiometricChallenge } from "../services/biometricAuth";
+import { clearBiometricEnrollment, getBiometricEnrollment, saveBiometricEnrollment } from "../services/biometricStorage";
+import { loginCustomerAccount, requestBiometricChallenge, verifyBiometricLogin } from "../services/auth";
+import { useAuthStore } from "../store/authStore";
 import { useOnboardingStore } from "../store/onboardingStore";
 import { useSessionStore } from "../store/sessionStore";
 import { theme } from "../theme/theme";
@@ -9,10 +13,16 @@ const logo = require("../assets/logo.png");
 export function LoginScreen({ navigation }: { navigation: any }) {
   const language = useOnboardingStore((state) => state.language);
   const setMode = useOnboardingStore((state) => state.setMode);
+  const setLanguage = useOnboardingStore((state) => state.setLanguage);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [biometricReady, setBiometricReady] = useState(false);
+  const [biometricLabel, setBiometricLabel] = useState<string | null>(null);
   const setAccessMode = useSessionStore((state) => state.setAccessMode);
   const clearGuestReservation = useSessionStore((state) => state.clearGuestReservation);
+  const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
 
   const copy = useMemo(() => {
     if (language === "en") {
@@ -30,6 +40,12 @@ export function LoginScreen({ navigation }: { navigation: any }) {
         privacy: "Privacy Policy",
         forgot: "Forgot password",
         create: "Create account",
+        forgotMessage: "Password recovery is not connected in the app yet. Use the website or support for now.",
+        invalidFields: "Enter a valid email and password to continue.",
+        authError: "We could not sign you in right now.",
+        biometric: "Sign in with biometrics",
+        biometricPromptTitle: "Confirm your identity",
+        biometricPromptSubtitle: "Use Face ID or fingerprint to continue securely",
       };
     }
 
@@ -48,6 +64,12 @@ export function LoginScreen({ navigation }: { navigation: any }) {
         privacy: "Política de Privacidad",
         forgot: "Olvidé mi contraseña",
         create: "Crear cuenta",
+        forgotMessage: "La recuperación de contraseña aún no está conectada en la app. Use el sitio web o soporte por ahora.",
+        invalidFields: "Ingrese un correo y contraseña válidos para continuar.",
+        authError: "No fue posible iniciar su sesión ahora.",
+        biometric: "Entrar con biometría",
+        biometricPromptTitle: "Confirme su identidad",
+        biometricPromptSubtitle: "Use Face ID o huella para continuar con seguridad",
       };
     }
 
@@ -65,19 +87,139 @@ export function LoginScreen({ navigation }: { navigation: any }) {
       privacy: "Política de Privacidade",
       forgot: "Esqueci a senha",
       create: "Criar conta",
+      forgotMessage: "A recuperação de senha ainda não está conectada no app. Use o site ou o suporte por enquanto.",
+      invalidFields: "Informe um e-mail e uma senha válidos para continuar.",
+      authError: "Não foi possível entrar na sua conta agora.",
+      biometric: "Entrar com biometria",
+      biometricPromptTitle: "Confirme sua identidade",
+      biometricPromptSubtitle: "Use Face ID ou digital para continuar com segurança",
     };
   }, [language]);
 
-  const handleLogin = () => {
-    setMode("regular");
+  useEffect(() => {
+    let mounted = true;
+
+    getBiometricEnrollment()
+      .then((enrollment) => {
+        if (!mounted || !enrollment?.enabled) {
+          return;
+        }
+
+        setBiometricReady(true);
+        setBiometricLabel(enrollment.firstName || enrollment.email);
+      })
+      .catch(() => {
+        if (!mounted) {
+          return;
+        }
+
+        setBiometricReady(false);
+        setBiometricLabel(null);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const applyAuthenticatedState = async (auth: Awaited<ReturnType<typeof loginCustomerAccount>>) => {
+    const nextMode = auth.profile.experienceMode === "senior" ? "senior" : "regular";
+
+    setAuthenticated(auth);
+    setLanguage(auth.profile.preferredLanguage || language);
+    setMode(nextMode);
     setAccessMode("account");
     clearGuestReservation();
-    navigation.replace("RegularMain");
+
+    if (auth.profile.biometricEnabled && auth.device.biometricReady && auth.device.biometricKeyAlias && auth.user.email) {
+      await saveBiometricEnrollment({
+        userId: auth.user.id,
+        deviceId: auth.device.id,
+        email: auth.user.email,
+        firstName: auth.user.firstName,
+        keyAlias: auth.device.biometricKeyAlias,
+        enabled: true,
+      });
+      setBiometricReady(true);
+      setBiometricLabel(auth.user.firstName || auth.user.email);
+    } else {
+      await clearBiometricEnrollment();
+      setBiometricReady(false);
+      setBiometricLabel(null);
+    }
+
+    navigation.replace(nextMode === "senior" ? "SeniorMain" : "RegularMain");
+  };
+
+  const handleLogin = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail || !password.trim()) {
+      Alert.alert(copy.enter, copy.invalidFields);
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const auth = await loginCustomerAccount({
+        email: normalizedEmail,
+        password: password.trim(),
+        appVariant: "standard",
+      });
+      await applyAuthenticatedState(auth);
+    } catch (error) {
+      Alert.alert(copy.enter, error instanceof Error ? error.message : copy.authError);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    setSubmitting(true);
+
+    try {
+      const enrollment = await getBiometricEnrollment();
+      if (!enrollment?.enabled) {
+        throw new Error(copy.authError);
+      }
+
+      const challenge = await requestBiometricChallenge(enrollment.deviceId);
+      const signature = await signBiometricChallenge(
+        enrollment.keyAlias,
+        challenge.challenge,
+        copy.biometricPromptTitle,
+        copy.biometricPromptSubtitle,
+      );
+
+      const auth = await verifyBiometricLogin({
+        challengeId: challenge.challengeId,
+        challenge: challenge.challenge,
+        deviceId: enrollment.deviceId,
+        signature,
+      });
+
+      await applyAuthenticatedState(auth);
+    } catch (error) {
+      Alert.alert(copy.biometric, error instanceof Error ? error.message : copy.authError);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleForgotPassword = () => {
+    Alert.alert(copy.forgot, copy.forgotMessage);
+  };
+
+  const handleCreateAccount = () => {
+    navigation.navigate("Register");
   };
 
   const handleGuest = () => {
+    clearAuth();
     setMode("regular");
     setAccessMode("guest");
+    clearGuestReservation();
     navigation.replace("RegularMain");
   };
 
@@ -129,9 +271,14 @@ export function LoginScreen({ navigation }: { navigation: any }) {
             style={styles.input}
           />
 
-          <TouchableOpacity style={styles.primaryButton} onPress={handleLogin} activeOpacity={0.92}>
-            <Text style={styles.primaryText}>{copy.enter}</Text>
+          <TouchableOpacity style={styles.primaryButton} onPress={handleLogin} activeOpacity={0.92} disabled={submitting}>
+            {submitting ? <ActivityIndicator color={theme.colors.white} /> : <Text style={styles.primaryText}>{copy.enter}</Text>}
           </TouchableOpacity>
+          {biometricReady ? (
+            <TouchableOpacity style={styles.biometricButton} onPress={handleBiometricLogin} activeOpacity={0.92} disabled={submitting}>
+              <Text style={styles.biometricText}>{biometricLabel ? `${copy.biometric} · ${biometricLabel}` : copy.biometric}</Text>
+            </TouchableOpacity>
+          ) : null}
 
           <TouchableOpacity style={styles.secondaryButton} onPress={handleGuest} activeOpacity={0.92}>
             <Text style={styles.secondaryText}>{copy.guest}</Text>
@@ -152,12 +299,12 @@ export function LoginScreen({ navigation }: { navigation: any }) {
         </View>
 
         <View style={styles.footerLinks}>
-          <View style={styles.footerLinkChip}>
+          <TouchableOpacity style={styles.footerLinkChip} activeOpacity={0.92} onPress={handleForgotPassword}>
             <Text style={styles.link}>{copy.forgot}</Text>
-          </View>
-          <View style={styles.footerLinkChip}>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.footerLinkChip} activeOpacity={0.92} onPress={handleCreateAccount}>
             <Text style={styles.link}>{copy.create}</Text>
-          </View>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -291,6 +438,16 @@ const styles = StyleSheet.create({
     ...theme.shadow.floating,
   },
   primaryText: { color: theme.colors.white, fontSize: 16, fontWeight: "800" },
+  biometricButton: {
+    marginTop: 10,
+    borderRadius: 18,
+    paddingVertical: 13,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.surfaceSoft,
+  },
+  biometricText: { color: theme.colors.primary, fontSize: 14, fontWeight: "800" },
   secondaryButton: {
     marginTop: 10,
     borderRadius: 18,

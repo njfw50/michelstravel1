@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import { db } from "../db";
 import {
+  customerMobileBiometricChallenges,
   customerMobileDevices,
   customerMobileRefreshTokens,
   customerProfiles,
@@ -15,7 +16,9 @@ import {
 
 const MOBILE_ACCESS_TOKEN_TTL_SECONDS = 60 * 15;
 const MOBILE_REFRESH_TOKEN_TTL_DAYS = 30;
+const MOBILE_BIOMETRIC_CHALLENGE_TTL_SECONDS = 60 * 3;
 const WEB_HANDOFF_TOKEN_TTL_SECONDS = 60 * 5;
+const MOBILE_REFRESH_COOKIE_NAME = "mt_mobile_refresh";
 const MOBILE_JWT_SECRET = process.env.MOBILE_JWT_SECRET || process.env.SESSION_SECRET;
 
 if (!MOBILE_JWT_SECRET) {
@@ -55,7 +58,24 @@ const loginSchema = z.object({
 });
 
 const refreshSchema = z.object({
-  refreshToken: z.string().min(20),
+  refreshToken: z.string().min(20).optional(),
+});
+
+const biometricRegisterSchema = z.object({
+  publicKey: z.string().min(64).max(8192),
+  keyAlias: z.string().trim().min(3).max(160),
+  keyType: z.enum(["rsa2048", "ec256"]).default("rsa2048"),
+});
+
+const biometricChallengeSchema = z.object({
+  deviceId: z.string().uuid(),
+});
+
+const biometricVerifySchema = z.object({
+  challengeId: z.string().uuid(),
+  deviceId: z.string().uuid(),
+  challenge: z.string().min(16).max(512),
+  signature: z.string().min(32).max(8192),
 });
 
 const registerSchema = z.object({
@@ -128,8 +148,93 @@ function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
+function generateBiometricChallenge() {
+  return crypto.randomBytes(32).toString("base64url");
+}
+
+function wrapPublicKeyAsPem(publicKey: string) {
+  const normalized = publicKey.replace(/-----BEGIN PUBLIC KEY-----|-----END PUBLIC KEY-----|\s+/g, "");
+  const body = normalized.match(/.{1,64}/g)?.join("\n") || normalized;
+  return `-----BEGIN PUBLIC KEY-----\n${body}\n-----END PUBLIC KEY-----`;
+}
+
+function verifyBiometricSignature({
+  publicKey,
+  challenge,
+  signature,
+  keyType,
+}: {
+  publicKey: string;
+  challenge: string;
+  signature: string;
+  keyType?: string | null;
+}) {
+  const pem = wrapPublicKeyAsPem(publicKey);
+
+  if (keyType === "ec256") {
+    return crypto.verify("sha256", Buffer.from(challenge, "utf8"), pem, Buffer.from(signature, "base64"));
+  }
+
+  const verifier = crypto.createVerify("RSA-SHA256");
+  verifier.update(challenge);
+  verifier.end();
+  return verifier.verify(pem, signature, "base64");
+}
+
 function generateRefreshToken() {
   return crypto.randomBytes(48).toString("base64url");
+}
+
+function isSecureCookieRequest(req: Request) {
+  if (process.env.NODE_ENV === "production") {
+    return true;
+  }
+
+  const forwardedProto = req.headers["x-forwarded-proto"];
+  if (typeof forwardedProto === "string") {
+    return forwardedProto.split(",")[0]?.trim() === "https";
+  }
+
+  return req.secure;
+}
+
+function getMobileRefreshCookieOptions(req: Request) {
+  const secure = isSecureCookieRequest(req);
+
+  return {
+    httpOnly: true,
+    secure,
+    sameSite: secure ? ("none" as const) : ("lax" as const),
+    maxAge: MOBILE_REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
+    path: "/api/mobile/customer/auth",
+  };
+}
+
+function setMobileRefreshCookie(req: Request, res: Response, refreshToken: string) {
+  res.cookie(MOBILE_REFRESH_COOKIE_NAME, refreshToken, getMobileRefreshCookieOptions(req));
+}
+
+function clearMobileRefreshCookie(req: Request, res: Response) {
+  res.clearCookie(MOBILE_REFRESH_COOKIE_NAME, getMobileRefreshCookieOptions(req));
+}
+
+function readCookie(req: Request, name: string) {
+  const cookieHeader = req.headers.cookie;
+  if (!cookieHeader) {
+    return null;
+  }
+
+  const cookies = cookieHeader.split(";");
+  for (const cookie of cookies) {
+    const [rawName, ...rest] = cookie.split("=");
+    if (rawName?.trim() !== name) {
+      continue;
+    }
+
+    return decodeURIComponent(rest.join("=").trim());
+  }
+
+  return null;
 }
 
 function signAccessToken(payload: CustomerMobileAuth) {
@@ -237,6 +342,7 @@ function buildProfileSeedFromVariant(appVariant: "standard" | "senior") {
 
 function serializeProfile(profile: typeof customerProfiles.$inferSelect) {
   return {
+    userId: profile.userId,
     experienceMode: profile.experienceMode,
     preferredLanguage: profile.preferredLanguage,
     preferredAirport: profile.preferredAirport,
@@ -265,6 +371,10 @@ function serializeDevice(device: typeof customerMobileDevices.$inferSelect) {
     osVersion: device.osVersion,
     appVersion: device.appVersion,
     hasPushToken: Boolean(device.pushToken),
+    biometricReady: Boolean(device.biometricPublicKey && device.biometricRegisteredAt && !device.revokedAt),
+    biometricKeyAlias: device.biometricKeyAlias,
+    biometricRegisteredAt: device.biometricRegisteredAt,
+    biometricLastValidatedAt: device.biometricLastValidatedAt,
     trustedAt: device.trustedAt,
     lastSeenAt: device.lastSeenAt,
     revokedAt: device.revokedAt,
@@ -368,6 +478,15 @@ async function issueSession(user: typeof users.$inferSelect, device: typeof cust
     refreshToken,
     expiresInSeconds: MOBILE_ACCESS_TOKEN_TTL_SECONDS,
     refreshExpiresAt: refreshExpiry.toISOString(),
+  };
+}
+
+function serializeSession(session: Awaited<ReturnType<typeof issueSession>>) {
+  return {
+    accessToken: session.accessToken,
+    expiresInSeconds: session.expiresInSeconds,
+    refreshExpiresAt: session.refreshExpiresAt,
+    refreshCookieIssued: true,
   };
 }
 
@@ -479,6 +598,18 @@ async function upsertDeviceForUser(userId: string, payload: z.infer<typeof devic
   return created;
 }
 
+async function consumeOutstandingBiometricChallenges(deviceId: string) {
+  await db
+    .update(customerMobileBiometricChallenges)
+    .set({ consumedAt: new Date() })
+    .where(
+      and(
+        eq(customerMobileBiometricChallenges.deviceId, deviceId),
+        isNull(customerMobileBiometricChallenges.consumedAt),
+      ),
+    );
+}
+
 export function registerCustomerMobileRoutes(app: Express) {
   app.post("/api/mobile/customer/auth/login", async (req, res) => {
     const parsed = loginSchema.safeParse(req.body);
@@ -504,12 +635,13 @@ export function registerCustomerMobileRoutes(app: Express) {
     const mobileDevice = await upsertDeviceForUser(user.id, device);
     const profile = await ensureCustomerProfile(user.id, buildProfileSeedFromVariant(device.appVariant));
     const session = await issueSession(user, mobileDevice);
+    setMobileRefreshCookie(req, res, session.refreshToken);
 
     return res.json({
       user: serializeUser(user),
       profile: serializeProfile(profile),
       device: serializeDevice(mobileDevice),
-      session,
+      session: serializeSession(session),
     });
   });
 
@@ -547,22 +679,28 @@ export function registerCustomerMobileRoutes(app: Express) {
     const mobileDevice = await upsertDeviceForUser(user.id, device);
     const profile = await ensureCustomerProfile(user.id, buildProfileSeedFromVariant(device.appVariant));
     const session = await issueSession(user, mobileDevice);
+    setMobileRefreshCookie(req, res, session.refreshToken);
 
     return res.status(201).json({
       user: serializeUser(user),
       profile: serializeProfile(profile),
       device: serializeDevice(mobileDevice),
-      session,
+      session: serializeSession(session),
     });
   });
 
   app.post("/api/mobile/customer/auth/refresh", async (req, res) => {
-    const parsed = refreshSchema.safeParse(req.body);
+    const parsed = refreshSchema.safeParse(req.body || {});
     if (!parsed.success) {
       return res.status(400).json({ error: "Invalid refresh payload" });
     }
 
-    const tokenHash = hashToken(parsed.data.refreshToken);
+    const refreshToken = parsed.data.refreshToken || readCookie(req, MOBILE_REFRESH_COOKIE_NAME);
+    if (!refreshToken) {
+      return res.status(401).json({ error: "Refresh token is invalid or expired" });
+    }
+
+    const tokenHash = hashToken(refreshToken);
     const [refreshTokenRow] = await db
       .select()
       .from(customerMobileRefreshTokens)
@@ -575,6 +713,7 @@ export function registerCustomerMobileRoutes(app: Express) {
       );
 
     if (!refreshTokenRow) {
+      clearMobileRefreshCookie(req, res);
       return res.status(401).json({ error: "Refresh token is invalid or expired" });
     }
 
@@ -589,6 +728,7 @@ export function registerCustomerMobileRoutes(app: Express) {
       );
 
     if (!device) {
+      clearMobileRefreshCookie(req, res);
       return res.status(401).json({ error: "Device is no longer trusted" });
     }
 
@@ -598,6 +738,7 @@ export function registerCustomerMobileRoutes(app: Express) {
       .where(eq(users.id, refreshTokenRow.userId));
 
     if (!user) {
+      clearMobileRefreshCookie(req, res);
       return res.status(404).json({ error: "User not found" });
     }
 
@@ -613,20 +754,160 @@ export function registerCustomerMobileRoutes(app: Express) {
 
     const profile = await ensureCustomerProfile(user.id);
     const session = await issueSession(user, device);
+    setMobileRefreshCookie(req, res, session.refreshToken);
 
     return res.json({
       user: serializeUser(user),
       profile: serializeProfile(profile),
       device: serializeDevice(device),
-      session,
+      session: serializeSession(session),
     });
   });
 
   app.post("/api/mobile/customer/auth/logout", requireCustomerMobileAuth, async (req: CustomerMobileRequest, res) => {
     const auth = req.customerMobileAuth!;
     await revokeActiveRefreshTokensForDevice(auth.deviceId);
+    clearMobileRefreshCookie(req, res);
 
     return res.json({ success: true });
+  });
+
+  app.post("/api/mobile/customer/auth/biometric/challenge", async (req, res) => {
+    const parsed = biometricChallengeSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid biometric challenge payload", details: parsed.error.flatten() });
+    }
+
+    const [device] = await db
+      .select()
+      .from(customerMobileDevices)
+      .where(
+        and(
+          eq(customerMobileDevices.id, parsed.data.deviceId),
+          isNull(customerMobileDevices.revokedAt),
+          isNotNull(customerMobileDevices.biometricPublicKey),
+          isNotNull(customerMobileDevices.biometricRegisteredAt),
+        ),
+      );
+
+    if (!device) {
+      return res.status(404).json({ error: "Biometric access is not configured for this device" });
+    }
+
+    const profile = await ensureCustomerProfile(device.userId);
+    if (!profile.biometricEnabled) {
+      return res.status(403).json({ error: "Biometric authentication is disabled for this profile" });
+    }
+
+    await consumeOutstandingBiometricChallenges(device.id);
+
+    const challenge = generateBiometricChallenge();
+    const expiresAt = new Date(Date.now() + MOBILE_BIOMETRIC_CHALLENGE_TTL_SECONDS * 1000);
+    const [challengeRow] = await db
+      .insert(customerMobileBiometricChallenges)
+      .values({
+        userId: device.userId,
+        deviceId: device.id,
+        challengeHash: hashToken(challenge),
+        purpose: "login",
+        expiresAt,
+      })
+      .returning();
+
+    return res.json({
+      challengeId: challengeRow.id,
+      challenge,
+      expiresInSeconds: MOBILE_BIOMETRIC_CHALLENGE_TTL_SECONDS,
+    });
+  });
+
+  app.post("/api/mobile/customer/auth/biometric/verify", async (req, res) => {
+    const parsed = biometricVerifySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid biometric verification payload", details: parsed.error.flatten() });
+    }
+
+    const [challengeRow] = await db
+      .select()
+      .from(customerMobileBiometricChallenges)
+      .where(
+        and(
+          eq(customerMobileBiometricChallenges.id, parsed.data.challengeId),
+          eq(customerMobileBiometricChallenges.deviceId, parsed.data.deviceId),
+          isNull(customerMobileBiometricChallenges.consumedAt),
+          gt(customerMobileBiometricChallenges.expiresAt, new Date()),
+        ),
+      );
+
+    if (!challengeRow || challengeRow.challengeHash !== hashToken(parsed.data.challenge)) {
+      return res.status(401).json({ error: "Biometric challenge is invalid or expired" });
+    }
+
+    await db
+      .update(customerMobileBiometricChallenges)
+      .set({ consumedAt: new Date() })
+      .where(eq(customerMobileBiometricChallenges.id, challengeRow.id));
+
+    const [device] = await db
+      .select()
+      .from(customerMobileDevices)
+      .where(
+        and(
+          eq(customerMobileDevices.id, parsed.data.deviceId),
+          eq(customerMobileDevices.userId, challengeRow.userId),
+          isNull(customerMobileDevices.revokedAt),
+          isNotNull(customerMobileDevices.biometricPublicKey),
+        ),
+      );
+
+    if (!device?.biometricPublicKey) {
+      return res.status(401).json({ error: "Biometric device configuration is no longer valid" });
+    }
+
+    const profile = await ensureCustomerProfile(challengeRow.userId);
+    if (!profile.biometricEnabled) {
+      return res.status(403).json({ error: "Biometric authentication is disabled for this profile" });
+    }
+
+    const signatureValid = verifyBiometricSignature({
+      publicKey: device.biometricPublicKey,
+      challenge: parsed.data.challenge,
+      signature: parsed.data.signature,
+      keyType: device.biometricKeyType,
+    });
+
+    if (!signatureValid) {
+      return res.status(401).json({ error: "Biometric signature could not be validated" });
+    }
+
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, challengeRow.userId));
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const [updatedDevice] = await db
+      .update(customerMobileDevices)
+      .set({
+        biometricLastValidatedAt: new Date(),
+        lastSeenAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(customerMobileDevices.id, device.id))
+      .returning();
+
+    const session = await issueSession(user, updatedDevice);
+    setMobileRefreshCookie(req, res, session.refreshToken);
+
+    return res.json({
+      user: serializeUser(user),
+      profile: serializeProfile(profile),
+      device: serializeDevice(updatedDevice),
+      session: serializeSession(session),
+    });
   });
 
   app.post("/api/mobile/customer/web-session", requireCustomerMobileAuth, async (req: CustomerMobileRequest, res) => {
@@ -743,6 +1024,23 @@ export function registerCustomerMobileRoutes(app: Express) {
     await ensureCustomerProfile(userId);
 
     const updates = parsed.data;
+    if (updates.biometricEnabled === true) {
+      const [currentDevice] = await db
+        .select()
+        .from(customerMobileDevices)
+        .where(
+          and(
+            eq(customerMobileDevices.id, req.customerMobileAuth!.deviceId),
+            eq(customerMobileDevices.userId, userId),
+            isNull(customerMobileDevices.revokedAt),
+          ),
+        );
+
+      if (!currentDevice?.biometricPublicKey) {
+        return res.status(400).json({ error: "Register biometric access on this device before enabling the profile switch" });
+      }
+    }
+
     const [profile] = await db
       .update(customerProfiles)
       .set({
@@ -764,6 +1062,108 @@ export function registerCustomerMobileRoutes(app: Express) {
       .returning();
 
     return res.json({ profile: serializeProfile(profile) });
+  });
+
+  app.post("/api/mobile/customer/biometric/register", requireCustomerMobileAuth, async (req: CustomerMobileRequest, res) => {
+    const parsed = biometricRegisterSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid biometric registration payload", details: parsed.error.flatten() });
+    }
+
+    const auth = req.customerMobileAuth!;
+    const [device] = await db
+      .select()
+      .from(customerMobileDevices)
+      .where(
+        and(
+          eq(customerMobileDevices.id, auth.deviceId),
+          eq(customerMobileDevices.userId, auth.userId),
+          isNull(customerMobileDevices.revokedAt),
+        ),
+      );
+
+    if (!device) {
+      return res.status(404).json({ error: "Trusted device not found" });
+    }
+
+    const [updatedDevice] = await db
+      .update(customerMobileDevices)
+      .set({
+        biometricPublicKey: parsed.data.publicKey,
+        biometricKeyAlias: parsed.data.keyAlias,
+        biometricKeyType: parsed.data.keyType,
+        biometricRegisteredAt: new Date(),
+        biometricLastValidatedAt: null,
+        trustedAt: device.trustedAt || new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(customerMobileDevices.id, device.id))
+      .returning();
+
+    await ensureCustomerProfile(auth.userId);
+    const [profile] = await db
+      .update(customerProfiles)
+      .set({
+        biometricEnabled: true,
+        updatedAt: new Date(),
+      })
+      .where(eq(customerProfiles.userId, auth.userId))
+      .returning();
+
+    await consumeOutstandingBiometricChallenges(device.id);
+
+    return res.status(201).json({
+      device: serializeDevice(updatedDevice),
+      profile: serializeProfile(profile),
+    });
+  });
+
+  app.post("/api/mobile/customer/biometric/revoke", requireCustomerMobileAuth, async (req: CustomerMobileRequest, res) => {
+    const auth = req.customerMobileAuth!;
+    const [device] = await db
+      .select()
+      .from(customerMobileDevices)
+      .where(
+        and(
+          eq(customerMobileDevices.id, auth.deviceId),
+          eq(customerMobileDevices.userId, auth.userId),
+          isNull(customerMobileDevices.revokedAt),
+        ),
+      );
+
+    if (!device) {
+      return res.status(404).json({ error: "Trusted device not found" });
+    }
+
+    const [updatedDevice] = await db
+      .update(customerMobileDevices)
+      .set({
+        biometricPublicKey: null,
+        biometricKeyAlias: null,
+        biometricKeyType: null,
+        biometricRegisteredAt: null,
+        biometricLastValidatedAt: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(customerMobileDevices.id, device.id))
+      .returning();
+
+    await ensureCustomerProfile(auth.userId);
+    const [profile] = await db
+      .update(customerProfiles)
+      .set({
+        biometricEnabled: false,
+        updatedAt: new Date(),
+      })
+      .where(eq(customerProfiles.userId, auth.userId))
+      .returning();
+
+    await consumeOutstandingBiometricChallenges(device.id);
+
+    return res.json({
+      device: serializeDevice(updatedDevice),
+      profile: serializeProfile(profile),
+    });
   });
 
   app.get("/api/mobile/customer/devices", requireCustomerMobileAuth, async (req: CustomerMobileRequest, res) => {

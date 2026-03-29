@@ -1,9 +1,13 @@
 import React, { useMemo, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import { AppShell } from "../components/AppShell";
 import { Card } from "../components/Card";
 import { PrimaryButton } from "../components/PrimaryButton";
 import { lookupBooking } from "../services/bookings";
+import { buildBiometricKeyAlias, ensureBiometricSupport, recreateBiometricKey, removeBiometricKey } from "../services/biometricAuth";
+import { clearBiometricEnrollment, saveBiometricEnrollment } from "../services/biometricStorage";
+import { registerBiometricKey, revokeBiometricKey } from "../services/auth";
+import { useAuthStore } from "../store/authStore";
 import { useOnboardingStore } from "../store/onboardingStore";
 import { useSessionStore } from "../store/sessionStore";
 import { theme } from "../theme/theme";
@@ -14,11 +18,17 @@ export function TripsScreen() {
   const accessMode = useSessionStore((state) => state.accessMode);
   const rememberedGuestReservation = useSessionStore((state) => state.guestReservation);
   const rememberGuestReservation = useSessionStore((state) => state.rememberGuestReservation);
+  const user = useAuthStore((state) => state.user);
+  const profile = useAuthStore((state) => state.profile);
+  const device = useAuthStore((state) => state.device);
+  const updateProfile = useAuthStore((state) => state.updateProfile);
+  const updateDevice = useAuthStore((state) => state.updateDevice);
   const [referenceCode, setReferenceCode] = useState(rememberedGuestReservation?.referenceCode ?? "");
   const [contactEmail, setContactEmail] = useState(rememberedGuestReservation?.contactEmail ?? "");
   const [booking, setBooking] = useState<any | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [biometricBusy, setBiometricBusy] = useState(false);
 
   const copy = useMemo(() => {
     if (language === "en") {
@@ -30,6 +40,7 @@ export function TripsScreen() {
           : "Your reservations will stay organized here with the same commercial source used on the website.",
         referenceLabel: "Reservation code",
         emailLabel: "Booking email",
+        deviceLabel: "Device",
         cta: "Open reservation",
         secureNote: "For your security, we confirm the booking code together with the contact email.",
         empty: "No reservation loaded yet.",
@@ -43,6 +54,13 @@ export function TripsScreen() {
         sourceLabel: "Reservation data comes from the main Michels Travel system",
         statusPending: "Pending",
         statusConfirmed: "Confirmed",
+        accountTitle: "Protected account access",
+        accountSubtitle: "Your app access is protected by password, secure session cookie, and biometric access when enabled on this device.",
+        biometricTitle: "Biometric access",
+        biometricEnabled: "Face ID or fingerprint can sign you in securely on this device.",
+        biometricDisabled: "Enable biometrics on this device to avoid typing your password every time.",
+        biometricUnavailable: "Strong biometrics are not available on this device.",
+        biometricError: "We could not update biometric access right now.",
       };
     }
 
@@ -55,6 +73,7 @@ export function TripsScreen() {
           : "Sus reservas quedan organizadas aquí con la misma fuente comercial usada en el sitio.",
         referenceLabel: "Código de reserva",
         emailLabel: "Correo de la reserva",
+        deviceLabel: "Dispositivo",
         cta: "Abrir reserva",
         secureNote: "Por su seguridad, confirmamos el código de la reserva junto con el correo de contacto.",
         empty: "Todavía no hay una reserva cargada.",
@@ -68,6 +87,13 @@ export function TripsScreen() {
         sourceLabel: "Los datos de la reserva vienen del sistema principal de Michels Travel",
         statusPending: "Pendiente",
         statusConfirmed: "Confirmada",
+        accountTitle: "Acceso protegido de la cuenta",
+        accountSubtitle: "Su acceso en la app queda protegido por contraseña, cookie segura de sesión y biometría cuando esté activada en este dispositivo.",
+        biometricTitle: "Acceso biométrico",
+        biometricEnabled: "Face ID o huella pueden iniciar su sesión con seguridad en este dispositivo.",
+        biometricDisabled: "Active la biometría en este dispositivo para no escribir la contraseña cada vez.",
+        biometricUnavailable: "La biometría fuerte no está disponible en este dispositivo.",
+        biometricError: "No fue posible actualizar el acceso biométrico ahora.",
       };
     }
 
@@ -79,6 +105,7 @@ export function TripsScreen() {
         : "Suas reservas ficam organizadas aqui com a mesma fonte comercial usada no site.",
       referenceLabel: "Código da reserva",
       emailLabel: "E-mail da reserva",
+      deviceLabel: "Dispositivo",
       cta: "Abrir reserva",
       secureNote: "Para sua segurança, confirmamos o código da reserva junto com o e-mail de contato.",
       empty: "Nenhuma reserva carregada ainda.",
@@ -92,6 +119,13 @@ export function TripsScreen() {
       sourceLabel: "Os dados da reserva vêm do sistema principal da Michels Travel",
       statusPending: "Pendente",
       statusConfirmed: "Confirmada",
+      accountTitle: "Acesso protegido da conta",
+      accountSubtitle: "Seu acesso no app fica protegido por senha, cookie seguro de sessão e biometria quando ativada neste aparelho.",
+      biometricTitle: "Acesso por biometria",
+      biometricEnabled: "Face ID ou digital podem entrar com segurança neste aparelho.",
+      biometricDisabled: "Ative a biometria neste aparelho para não digitar a senha sempre.",
+      biometricUnavailable: "A biometria forte não está disponível neste aparelho.",
+      biometricError: "Não foi possível atualizar o acesso por biometria agora.",
     };
   }, [accessMode, language, mode]);
 
@@ -136,6 +170,47 @@ export function TripsScreen() {
 
   const bookingStatus = String(booking?.status || "pending").toLowerCase();
   const statusLabel = bookingStatus === "confirmed" ? copy.statusConfirmed : copy.statusPending;
+
+  const handleBiometricToggle = async (enabled: boolean) => {
+    if (!user?.email || !profile || !device?.id) {
+      Alert.alert(copy.biometricTitle, copy.biometricError);
+      return;
+    }
+
+    setBiometricBusy(true);
+
+    try {
+      if (enabled) {
+        await ensureBiometricSupport();
+        const keyAlias = device.biometricKeyAlias || buildBiometricKeyAlias(device.id);
+        const publicKey = await recreateBiometricKey(keyAlias);
+        const response = await registerBiometricKey({ publicKey, keyAlias, keyType: "rsa2048" });
+        updateProfile(response.profile);
+        updateDevice(response.device);
+        await saveBiometricEnrollment({
+          userId: user.id,
+          deviceId: response.device.id,
+          email: user.email,
+          firstName: user.firstName,
+          keyAlias,
+          enabled: true,
+        });
+        return;
+      }
+
+      const keyAlias = device.biometricKeyAlias || buildBiometricKeyAlias(device.id);
+      const response = await revokeBiometricKey();
+      updateProfile(response.profile);
+      updateDevice(response.device);
+      await removeBiometricKey(keyAlias);
+      await clearBiometricEnrollment();
+    } catch (toggleError) {
+      const message = toggleError instanceof Error ? toggleError.message : copy.biometricError;
+      Alert.alert(copy.biometricTitle, message || copy.biometricUnavailable);
+    } finally {
+      setBiometricBusy(false);
+    }
+  };
 
   return (
     <AppShell mode={mode} badge={copy.badge} title={copy.title} subtitle={copy.subtitle} contentStyle={styles.container}>
@@ -227,10 +302,40 @@ export function TripsScreen() {
           </Card>
         </>
       ) : (
-        <Card>
-          <Text style={styles.cardTitle}>{copy.title}</Text>
-          <Text style={styles.resultSubtitle}>{copy.subtitle}</Text>
-        </Card>
+        <>
+          <Card>
+            <Text style={styles.cardTitle}>{copy.accountTitle}</Text>
+            <Text style={styles.resultSubtitle}>{copy.accountSubtitle}</Text>
+
+            <View style={styles.metaGrid}>
+              <View style={styles.metaCard}>
+                <Text style={styles.metaLabel}>{copy.emailLabel}</Text>
+                <Text style={styles.metaValue}>{user?.email || "--"}</Text>
+              </View>
+              <View style={styles.metaCard}>
+                <Text style={styles.metaLabel}>{copy.deviceLabel}</Text>
+                <Text style={styles.metaValue}>{device?.id ? device.id.slice(0, 8).toUpperCase() : "--"}</Text>
+              </View>
+            </View>
+
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleCopy}>
+                <Text style={styles.toggleTitle}>{copy.biometricTitle}</Text>
+                <Text style={styles.toggleSubtitle}>{profile?.biometricEnabled ? copy.biometricEnabled : copy.biometricDisabled}</Text>
+              </View>
+              {biometricBusy ? (
+                <ActivityIndicator color={theme.colors.primary} />
+              ) : (
+                <Switch
+                  value={Boolean(profile?.biometricEnabled)}
+                  onValueChange={handleBiometricToggle}
+                  trackColor={{ false: theme.colors.gray300, true: theme.colors.primary }}
+                  thumbColor={theme.colors.white}
+                />
+              )}
+            </View>
+          </Card>
+        </>
       )}
     </AppShell>
   );
@@ -338,4 +443,19 @@ const styles = StyleSheet.create({
   },
   metaValue: { marginTop: 8, fontSize: 15, fontWeight: "700", color: theme.colors.gray900, lineHeight: 22 },
   totalValue: { marginTop: 8, fontSize: 20, fontWeight: "800", color: theme.colors.primaryInk },
+  toggleRow: {
+    marginTop: theme.spacing(4),
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing(3),
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: theme.colors.outline,
+    backgroundColor: theme.colors.surfaceMuted,
+    paddingHorizontal: theme.spacing(3),
+    paddingVertical: theme.spacing(3),
+  },
+  toggleCopy: { flex: 1 },
+  toggleTitle: { fontSize: 14, fontWeight: "800", color: theme.colors.gray900 },
+  toggleSubtitle: { marginTop: 6, fontSize: 12, lineHeight: 18, color: theme.colors.gray600 },
 });

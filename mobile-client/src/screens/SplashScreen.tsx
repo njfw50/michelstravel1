@@ -2,12 +2,21 @@ import React, { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getMobileAppConfig } from "../services/appConfig";
+import { refreshCustomerSession } from "../services/auth";
+import { useAuthStore } from "../store/authStore";
+import { useOnboardingStore } from "../store/onboardingStore";
+import { useSessionStore } from "../store/sessionStore";
 import { theme } from "../theme/theme";
 
 const logo = require("../assets/logo.png");
 
 export function SplashScreen({ navigation }: { navigation: any }) {
   const [secondsLeft, setSecondsLeft] = useState(5);
+  const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  const setLanguage = useOnboardingStore((state) => state.setLanguage);
+  const setMode = useOnboardingStore((state) => state.setMode);
+  const setAccessMode = useSessionStore((state) => state.setAccessMode);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -28,6 +37,19 @@ export function SplashScreen({ navigation }: { navigation: any }) {
         // If config fails, do not hard-block the app start.
       }
 
+      try {
+        const auth = await refreshCustomerSession();
+        const nextMode = auth.profile.experienceMode === "senior" ? "senior" : "regular";
+        setAuthenticated(auth);
+        setLanguage(auth.profile.preferredLanguage || "pt");
+        setMode(nextMode);
+        setAccessMode("account");
+        navigation.replace(nextMode === "senior" ? "SeniorMain" : "RegularMain");
+        return;
+      } catch {
+        clearAuth();
+      }
+
       navigation.replace("LanguageSelect");
     }, 5200);
 
@@ -35,7 +57,7 @@ export function SplashScreen({ navigation }: { navigation: any }) {
       clearInterval(interval);
       clearTimeout(timeout);
     };
-  }, [navigation]);
+  }, [clearAuth, navigation, setAccessMode, setAuthenticated, setLanguage, setMode]);
 
   return (
     <SafeAreaView style={styles.screen}>

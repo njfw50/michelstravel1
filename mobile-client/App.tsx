@@ -12,6 +12,7 @@ import { LanguageSelectScreen } from "./src/screens/LanguageSelectScreen";
 import { LoginScreen } from "./src/screens/LoginScreen";
 import { OnboardingScreen } from "./src/screens/OnboardingScreen";
 import { PrivacyScreen } from "./src/screens/PrivacyScreen";
+import { RegisterScreen } from "./src/screens/RegisterScreen";
 import { BookingFormScreen } from "./src/screens/BookingFormScreen";
 import { RegularHomeScreen } from "./src/screens/HomeSearchScreen";
 import { RegularResultsScreen } from "./src/screens/ResultsScreen";
@@ -195,6 +196,7 @@ export default function App() {
           <Stack.Screen name="AppStatus" component={AppStatusScreen} />
           <Stack.Screen name="LanguageSelect" component={LanguageSelectScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
           <Stack.Screen name="Terms" component={TermsScreen} />
           <Stack.Screen name="Privacy" component={PrivacyScreen} />
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
