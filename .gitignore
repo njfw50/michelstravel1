@@ -42,11 +42,13 @@ yarn-error.log*
 *.db
 
 # Local mobile scaffolds not part of the shipped app
-mobile/
-tempnative/
+/mobile/
+/tempnative/
 
 # Replit specific (keep for Replit compatibility)
 .config
 .local
 .replit
 replit.nix
+/mobile-client/ios/tempnative/
+
