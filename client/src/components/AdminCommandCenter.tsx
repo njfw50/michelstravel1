@@ -749,23 +749,23 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
         <ProductAppCard
           title="Michels Travel Admin"
           audience="Operacao"
-          description="Seu app separado de operacao e atendimento. Ele nao e o senior e nao e o app de busca e compra do cliente."
-          status="Instalacao separada do senior"
+          description="Seu app separado de operacao e atendimento. Ele nao e o app do cliente."
+          status="Instalacao separada do app do cliente"
           icon={<Smartphone className="h-5 w-5" />}
           primaryAction={{ label: "Instalar app admin", onClick: handleOpenAdminInstallPage }}
           secondaryAction={{ label: "Copiar link de instalacao", onClick: handleCopyAdminInstallLink }}
         />
         <ProductAppCard
-          title="Michels Travel Senior"
+          title="Modo senior no app Michels Travel"
           audience="Idosos"
-          description="App separado para o publico senior, com fluxo facilitado, ajuda calma e jornada dedicada ao cliente idoso."
-          status="Separado do admin"
+          description="O app do cliente inclui o modo senior com fluxo facilitado, ajuda calma e jornada dedicada ao cliente idoso."
+          status="Disponivel dentro do app do cliente"
           icon={<Users className="h-5 w-5" />}
         />
         <ProductAppCard
           title="Michels Travel Cliente"
           audience="Busca e compra"
-          description="App separado para o cliente comum pesquisar voos, comparar, comprar e acompanhar reservas sem usar o app senior nem o admin."
+          description="App principal do cliente para pesquisar voos, comparar, comprar e acompanhar reservas no mesmo produto."
           status="Separado do admin"
           icon={<Plane className="h-5 w-5" />}
         />

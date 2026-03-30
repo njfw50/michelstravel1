@@ -201,19 +201,19 @@ function buildSeniorAppStructuredData(origin: string) {
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      name: "Baixar App Android Michels Travel Senior",
-      url: `${origin}/apps/michels-travel-senior`,
+      name: "Baixar App Android Michels Travel",
+      url: `${origin}/apps/michels-travel`,
       description:
-        "Pagina oficial da Michels Travel para instalar o app Android senior, continuar a viagem com mais calma e escanear documentos direto do celular.",
+        "Pagina oficial da Michels Travel para instalar o app Android, continuar a reserva no celular e escanear documentos direto do aparelho.",
     },
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      name: "Michels Travel Senior",
+      name: "Michels Travel",
       operatingSystem: "Android",
       applicationCategory: "TravelApplication",
-      url: `${origin}/apps/michels-travel-senior`,
-      downloadUrl: `${origin}/apps/michels-travel-senior`,
+      url: `${origin}/apps/michels-travel`,
+      downloadUrl: `${origin}/apps/michels-travel`,
       offers: {
         "@type": "Offer",
         price: "0",
@@ -269,14 +269,14 @@ function getSeoConfig(path: string, origin: string): SeoConfig {
     };
   }
 
-  if (normalizedPath === "/apps/michels-travel-senior") {
+  if (normalizedPath === "/apps/michels-travel" || normalizedPath === "/apps/michels-travel-senior") {
     return {
       ...fallback,
-      title: "Baixar App Android Michels Travel Senior",
+      title: "Baixar App Android Michels Travel",
       description:
-        "Pagina oficial da Michels Travel para instalar o app Android senior, continuar a viagem com mais calma e escanear documentos direto do celular.",
+        "Pagina oficial da Michels Travel para instalar o app Android, continuar a reserva no celular e escanear documentos direto do aparelho.",
       ogDescription:
-        "Instale o app Android senior da Michels Travel e continue sua viagem com mais calma direto do celular.",
+        "Instale o app Android da Michels Travel e continue sua viagem direto do celular.",
       structuredData: buildSeniorAppStructuredData(origin),
     };
   }

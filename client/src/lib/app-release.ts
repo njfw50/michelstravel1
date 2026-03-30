@@ -29,23 +29,23 @@ export type AppReleaseManifest = {
 
 export const DEFAULT_APP_RELEASE_MANIFEST: AppReleaseManifest = {
   senior: {
-    appName: "Michels Travel Senior",
-    installPagePath: "/apps/michels-travel-senior",
+    appName: "Michels Travel",
+    installPagePath: "/apps/michels-travel",
     android: {
       status: "coming_soon",
       version: null,
       directDownloadUrl: null,
       archivedDownloadUrl: null,
       playStoreUrl: null,
-      packageName: "agency.michelstravel.senior",
+      packageName: "agency.michelstravel.app",
       minAndroid: "8.0+",
       sizeLabel: null,
       releasedAt: null,
       sha256: null,
       installNotes: {
-        pt: "Quando o APK Android estiver publicado, o botao de download aparece aqui automaticamente.",
-        en: "When the Android APK is published, the download button will appear here automatically.",
-        es: "Cuando el APK de Android este publicado, el boton de descarga aparecera aqui automaticamente.",
+        pt: "Quando o app Android estiver publicado, o botao de download aparece aqui automaticamente.",
+        en: "When the Android app is published, the download button will appear here automatically.",
+        es: "Cuando la app de Android este publicada, el boton de descarga aparecera aqui automaticamente.",
       },
     },
   },

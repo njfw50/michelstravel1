@@ -46,12 +46,12 @@ export default function AppLaunchPromo({
           title: "Michels Travel is getting dedicated apps for iPhone, Android, and Samsung.",
           subtitle:
             mode === "senior"
-              ? "The senior app will open directly in the calmer journey, keep the traveler signed in, and make document scanning easier from the phone."
-              : "The standard app and the senior app are being prepared so customers can open faster, stay signed in, scan documents on the phone, and continue the trip without starting over.",
+              ? "The Michels Travel app will open with the senior-friendly journey available, keep the traveler signed in, and make document scanning easier from the phone."
+              : "The Michels Travel app is being prepared so customers can open faster, stay signed in, scan documents on the phone, and continue the trip without starting over.",
           standardTitle: "Michels Travel App",
           standardDesc: "Search flights, follow trips, talk to Mia, and keep your travel details ready in one place.",
-          seniorTitle: "Michels Senior App",
-          seniorDesc: "Open directly in the easier journey, with calmer screens, larger actions, and less pressure for older travelers.",
+          seniorTitle: "Senior experience inside the app",
+          seniorDesc: "Open the same Michels Travel app with calmer screens, larger actions, and less pressure for older travelers.",
           featureSignedIn: "Stay signed in on your own device",
           featureScanner: "Scan documents from the phone and send them to your booking",
             featureAlerts: "Get notified when your trip, payment, or support needs attention",
@@ -60,8 +60,8 @@ export default function AppLaunchPromo({
             siteNow: mode === "senior" ? "Open senior site" : "Open website",
             storeNote: "Planned for App Store, Google Play, and Galaxy Store.",
             releaseNote: releaseVersion ? `Android available now: version ${releaseVersion}.` : "Android available now.",
-            topic: mode === "senior" ? "Senior app early access" : "Apps early access",
-            interest: mode === "senior" ? "I want the Michels Travel Senior app when it is ready." : "I want the Michels Travel apps when they are ready.",
+            topic: mode === "senior" ? "Michels Travel app early access" : "Apps early access",
+            interest: mode === "senior" ? "I want the Michels Travel app with senior support when it is ready." : "I want the Michels Travel apps when they are ready.",
           }
       : language === "es"
         ? {
@@ -69,12 +69,12 @@ export default function AppLaunchPromo({
             title: "Michels Travel tendrá apps dedicadas para iPhone, Android y Samsung.",
             subtitle:
               mode === "senior"
-                ? "La app senior abrirá directamente en el camino más tranquilo, mantendrá al cliente conectado y hará más simple el escaneo de documentos desde el celular."
-                : "Estamos preparando la app estándar y la app senior para que el cliente abra más rápido, siga conectado, escanee documentos desde el celular y continúe el viaje sin empezar de nuevo.",
+                ? "La app Michels Travel abrirá con el camino senior disponible, mantendrá al cliente conectado y hará más simple el escaneo de documentos desde el celular."
+                : "Estamos preparando la app Michels Travel para que el cliente abra más rápido, siga conectado, escanee documentos desde el celular y continúe el viaje sin empezar de nuevo.",
             standardTitle: "App Michels Travel",
             standardDesc: "Buscar vuelos, seguir viajes, hablar con Mia y guardar sus datos en un solo lugar.",
-            seniorTitle: "App Michels Senior",
-            seniorDesc: "Abrir directamente en el camino fácil, con pantallas más calmadas, acciones grandes y menos presión para viajeros mayores.",
+            seniorTitle: "Modo senior dentro de la app",
+            seniorDesc: "Abrir la misma app Michels Travel con pantallas más calmadas, acciones grandes y menos presión para viajeros mayores.",
             featureSignedIn: "Seguir conectado en su propio dispositivo",
             featureScanner: "Escanear documentos desde el celular y enviarlos a la reserva",
             featureAlerts: "Recibir avisos cuando su viaje, pago o ayuda necesiten atención",
@@ -83,20 +83,20 @@ export default function AppLaunchPromo({
             siteNow: mode === "senior" ? "Abrir sitio senior" : "Abrir sitio web",
             storeNote: "Previsto para App Store, Google Play y Galaxy Store.",
             releaseNote: releaseVersion ? `Android disponible ahora: version ${releaseVersion}.` : "Android disponible ahora.",
-            topic: mode === "senior" ? "Acceso anticipado app senior" : "Acceso anticipado apps",
-            interest: mode === "senior" ? "Quiero usar la app Michels Travel Senior cuando esté lista." : "Quiero usar las apps de Michels Travel cuando estén listas.",
+            topic: mode === "senior" ? "Acceso anticipado app Michels Travel" : "Acceso anticipado apps",
+            interest: mode === "senior" ? "Quiero usar la app Michels Travel con soporte senior cuando esté lista." : "Quiero usar las apps de Michels Travel cuando estén listas.",
           }
         : {
             eyebrow: "Apps em breve",
             title: "A Michels Travel vai ganhar apps dedicados para iPhone, Android e Samsung.",
             subtitle:
               mode === "senior"
-                ? "O app senior vai abrir direto no caminho mais calmo, manter o cliente conectado e deixar o escaneamento de documentos mais simples no celular."
-                : "Estamos preparando o app comum e o app senior para o cliente abrir mais rapido, ficar logado, escanear documentos no celular e continuar a viagem sem comecar de novo.",
+                ? "O app Michels Travel vai abrir com o caminho senior disponivel, manter o cliente conectado e deixar o escaneamento de documentos mais simples no celular."
+                : "Estamos preparando o app Michels Travel para o cliente abrir mais rapido, ficar logado, escanear documentos no celular e continuar a viagem sem comecar de novo.",
             standardTitle: "App Michels Travel",
             standardDesc: "Buscar voos, acompanhar viagens, falar com a Mia e deixar seus dados de viagem prontos em um lugar so.",
-            seniorTitle: "App Michels Senior",
-            seniorDesc: "Abrir direto no caminho facil, com telas mais calmas, acoes maiores e menos pressao para o publico idoso.",
+            seniorTitle: "Modo senior dentro do app",
+            seniorDesc: "Abrir o mesmo app Michels Travel com telas mais calmas, acoes maiores e menos pressao para o publico idoso.",
             featureSignedIn: "Ficar logado no proprio aparelho",
             featureScanner: "Escanear documentos no celular e mandar para a reserva",
             featureAlerts: "Receber aviso quando a viagem, o pagamento ou a ajuda precisarem de atencao",
@@ -105,8 +105,8 @@ export default function AppLaunchPromo({
             siteNow: mode === "senior" ? "Abrir site senior" : "Abrir o site",
             storeNote: "Previsto para App Store, Google Play e Galaxy Store.",
             releaseNote: releaseVersion ? `Android disponivel agora: versao ${releaseVersion}.` : "Android disponivel agora.",
-            topic: mode === "senior" ? "App Michels Travel Senior" : "Apps Michels Travel",
-            interest: mode === "senior" ? "Quero usar o app Michels Travel Senior quando ele estiver pronto." : "Quero usar os apps da Michels Travel quando eles estiverem prontos.",
+            topic: mode === "senior" ? "App Michels Travel" : "Apps Michels Travel",
+            interest: mode === "senior" ? "Quero usar o app Michels Travel com suporte senior quando ele estiver pronto." : "Quero usar os apps da Michels Travel quando eles estiverem prontos.",
           };
 
   const waitlistHref = buildWhatsAppHref(
@@ -115,7 +115,7 @@ export default function AppLaunchPromo({
       topic: copy.topic,
       details: [
         copy.interest,
-        mode === "senior" ? "Quero pesquisar viagens com mais calma no app senior." : "Quero acompanhar minhas viagens e pesquisar no app da Michels Travel.",
+        mode === "senior" ? "Quero pesquisar viagens com mais calma no app Michels Travel." : "Quero acompanhar minhas viagens e pesquisar no app da Michels Travel.",
       ],
     }),
   );

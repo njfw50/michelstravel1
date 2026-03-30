@@ -1,18 +1,18 @@
 {
   "senior": {
-    "appName": "Michels Travel Senior",
-    "installPagePath": "/apps/michels-travel-senior",
+    "appName": "Michels Travel",
+    "installPagePath": "/apps/michels-travel",
     "android": {
       "status": "ready",
-      "version": "1.2.0",
-      "directDownloadUrl": "/downloads/michels-travel-senior-latest.apk?v=1.2.0-definitive",
+      "version": "1.2.1",
+      "directDownloadUrl": "/downloads/michels-travel-latest.apk?v=1.2.1",
       "archivedDownloadUrl": null,
       "playStoreUrl": null,
-      "packageName": "agency.michelstravel.senior",
+      "packageName": "agency.michelstravel.app",
       "minAndroid": "8.0+",
       "sizeLabel": "72.1 MB",
-      "releasedAt": "2026-03-30T01:57:31Z",
-      "sha256": "c4b1c62bfc089ae71978900b64121aafd6334fe3a8aeb3b965e897663a581475",
+      "releasedAt": "2026-03-30T02:48:02Z",
+      "sha256": "497b41f396b22d1c8e1b8e260ac6f076275f126c9a00536238d202b3b192f3a0",
       "installNotes": {
         "pt": "Baixe o APK no Android e conclua a instalacao no seu celular.",
         "en": "Download the APK on Android and finish the installation on your phone.",

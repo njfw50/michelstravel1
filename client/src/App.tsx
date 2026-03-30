@@ -94,6 +94,7 @@ function Router() {
       <Route path="/about" component={() => <Layout><About /></Layout>} />
       <Route path="/agencia-de-viagens-ironbound-newark" component={() => <Layout><IronboundNewark /></Layout>} />
       <Route path="/passagens-para-o-brasil-saindo-de-newark" component={() => <Layout><BrazilFlightsNewark /></Layout>} />
+      <Route path="/apps/michels-travel" component={() => <Layout><AppSeniorDownload /></Layout>} />
       <Route path="/apps/michels-travel-senior" component={() => <Layout><AppSeniorDownload /></Layout>} />
       <Route path="/apps/michels-travel-admin" component={() => <Layout><AppAdminDownload /></Layout>} />
       <Route path="/blog" component={() => <Layout><BlogList /></Layout>} />
