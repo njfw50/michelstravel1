@@ -3,7 +3,6 @@ import {
   Image,
   Modal,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleProp,
   StyleSheet,
@@ -14,6 +13,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import LinearGradient from "react-native-linear-gradient";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { theme } from "../theme/theme";
 import { JourneyMode } from "../types/app";
 import { useOnboardingStore } from "../store/onboardingStore";
@@ -28,6 +28,7 @@ type AppShellProps = {
   scrollable?: boolean;
   contentStyle?: StyleProp<ViewStyle>;
   heroSize?: "default" | "expanded";
+  reserveBottomNav?: boolean;
 };
 
 type MenuItem = {
@@ -45,8 +46,10 @@ export function AppShell({
   scrollable = true,
   contentStyle,
   heroSize = "default",
+  reserveBottomNav = false,
 }: AppShellProps) {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const language = useOnboardingStore((state) => state.language);
   const [menuVisible, setMenuVisible] = useState(false);
   const currentYear = new Date().getFullYear();
@@ -107,6 +110,10 @@ export function AppShell({
         activeBorder: "#CFE0FF",
       };
 
+  const topSpacing = Math.max(2, Math.min(insets.top, 10));
+  const bottomBarInset = reserveBottomNav ? Math.max(insets.bottom + 52, 62) : Math.max(insets.bottom + 6, 12);
+  const contentBottomPadding = reserveBottomNav ? 18 : 12;
+
   const navigateMain = (screen?: string) => {
     setMenuVisible(false);
 
@@ -132,18 +139,22 @@ export function AppShell({
       ];
 
   const content = scrollable ? (
-    <ScrollView contentContainerStyle={[styles.content, contentStyle]} showsVerticalScrollIndicator>
+    <ScrollView
+      contentContainerStyle={[styles.content, { paddingBottom: contentBottomPadding }, contentStyle]}
+      contentInsetAdjustmentBehavior="never"
+      showsVerticalScrollIndicator
+    >
       {children}
     </ScrollView>
   ) : (
-    <View style={[styles.contentStatic, contentStyle]}>{children}</View>
+    <View style={[styles.contentStatic, { paddingBottom: contentBottomPadding }, contentStyle]}>{children}</View>
   );
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
       <View style={styles.ambientTop} />
       <View style={styles.ambientBottom} />
-      <View style={styles.heroWrap}>
+      <View style={[styles.heroWrap, { paddingTop: topSpacing }]}>
         <LinearGradient
           colors={modePalette.gradient}
           start={{ x: 0, y: 0 }}
@@ -184,7 +195,7 @@ export function AppShell({
 
       <View style={styles.contentWrap}>{content}</View>
 
-      <View style={styles.footerWrap}>
+      <View style={[styles.footerWrap, { marginBottom: bottomBarInset, paddingBottom: Math.max(5, Math.min(insets.bottom + 2, 10)) }]}>
         <Text style={styles.footerLegal} numberOfLines={1}>{labels.footerLegal}</Text>
       </View>
 
@@ -244,22 +255,21 @@ const styles = StyleSheet.create({
   },
   heroWrap: {
     paddingHorizontal: theme.spacing(3),
-    paddingTop: theme.spacing(1),
   },
   hero: {
     overflow: "hidden",
     borderRadius: 30,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
-    paddingHorizontal: theme.spacing(4),
-    paddingTop: theme.spacing(3.25),
-    paddingBottom: theme.spacing(4),
+    paddingHorizontal: theme.spacing(3.5),
+    paddingTop: theme.spacing(2.75),
+    paddingBottom: theme.spacing(3),
     ...theme.shadow.floating,
   },
   heroExpanded: {
-    minHeight: 214,
-    paddingTop: theme.spacing(3.75),
-    paddingBottom: theme.spacing(5.25),
+    minHeight: 188,
+    paddingTop: theme.spacing(3),
+    paddingBottom: theme.spacing(3.75),
   },
   heroGlowOne: {
     position: "absolute",
@@ -319,7 +329,7 @@ const styles = StyleSheet.create({
   menuIcon: { width: 18, gap: 3 },
   menuLine: { height: 2, borderRadius: 999, backgroundColor: theme.colors.white },
   menuLineShort: { width: 12, alignSelf: "flex-end" },
-  heroContent: { marginTop: theme.spacing(3.5) },
+  heroContent: { marginTop: theme.spacing(2.5) },
   badge: {
     alignSelf: "flex-start",
     borderRadius: 999,
@@ -335,37 +345,34 @@ const styles = StyleSheet.create({
   heroTitle: {
     marginTop: theme.spacing(2.25),
     color: theme.colors.white,
-    fontSize: 24,
+    fontSize: 23,
     fontWeight: "800",
-    lineHeight: 30,
+    lineHeight: 28,
   },
   heroSubtitle: {
-    marginTop: theme.spacing(1.75),
+    marginTop: theme.spacing(1.25),
     color: "rgba(255,255,255,0.84)",
     fontSize: 12,
-    lineHeight: 18,
+    lineHeight: 17,
   },
   contentWrap: {
     flex: 1,
   },
   content: {
     paddingHorizontal: theme.spacing(3),
-    paddingTop: theme.spacing(2.75),
-    paddingBottom: 108,
+    paddingTop: theme.spacing(2),
     gap: theme.spacing(3),
   },
   contentStatic: {
     flex: 1,
     paddingHorizontal: theme.spacing(3),
-    paddingTop: theme.spacing(2.75),
-    paddingBottom: 108,
+    paddingTop: theme.spacing(2),
   },
   footerWrap: {
     backgroundColor: theme.colors.surface,
     paddingHorizontal: theme.spacing(3),
-    paddingVertical: 6,
-    minHeight: 34,
-    marginBottom: 72,
+    paddingVertical: 5,
+    minHeight: 28,
     borderTopWidth: 1,
     borderTopColor: theme.colors.outline,
     alignItems: "center",

@@ -3,7 +3,7 @@ import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { StatusBar } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { TabBarIcon } from "./src/components/TabBarIcon";
 import { AppStatusScreen } from "./src/screens/AppStatusScreen";
 import { DestinationsScreen } from "./src/screens/DestinationsScreen";
@@ -31,6 +31,7 @@ const RegularTabs = createBottomTabNavigator<RegularTabParamList>();
 const SeniorTabs = createBottomTabNavigator<SeniorTabParamList>();
 
 function RegularTabsNavigator() {
+  const insets = useSafeAreaInsets();
   const language = useOnboardingStore((state) => state.language);
   const labels = language === "en"
     ? { home: "Search", destinations: "Catalog", trips: "Trips", help: "Help" }
@@ -48,19 +49,19 @@ function RegularTabsNavigator() {
           position: "absolute",
           left: 12,
           right: 12,
-          bottom: 10,
-          height: 58,
-          paddingBottom: 6,
-          paddingTop: 6,
-          borderRadius: 24,
+          bottom: Math.max(insets.bottom, 8),
+          height: 50 + Math.max(insets.bottom, 6),
+          paddingBottom: Math.max(insets.bottom, 5),
+          paddingTop: 5,
+          borderRadius: 22,
           backgroundColor: theme.colors.surface,
           borderTopWidth: 0,
           borderWidth: 1,
           borderColor: theme.colors.outline,
           ...theme.shadow.floating,
         },
-        tabBarItemStyle: { paddingVertical: 1 },
-        tabBarLabelStyle: { fontSize: 9, fontWeight: "800", marginTop: 0, marginBottom: 0 },
+        tabBarItemStyle: { paddingVertical: 0 },
+        tabBarLabelStyle: { fontSize: 8, fontWeight: "800", marginTop: 0, marginBottom: 0 },
       }}
     >
       <RegularTabs.Screen
@@ -112,6 +113,7 @@ function RegularTabsNavigator() {
 }
 
 function SeniorTabsNavigator() {
+  const insets = useSafeAreaInsets();
   const language = useOnboardingStore((state) => state.language);
   const labels = language === "en"
     ? { home: "Senior", trips: "Trips", help: "Help" }
@@ -129,19 +131,19 @@ function SeniorTabsNavigator() {
           position: "absolute",
           left: 12,
           right: 12,
-          bottom: 10,
-          height: 58,
-          paddingBottom: 6,
-          paddingTop: 6,
-          borderRadius: 24,
+          bottom: Math.max(insets.bottom, 8),
+          height: 50 + Math.max(insets.bottom, 6),
+          paddingBottom: Math.max(insets.bottom, 5),
+          paddingTop: 5,
+          borderRadius: 22,
           backgroundColor: theme.colors.surface,
           borderTopWidth: 0,
           borderWidth: 1,
           borderColor: theme.colors.outline,
           ...theme.shadow.floating,
         },
-        tabBarItemStyle: { paddingVertical: 1 },
-        tabBarLabelStyle: { fontSize: 9, fontWeight: "800", marginTop: 0, marginBottom: 0 },
+        tabBarItemStyle: { paddingVertical: 0 },
+        tabBarLabelStyle: { fontSize: 8, fontWeight: "800", marginTop: 0, marginBottom: 0 },
       }}
     >
       <SeniorTabs.Screen

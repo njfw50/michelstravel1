@@ -109,13 +109,14 @@ export function DestinationsScreen() {
 
   return (
     <AppShell
-      mode="regular"
-      badge={copy.badge}
-      title={copy.title}
-      subtitle={copy.subtitle}
-      scrollable={false}
-      contentStyle={styles.safe}
-    >
+        mode="regular"
+        badge={copy.badge}
+        title={copy.title}
+        subtitle={copy.subtitle}
+        scrollable={false}
+        contentStyle={styles.safe}
+        reserveBottomNav
+      >
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}

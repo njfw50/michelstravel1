@@ -365,7 +365,7 @@ export function SeniorHomeScreen({ navigation }: { navigation: any }) {
   };
 
   return (
-    <AppShell mode="senior" badge={copy.badge} title={copy.title} subtitle={copy.subtitle} contentStyle={styles.container} heroSize="expanded">
+    <AppShell mode="senior" badge={copy.badge} title={copy.title} subtitle={copy.subtitle} contentStyle={styles.container} heroSize="expanded" reserveBottomNav>
       <View style={styles.trustRow}>
         <View style={styles.trustCard}>
           <Text style={styles.trustValue}>{copy.trustStepValue}</Text>

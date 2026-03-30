@@ -213,7 +213,7 @@ export function TripsScreen() {
   };
 
   return (
-    <AppShell mode={mode} badge={copy.badge} title={copy.title} subtitle={copy.subtitle} contentStyle={styles.container}>
+    <AppShell mode={mode} badge={copy.badge} title={copy.title} subtitle={copy.subtitle} contentStyle={styles.container} reserveBottomNav>
       <View style={styles.proofRow}>
         <View style={styles.proofCard}>
           <Text style={styles.proofValue}>{copy.securityValue}</Text>

@@ -412,7 +412,7 @@ export function RegularHomeScreen({ navigation }: { navigation: any }) {
   };
 
   return (
-    <AppShell mode="regular" badge={copy.badge} title={copy.title} subtitle={copy.subtitle} contentStyle={styles.container} heroSize="expanded">
+    <AppShell mode="regular" badge={copy.badge} title={copy.title} subtitle={copy.subtitle} contentStyle={styles.container} heroSize="expanded" reserveBottomNav>
       {accessMode === "guest" ? (
         <View style={styles.guestBanner}>
           <Text style={styles.guestBannerText}>{copy.guest}</Text>
