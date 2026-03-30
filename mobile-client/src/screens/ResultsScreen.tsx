@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { AppShell } from "../components/AppShell";
 import { Card } from "../components/Card";
 import { FlightOfferCard } from "../components/FlightOfferCard";
@@ -22,12 +22,19 @@ import {
   getOrderedReturnOptions,
   hasRoundTripSlices,
 } from "../utils/roundTripFlow";
+import {
+  buildNearbySearchRequests,
+  NearbySearchOption,
+  summarizeNearbySearchOption,
+} from "../utils/nearbySearches";
 
 const PAGE_SIZE = 7;
 
 export function RegularResultsScreen({ navigation, route }: { navigation: any; route: any }) {
   const language = useOnboardingStore((state) => state.language);
   const [offers, setOffers] = useState<FlightOffer[]>([]);
+  const [nearbyOptions, setNearbyOptions] = useState<NearbySearchOption[]>([]);
+  const [nearbyLoading, setNearbyLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedOutboundCardKey, setSelectedOutboundCardKey] = useState<string | null>(null);
@@ -55,6 +62,11 @@ export function RegularResultsScreen({ navigation, route }: { navigation: any; r
         retry: "Try again",
         emptyTitle: "No offers found",
         emptyText: "Adjust dates, origin, destination, or cabin to open more options.",
+        nearbyTitle: "Closest dates with seats available",
+        nearbyText: "These nearby dates already have live offers from the same search route.",
+        nearbyLoading: "Checking nearby dates...",
+        nearbyOpen: "Open these dates",
+        nearbyFrom: "from",
         filteredEmptyTitle: "No flights match the current filters",
         filteredEmptyText: "Clear or relax some filters to reveal more options.",
         multiCityLegs: "legs",
@@ -86,6 +98,11 @@ export function RegularResultsScreen({ navigation, route }: { navigation: any; r
         retry: "Intentar de nuevo",
         emptyTitle: "No encontramos ofertas",
         emptyText: "Ajuste fechas, origen, destino o cabina para abrir más opciones.",
+        nearbyTitle: "Fechas cercanas con disponibilidad",
+        nearbyText: "Estas fechas cercanas ya tienen ofertas activas para la misma ruta.",
+        nearbyLoading: "Revisando fechas cercanas...",
+        nearbyOpen: "Abrir estas fechas",
+        nearbyFrom: "desde",
         filteredEmptyTitle: "Ningún vuelo coincide con los filtros actuales",
         filteredEmptyText: "Limpie o flexibilice algunos filtros para ver más opciones.",
         multiCityLegs: "tramos",
@@ -116,6 +133,11 @@ export function RegularResultsScreen({ navigation, route }: { navigation: any; r
       retry: "Tentar novamente",
       emptyTitle: "Nenhuma oferta encontrada",
       emptyText: "Ajuste datas, origem, destino ou cabine para abrir mais opções.",
+      nearbyTitle: "Datas próximas com disponibilidade",
+      nearbyText: "Estas datas próximas já têm ofertas ativas para a mesma rota pesquisada.",
+      nearbyLoading: "Verificando datas próximas...",
+      nearbyOpen: "Abrir estas datas",
+      nearbyFrom: "a partir de",
       filteredEmptyTitle: "Nenhum voo corresponde aos filtros atuais",
       filteredEmptyText: "Limpe ou flexibilize alguns filtros para revelar mais opções.",
       multiCityLegs: "trechos",
@@ -137,6 +159,19 @@ export function RegularResultsScreen({ navigation, route }: { navigation: any; r
     };
   }, [language]);
 
+  const locale = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
+  const nearbyRequests = useMemo(() => buildNearbySearchRequests(search), [search]);
+
+  const formatSuggestionLabel = (item: NearbySearchOption) => {
+    const formatter = new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short" });
+    const departure = formatter.format(new Date(`${item.search.date}T12:00:00Z`));
+    if (item.search.tripType === "round-trip" && item.search.returnDate) {
+      const returning = formatter.format(new Date(`${item.search.returnDate}T12:00:00Z`));
+      return `${departure} - ${returning}`;
+    }
+    return departure;
+  };
+
   const summary = useMemo(() => {
     if (search.tripType === "multi-city" && search.legs?.length) {
       const firstLeg = search.legs[0];
@@ -150,10 +185,27 @@ export function RegularResultsScreen({ navigation, route }: { navigation: any; r
   const loadOffers = async () => {
     setLoading(true);
     setError("");
+    setNearbyLoading(false);
+    setNearbyOptions([]);
 
     try {
       const response = await searchFlightOffers(search);
       setOffers(response);
+
+      if (response.length === 0 && nearbyRequests.length > 0) {
+        setNearbyLoading(true);
+        const settled = await Promise.all(
+          nearbyRequests.map(async (candidate) => {
+            try {
+              const candidateOffers = await searchFlightOffers(candidate);
+              return summarizeNearbySearchOption(candidate, candidateOffers);
+            } catch {
+              return null;
+            }
+          }),
+        );
+        setNearbyOptions(settled.filter((item): item is NearbySearchOption => Boolean(item)));
+      }
     } catch (requestError: any) {
       setOffers([]);
       if (requestError?.code === "ECONNABORTED") {
@@ -162,6 +214,7 @@ export function RegularResultsScreen({ navigation, route }: { navigation: any; r
         setError(requestError?.response?.data?.error || copy.errorTitle);
       }
     } finally {
+      setNearbyLoading(false);
       setLoading(false);
     }
   };
@@ -270,10 +323,51 @@ export function RegularResultsScreen({ navigation, route }: { navigation: any; r
       ) : null}
 
       {!loading && !error && offers.length === 0 ? (
-        <Card>
-          <Text style={styles.errorTitle}>{copy.emptyTitle}</Text>
-          <Text style={styles.errorText}>{copy.emptyText}</Text>
-        </Card>
+        <View style={styles.stack}>
+          <Card>
+            <Text style={styles.errorTitle}>{copy.emptyTitle}</Text>
+            <Text style={styles.errorText}>{copy.emptyText}</Text>
+          </Card>
+
+          {nearbyLoading ? (
+            <View style={styles.feedbackCard}>
+              <ActivityIndicator color={theme.colors.primary} />
+              <Text style={styles.feedbackText}>{copy.nearbyLoading}</Text>
+            </View>
+          ) : null}
+
+          {!nearbyLoading && nearbyOptions.length > 0 ? (
+            <Card>
+              <Text style={styles.errorTitle}>{copy.nearbyTitle}</Text>
+              <Text style={styles.errorText}>{copy.nearbyText}</Text>
+
+              <View style={styles.suggestionStack}>
+                {nearbyOptions.map((item) => (
+                  <TouchableOpacity
+                    key={`${item.search.date}-${item.search.returnDate || "one-way"}`}
+                    activeOpacity={0.9}
+                    style={styles.suggestionCard}
+                    onPress={() => navigation.replace("RegularResults", { search: item.search })}
+                  >
+                    <View style={styles.suggestionHeader}>
+                      <Text style={styles.suggestionTitle}>{formatSuggestionLabel(item)}</Text>
+                      <Text style={styles.suggestionMeta}>{item.offerCount}</Text>
+                    </View>
+                    <Text style={styles.suggestionPrice}>
+                      {copy.nearbyFrom}{" "}
+                      {new Intl.NumberFormat("en-US", {
+                        style: "currency",
+                        currency: item.currency,
+                        maximumFractionDigits: 0,
+                      }).format(item.fromPrice)}
+                    </Text>
+                    <Text style={styles.suggestionAction}>{copy.nearbyOpen}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </Card>
+          ) : null}
+        </View>
       ) : null}
 
       {!loading && !error && offers.length > 0 ? (
@@ -496,4 +590,29 @@ const styles = StyleSheet.create({
   },
   stepText: { marginTop: theme.spacing(2), fontSize: 14, lineHeight: 21, color: theme.colors.gray600 },
   stack: { gap: theme.spacing(3) },
+  suggestionStack: { marginTop: theme.spacing(3), gap: theme.spacing(2) },
+  suggestionCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: theme.colors.outline,
+    backgroundColor: theme.colors.primarySoft,
+    paddingHorizontal: theme.spacing(3),
+    paddingVertical: theme.spacing(3),
+  },
+  suggestionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: theme.spacing(2) },
+  suggestionTitle: { flex: 1, fontSize: 15, fontWeight: "800", color: theme.colors.primaryInk },
+  suggestionMeta: {
+    minWidth: 36,
+    textAlign: "center",
+    borderRadius: 999,
+    overflow: "hidden",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: theme.colors.surface,
+    color: theme.colors.primary,
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  suggestionPrice: { marginTop: 8, fontSize: 14, fontWeight: "700", color: theme.colors.gray700 },
+  suggestionAction: { marginTop: 10, fontSize: 12, fontWeight: "800", color: theme.colors.primary },
 });

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { AppShell } from "../components/AppShell";
 import { Card } from "../components/Card";
 import { PrimaryButton } from "../components/PrimaryButton";
@@ -22,6 +22,11 @@ import {
   getOrderedReturnOptions,
   hasRoundTripSlices,
 } from "../utils/roundTripFlow";
+import {
+  buildNearbySearchRequests,
+  NearbySearchOption,
+  summarizeNearbySearchOption,
+} from "../utils/nearbySearches";
 import { buildSeniorRecommendations } from "../utils/seniorRecommendations";
 
 const PAGE_SIZE = 7;
@@ -33,6 +38,8 @@ function formatPreference(label: string, value: string) {
 export function SeniorResultsScreen({ navigation, route }: { navigation: any; route: any }) {
   const language = useOnboardingStore((state) => state.language);
   const [offers, setOffers] = useState<FlightOffer[]>([]);
+  const [nearbyOptions, setNearbyOptions] = useState<NearbySearchOption[]>([]);
+  const [nearbyLoading, setNearbyLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedOutboundCardKey, setSelectedOutboundCardKey] = useState<string | null>(null);
@@ -62,6 +69,11 @@ export function SeniorResultsScreen({ navigation, route }: { navigation: any; ro
         warningText: "So we opened the closest alternatives to keep good options available for you.",
         emptyTitle: "No offers found",
         emptyText: "Adjust route, dates, or preferences to open more combinations.",
+        nearbyTitle: "Closest dates with seats available",
+        nearbyText: "These nearby dates already have live offers for the same route.",
+        nearbyLoading: "Checking nearby dates...",
+        nearbyOpen: "Open these dates",
+        nearbyFrom: "from",
         filteredEmptyTitle: "No flights match the current filters",
         filteredEmptyText: "Clear or relax some filters to reopen more options.",
         priorityLabel: "Priority",
@@ -100,6 +112,11 @@ export function SeniorResultsScreen({ navigation, route }: { navigation: any; ro
         warningText: "Por eso abrimos las alternativas más cercanas para que usted siga teniendo buenas opciones.",
         emptyTitle: "No encontramos ofertas",
         emptyText: "Ajuste ruta, fechas o preferencias para abrir más combinaciones.",
+        nearbyTitle: "Fechas cercanas con disponibilidad",
+        nearbyText: "Estas fechas cercanas ya tienen ofertas activas para la misma ruta.",
+        nearbyLoading: "Revisando fechas cercanas...",
+        nearbyOpen: "Abrir estas fechas",
+        nearbyFrom: "desde",
         filteredEmptyTitle: "Ningún vuelo coincide con los filtros actuales",
         filteredEmptyText: "Limpie o flexibilice algunos filtros para recuperar más opciones.",
         priorityLabel: "Prioridad",
@@ -137,6 +154,11 @@ export function SeniorResultsScreen({ navigation, route }: { navigation: any; ro
       warningText: "Por isso abrimos as alternativas mais próximas para manter boas opções disponíveis para você.",
       emptyTitle: "Nenhuma oferta encontrada",
       emptyText: "Ajuste rota, datas ou preferências para abrir mais combinações.",
+      nearbyTitle: "Datas próximas com disponibilidade",
+      nearbyText: "Estas datas próximas já têm ofertas ativas para a mesma rota.",
+      nearbyLoading: "Verificando datas próximas...",
+      nearbyOpen: "Abrir estas datas",
+      nearbyFrom: "a partir de",
       filteredEmptyTitle: "Nenhum voo corresponde aos filtros atuais",
       filteredEmptyText: "Limpe ou flexibilize alguns filtros para recuperar mais opções.",
       priorityLabel: "Prioridade",
@@ -164,17 +186,48 @@ export function SeniorResultsScreen({ navigation, route }: { navigation: any; ro
     };
   }, [language]);
 
+  const locale = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
+  const nearbyRequests = useMemo(() => buildNearbySearchRequests(search), [search]);
+
+  const formatSuggestionLabel = (item: NearbySearchOption) => {
+    const formatter = new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short" });
+    const departure = formatter.format(new Date(`${item.search.date}T12:00:00Z`));
+    if (item.search.tripType === "round-trip" && item.search.returnDate) {
+      const returning = formatter.format(new Date(`${item.search.returnDate}T12:00:00Z`));
+      return `${departure} - ${returning}`;
+    }
+    return departure;
+  };
+
   const loadOffers = async () => {
     setLoading(true);
     setError("");
+    setNearbyLoading(false);
+    setNearbyOptions([]);
 
     try {
       const response = await searchFlightOffers(search);
       setOffers(response);
+
+      if (response.length === 0 && nearbyRequests.length > 0) {
+        setNearbyLoading(true);
+        const settled = await Promise.all(
+          nearbyRequests.map(async (candidate) => {
+            try {
+              const candidateOffers = await searchFlightOffers(candidate);
+              return summarizeNearbySearchOption(candidate, candidateOffers);
+            } catch {
+              return null;
+            }
+          }),
+        );
+        setNearbyOptions(settled.filter((item): item is NearbySearchOption => Boolean(item)));
+      }
     } catch (requestError: any) {
       setOffers([]);
       setError(requestError?.response?.data?.error || "Não foi possível carregar os voos agora.");
     } finally {
+      setNearbyLoading(false);
       setLoading(false);
     }
   };
@@ -448,10 +501,51 @@ export function SeniorResultsScreen({ navigation, route }: { navigation: any; ro
       ) : null}
 
       {!loading && !error && !showTwoStepFlow && rankedFlights.length === 0 ? (
-        <Card>
-          <Text style={styles.errorTitle}>{offers.length > 0 ? copy.filteredEmptyTitle : copy.emptyTitle}</Text>
-          <Text style={styles.errorText}>{offers.length > 0 ? copy.filteredEmptyText : copy.emptyText}</Text>
-        </Card>
+        <View style={styles.stack}>
+          <Card>
+            <Text style={styles.errorTitle}>{offers.length > 0 ? copy.filteredEmptyTitle : copy.emptyTitle}</Text>
+            <Text style={styles.errorText}>{offers.length > 0 ? copy.filteredEmptyText : copy.emptyText}</Text>
+          </Card>
+
+          {!offers.length && nearbyLoading ? (
+            <View style={styles.feedbackCard}>
+              <ActivityIndicator color={theme.colors.senior} />
+              <Text style={styles.feedbackText}>{copy.nearbyLoading}</Text>
+            </View>
+          ) : null}
+
+          {!offers.length && !nearbyLoading && nearbyOptions.length > 0 ? (
+            <Card>
+              <Text style={styles.errorTitle}>{copy.nearbyTitle}</Text>
+              <Text style={styles.errorText}>{copy.nearbyText}</Text>
+
+              <View style={styles.suggestionStack}>
+                {nearbyOptions.map((item) => (
+                  <TouchableOpacity
+                    key={`${item.search.date}-${item.search.returnDate || "one-way"}`}
+                    activeOpacity={0.9}
+                    style={styles.suggestionCard}
+                    onPress={() => navigation.replace("SeniorResults", { search: item.search, preferences })}
+                  >
+                    <View style={styles.suggestionHeader}>
+                      <Text style={styles.suggestionTitle}>{formatSuggestionLabel(item)}</Text>
+                      <Text style={styles.suggestionMeta}>{item.offerCount}</Text>
+                    </View>
+                    <Text style={styles.suggestionPrice}>
+                      {copy.nearbyFrom}{" "}
+                      {new Intl.NumberFormat("en-US", {
+                        style: "currency",
+                        currency: item.currency,
+                        maximumFractionDigits: 0,
+                      }).format(item.fromPrice)}
+                    </Text>
+                    <Text style={styles.suggestionAction}>{copy.nearbyOpen}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </Card>
+          ) : null}
+        </View>
       ) : null}
     </AppShell>
   );
@@ -502,4 +596,29 @@ const styles = StyleSheet.create({
   },
   stepText: { marginTop: theme.spacing(2), fontSize: 14, lineHeight: 21, color: theme.colors.gray600 },
   stack: { gap: theme.spacing(3) },
+  suggestionStack: { marginTop: theme.spacing(3), gap: theme.spacing(2) },
+  suggestionCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: theme.colors.seniorDark,
+    backgroundColor: theme.colors.seniorSoft,
+    paddingHorizontal: theme.spacing(3),
+    paddingVertical: theme.spacing(3),
+  },
+  suggestionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: theme.spacing(2) },
+  suggestionTitle: { flex: 1, fontSize: 15, fontWeight: "800", color: theme.colors.seniorDark },
+  suggestionMeta: {
+    minWidth: 36,
+    textAlign: "center",
+    borderRadius: 999,
+    overflow: "hidden",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: theme.colors.white,
+    color: theme.colors.seniorDark,
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  suggestionPrice: { marginTop: 8, fontSize: 14, fontWeight: "700", color: theme.colors.gray700 },
+  suggestionAction: { marginTop: 10, fontSize: 12, fontWeight: "800", color: theme.colors.seniorDark },
 });
