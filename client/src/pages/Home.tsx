@@ -225,14 +225,14 @@ export default function Home() {
         description="Atendimento em português para passagens aéreas em Newark, NJ, com foco em voos para o Brasil, suporte humano e ajuda clara para clientes de Ironbound e região."
         path="/"
       />
-      <section className="relative min-h-[78vh] md:min-h-[90vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[78vh] md:min-h-[90vh] flex items-center justify-center overflow-hidden bg-background">
         <div className="absolute inset-0 select-none">
           <img 
             src={airplaneLightHero}
             alt="Airplane flying through bright sky"
             className="w-full h-full object-cover scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/65 via-blue-900/35 to-white/95" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/40 to-background" />
         </div>
 
         <div className="container mx-auto px-4 md:px-6 relative z-10">

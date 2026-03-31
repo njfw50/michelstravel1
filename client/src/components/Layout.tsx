@@ -21,7 +21,7 @@ import {
   buildWhatsAppHref,
   buildWhatsAppMessage,
 } from "@/lib/contact";
-import logo from "@assets/LOGO_1770751298475.png";
+import logo from "@assets/logo_new.png";
 
 const LANG_OPTIONS = [
   { code: "pt" as const, label: "Português", flag: "PT" },
@@ -157,7 +157,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <header className={cn(
         "fixed top-0 z-50 w-full transition-all duration-500",
         scrolled || !isHome
-          ? "bg-white/97 backdrop-blur-xl border-b border-gray-200/70 shadow-[0_2px_20px_-4px_hsl(213_90%_50%/0.08)]"
+          ? "bg-background/95 backdrop-blur-xl border-b border-white/10 shadow-xl"
           : "bg-transparent border-b border-transparent"
       )}>
         <div className="container mx-auto flex h-16 items-center justify-between gap-3 px-4 sm:px-5 md:h-24 md:px-6">
@@ -180,15 +180,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   className={cn(
                     "relative text-sm font-semibold px-4 py-2 rounded-full transition-all duration-200",
                     location === link.href
-                      ? "text-blue-600 bg-blue-50 shadow-sm"
-                      : "text-gray-500 hover:text-gray-900 hover:bg-gray-100/70"
+                      ? "text-primary bg-white/10 shadow-sm"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
                   )}
                 >
                   {link.label}
                   {location === link.href && (
                     <motion.div 
                       layoutId="activeNav"
-                      className="absolute bottom-1 left-4 right-4 h-[2px] rounded-full bg-blue-500"
+                      className="absolute bottom-1 left-4 right-4 h-[2px] rounded-full bg-primary"
                       transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
                     />
                   )}
