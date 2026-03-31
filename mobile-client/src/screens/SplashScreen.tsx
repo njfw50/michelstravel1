@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { getMobileAppConfig } from "../services/appConfig";
 import { refreshCustomerSession } from "../services/auth";
 import { useAuthStore } from "../store/authStore";
@@ -58,144 +59,54 @@ export function SplashScreen({ navigation }: { navigation: any }) {
     };
   }, [clearAuth, navigation, setAccessMode, setAuthenticated, setLanguage, setMode]);
 
-  const progress = Math.max(0, Math.min(1, (5 - secondsLeft) / 5));
-
   return (
-    <View style={styles.container}>
-      <View style={styles.bgBlob1} />
-      <View style={styles.bgBlob2} />
-      <View style={styles.bgBlob3} />
+    <SafeAreaView style={styles.screen}>
       <View style={styles.logoWrap}>
-        <View style={styles.logoOuter}>
-          <View style={styles.logoInner}>
-            <Image source={logo} style={styles.logo} resizeMode="contain" />
-          </View>
-        </View>
-        <Text style={styles.brandName}>Michels Travel</Text>
-        <Text style={styles.brandTagline}>Agency · Sua viagem começa aqui</Text>
+        <Image source={logo} style={styles.logo} resizeMode="contain" />
       </View>
       <View style={styles.loadingWrap}>
-        <View style={styles.loadingBar}>
-          <View style={[styles.loadingFill, { width: `${progress * 100}%` as any }]} />
-        </View>
-        <Text style={styles.loadingText}>Preparando sua experiência</Text>
-        {secondsLeft > 0 && (
-          <Text style={styles.countdownText}>Entrando em {secondsLeft}s</Text>
-        )}
+        <Text style={styles.loadingText}>Preparando sua experiência Michels Travel</Text>
+        <Text style={styles.countdownText}>Entrando em {secondsLeft}s</Text>
       </View>
       <View style={styles.footer}>
         <Text style={styles.footerText}>Copyright © Michels Travel</Text>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
+    backgroundColor: theme.colors.white,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: theme.colors.gray950,
-  },
-  bgBlob1: {
-    position: "absolute",
-    top: -80,
-    right: -60,
-    width: 280,
-    height: 280,
-    borderRadius: 999,
-    backgroundColor: "rgba(44,68,176,0.18)",
-  },
-  bgBlob2: {
-    position: "absolute",
-    bottom: -100,
-    left: -80,
-    width: 320,
-    height: 320,
-    borderRadius: 999,
-    backgroundColor: "rgba(212,130,14,0.12)",
-  },
-  bgBlob3: {
-    position: "absolute",
-    top: "40%",
-    right: "10%",
-    width: 120,
-    height: 120,
-    borderRadius: 999,
-    backgroundColor: "rgba(44,68,176,0.08)",
   },
   logoWrap: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 32,
-  },
-  logoOuter: {
-    width: 120,
-    height: 120,
-    borderRadius: 34,
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoInner: {
-    width: 100,
-    height: 100,
-    borderRadius: 28,
-    backgroundColor: "rgba(255,255,255,0.10)",
-    alignItems: "center",
-    justifyContent: "center",
-    ...theme.shadow.elevated,
   },
   logo: {
-    width: 84,
-    height: 84,
-    borderRadius: 22,
-  },
-  brandName: {
-    marginTop: 20,
-    color: theme.colors.white,
-    fontSize: 26,
-    fontWeight: "800",
-    letterSpacing: 0.2,
-    textAlign: "center",
-  },
-  brandTagline: {
-    marginTop: 6,
-    color: "rgba(255,255,255,0.5)",
-    fontSize: 13,
-    fontWeight: "600",
-    letterSpacing: 0.5,
-    textAlign: "center",
+    width: 96,
+    height: 96,
+    borderRadius: 20,
   },
   loadingWrap: {
-    marginTop: 48,
+    position: "absolute",
+    bottom: 92,
     alignItems: "center",
-    gap: 12,
-  },
-  loadingBar: {
-    width: 180,
-    height: 3,
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.10)",
-    overflow: "hidden",
-  },
-  loadingFill: {
-    height: "100%",
-    borderRadius: 999,
-    backgroundColor: theme.colors.primary,
+    gap: 6,
   },
   loadingText: {
     fontSize: 12,
-    fontWeight: "700",
-    color: "rgba(255,255,255,0.45)",
+    fontWeight: "500",
+    color: theme.colors.gray500,
     letterSpacing: 0.3,
   },
   countdownText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "rgba(255,255,255,0.35)",
+    color: theme.colors.gray700,
   },
   footer: {
     position: "absolute",
@@ -204,7 +115,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 11,
-    color: "rgba(255,255,255,0.3)",
+    color: theme.colors.gray500,
     letterSpacing: 0.4,
   },
 });
