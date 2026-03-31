@@ -32,6 +32,7 @@ const SeniorTabs = createBottomTabNavigator<SeniorTabParamList>();
 
 function RegularTabsNavigator() {
   const insets = useSafeAreaInsets();
+  const bottomInset = Math.min(Math.max(insets.bottom, 0), 10);
   const language = useOnboardingStore((state) => state.language);
   const labels = language === "en"
     ? { home: "Search", destinations: "Catalog", trips: "Trips", help: "Help" }
@@ -49,11 +50,11 @@ function RegularTabsNavigator() {
           position: "absolute",
           left: 12,
           right: 12,
-          bottom: Math.max(insets.bottom, 8),
-          height: 50 + Math.max(insets.bottom, 6),
-          paddingBottom: Math.max(insets.bottom, 5),
-          paddingTop: 5,
-          borderRadius: 22,
+          bottom: 6 + Math.floor(bottomInset / 2),
+          height: 48 + bottomInset,
+          paddingBottom: 4 + Math.floor(bottomInset / 2),
+          paddingTop: 3,
+          borderRadius: 20,
           backgroundColor: theme.colors.surface,
           borderTopWidth: 0,
           borderWidth: 1,
@@ -114,6 +115,7 @@ function RegularTabsNavigator() {
 
 function SeniorTabsNavigator() {
   const insets = useSafeAreaInsets();
+  const bottomInset = Math.min(Math.max(insets.bottom, 0), 10);
   const language = useOnboardingStore((state) => state.language);
   const labels = language === "en"
     ? { home: "Senior", trips: "Trips", help: "Help" }
@@ -131,11 +133,11 @@ function SeniorTabsNavigator() {
           position: "absolute",
           left: 12,
           right: 12,
-          bottom: Math.max(insets.bottom, 8),
-          height: 50 + Math.max(insets.bottom, 6),
-          paddingBottom: Math.max(insets.bottom, 5),
-          paddingTop: 5,
-          borderRadius: 22,
+          bottom: 6 + Math.floor(bottomInset / 2),
+          height: 48 + bottomInset,
+          paddingBottom: 4 + Math.floor(bottomInset / 2),
+          paddingTop: 3,
+          borderRadius: 20,
           backgroundColor: theme.colors.surface,
           borderTopWidth: 0,
           borderWidth: 1,

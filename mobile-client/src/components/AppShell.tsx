@@ -110,9 +110,22 @@ export function AppShell({
         activeBorder: "#CFE0FF",
       };
 
-  const topSpacing = Math.max(2, Math.min(insets.top, 10));
-  const bottomBarInset = reserveBottomNav ? Math.max(insets.bottom + 52, 62) : Math.max(insets.bottom + 6, 12);
-  const contentBottomPadding = reserveBottomNav ? 18 : 12;
+  const topSpacing = 0;
+  const bottomInset = Math.min(Math.max(insets.bottom, 0), 10);
+  const bottomBarInset = reserveBottomNav ? 44 + bottomInset : 8 + bottomInset;
+  const contentBottomPadding = scrollable ? 8 : 12;
+
+  const footerBlock = (
+    <View
+      style={[
+        styles.footerWrap,
+        scrollable ? styles.footerWrapInline : null,
+        { marginBottom: bottomBarInset, paddingBottom: 5 + Math.floor(bottomInset / 3) },
+      ]}
+    >
+      <Text style={styles.footerLegal} numberOfLines={1}>{labels.footerLegal}</Text>
+    </View>
+  );
 
   const navigateMain = (screen?: string) => {
     setMenuVisible(false);
@@ -145,6 +158,7 @@ export function AppShell({
       showsVerticalScrollIndicator
     >
       {children}
+      {footerBlock}
     </ScrollView>
   ) : (
     <View style={[styles.contentStatic, { paddingBottom: contentBottomPadding }, contentStyle]}>{children}</View>
@@ -195,9 +209,7 @@ export function AppShell({
 
       <View style={styles.contentWrap}>{content}</View>
 
-      <View style={[styles.footerWrap, { marginBottom: bottomBarInset, paddingBottom: Math.max(5, Math.min(insets.bottom + 2, 10)) }]}>
-        <Text style={styles.footerLegal} numberOfLines={1}>{labels.footerLegal}</Text>
-      </View>
+      {!scrollable ? footerBlock : null}
 
       <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={() => setMenuVisible(false)}>
         <Pressable style={styles.menuBackdrop} onPress={() => setMenuVisible(false)}>
@@ -262,14 +274,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
     paddingHorizontal: theme.spacing(3.5),
-    paddingTop: theme.spacing(2.75),
-    paddingBottom: theme.spacing(3),
+    paddingTop: theme.spacing(2.5),
+    paddingBottom: theme.spacing(2.5),
     ...theme.shadow.floating,
   },
   heroExpanded: {
-    minHeight: 188,
-    paddingTop: theme.spacing(3),
-    paddingBottom: theme.spacing(3.75),
+    minHeight: 176,
+    paddingTop: theme.spacing(2.5),
+    paddingBottom: theme.spacing(3),
   },
   heroGlowOne: {
     position: "absolute",
@@ -329,13 +341,13 @@ const styles = StyleSheet.create({
   menuIcon: { width: 18, gap: 3 },
   menuLine: { height: 2, borderRadius: 999, backgroundColor: theme.colors.white },
   menuLineShort: { width: 12, alignSelf: "flex-end" },
-  heroContent: { marginTop: theme.spacing(2.5) },
+  heroContent: { marginTop: theme.spacing(2) },
   badge: {
     alignSelf: "flex-start",
     borderRadius: 999,
     backgroundColor: "rgba(255,255,255,0.18)",
     paddingHorizontal: 11,
-    paddingVertical: 6,
+    paddingVertical: 5,
     color: theme.colors.white,
     fontSize: 10,
     fontWeight: "800",
@@ -377,6 +389,9 @@ const styles = StyleSheet.create({
     borderTopColor: theme.colors.outline,
     alignItems: "center",
     justifyContent: "center",
+  },
+  footerWrapInline: {
+    marginTop: theme.spacing(1),
   },
   footerLegal: {
     fontSize: 8,
