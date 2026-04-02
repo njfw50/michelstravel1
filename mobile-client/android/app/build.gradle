@@ -1,6 +1,7 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+import groovy.json.JsonSlurper
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -58,6 +59,13 @@ react {
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
 def enableProguardInReleaseBuilds = false
+def mobilePackageJson = new JsonSlurper().parse(file("$rootDir/../package.json"))
+def appVersionName = String.valueOf(mobilePackageJson.version ?: "1.3.0")
+def versionParts = appVersionName.tokenize(".").collect { part -> Integer.parseInt(part.replaceAll("[^0-9]", "")) }
+while (versionParts.size() < 3) {
+    versionParts << 0
+}
+def appVersionCode = (versionParts[0] * 10000) + (versionParts[1] * 100) + versionParts[2]
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -82,8 +90,8 @@ android {
         applicationId "agency.michelstravel.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 4
-        versionName "1.2.2"
+        versionCode appVersionCode
+        versionName appVersionName
     }
     signingConfigs {
         debug {

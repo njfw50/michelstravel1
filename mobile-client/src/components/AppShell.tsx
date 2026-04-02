@@ -1,6 +1,7 @@
 import React, { ReactNode, useMemo, useState } from "react";
 import {
   Image,
+  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -16,6 +17,7 @@ import LinearGradient from "react-native-linear-gradient";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { theme } from "../theme/theme";
 import { JourneyMode } from "../types/app";
+import { useAppRuntimeStore } from "../store/appRuntimeStore";
 import { useOnboardingStore } from "../store/onboardingStore";
 const logo = require("../assets/logo.png");
 
@@ -51,6 +53,11 @@ export function AppShell({
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const language = useOnboardingStore((state) => state.language);
+  const environment = useAppRuntimeStore((state) => state.environment);
+  const latestVersion = useAppRuntimeStore((state) => state.latestVersion);
+  const updateAvailable = useAppRuntimeStore((state) => state.updateAvailable);
+  const updateRequired = useAppRuntimeStore((state) => state.updateRequired);
+  const updateUrl = useAppRuntimeStore((state) => state.updateUrl);
   const [menuVisible, setMenuVisible] = useState(false);
   const currentYear = new Date().getFullYear();
 
@@ -64,6 +71,10 @@ export function AppShell({
         trips: "Trips",
         help: "Help",
         footerLegal: `Michel's Travel · Efficient travel option · Copyright © ${currentYear}`,
+        environmentLabel: "TEST MODE",
+        updateTitle: updateRequired ? "Required update" : "New version available",
+        updateAction: "Update app",
+        updateBody: latestVersion ? `Version ${latestVersion} is ready to install from the official link.` : "A new version is ready to install from the official link.",
       };
     }
 
@@ -76,6 +87,10 @@ export function AppShell({
         trips: "Viajes",
         help: "Ayuda",
         footerLegal: `Michel's Travel · Opción eficiente · Copyright © ${currentYear}`,
+        environmentLabel: "MODO PRUEBA",
+        updateTitle: updateRequired ? "Actualización obligatoria" : "Nueva versión disponible",
+        updateAction: "Actualizar app",
+        updateBody: latestVersion ? `La versión ${latestVersion} ya está lista para instalar desde el enlace oficial.` : "Hay una nueva versión lista para instalar desde el enlace oficial.",
       };
     }
 
@@ -87,8 +102,12 @@ export function AppShell({
       trips: "Viagens",
       help: "Ajuda",
       footerLegal: `Michel's Travel · Opção eficiente · Copyright © ${currentYear}`,
+      environmentLabel: "MODO TESTE",
+      updateTitle: updateRequired ? "Atualização obrigatória" : "Nova versão disponível",
+      updateAction: "Atualizar app",
+      updateBody: latestVersion ? `A versão ${latestVersion} já está pronta para instalar pelo link oficial.` : "Há uma nova versão pronta para instalar pelo link oficial.",
     };
-  }, [currentYear, language, mode]);
+  }, [currentYear, language, latestVersion, mode, updateRequired]);
 
   const modePalette = mode === "senior"
     ? {
@@ -200,12 +219,31 @@ export function AppShell({
           </View>
 
           <View style={styles.heroContent}>
-            <Text style={[styles.badge, { backgroundColor: modePalette.chipBg, color: modePalette.chipText }]}>{badge}</Text>
+            <View style={styles.heroBadgeRow}>
+              {environment === "test" ? (
+                <Text style={styles.environmentBadge}>{labels.environmentLabel}</Text>
+              ) : null}
+              <Text style={[styles.badge, { backgroundColor: modePalette.chipBg, color: modePalette.chipText }]}>{badge}</Text>
+            </View>
             <Text style={styles.heroTitle}>{title}</Text>
             <Text style={styles.heroSubtitle} numberOfLines={heroSize === "expanded" ? 3 : 2}>{subtitle}</Text>
           </View>
         </LinearGradient>
       </View>
+
+      {updateAvailable && updateUrl ? (
+        <View style={styles.updateWrap}>
+          <View style={[styles.updateBanner, updateRequired && styles.updateBannerCritical]}>
+            <View style={styles.updateTextWrap}>
+              <Text style={styles.updateTitle}>{labels.updateTitle}</Text>
+              <Text style={styles.updateBody}>{labels.updateBody}</Text>
+            </View>
+            <TouchableOpacity style={styles.updateButton} onPress={() => void Linking.openURL(updateUrl)}>
+              <Text style={styles.updateButtonText}>{labels.updateAction}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : null}
 
       <View style={styles.contentWrap}>{content}</View>
 
@@ -342,6 +380,24 @@ const styles = StyleSheet.create({
   menuLine: { height: 2, borderRadius: 999, backgroundColor: theme.colors.white },
   menuLineShort: { width: 12, alignSelf: "flex-end" },
   heroContent: { marginTop: theme.spacing(2) },
+  heroBadgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: theme.spacing(1.25),
+  },
+  environmentBadge: {
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    backgroundColor: "#FDE68A",
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+    color: "#7C2D12",
+    fontSize: 10,
+    fontWeight: "900",
+    textTransform: "uppercase",
+    letterSpacing: 0.85,
+  },
   badge: {
     alignSelf: "flex-start",
     borderRadius: 999,
@@ -366,6 +422,51 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.84)",
     fontSize: 12,
     lineHeight: 17,
+  },
+  updateWrap: {
+    paddingHorizontal: theme.spacing(3),
+    marginTop: theme.spacing(1.5),
+  },
+  updateBanner: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+    backgroundColor: "#EFF6FF",
+    paddingHorizontal: theme.spacing(3),
+    paddingVertical: theme.spacing(2.5),
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: theme.spacing(2),
+  },
+  updateBannerCritical: {
+    borderColor: "#FECACA",
+    backgroundColor: "#FFF5F5",
+  },
+  updateTextWrap: {
+    flex: 1,
+    gap: 4,
+  },
+  updateTitle: {
+    color: theme.colors.gray900,
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  updateBody: {
+    color: theme.colors.gray600,
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  updateButton: {
+    borderRadius: 999,
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  updateButtonText: {
+    color: theme.colors.white,
+    fontSize: 11,
+    fontWeight: "800",
   },
   contentWrap: {
     flex: 1,

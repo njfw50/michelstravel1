@@ -21,7 +21,7 @@ import {
   buildWhatsAppHref,
   buildWhatsAppMessage,
 } from "@/lib/contact";
-import logo from "@assets/logo_new.png";
+import logo from "@/assets/logo_new.png";
 
 const LANG_OPTIONS = [
   { code: "pt" as const, label: "Português", flag: "PT" },

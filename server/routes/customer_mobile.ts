@@ -13,6 +13,7 @@ import {
   customerProfiles,
   users,
 } from "@shared/models/auth";
+import { bookings } from "@shared/schema";
 
 const MOBILE_ACCESS_TOKEN_TTL_SECONDS = 60 * 15;
 const MOBILE_REFRESH_TOKEN_TTL_DAYS = 30;
@@ -126,14 +127,14 @@ const profilePatchSchema = z.object({
   lastActiveOfferId: z.string().max(120).nullable().optional(),
 });
 
-type CustomerMobileAuth = {
+export type CustomerMobileAuth = {
   userId: string;
   email: string;
   deviceId: string;
   appVariant: "standard" | "senior";
 };
 
-type CustomerMobileRequest = Request & {
+export type CustomerMobileRequest = Request & {
   customerMobileAuth?: CustomerMobileAuth;
 };
 
@@ -383,7 +384,7 @@ function serializeDevice(device: typeof customerMobileDevices.$inferSelect) {
   };
 }
 
-async function ensureCustomerProfile(
+export async function ensureCustomerProfile(
   userId: string,
   seed: Partial<typeof customerProfiles.$inferInsert> = {},
 ) {
@@ -490,10 +491,10 @@ function serializeSession(session: Awaited<ReturnType<typeof issueSession>>) {
   };
 }
 
-async function requireCustomerMobileAuth(req: CustomerMobileRequest, res: Response, next: NextFunction) {
+export async function resolveCustomerMobileAuth(req: Request): Promise<CustomerMobileAuth | null> {
   const token = readBearerToken(req);
   if (!token) {
-    return res.status(401).json({ error: "Authentication required" });
+    return null;
   }
 
   try {
@@ -506,7 +507,7 @@ async function requireCustomerMobileAuth(req: CustomerMobileRequest, res: Respon
     };
 
     if (decoded.type !== "customer_mobile_access") {
-      return res.status(401).json({ error: "Invalid token type" });
+      return null;
     }
 
     const [device] = await db
@@ -521,7 +522,7 @@ async function requireCustomerMobileAuth(req: CustomerMobileRequest, res: Respon
       );
 
     if (!device) {
-      return res.status(401).json({ error: "Device session revoked" });
+      return null;
     }
 
     await db
@@ -529,17 +530,25 @@ async function requireCustomerMobileAuth(req: CustomerMobileRequest, res: Respon
       .set({ lastSeenAt: new Date(), updatedAt: new Date() })
       .where(eq(customerMobileDevices.id, device.id));
 
-    req.customerMobileAuth = {
+    return {
       userId: decoded.sub,
       email: decoded.email,
       deviceId: decoded.deviceId,
       appVariant: decoded.appVariant,
     };
-
-    return next();
   } catch {
-    return res.status(401).json({ error: "Invalid or expired token" });
+    return null;
   }
+}
+
+export async function requireCustomerMobileAuth(req: CustomerMobileRequest, res: Response, next: NextFunction) {
+  const auth = await resolveCustomerMobileAuth(req);
+  if (!auth) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+
+  req.customerMobileAuth = auth;
+  return next();
 }
 
 async function upsertDeviceForUser(userId: string, payload: z.infer<typeof deviceSchema>) {
@@ -1012,6 +1021,39 @@ export function registerCustomerMobileRoutes(app: Express) {
   app.get("/api/mobile/customer/profile", requireCustomerMobileAuth, async (req: CustomerMobileRequest, res) => {
     const profile = await ensureCustomerProfile(req.customerMobileAuth!.userId);
     return res.json({ profile: serializeProfile(profile) });
+  });
+
+  app.get("/api/mobile/customer/bookings", requireCustomerMobileAuth, async (req: CustomerMobileRequest, res) => {
+    try {
+      const rows = await db
+        .select()
+        .from(bookings)
+        .where(eq(bookings.userId, req.customerMobileAuth!.userId))
+        .orderBy(desc(bookings.createdAt));
+
+      return res.json({
+        bookings: rows.map((booking) => ({
+          id: booking.id,
+          referenceCode: booking.referenceCode,
+          userId: booking.userId,
+          flightData: booking.flightData,
+          passengerDetails: booking.passengerDetails,
+          totalPrice: booking.totalPrice,
+          currency: booking.currency,
+          status: booking.status,
+          stripePaymentStatus: booking.stripePaymentStatus,
+          stripeReceiptUrl: booking.stripeReceiptUrl,
+          contactEmail: booking.contactEmail,
+          contactPhone: booking.contactPhone,
+          ticketStatus: booking.ticketStatus,
+          ticketNumber: booking.ticketNumber,
+          createdAt: booking.createdAt,
+        })),
+      });
+    } catch (error) {
+      console.error("Mobile customer bookings error:", error);
+      return res.status(500).json({ error: "Failed to load bookings" });
+    }
   });
 
   app.patch("/api/mobile/customer/profile", requireCustomerMobileAuth, async (req: CustomerMobileRequest, res) => {

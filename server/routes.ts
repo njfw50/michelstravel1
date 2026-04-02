@@ -4,7 +4,7 @@ import { stripeService } from './stripeService';
 import { getUncachableStripeClient } from './stripeClient';
 import { db } from "./db";
 import { flightSearches, bookings, siteSettings, conversations, messages, insertFeaturedDealSchema, type FlightSearchParams } from "@shared/schema";
-import { users } from "@shared/models/auth";
+import { customerProfiles, users } from "@shared/models/auth";
 import { desc, eq, and, gt } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import jwt from "jsonwebtoken";
@@ -40,9 +40,17 @@ import {
   getServiceAiStatus,
   SERVICE_AI_AGENT_TOOLS,
 } from "./services/serviceAi";
+import {
+  getMobileReleaseStatus,
+  getPublicAppReleaseManifest,
+  getStoredAppReleaseManifest,
+  publishChannelRelease,
+  verifyGitHubCommit,
+} from "./services/mobileRelease";
 import { buildOwnerDeskSnapshot } from "./services/ownerDesk";
 import { buildRedactedDocumentPayload } from "./services/passengerPrivacy";
 import { analyzeDocumentScanWithAi } from "./services/documentScannerAi";
+import { ensureCustomerProfile, resolveCustomerMobileAuth } from "./routes/customer_mobile";
 
 function parseNumericRouteParam(value: string | string[] | undefined): number {
   const normalizedValue = Array.isArray(value) ? value[0] : value;
@@ -129,6 +137,11 @@ export function registerRoutes(app: Express) {
       supportEmail: process.env.SUPPORT_EMAIL || "support@michelstravel.agency",
       supportWhatsApp: process.env.WHATSAPP_NUMBER || null,
     });
+  });
+
+  app.get('/api/app-release', async (_req, res) => {
+    const settings = await storage.getSiteSettings();
+    res.json(await getPublicAppReleaseManifest(settings));
   });
 
   app.use('/api', async (req, res, next) => {
@@ -527,8 +540,16 @@ export function registerRoutes(app: Express) {
         }
 
         const bookingData = req.body;
+        const mobileAuth = await resolveCustomerMobileAuth(req);
+        const webUser = (req as any).user;
+        const resolvedUserId = webUser?.claims?.sub || webUser?.id || mobileAuth?.userId || null;
+        const resolvedContactEmail = bookingData.contactEmail || mobileAuth?.email;
         const commissionRate = settings?.commissionPercentage ? parseFloat(settings.commissionPercentage) / 100 : 0.085;
         const requestedOfferId = typeof bookingData?.flightData?.id === "string" ? bookingData.flightData.id : null;
+
+        if (!resolvedContactEmail) {
+          return res.status(400).json({ error: "Contact email is required" });
+        }
 
         if (requestedOfferId) {
           const refreshedOffer = await refreshOffer(requestedOfferId);
@@ -569,14 +590,48 @@ export function registerRoutes(app: Express) {
             passengerDetails: bookingData.passengerDetails || bookingData.passengers,
             totalPrice: bookingData.totalPrice,
             currency: bookingData.currency || 'USD',
-            contactEmail: bookingData.contactEmail,
+            contactEmail: resolvedContactEmail,
             contactPhone: bookingData.contactPhone || null,
             commissionRate: commissionRate.toString(),
             commissionAmount: commissionAmount,
             status: 'pending',
             stripePaymentStatus: 'pending',
-            userId: (req as any).user?.id ? String((req as any).user.id) : null
+            userId: resolvedUserId ? String(resolvedUserId) : null
         }).returning();
+
+        if (resolvedUserId) {
+          await ensureCustomerProfile(String(resolvedUserId), {
+            preferredAirport: flightDataWithMode.originCode || flightDataWithMode.origin || null,
+            lastActiveBookingId: booking.id,
+            lastActiveOfferId: requestedOfferId,
+            savedPassengers: (bookingData.passengerDetails || bookingData.passengers || []).map((passenger: any) => ({
+              type: passenger.type,
+              givenName: passenger.givenName,
+              familyName: passenger.familyName,
+              bornOn: passenger.bornOn,
+              documentType: passenger.documentType,
+              nationality: passenger.nationality,
+            })),
+          });
+
+          await db
+            .update(customerProfiles)
+            .set({
+              preferredAirport: flightDataWithMode.originCode || flightDataWithMode.origin || null,
+              lastActiveBookingId: booking.id,
+              lastActiveOfferId: requestedOfferId,
+              savedPassengers: (bookingData.passengerDetails || bookingData.passengers || []).map((passenger: any) => ({
+                type: passenger.type,
+                givenName: passenger.givenName,
+                familyName: passenger.familyName,
+                bornOn: passenger.bornOn,
+                documentType: passenger.documentType,
+                nationality: passenger.nationality,
+              })),
+              updatedAt: new Date(),
+            })
+            .where(eq(customerProfiles.userId, String(resolvedUserId)));
+        }
 
         const flightInfo = bookingData.flightData || {};
         const stripe = await getUncachableStripeClient();
@@ -593,7 +648,7 @@ export function registerRoutes(app: Express) {
           description: `Michels Travel Booking ${refCode}: ${flightInfo.originCode || flightInfo.origin || ''} → ${flightInfo.destinationCode || flightInfo.destination || ''}`,
           statement_descriptor: 'MICHELS TRAVEL',
           statement_descriptor_suffix: refCode.substring(0, 22),
-          receipt_email: bookingData.contactEmail || undefined,
+          receipt_email: resolvedContactEmail || undefined,
           metadata: {
             bookingId: String(booking.id),
             referenceCode: refCode,
@@ -604,7 +659,7 @@ export function registerRoutes(app: Express) {
             departureDate: flightInfo.departureTime ? flightInfo.departureTime.split('T')[0] : '',
             passengerCount: String(bookingData.passengerDetails?.length || bookingData.passengers?.length || 1),
             cabinClass: flightInfo.cabinClass || 'economy',
-            contactEmail: bookingData.contactEmail || '',
+            contactEmail: resolvedContactEmail || '',
             contactPhone: bookingData.contactPhone || '',
             passengerSummary,
           },
@@ -1194,9 +1249,11 @@ export function registerRoutes(app: Express) {
       if (!booking) return res.status(404).json({ error: "Booking not found" });
 
       const user = (req as any).user;
+      const mobileAuth = await resolveCustomerMobileAuth(req);
       const { referenceCode, contactEmail } = req.body || {};
       const hasValidRef = referenceCode && contactEmail && booking.referenceCode === referenceCode && booking.contactEmail === contactEmail;
-      const hasValidUser = user && booking.userId && user.id === booking.userId;
+      const resolvedUserId = user?.claims?.sub || user?.id || mobileAuth?.userId || null;
+      const hasValidUser = resolvedUserId && booking.userId && resolvedUserId === booking.userId;
       if (booking.userId && !hasValidUser && !hasValidRef) {
         return res.status(403).json({ error: "Access denied" });
       }
@@ -1268,7 +1325,9 @@ export function registerRoutes(app: Express) {
       if (!booking) return res.status(404).json({ error: "Booking not found" });
 
       const user = (req as any).user;
-      if (booking.userId && (!user || user.id !== booking.userId)) {
+      const mobileAuth = await resolveCustomerMobileAuth(req);
+      const resolvedUserId = user?.claims?.sub || user?.id || mobileAuth?.userId || null;
+      if (booking.userId && resolvedUserId !== booking.userId) {
         const { reference, email } = req.query;
         if (!reference || !email || reference !== booking.referenceCode || email !== booking.contactEmail) {
           return res.status(403).json({ error: "Access denied" });
@@ -1893,6 +1952,74 @@ export function registerRoutes(app: Express) {
   app.post('/api/admin/settings', requireAdmin, async (req, res) => {
     const updated = await storage.upsertSiteSettings(req.body);
     res.json(updated);
+  });
+
+  app.get('/api/admin/mobile-release/status', requireAdmin, async (req, res) => {
+    try {
+      const channel = req.query.channel === "admin" ? "admin" : "senior";
+      const settings = await storage.getSiteSettings();
+      res.json(await getMobileReleaseStatus(channel, settings));
+    } catch (error: any) {
+      res.status(500).json({ error: error?.message || "Failed to load mobile release status" });
+    }
+  });
+
+  app.get('/api/admin/mobile-release/verify', requireAdmin, async (req, res) => {
+    try {
+      const commitHash = String(req.query.commit || "");
+      const channel = req.query.channel === "admin" ? "admin" : "senior";
+      const settings = await storage.getSiteSettings();
+      const status = await getMobileReleaseStatus(channel, settings);
+      const commit = await verifyGitHubCommit(commitHash);
+
+      res.json({
+        ...status,
+        commit,
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error?.message || "Failed to verify commit" });
+    }
+  });
+
+  app.post('/api/admin/mobile-release/publish', requireAdmin, async (req, res) => {
+    try {
+      const channel = req.body?.channel === "admin" ? "admin" : "senior";
+      const commitHash = String(req.body?.commitHash || "").trim();
+
+      if (!commitHash) {
+        return res.status(400).json({ error: "commitHash is required" });
+      }
+
+      const settings = await storage.getSiteSettings();
+      const release = await publishChannelRelease(channel, commitHash, settings);
+      const updated = await storage.upsertSiteSettings({
+        ...(settings ? {
+          siteName: settings.siteName || undefined,
+          commissionPercentage: settings.commissionPercentage || undefined,
+          heroTitle: settings.heroTitle || undefined,
+          heroSubtitle: settings.heroSubtitle || undefined,
+          testMode: settings.testMode ?? true,
+          mobileAppTestEnabled: settings.mobileAppTestEnabled ?? true,
+          mobileAppProductionEnabled: settings.mobileAppProductionEnabled ?? true,
+          mobileConsumerRelease: channel === "senior" ? release : settings.mobileConsumerRelease ?? undefined,
+          mobileAdminRelease: channel === "admin" ? release : settings.mobileAdminRelease ?? undefined,
+        } : {
+          testMode: true,
+          mobileAppTestEnabled: true,
+          mobileAppProductionEnabled: true,
+          mobileConsumerRelease: channel === "senior" ? release : undefined,
+          mobileAdminRelease: channel === "admin" ? release : undefined,
+        }),
+      });
+
+      res.json({
+        success: true,
+        manifest: getStoredAppReleaseManifest(updated),
+        published: release,
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error?.message || "Failed to publish mobile release" });
+    }
   });
 
   // Pre-flight check: validate both APIs are ready for target mode

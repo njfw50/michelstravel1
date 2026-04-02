@@ -23,6 +23,7 @@ import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { format, parseISO } from "date-fns";
 import type { FeaturedDeal } from "@shared/schema";
+import type { AppReleaseManifest } from "@shared/mobile-release";
 
 function TestModeControl() {
   const { t } = useI18n();
@@ -543,6 +544,221 @@ function MobileAppChannelControl() {
 
         <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
           O app consumer usa a mesma API compartilhada do site. Se este canal for desativado no ambiente atual, o app recebe bloqueio server-side e mostra indisponibilidade antes da busca.
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+type MobileReleaseStatusResponse = {
+  channel: "senior" | "admin";
+  published: AppReleaseManifest["senior"];
+  artifact: {
+    fileName: string;
+    directDownloadUrl: string;
+    version: string | null;
+    packageName: string | null;
+    minAndroid: string | null;
+    sizeLabel: string;
+    sha256: string;
+    updateRequired: boolean;
+  } | null;
+};
+
+type MobileReleaseVerifyResponse = MobileReleaseStatusResponse & {
+  commit: {
+    shortHash: string;
+    fullHash: string;
+    url: string;
+    message: string;
+    authoredAt: string | null;
+  };
+};
+
+function MobileAppReleaseControl() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [commitHash, setCommitHash] = useState("");
+  const [verifiedRelease, setVerifiedRelease] = useState<MobileReleaseVerifyResponse | null>(null);
+
+  const { data: manifest } = useQuery<AppReleaseManifest>({
+    queryKey: ["/api/app-release"],
+    queryFn: async () => {
+      const res = await fetch("/api/app-release", { credentials: "include" });
+      if (!res.ok) throw new Error("Falha ao carregar release pública");
+      return res.json();
+    },
+  });
+
+  const { data: releaseStatus, isLoading: statusLoading } = useQuery<MobileReleaseStatusResponse>({
+    queryKey: ["/api/admin/mobile-release/status", "senior"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/mobile-release/status?channel=senior", { credentials: "include" });
+      if (!res.ok) throw new Error("Falha ao carregar status do app mobile");
+      return res.json();
+    },
+  });
+
+  const verifyMutation = useMutation({
+    mutationFn: async (hash: string) => {
+      const res = await fetch(`/api/admin/mobile-release/verify?channel=senior&commit=${encodeURIComponent(hash)}`, {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Nao foi possivel validar o commit");
+      return data as MobileReleaseVerifyResponse;
+    },
+    onSuccess: (data) => {
+      setVerifiedRelease(data);
+      toast({
+        title: "Commit verificado",
+        description: `${data.commit.shortHash} pronto para publicar o APK atual.`,
+      });
+    },
+    onError: (error: Error) => {
+      setVerifiedRelease(null);
+      toast({
+        title: "Falha ao validar commit",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const publishMutation = useMutation({
+    mutationFn: async (hash: string) => {
+      const res = await fetch("/api/admin/mobile-release/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ channel: "senior", commitHash: hash }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Nao foi possivel publicar o app");
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/app-release"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/mobile-release/status", "senior"] });
+      setVerifiedRelease(null);
+      toast({
+        title: "App publicado",
+        description: "O botao do site e a checagem de atualizacao agora apontam para o APK atual.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Falha ao publicar app",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const published = manifest?.senior.android ?? releaseStatus?.published.android;
+  const publishedUrl = published?.directDownloadUrl || manifest?.senior.installPagePath || "/apps/michels-travel";
+
+  return (
+    <Card className="bg-white border border-gray-200 shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-xl border flex items-center justify-center shadow-inner text-indigo-500 bg-indigo-50 border-indigo-200">
+            <Smartphone className="h-6 w-6" />
+          </div>
+          <div>
+            <CardTitle className="text-lg text-gray-900">Publicação do app Android</CardTitle>
+            <p className="text-xs text-gray-500 mt-1">
+              Informe o commit de 7 dígitos. O dashboard valida no GitHub e publica o APK já deployado no site.
+            </p>
+          </div>
+        </div>
+        <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200">
+          Link dinâmico + aviso de atualização
+        </Badge>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-2">
+            <p className="text-xs uppercase tracking-[0.12em] text-gray-500 font-semibold">Publicado no site</p>
+            <p className="text-sm font-semibold text-gray-900">
+              Versão {published?.version || "não publicada"}
+            </p>
+            <p className="text-xs text-gray-500 break-all">{published?.packageName || "Sem package"}</p>
+            <p className="text-xs text-gray-500">
+              Commit: {published?.commitHash || "não informado"}
+            </p>
+            <div className="flex items-center gap-2 pt-1">
+              <a href={publishedUrl} target="_blank" rel="noreferrer" className="text-xs font-semibold text-blue-600 inline-flex items-center gap-1">
+                Abrir link público <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-2">
+            <p className="text-xs uppercase tracking-[0.12em] text-gray-500 font-semibold">APK detectado no deploy</p>
+            {statusLoading ? (
+              <p className="text-sm text-gray-500">Lendo artefato...</p>
+            ) : releaseStatus?.artifact ? (
+              <>
+                <p className="text-sm font-semibold text-gray-900">
+                  {releaseStatus.artifact.version || "Versão não identificada"} · {releaseStatus.artifact.sizeLabel}
+                </p>
+                <p className="text-xs text-gray-500 break-all">{releaseStatus.artifact.packageName || "Package não encontrado"}</p>
+                <p className="text-xs text-gray-500 break-all">SHA256: {releaseStatus.artifact.sha256}</p>
+              </>
+            ) : (
+              <p className="text-sm text-red-600">Nenhum APK disponível no deploy atual.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4 space-y-3">
+          <div className="space-y-1">
+            <Label htmlFor="mobile-release-commit" className="text-sm text-gray-700">Commit hash do app</Label>
+            <div className="flex flex-col gap-2 md:flex-row">
+              <Input
+                id="mobile-release-commit"
+                data-testid="input-mobile-release-commit"
+                placeholder="ex.: fd247ea"
+                value={commitHash}
+                onChange={(event) => setCommitHash(event.target.value.trim())}
+                className="bg-white"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => verifyMutation.mutate(commitHash)}
+                disabled={commitHash.length < 7 || verifyMutation.isPending}
+                className="gap-2"
+              >
+                {verifyMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                Verificar no GitHub
+              </Button>
+              <Button
+                type="button"
+                onClick={() => publishMutation.mutate(commitHash)}
+                disabled={commitHash.length < 7 || publishMutation.isPending || !releaseStatus?.artifact}
+                className="gap-2"
+              >
+                {publishMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                Publicar app
+              </Button>
+            </div>
+          </div>
+
+          {verifiedRelease ? (
+            <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 space-y-1">
+              <p className="font-semibold">{verifiedRelease.commit.shortHash} · {verifiedRelease.commit.message}</p>
+              <p>APK pronto: {verifiedRelease.artifact?.version || "sem versão"} · {verifiedRelease.artifact?.sizeLabel || "sem tamanho"}</p>
+              <a href={verifiedRelease.commit.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold text-green-700">
+                Ver commit no GitHub <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          ) : (
+            <p className="text-xs text-gray-500">
+              O app instalado não pode atualizar silenciosamente por APK sideload. Quando você publicar aqui, o site entrega o APK novo e o app passa a avisar no celular que existe atualização disponível.
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -1432,6 +1648,7 @@ export default function AdminDashboard() {
           <TabsContent value="settings" className="space-y-6 mt-6">
             <TestModeControl />
             <MobileAppChannelControl />
+            <MobileAppReleaseControl />
             <CommissionControl />
             <FeaturedDealsManager />
             <VoiceEscalations />

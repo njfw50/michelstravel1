@@ -3,6 +3,8 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getMobileAppConfig } from "../services/appConfig";
 import { refreshCustomerSession } from "../services/auth";
+import { getMobileReleaseState } from "../services/release";
+import { useAppRuntimeStore } from "../store/appRuntimeStore";
 import { useAuthStore } from "../store/authStore";
 import { useOnboardingStore } from "../store/onboardingStore";
 import { useSessionStore } from "../store/sessionStore";
@@ -14,6 +16,8 @@ export function SplashScreen({ navigation }: { navigation: any }) {
   const [secondsLeft, setSecondsLeft] = useState(5);
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
   const clearAuth = useAuthStore((state) => state.clearAuth);
+  const setEnvironmentState = useAppRuntimeStore((state) => state.setEnvironmentState);
+  const setReleaseState = useAppRuntimeStore((state) => state.setReleaseState);
   const setLanguage = useOnboardingStore((state) => state.setLanguage);
   const setMode = useOnboardingStore((state) => state.setMode);
   const setAccessMode = useSessionStore((state) => state.setAccessMode);
@@ -26,6 +30,10 @@ export function SplashScreen({ navigation }: { navigation: any }) {
     const timeout = setTimeout(async () => {
       try {
         const config = await getMobileAppConfig();
+        setEnvironmentState({
+          environment: config.environment,
+          appEnabled: config.appEnabled,
+        });
         if (!config.appEnabled) {
           navigation.replace("AppStatus", {
             environment: config.environment,
@@ -35,6 +43,13 @@ export function SplashScreen({ navigation }: { navigation: any }) {
         }
       } catch {
         // If config fails, do not hard-block the app start.
+      }
+
+      try {
+        const release = await getMobileReleaseState();
+        setReleaseState(release);
+      } catch {
+        // Release check is non-blocking.
       }
 
       try {
@@ -57,7 +72,7 @@ export function SplashScreen({ navigation }: { navigation: any }) {
       clearInterval(interval);
       clearTimeout(timeout);
     };
-  }, [clearAuth, navigation, setAccessMode, setAuthenticated, setLanguage, setMode]);
+  }, [clearAuth, navigation, setAccessMode, setAuthenticated, setEnvironmentState, setLanguage, setMode, setReleaseState]);
 
   return (
     <SafeAreaView style={styles.screen}>

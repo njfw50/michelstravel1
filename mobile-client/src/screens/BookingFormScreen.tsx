@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Modal,
   Pressable,
   StyleSheet,
@@ -8,13 +9,18 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { initPaymentSheet, presentPaymentSheet } from "@stripe/stripe-react-native";
 import { Asset, launchCamera, launchImageLibrary } from "react-native-image-picker";
 import { AppShell } from "../components/AppShell";
 import { Card } from "../components/Card";
 import { FormField } from "../components/FormField";
 import { PrimaryButton } from "../components/PrimaryButton";
+import { createBooking, verifyBookingPayment } from "../services/bookings";
 import { analyzeDocumentScan, DocumentScannerCandidate } from "../services/documentScanner";
+import { ensureStripeReady } from "../services/payments";
+import { useAuthStore } from "../store/authStore";
 import { useOnboardingStore } from "../store/onboardingStore";
+import { useSessionStore } from "../store/sessionStore";
 import { theme } from "../theme/theme";
 import { JourneyMode } from "../types/app";
 import { FlightOffer, FlightSearchRequest } from "../types/flights";
@@ -204,16 +210,20 @@ async function assetToDataUrl(asset?: Asset) {
   });
 }
 
-export function BookingFormScreen({ route }: { route: any }) {
+export function BookingFormScreen({ route, navigation }: { route: any; navigation: any }) {
   const offer = route.params.offer as FlightOffer;
   const search = route.params.search as FlightSearchRequest | undefined;
   const mode = route.params.mode as JourneyMode;
   const localeLanguage = useOnboardingStore((state) => state.language);
-  const [contactEmail, setContactEmail] = useState("");
-  const [contactPhone, setContactPhone] = useState("");
+  const user = useAuthStore((state) => state.user);
+  const accessMode = useSessionStore((state) => state.accessMode);
+  const rememberGuestReservation = useSessionStore((state) => state.rememberGuestReservation);
+  const [contactEmail, setContactEmail] = useState(user?.email || "");
+  const [contactPhone, setContactPhone] = useState(user?.phone || "");
   const [passengers, setPassengers] = useState<PassengerDraft[]>(() => buildPassengers(search));
   const [formError, setFormError] = useState("");
-  const [ready, setReady] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [scanningIndex, setScanningIndex] = useState<number | null>(null);
   const [scanPrompt, setScanPrompt] = useState<ScanPrompt | null>(null);
 
@@ -260,13 +270,18 @@ export function BookingFormScreen({ route }: { route: any }) {
         scannerNoImage: "No image was provided for scanning.",
         scannerCameraImageMissing: "The camera did not return a readable image.",
         continue: "Continue",
-        readyTitle: "Traveler details ready",
-        readyText: "The reservation form is prepared for the next checkout step.",
         missingContact: "Enter the booking email and phone before continuing.",
         missingPassenger: "Complete all required traveler fields before continuing.",
         totalTravelers: "Travelers",
         totalFare: "Selected fare",
         cameraPermission: "Camera permission is required to scan the document.",
+        paymentPreparing: "Preparing secure payment...",
+        paymentSetupFailed: "We could not prepare the payment right now.",
+        paymentCancelled: "Payment was not completed. You can reopen your reservation and try again.",
+        paymentFailed: "The payment could not be completed right now.",
+        paymentSuccessTitle: "Reservation confirmed",
+        paymentSuccessBody: "Your payment was approved and your reservation is now available in My Trips.",
+        paymentPendingBody: "Your payment is being confirmed. The reservation is already in My Trips for follow-up.",
       };
     }
 
@@ -312,13 +327,18 @@ export function BookingFormScreen({ route }: { route: any }) {
         scannerNoImage: "No se recibió ninguna imagen para escanear.",
         scannerCameraImageMissing: "La cámara no devolvió una imagen válida.",
         continue: "Continuar",
-        readyTitle: "Datos del pasajero listos",
-        readyText: "El formulario de reserva quedó preparado para el siguiente paso de pago.",
         missingContact: "Complete el correo y el teléfono de contacto antes de continuar.",
         missingPassenger: "Complete todos los campos obligatorios de los pasajeros antes de continuar.",
         totalTravelers: "Pasajeros",
         totalFare: "Tarifa elegida",
         cameraPermission: "Se necesita permiso de cámara para escanear el documento.",
+        paymentPreparing: "Preparando el pago seguro...",
+        paymentSetupFailed: "No fue posible preparar el pago ahora.",
+        paymentCancelled: "El pago no se completó. Puede reabrir su reserva e intentarlo otra vez.",
+        paymentFailed: "No fue posible concluir el pago ahora.",
+        paymentSuccessTitle: "Reserva confirmada",
+        paymentSuccessBody: "Su pago fue aprobado y su reserva ya está disponible en Mis viajes.",
+        paymentPendingBody: "Su pago está siendo confirmado. La reserva ya está disponible en Mis viajes para seguimiento.",
       };
     }
 
@@ -363,13 +383,18 @@ export function BookingFormScreen({ route }: { route: any }) {
       scannerNoImage: "Nenhuma imagem foi enviada para leitura.",
       scannerCameraImageMissing: "A câmera não retornou uma imagem válida.",
       continue: "Continuar",
-      readyTitle: "Dados dos passageiros prontos",
-      readyText: "O formulário da reserva ficou preparado para a próxima etapa de pagamento.",
       missingContact: "Preencha o e-mail e o telefone de contato antes de continuar.",
       missingPassenger: "Complete todos os campos obrigatórios dos passageiros antes de continuar.",
       totalTravelers: "Passageiros",
       totalFare: "Tarifa escolhida",
       cameraPermission: "É necessário permitir a câmera para escanear o documento.",
+      paymentPreparing: "Preparando o pagamento seguro...",
+      paymentSetupFailed: "Não foi possível preparar o pagamento agora.",
+      paymentCancelled: "O pagamento não foi concluído. Você pode reabrir a reserva e tentar novamente.",
+      paymentFailed: "Não foi possível concluir o pagamento agora.",
+      paymentSuccessTitle: "Reserva confirmada",
+      paymentSuccessBody: "Seu pagamento foi aprovado e sua reserva já está disponível em Minhas viagens.",
+      paymentPendingBody: "Seu pagamento está em confirmação. A reserva já está disponível em Minhas viagens para acompanhamento.",
     };
   }, [localeLanguage]);
 
@@ -394,7 +419,7 @@ export function BookingFormScreen({ route }: { route: any }) {
       ),
     );
     setFormError("");
-    setReady(false);
+    setStatusMessage("");
   };
 
   const applyScannerCandidate = (index: number, candidate: DocumentScannerCandidate, warnings?: string[]) => {
@@ -447,7 +472,7 @@ export function BookingFormScreen({ route }: { route: any }) {
 
     setScanningIndex(index);
     setFormError("");
-    setReady(false);
+    setStatusMessage("");
 
     try {
       const response = await analyzeDocumentScan({
@@ -550,10 +575,112 @@ export function BookingFormScreen({ route }: { route: any }) {
     return "";
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     const validationError = validateForm();
     setFormError(validationError);
-    setReady(!validationError);
+    setStatusMessage("");
+    if (validationError) {
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const normalizedEmail = contactEmail.trim().toLowerCase();
+      const normalizedPhone = contactPhone.trim();
+      const passengerDetails = passengers.map((passenger, index) => ({
+        ...passenger,
+        email: passenger.email.trim() || normalizedEmail,
+        phoneNumber: passenger.phoneNumber.trim() || normalizedPhone,
+        passengerId: offer.passengers?.[index]?.passengerId || `pax_${index + 1}`,
+      }));
+
+      const response = await createBooking({
+        contactEmail: normalizedEmail,
+        contactPhone: normalizedPhone,
+        totalPrice: offer.price.toFixed(2),
+        currency: offer.currency,
+        flightData: {
+          id: offer.id,
+          airline: offer.airline,
+          flightNumber: offer.flightNumber,
+          origin: offer.originCode || "N/A",
+          destination: offer.destinationCode || "N/A",
+          departureTime: offer.departureTime,
+          arrivalTime: offer.arrivalTime,
+          cabinClass: offer.cabinClass,
+          slices: offer.slices,
+          logoUrl: offer.logoUrl,
+          originCity: offer.originCity,
+          destinationCity: offer.destinationCity,
+        },
+        passengerDetails,
+      });
+
+      const referenceCode = response.booking.referenceCode || "";
+      rememberGuestReservation({
+        referenceCode,
+        contactEmail: normalizedEmail,
+        bookingId: response.booking.id,
+      });
+
+      if (!response.clientSecret) {
+        throw new Error(copy.paymentSetupFailed);
+      }
+
+      setStatusMessage(copy.paymentPreparing);
+      await ensureStripeReady();
+
+      const initResult = await initPaymentSheet({
+        merchantDisplayName: "Michels Travel",
+        paymentIntentClientSecret: response.clientSecret,
+        defaultBillingDetails: {
+          email: normalizedEmail,
+          phone: normalizedPhone,
+          name: passengerDetails[0] ? `${passengerDetails[0].givenName} ${passengerDetails[0].familyName}`.trim() : undefined,
+        },
+        allowsDelayedPaymentMethods: false,
+      });
+
+      if (initResult.error) {
+        throw new Error(initResult.error.message || copy.paymentSetupFailed);
+      }
+
+      const paymentResult = await presentPaymentSheet();
+      if (paymentResult.error) {
+        const normalizedCode = String(paymentResult.error.code || "").toLowerCase();
+        if (normalizedCode.includes("canceled")) {
+          setFormError(copy.paymentCancelled);
+          setStatusMessage("");
+          return;
+        }
+
+        throw new Error(paymentResult.error.message || copy.paymentFailed);
+      }
+
+      const verification = await verifyBookingPayment(response.booking.id, referenceCode, normalizedEmail);
+      const destinationRoute =
+        mode === "senior"
+          ? { name: "SeniorMain", params: { screen: "SeniorTrips" } }
+          : { name: "RegularMain", params: { screen: "RegularTrips" } };
+
+      Alert.alert(
+        copy.paymentSuccessTitle,
+        verification.verified ? copy.paymentSuccessBody : copy.paymentPendingBody,
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.navigate(destinationRoute.name, destinationRoute.params),
+          },
+        ],
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : copy.paymentFailed;
+      setFormError(message || copy.paymentFailed);
+      setStatusMessage("");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -703,14 +830,13 @@ export function BookingFormScreen({ route }: { route: any }) {
         </Card>
       ) : null}
 
-      {ready ? (
+      {statusMessage ? (
         <Card style={styles.readyCard}>
-          <Text style={styles.readyTitle}>{copy.readyTitle}</Text>
-          <Text style={styles.readyText}>{copy.readyText}</Text>
+          <Text style={styles.readyText}>{statusMessage}</Text>
         </Card>
       ) : null}
 
-      <PrimaryButton label={copy.continue} onPress={handleContinue} />
+      <PrimaryButton label={copy.continue} onPress={handleContinue} loading={submitting} />
 
       <Modal visible={!!scanPrompt} transparent animationType="fade" onRequestClose={() => setScanPrompt(null)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setScanPrompt(null)}>

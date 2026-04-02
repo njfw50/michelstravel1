@@ -2,6 +2,7 @@ import { pgTable, text, serial, integer, boolean, timestamp, jsonb, decimal } fr
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import type { MobileReleaseChannel } from "./mobile-release";
 
 // Import auth models - CRITICAL for Replit Auth
 export * from "./models/auth";
@@ -64,6 +65,8 @@ export const siteSettings = pgTable("site_settings", {
   testMode: boolean("test_mode").default(true).notNull(),
   mobileAppTestEnabled: boolean("mobile_app_test_enabled").default(true).notNull(),
   mobileAppProductionEnabled: boolean("mobile_app_production_enabled").default(true).notNull(),
+  mobileConsumerRelease: jsonb("mobile_consumer_release").$type<MobileReleaseChannel | null>(),
+  mobileAdminRelease: jsonb("mobile_admin_release").$type<MobileReleaseChannel | null>(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 

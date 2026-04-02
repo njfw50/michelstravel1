@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Switch, Text, TextInput, View } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Alert, Linking, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { AppShell } from "../components/AppShell";
 import { Card } from "../components/Card";
 import { PrimaryButton } from "../components/PrimaryButton";
-import { lookupBooking } from "../services/bookings";
+import { getBookingReceipt, listAccountBookings, lookupBooking } from "../services/bookings";
 import { buildBiometricKeyAlias, ensureBiometricSupport, recreateBiometricKey, removeBiometricKey } from "../services/biometricAuth";
 import { clearBiometricEnrollment, saveBiometricEnrollment } from "../services/biometricStorage";
 import { registerBiometricKey, revokeBiometricKey } from "../services/auth";
@@ -26,8 +27,11 @@ export function TripsScreen() {
   const [referenceCode, setReferenceCode] = useState(rememberedGuestReservation?.referenceCode ?? "");
   const [contactEmail, setContactEmail] = useState(rememberedGuestReservation?.contactEmail ?? "");
   const [booking, setBooking] = useState<any | null>(null);
+  const [accountBookings, setAccountBookings] = useState<any[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [accountLoading, setAccountLoading] = useState(false);
+  const [receiptLoadingId, setReceiptLoadingId] = useState<number | null>(null);
   const [biometricBusy, setBiometricBusy] = useState(false);
 
   const copy = useMemo(() => {
@@ -48,14 +52,22 @@ export function TripsScreen() {
         route: "Route",
         status: "Status",
         total: "Total",
+        payment: "Payment",
+        ticket: "Ticket",
         securityValue: "Protected access",
         securityLabel: "Code and contact email required",
         sourceValue: "Same source",
         sourceLabel: "Reservation data comes from the main Michels Travel system",
         statusPending: "Pending",
         statusConfirmed: "Confirmed",
+        statusPaid: "Paid",
         accountTitle: "Protected account access",
         accountSubtitle: "Your app access is protected by password, secure session cookie, and biometric access when enabled on this device.",
+        accountReservationsTitle: "Reservations linked to your account",
+        accountReservationsSubtitle: "Every purchase completed in the site or app appears here with the same operational source.",
+        accountReservationsEmpty: "No reservation is linked to this account yet.",
+        viewReceipt: "View receipt",
+        receiptUnavailable: "Receipt is not available yet.",
         biometricTitle: "Biometric access",
         biometricEnabled: "Face ID or fingerprint can sign you in securely on this device.",
         biometricDisabled: "Enable biometrics on this device to avoid typing your password every time.",
@@ -81,14 +93,22 @@ export function TripsScreen() {
         route: "Ruta",
         status: "Estado",
         total: "Total",
+        payment: "Pago",
+        ticket: "Boleto",
         securityValue: "Acceso protegido",
         securityLabel: "Se requiere código y correo de contacto",
         sourceValue: "Misma fuente",
         sourceLabel: "Los datos de la reserva vienen del sistema principal de Michels Travel",
         statusPending: "Pendiente",
         statusConfirmed: "Confirmada",
+        statusPaid: "Pagado",
         accountTitle: "Acceso protegido de la cuenta",
         accountSubtitle: "Su acceso en la app queda protegido por contraseña, cookie segura de sesión y biometría cuando esté activada en este dispositivo.",
+        accountReservationsTitle: "Reservas vinculadas a su cuenta",
+        accountReservationsSubtitle: "Cada compra finalizada en el sitio o en la app aparece aquí con la misma fuente operativa.",
+        accountReservationsEmpty: "Todavía no hay una reserva vinculada a esta cuenta.",
+        viewReceipt: "Ver recibo",
+        receiptUnavailable: "El recibo aún no está disponible.",
         biometricTitle: "Acceso biométrico",
         biometricEnabled: "Face ID o huella pueden iniciar su sesión con seguridad en este dispositivo.",
         biometricDisabled: "Active la biometría en este dispositivo para no escribir la contraseña cada vez.",
@@ -113,14 +133,22 @@ export function TripsScreen() {
       route: "Rota",
       status: "Status",
       total: "Total",
+      payment: "Pagamento",
+      ticket: "Bilhete",
       securityValue: "Acesso protegido",
       securityLabel: "Código e e-mail de contato são obrigatórios",
       sourceValue: "Mesma fonte",
       sourceLabel: "Os dados da reserva vêm do sistema principal da Michels Travel",
       statusPending: "Pendente",
       statusConfirmed: "Confirmada",
+      statusPaid: "Pago",
       accountTitle: "Acesso protegido da conta",
       accountSubtitle: "Seu acesso no app fica protegido por senha, cookie seguro de sessão e biometria quando ativada neste aparelho.",
+      accountReservationsTitle: "Reservas vinculadas à sua conta",
+      accountReservationsSubtitle: "Cada compra concluída no site ou no app aparece aqui com a mesma fonte operacional.",
+      accountReservationsEmpty: "Nenhuma reserva vinculada a esta conta ainda.",
+      viewReceipt: "Ver recibo",
+      receiptUnavailable: "O recibo ainda não está disponível.",
       biometricTitle: "Acesso por biometria",
       biometricEnabled: "Face ID ou digital podem entrar com segurança neste aparelho.",
       biometricDisabled: "Ative a biometria neste aparelho para não digitar a senha sempre.",
@@ -140,15 +168,7 @@ export function TripsScreen() {
     return `${origin} -> ${destination}`;
   };
 
-  const handleGuestLookup = async () => {
-    const normalizedReference = referenceCode.trim().toUpperCase();
-    const normalizedEmail = contactEmail.trim().toLowerCase();
-
-    if (!normalizedReference || !normalizedEmail) {
-      setError(copy.notFound);
-      return;
-    }
-
+  const runGuestLookup = async (normalizedReference: string, normalizedEmail: string) => {
     setLoading(true);
     setError("");
 
@@ -168,8 +188,68 @@ export function TripsScreen() {
     }
   };
 
+  const handleGuestLookup = async () => {
+    const normalizedReference = referenceCode.trim().toUpperCase();
+    const normalizedEmail = contactEmail.trim().toLowerCase();
+
+    if (!normalizedReference || !normalizedEmail) {
+      setError(copy.notFound);
+      return;
+    }
+
+    await runGuestLookup(normalizedReference, normalizedEmail);
+  };
+
+  const loadAccountBookings = async () => {
+    setAccountLoading(true);
+    setError("");
+
+    try {
+      const rows = await listAccountBookings();
+      setAccountBookings(rows);
+    } catch (accountError: any) {
+      setError(accountError?.message || copy.notFound);
+    } finally {
+      setAccountLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (accessMode === "guest" && rememberedGuestReservation?.referenceCode && rememberedGuestReservation?.contactEmail && !booking && !loading) {
+      void runGuestLookup(
+        rememberedGuestReservation.referenceCode.trim().toUpperCase(),
+        rememberedGuestReservation.contactEmail.trim().toLowerCase(),
+      );
+    }
+  }, [accessMode, booking, loading, rememberedGuestReservation]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (accessMode === "account" && user?.id) {
+        void loadAccountBookings();
+      }
+    }, [accessMode, user?.id]),
+  );
+
   const bookingStatus = String(booking?.status || "pending").toLowerCase();
   const statusLabel = bookingStatus === "confirmed" ? copy.statusConfirmed : copy.statusPending;
+
+  const handleOpenReceipt = async (targetBooking: any) => {
+    try {
+      setReceiptLoadingId(targetBooking.id);
+      const receiptUrl = await getBookingReceipt(targetBooking.id, targetBooking.referenceCode || undefined, targetBooking.contactEmail || undefined);
+      if (!receiptUrl) {
+        Alert.alert(copy.viewReceipt, copy.receiptUnavailable);
+        return;
+      }
+
+      await Linking.openURL(receiptUrl);
+    } catch (receiptError: any) {
+      Alert.alert(copy.viewReceipt, receiptError?.message || copy.receiptUnavailable);
+    } finally {
+      setReceiptLoadingId(null);
+    }
+  };
 
   const handleBiometricToggle = async (enabled: boolean) => {
     if (!user?.email || !profile || !device?.id) {
@@ -292,6 +372,12 @@ export function TripsScreen() {
                     <Text style={styles.totalValue}>{booking.currency || "USD"} {booking.totalPrice}</Text>
                   </View>
                 </View>
+
+                {booking.id ? (
+                  <TouchableOpacity style={styles.receiptButton} onPress={() => handleOpenReceipt(booking)} disabled={receiptLoadingId === booking.id}>
+                    {receiptLoadingId === booking.id ? <ActivityIndicator color={theme.colors.primary} /> : <Text style={styles.receiptButtonText}>{copy.viewReceipt}</Text>}
+                  </TouchableOpacity>
+                ) : null}
               </>
             ) : (
               <>
@@ -334,6 +420,61 @@ export function TripsScreen() {
                 />
               )}
             </View>
+          </Card>
+
+          <Card>
+            <Text style={styles.cardTitle}>{copy.accountReservationsTitle}</Text>
+            <Text style={styles.resultSubtitle}>{copy.accountReservationsSubtitle}</Text>
+
+            {accountLoading ? <ActivityIndicator style={styles.loader} color={theme.colors.primary} /> : null}
+
+            {!accountLoading && accountBookings.length === 0 ? (
+              <Text style={styles.resultSubtitle}>{copy.accountReservationsEmpty}</Text>
+            ) : null}
+
+            {!accountLoading ? (
+              <View style={styles.accountBookingsList}>
+                {accountBookings.map((item) => {
+                  const itemStatus = String(item.status || "pending").toLowerCase() === "confirmed" ? copy.statusConfirmed : copy.statusPending;
+                  const paymentStatus = String(item.stripePaymentStatus || "pending").toLowerCase() === "paid" ? copy.statusPaid : copy.statusPending;
+
+                  return (
+                    <View key={item.id} style={styles.accountBookingCard}>
+                      <View style={styles.resultHeader}>
+                        <View style={styles.resultHeaderCopy}>
+                          <Text style={styles.referenceTitle}>{item.referenceCode || `#${item.id}`}</Text>
+                          <Text style={styles.resultSubtitle}>{extractRoute(item)}</Text>
+                        </View>
+                        <View style={[styles.statusPill, String(item.status || "").toLowerCase() === "confirmed" ? styles.statusPillConfirmed : styles.statusPillPending]}>
+                          <Text style={[styles.statusPillText, String(item.status || "").toLowerCase() === "confirmed" ? styles.statusPillTextConfirmed : styles.statusPillTextPending]}>
+                            {itemStatus}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.metaGrid}>
+                        <View style={styles.metaCard}>
+                          <Text style={styles.metaLabel}>{copy.payment}</Text>
+                          <Text style={styles.metaValue}>{paymentStatus}</Text>
+                        </View>
+                        <View style={styles.metaCard}>
+                          <Text style={styles.metaLabel}>{copy.ticket}</Text>
+                          <Text style={styles.metaValue}>{item.ticketNumber || item.ticketStatus || "--"}</Text>
+                        </View>
+                        <View style={styles.metaCardWide}>
+                          <Text style={styles.metaLabel}>{copy.total}</Text>
+                          <Text style={styles.totalValue}>{item.currency || "USD"} {item.totalPrice}</Text>
+                        </View>
+                      </View>
+
+                      <TouchableOpacity style={styles.receiptButton} onPress={() => handleOpenReceipt(item)} disabled={receiptLoadingId === item.id}>
+                        {receiptLoadingId === item.id ? <ActivityIndicator color={theme.colors.primary} /> : <Text style={styles.receiptButtonText}>{copy.viewReceipt}</Text>}
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+              </View>
+            ) : null}
           </Card>
         </>
       )}
@@ -443,6 +584,34 @@ const styles = StyleSheet.create({
   },
   metaValue: { marginTop: 8, fontSize: 15, fontWeight: "700", color: theme.colors.gray900, lineHeight: 22 },
   totalValue: { marginTop: 8, fontSize: 20, fontWeight: "800", color: theme.colors.primaryInk },
+  accountBookingsList: {
+    marginTop: theme.spacing(4),
+    gap: theme.spacing(2),
+  },
+  accountBookingCard: {
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: theme.colors.outline,
+    backgroundColor: theme.colors.surfaceMuted,
+    paddingHorizontal: theme.spacing(3),
+    paddingVertical: theme.spacing(3),
+  },
+  receiptButton: {
+    marginTop: theme.spacing(3),
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing(3),
+    paddingVertical: theme.spacing(2.5),
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: theme.colors.white,
+  },
+  receiptButtonText: {
+    color: theme.colors.primary,
+    fontSize: 13,
+    fontWeight: "800",
+  },
   toggleRow: {
     marginTop: theme.spacing(4),
     flexDirection: "row",

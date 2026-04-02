@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import { APP_VERSION } from "../config/appInfo";
 import { api } from "../lib/api";
 import {
   MobileCustomerDevice,
@@ -50,7 +51,7 @@ function buildDevicePayload(appVariant: AppVariant = "standard") {
     appVariant,
     deviceModel: platformConstants?.Model ?? undefined,
     osVersion: String(Platform.Version ?? ""),
-    appVersion: "0.1.0",
+    appVersion: APP_VERSION,
   };
 }
 
