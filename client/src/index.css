@@ -165,3 +165,30 @@
   border-color: rgba(255, 127, 80, 0.5);
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
 }
+
+.brand-mark-shell--header {
+  width: 5rem;
+  height: 5rem;
+  flex: 0 0 5rem;
+}
+
+.brand-mark-shell--footer {
+  width: 3.25rem;
+  height: 3.25rem;
+  flex: 0 0 3.25rem;
+}
+
+.brand-mark-shell img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .brand-mark-shell--header {
+    width: 4rem;
+    height: 4rem;
+    flex-basis: 4rem;
+  }
+}
