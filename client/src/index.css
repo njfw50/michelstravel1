@@ -192,3 +192,44 @@
     flex-basis: 4rem;
   }
 }
+
+/* ─── Homepage section surfaces ────────────────────────── */
+.section-light {
+  background:
+    radial-gradient(circle at top left, rgba(88, 128, 255, 0.12), transparent 28%),
+    linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+}
+
+.section-white {
+  background: #ffffff;
+}
+
+.section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(59, 130, 246, 0.16);
+  background: rgba(255, 255, 255, 0.92);
+  color: #3564ea;
+  box-shadow: 0 10px 30px rgba(17, 35, 92, 0.08);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.step-card,
+.guide-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 22px 48px rgba(15, 23, 42, 0.08);
+}
+
+.step-card {
+  padding: 2rem 1.75rem;
+}

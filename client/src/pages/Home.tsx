@@ -425,12 +425,8 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-12 md:mb-16"
           >
-            <span className="section-eyebrow border-white/15 bg-white/10 text-blue-100 shadow-none">
-              {t("home.how.title")}
-            </span>
-            <h2 className="text-[1.9rem] sm:text-3xl md:text-5xl font-extrabold font-display text-white mb-4">
-              {t("home.how.subtitle")}
-            </h2>
+            <span className="section-eyebrow">{t("home.how.title")}</span>
+            <h2 className="text-[1.9rem] sm:text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-4">{t("home.how.subtitle")}</h2>
           </motion.div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
@@ -445,7 +441,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.12 }}
-                className="step-card group rounded-[28px] border border-white/70 bg-white/95 p-8 shadow-[0_24px_70px_-38px_rgba(15,23,42,0.55)] backdrop-blur-sm"
+                className="step-card group"
               >
                 <span className="text-[11px] font-bold text-blue-500 tracking-[0.3em] mb-6 block">{item.step}</span>
                 <div className={`h-16 w-16 rounded-2xl ${item.color} flex items-center justify-center mb-6 mx-auto shadow-md shadow-blue-500/20`}>
@@ -500,15 +496,13 @@ export default function Home() {
         <section className="py-16 section-light border-y border-gray-200/80">
           <div className="container mx-auto px-4 md:px-6">
             <div className="text-center mb-10">
-              <span className="section-eyebrow border-white/15 bg-white/10 text-blue-100 shadow-none">
-                {t("home.airlines")}
-              </span>
-              <p className="text-blue-100/80 text-sm">{t("home.airlines_sub")}</p>
+              <span className="section-eyebrow">{t("home.airlines")}</span>
+              <p className="text-gray-500 text-sm">{t("home.airlines_sub")}</p>
             </div>
             
             <div className="relative overflow-hidden">
-              <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-[#13245a] to-transparent z-10 pointer-events-none" />
-              <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-[#13245a] to-transparent z-10 pointer-events-none" />
+              <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
               <div className="flex animate-marquee gap-4 py-4">
                 {[...topAirlines, ...topAirlines].map((airline, i) => (
                   <div
