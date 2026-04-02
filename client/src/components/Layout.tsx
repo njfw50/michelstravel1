@@ -21,8 +21,6 @@ import {
   buildWhatsAppHref,
   buildWhatsAppMessage,
 } from "@/lib/contact";
-import logo from "@/assets/logo_new.png";
-
 const LANG_OPTIONS = [
   { code: "pt" as const, label: "Português", flag: "PT" },
   { code: "en" as const, label: "English", flag: "EN" },
@@ -81,6 +79,7 @@ function UnreadBadge() {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const brandMark = "/favicon.png";
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
@@ -165,7 +164,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Link href="/" className="flex items-center gap-4 group">
               <div className="brand-mark-shell brand-mark-shell--header">
                 <img 
-                  src={logo} 
+                  src={brandMark} 
                   alt="Michels Travel" 
                   className="transition-transform duration-300 group-hover:scale-[1.04]"
                 />
@@ -366,7 +365,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <div className="flex items-center justify-center gap-2 md:justify-start">
                   <div className="brand-mark-shell brand-mark-shell--footer">
                     <img
-                      src={logo}
+                      src={brandMark}
                       alt="Michels Travel"
                     />
                   </div>
