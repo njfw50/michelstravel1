@@ -1,24 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Phone, Plane, Calendar, CheckCircle2, Mic, ArrowRight, User } from "lucide-react";
+import { Phone, Plane, Calendar, CheckCircle2, Mic, ArrowRight, User, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import PaymentForm from "@/components/PaymentForm";
+import FlightBaggageHighlights from "@/components/FlightBaggageHighlights";
+import { useDebounce } from "@/hooks/use-debounce";
 
-type FlowStep = "auth" | "greeting" | "destination" | "dates" | "ask_name" | "ask_dob" | "searching" | "offer" | "checkout";
+type FlowStep = "auth" | "greeting" | "ask_origin" | "destination" | "dates" | "ask_name" | "ask_dob" | "searching" | "offer" | "checkout";
 
 export default function SeniorTerminal() {
   const [step, setStep] = useState<FlowStep>("auth");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [selectedDest, setSelectedDest] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
+  
+  // Origin State
+  const [originQuery, setOriginQuery] = useState("");
+  const [originIata, setOriginIata] = useState("");
+  const [originResults, setOriginResults] = useState<any[]>([]);
+  const debouncedOrigin = useDebounce(originQuery, 500);
+
+  // Dest State
+  const [destQuery, setDestQuery] = useState("");
+  const [destIata, setDestIata] = useState("");
+  const [destResults, setDestResults] = useState<any[]>([]);
+  const debouncedDest = useDebounce(destQuery, 500);
+
+  // Date State
+  const [travelDate, setTravelDate] = useState("");
+
+  // Passenger State
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [dobDay, setDobDay] = useState("");
   const [dobMonth, setDobMonth] = useState("");
   const [dobYear, setDobYear] = useState("");
   
+  // Flight & Booking State
   const [selectedFlight, setSelectedFlight] = useState<any>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [bookingData, setBookingData] = useState<{ clientSecret: string; bookingId: number; referenceCode: string; amount: number; currency: string } | null>(null);
@@ -33,20 +51,68 @@ export default function SeniorTerminal() {
     window.speechSynthesis.speak(utterance);
   };
 
+  useEffect(() => {
+    const fetchPlaces = async (query: string, setter: any) => {
+      if (query.length < 2) {
+        setter([]);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/places/search?query=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        setter(data || []);
+      } catch (e) {
+        setter([]);
+      }
+    };
+    if (debouncedOrigin && !originIata) fetchPlaces(debouncedOrigin, setOriginResults);
+  }, [debouncedOrigin, originIata]);
+
+  useEffect(() => {
+    const fetchPlaces = async (query: string, setter: any) => {
+      if (query.length < 2) {
+        setter([]);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/places/search?query=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        setter(data || []);
+      } catch (e) {
+        setter([]);
+      }
+    };
+    if (debouncedDest && !destIata) fetchPlaces(debouncedDest, setDestResults);
+  }, [debouncedDest, destIata]);
+
   const handleLogin = () => {
     if (phoneNumber.length < 5) return;
     setStep("greeting");
     speak("Olá. Bem-vindo ao terminal de acesso rápido. Nós vamos ajudar você a comprar a sua passagem.");
   };
 
-  const handleDest = (dest: string) => {
-    setSelectedDest(dest);
-    setStep("dates");
-    speak(`Ótima escolha, ${dest}. Quando você deseja viajar?`);
+  const handleOriginSelect = (place: any) => {
+    setOriginIata(place.iataCode);
+    setOriginQuery(`${place.cityName || place.name} (${place.iataCode})`);
+    setOriginResults([]);
+    setTimeout(() => {
+      setStep("destination");
+      speak("Muito bem. E para qual cidade você quer viajar?");
+    }, 500);
   };
 
-  const handleDate = (date: string) => {
-    setSelectedDate(date);
+  const handleDestSelect = (place: any) => {
+    setDestIata(place.iataCode);
+    setDestQuery(`${place.cityName || place.name} (${place.iataCode})`);
+    setDestResults([]);
+    setTimeout(() => {
+      setStep("dates");
+      speak("Certo. Qual é a data exata da sua viagem?");
+    }, 500);
+  };
+
+  const handleDateNext = () => {
+    if (!travelDate) return;
     setStep("ask_name");
     speak("Tudo certo. Agora, para emitir a passagem, por favor digite o seu nome de batismo da forma como está no documento");
   };
@@ -64,20 +130,7 @@ export default function SeniorTerminal() {
     speak("Tudo certo. Nossa inteligência está procurando os melhores voos para você agora mesmo. Aguarde um momento.");
     
     try {
-      let destIata = "LIS";
-      if (selectedDest.includes("Brasil")) destIata = "GRU";
-      else if (selectedDest.includes("Flórida") || selectedDest.includes("Florida")) destIata = "MCO";
-      else destIata = "CDG";
-
-      const d = new Date();
-      if (selectedDate.includes("Semana")) d.setDate(d.getDate() + 7);
-      else if (selectedDate.includes("Mês") || selectedDate.includes("Mes")) d.setDate(d.getDate() + 30);
-      else if (selectedDate.includes("3 meses")) d.setDate(d.getDate() + 90);
-      else d.setDate(d.getDate() + 14);
-
-      const dateStr = d.toISOString().split("T")[0];
-
-      const res = await fetch(`/api/flights/search?origin=EWR&destination=${destIata}&date=${dateStr}&passengers=1&adults=1&children=0&infants=0&cabinClass=economy`);
+      const res = await fetch(`/api/flights/search?origin=${originIata}&destination=${destIata}&date=${travelDate}&passengers=1&adults=1&children=0&infants=0&cabinClass=economy`);
       const flights = await res.json();
       
       if (flights && flights.length > 0) {
@@ -107,7 +160,7 @@ export default function SeniorTerminal() {
         givenName: firstName,
         familyName: lastName,
         bornOn: `${dobYear}-${dobMonth.padStart(2, '0')}-${dobDay.padStart(2, '0')}`,
-        gender: "m" // Standard fallback for ATM flow
+        gender: "m" // Simplified for ATM flow
       };
       
       const res = await fetch("/api/bookings", {
@@ -133,13 +186,13 @@ export default function SeniorTerminal() {
           currency: selectedFlight.currency
         });
         setStep("checkout");
-        speak("Pronto. Agora preencha os dados do cartão para concluir a aprovação.");
+        speak("Pronto. Agora digite os dados do cartão para concluir a aprovação.");
       } else {
          toast({ title: "Aviso", description: data.error || "Tente novamente.", variant: "destructive" });
          speak("Houve um pequeno problema com a confirmação. Tente novamente.");
       }
     } catch (e) {
-      toast({ title: "Erro na reserva", description: "Problema ao conectar com o sistema.", variant: "destructive" });
+      toast({ title: "Erro na reserva", description: "Problema ao conectar com o banco de dados.", variant: "destructive" });
     }
   };
 
@@ -208,8 +261,8 @@ export default function SeniorTerminal() {
             </p>
             <Button 
               onClick={() => {
-                setStep("destination");
-                speak("Para onde você quer viajar?");
+                setStep("ask_origin");
+                speak("De qual cidade você vai sair?");
               }}
               className="w-full h-32 text-4xl font-extrabold bg-emerald-500 hover:bg-emerald-400 text-white rounded-[32px] mt-12 shadow-[0_0_60px_rgba(16,185,129,0.3)]"
             >
@@ -218,41 +271,106 @@ export default function SeniorTerminal() {
           </div>
         )}
 
-        {step === "destination" && (
-          <div className="w-full max-w-4xl text-center space-y-12 animate-in slide-in-from-right duration-500">
-            <h2 className="text-5xl font-bold text-white mb-8 leading-tight">Para onde você quer viajar?</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Button onClick={() => handleDest("Portugal")} className="h-48 rounded-3xl bg-slate-800 hover:bg-blue-600 border-4 border-slate-700 hover:border-blue-400 flex flex-col gap-4 text-4xl font-bold text-white transition-all">
-                <span className="text-6xl">🇵🇹</span> Portugal
-              </Button>
-              <Button onClick={() => handleDest("Brasil")} className="h-48 rounded-3xl bg-slate-800 hover:bg-emerald-600 border-4 border-slate-700 hover:border-emerald-400 flex flex-col gap-4 text-4xl font-bold text-white transition-all">
-                <span className="text-6xl">🇧🇷</span> Brasil
-              </Button>
-              <Button onClick={() => handleDest("Flórida (EUA)")} className="h-48 rounded-3xl bg-slate-800 hover:bg-purple-600 border-4 border-slate-700 hover:border-purple-400 flex flex-col gap-4 text-4xl font-bold text-white transition-all">
-                <span className="text-6xl">🎢</span> Flórida (EUA)
-              </Button>
-              <Button onClick={() => handleDest("Outro destino")} className="h-48 rounded-3xl bg-slate-800 hover:bg-orange-600 border-4 border-slate-700 hover:border-orange-400 flex flex-col gap-4 text-4xl font-bold text-white transition-all">
-                <span className="text-5xl">🌍</span> Outro Lugar
-              </Button>
+        {step === "ask_origin" && (
+          <div className="w-full max-w-4xl text-center space-y-8 animate-in slide-in-from-right duration-500">
+            <h2 className="text-5xl font-bold text-white mb-4 leading-tight">De qual cidade você vai sair?</h2>
+            <p className="text-2xl text-blue-400 mb-8">Digite o nome da cidade ou aeroporto abaixo:</p>
+            <div className="relative">
+              <Input 
+                type="text"
+                value={originQuery}
+                onChange={(e) => {
+                  setOriginQuery(e.target.value);
+                  setOriginIata("");
+                }}
+                placeholder="Ex: Nova York, Rio de Janeiro..."
+                className="h-32 text-4xl text-center rounded-[32px] border-4 border-slate-600 bg-slate-800 text-white focus:border-blue-400"
+              />
+              {originResults.length > 0 && !originIata && (
+                <div className="absolute top-full left-0 right-0 mt-4 bg-slate-800 border-4 border-slate-600 rounded-[32px] overflow-hidden z-50">
+                  {originResults.map((place) => (
+                    <button
+                      key={place.id}
+                      onClick={() => handleOriginSelect(place)}
+                      className="w-full p-8 text-left hover:bg-slate-700 flex items-center gap-6 border-b border-slate-700 last:border-0"
+                    >
+                      <MapPin className="h-12 w-12 text-blue-400" />
+                      <div>
+                        <p className="text-4xl font-bold text-white">{place.cityName || place.name}</p>
+                        <p className="text-2xl text-slate-400 mt-2">{place.countryName} ({place.iataCode})</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+            {originQuery.length < 3 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
+                 <Button onClick={() => handleOriginSelect({ iataCode: "EWR", cityName: "Newark", countryName: "United States" })} className="h-32 text-3xl font-bold rounded-[24px] bg-slate-800 hover:bg-blue-600">Nova York / Newark (EWR)</Button>
+                 <Button onClick={() => handleOriginSelect({ iataCode: "MIA", cityName: "Miami", countryName: "United States" })} className="h-32 text-3xl font-bold rounded-[24px] bg-slate-800 hover:bg-blue-600">Miami, Flórida (MIA)</Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {step === "destination" && (
+          <div className="w-full max-w-4xl text-center space-y-8 animate-in slide-in-from-right duration-500">
+            <h2 className="text-5xl font-bold text-white mb-4 leading-tight">Para onde você quer viajar?</h2>
+            <p className="text-2xl text-blue-400 mb-8">Digite o nome da cidade ou aeroporto abaixo:</p>
+            <div className="relative">
+              <Input 
+                type="text"
+                value={destQuery}
+                onChange={(e) => {
+                  setDestQuery(e.target.value);
+                  setDestIata("");
+                }}
+                placeholder="Ex: Lisboa, São Paulo..."
+                className="h-32 text-4xl text-center rounded-[32px] border-4 border-slate-600 bg-slate-800 text-white focus:border-emerald-400"
+              />
+              {destResults.length > 0 && !destIata && (
+                <div className="absolute top-full left-0 right-0 mt-4 bg-slate-800 border-4 border-slate-600 rounded-[32px] overflow-hidden z-50">
+                  {destResults.map((place) => (
+                    <button
+                      key={place.id}
+                      onClick={() => handleDestSelect(place)}
+                      className="w-full p-8 text-left hover:bg-slate-700 flex items-center gap-6 border-b border-slate-700 last:border-0"
+                    >
+                      <MapPin className="h-12 w-12 text-emerald-400" />
+                      <div>
+                        <p className="text-4xl font-bold text-white">{place.cityName || place.name}</p>
+                        <p className="text-2xl text-slate-400 mt-2">{place.countryName} ({place.iataCode})</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {destQuery.length < 3 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
+                 <Button onClick={() => handleDestSelect({ iataCode: "LIS", cityName: "Lisboa", countryName: "Portugal" })} className="h-32 text-3xl font-bold rounded-[24px] bg-slate-800 hover:bg-emerald-600">Lisboa, Portugal (LIS)</Button>
+                 <Button onClick={() => handleDestSelect({ iataCode: "GRU", cityName: "São Paulo", countryName: "Brasil" })} className="h-32 text-3xl font-bold rounded-[24px] bg-slate-800 hover:bg-emerald-600">S. Paulo, Brasil (GRU)</Button>
+              </div>
+            )}
           </div>
         )}
 
         {step === "dates" && (
           <div className="w-full max-w-4xl text-center space-y-12 animate-in slide-in-from-right duration-500">
-            <h2 className="text-5xl font-bold text-white mb-8 leading-tight">Quando você deseja ir para {selectedDest}?</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Button onClick={() => handleDate("Próxima Semana")} className="h-48 rounded-3xl bg-slate-800 hover:bg-indigo-600 border-4 border-slate-700 hover:border-indigo-400 flex flex-col gap-4 text-4xl font-bold text-white transition-all">
-                <Calendar className="h-16 w-16 text-indigo-400" /> Próxima Semana
-              </Button>
-              <Button onClick={() => handleDate("Próximo Mês")} className="h-48 rounded-3xl bg-slate-800 hover:bg-indigo-600 border-4 border-slate-700 hover:border-indigo-400 flex flex-col gap-4 text-4xl font-bold text-white transition-all">
-                <Calendar className="h-16 w-16 text-indigo-400" /> Próximo Mês
-              </Button>
-              <Button onClick={() => handleDate("Daqui a 3 meses")} className="h-48 rounded-3xl bg-slate-800 hover:bg-indigo-600 border-4 border-slate-700 hover:border-indigo-400 flex flex-col gap-4 text-4xl font-bold text-white transition-all">
-                <Calendar className="h-16 w-16 text-indigo-400" /> Daqui a 3 meses
-              </Button>
-              <Button onClick={() => handleDate("Ainda não sei")} className="h-48 rounded-3xl bg-slate-800 hover:bg-indigo-600 border-4 border-slate-700 hover:border-indigo-400 flex flex-col gap-4 text-4xl font-bold text-white transition-all">
-                <Calendar className="h-16 w-16 text-indigo-400" /> Data Flexível (14 dias)
+            <h2 className="text-5xl font-bold text-white mb-8 leading-tight">Qual a data da viagem?</h2>
+            <div className="flex flex-col items-center gap-8">
+              <Input 
+                type="date"
+                value={travelDate}
+                onChange={(e) => setTravelDate(e.target.value)}
+                className="h-32 w-full max-w-2xl text-5xl text-center rounded-[32px] border-4 border-slate-600 bg-slate-800 text-white focus:border-blue-400"
+              />
+              <Button 
+                onClick={handleDateNext}
+                disabled={!travelDate}
+                className="h-24 px-12 text-3xl font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-[0_0_40px_rgba(37,99,235,0.3)] transition-all"
+              >
+                Continuar <ArrowRight className="ml-4 h-8 w-8" />
               </Button>
             </div>
           </div>
@@ -341,21 +459,22 @@ export default function SeniorTerminal() {
               <Plane className="h-20 w-20 text-blue-400 animate-pulse relative z-10" />
             </div>
             <h2 className="text-4xl font-bold text-white leading-tight">
-              Buscando passagem aérea ideal para {selectedDest}...
+              Buscando passagem aérea ideal para {destIata}...
             </h2>
             <p className="text-2xl text-slate-400">
-              Estamos validando a disponibilidade real com seu nome e datas preferenciais. Não saia desta tela.
+              Estamos validando a disponibilidade real com seu nome e datas escolhidas. Não saia desta tela.
             </p>
           </div>
         )}
 
         {step === "offer" && selectedFlight && (
-          <div className="w-full max-w-4xl text-center space-y-12 animate-in slide-in-from-bottom duration-700">
-            <h2 className="text-5xl font-bold text-white mb-8 leading-tight">Encontramos o voo ideal para você.</h2>
-            <div className="bg-slate-800 rounded-[40px] p-12 border-4 border-emerald-500 shadow-[0_0_60px_rgba(16,185,129,0.2)] text-left flex flex-col gap-8">
-              <div className="flex justify-between items-center gap-4 flex-wrap">
+          <div className="w-full max-w-4xl text-center space-y-8 animate-in slide-in-from-bottom duration-700">
+            <h2 className="text-5xl font-bold text-white leading-tight">Encontramos o voo ideal para você.</h2>
+            <div className="bg-slate-800 rounded-[40px] p-10 border-4 border-emerald-500 shadow-[0_0_60px_rgba(16,185,129,0.2)] text-left flex flex-col gap-8">
+              
+              <div className="flex justify-between items-center gap-4 flex-wrap pb-4 border-b border-slate-700">
                 <div>
-                  <p className="text-2xl text-slate-400 font-medium">Companhia</p>
+                  <p className="text-2xl text-slate-400 font-medium">Companhia Aérea</p>
                   <p className="text-5xl font-extrabold text-white mt-1 capitalize">{selectedFlight.airline}</p>
                 </div>
                 <div className="text-right">
@@ -363,11 +482,14 @@ export default function SeniorTerminal() {
                   <p className="text-6xl font-extrabold text-emerald-400 mt-2 uppercase">{selectedFlight.currency} {selectedFlight.price}</p>
                 </div>
               </div>
-              <div className="h-1 bg-slate-700 w-full rounded-full"></div>
-              <div className="flex gap-4 items-center">
-                <CheckCircle2 className="h-10 w-10 text-emerald-500 shrink-0" />
-                <p className="text-3xl text-white">Voo analisado em tempo real, válido para reserva imediata.</p>
+
+              <div className="bg-slate-900 rounded-3xl p-6">
+                <p className="text-2xl font-bold text-white mb-4">Informações de Bagagem</p>
+                <div className="scale-125 origin-top-left max-w-[80%]">
+                  <FlightBaggageHighlights flight={selectedFlight} />
+                </div>
               </div>
+
               <Button 
                 onClick={createBooking}
                 className="w-full h-32 text-4xl font-extrabold bg-emerald-500 hover:bg-emerald-400 text-white rounded-full mt-4 shadow-xl"
