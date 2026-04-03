@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, Mic, HeartHandshake, AlertTriangle, AlertCircle } from "lucide-react";
+import { Phone, Mic, HeartHandshake, AlertTriangle, AlertCircle, ShieldCheck, Activity, Eye } from "lucide-react";
 
 export function SeniorCareDesk() {
   return (
@@ -15,17 +15,64 @@ export function SeniorCareDesk() {
                 <Badge className="border border-white/10 bg-white/5 text-white/80">Ao vivo</Badge>
               </div>
               <CardTitle className="mt-4 text-3xl font-bold tracking-tight text-white">
-                Assistência Sênior
+                Concierge Sênior e Suporte VIP
               </CardTitle>
               <CardDescription className="mt-2 max-w-3xl text-white/75">
-                Monitoramento e suporte direto para passageiros idosos. Responda a pedidos de ajuda humana ou guie-os com áudios simples por aqui.
+                Curadoria e monitoramento direto para nossos viajantes mais criteriosos. Responda com eficiência a chamados de assistência ou envie guias em áudio para uma jornada sem atritos.
               </CardDescription>
             </div>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-6 p-6">
+          <h3 className="text-xl font-bold text-slate-800 border-b pb-2">Terminais Sênior Ativos (Caixa Eletrônico)</h3>
           <div className="grid gap-4 xl:grid-cols-2">
+            
+            {/* Novo Card de Terminal Autônomo */}
+            <div className="rounded-[30px] border-4 border-emerald-500 bg-slate-900 p-5 shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                <ShieldCheck className="w-32 h-32 text-emerald-500" />
+              </div>
+              <div className="relative z-10 flex flex-wrap items-start justify-between gap-3 text-white">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-xl font-extrabold text-white">Dona Antônia, 72</p>
+                    <Badge className="bg-emerald-500 text-white font-bold animate-pulse">Terminal Autônomo</Badge>
+                  </div>
+                  <p className="mt-2 text-sm text-slate-400 font-medium">
+                    Acesso via Telefone: (11) 98765-4321
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs uppercase tracking-widest text-slate-400 font-bold">Passo Atual</p>
+                  <p className="mt-1 text-2xl font-black text-emerald-400">Escolhendo Destino</p>
+                  <p className="mt-1 text-xs text-slate-500">Tempo na tela: 00:45s</p>
+                </div>
+              </div>
+
+              <div className="relative z-10 mt-6 rounded-[20px] bg-slate-800 p-4 border border-slate-700">
+                <div className="flex gap-3">
+                  <Activity className="h-6 w-6 text-emerald-400" />
+                  <div>
+                    <p className="text-sm font-bold text-white">Monitoria Ativa em Tempo Real</p>
+                    <p className="mt-1 text-sm text-slate-400">Ela está olhando as opções de destinos internacionais (Europa).</p>
+                  </div>
+                </div>
+                
+                <div className="mt-6 flex flex-wrap gap-2">
+                  <Button className="gap-2 bg-blue-600 hover:bg-blue-500 font-bold shadow-lg">
+                    <Mic className="h-4 w-4" />
+                    Enviar Voz: "Quer ajuda com a Europa?"
+                  </Button>
+                  <Button variant="outline" className="gap-2 border-slate-600 text-slate-300 hover:text-white hover:bg-slate-700 font-bold">
+                    <Eye className="h-4 w-4" />
+                    Espelhar Tela
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Restante dos cards antigos adaptados */}
             
             {/* Exemplo de Card de Passageiro Sênior Precisando de Ajuda */}
             <div className="rounded-[30px] border border-red-200 bg-white p-5 shadow-sm">

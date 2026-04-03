@@ -104,13 +104,13 @@ export default function Home() {
             <div className="max-w-3xl">
               <Badge className="rounded-full border border-blue-200 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700 shadow-sm">
                 <Sparkles className="mr-2 h-3.5 w-3.5" />
-                Passagens Aéreas e Consultoria Premium
+                Curadoria de Viagens & Concierge Exclusivo
               </Badge>
               <h1 className="mt-6 text-[2.8rem] font-extrabold leading-[0.94] tracking-tight text-slate-950 sm:text-5xl md:text-6xl lg:text-[4.65rem]">
-                Voe Mais Longe com as Melhores Tarifas e Suporte Humano Real.
+                A Arte de Viajar Bem: Excelência, Conforto e Suporte Exclusivo.
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
-                Sua próxima viagem começa aqui. Compare centenas de companhias aéreas, garanta os voos mais baratos e conte com a Michels Travel para cuidar de cada detalhe com segurança e exclusividade.
+                Descubra o novo padrão em viagens. Mais do que reservas, oferecemos uma curadoria inteligente e um serviço de concierge focado em quem exige o melhor. Cuidamos de cada detalhe para que sua única preocupação seja aproveitar o destino.
               </p>
 
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -118,7 +118,7 @@ export default function Home() {
                   className="rounded-full bg-[#2563eb] px-7 py-6 text-base font-bold text-white shadow-[0_18px_35px_-18px_rgba(37,99,235,0.75)] hover:bg-[#1d4ed8]"
                   onClick={() => window.scrollTo({ top: 620, behavior: "smooth" })}
                 >
-                  Buscar passagens
+                  Explorar Destinos
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button
@@ -132,7 +132,7 @@ export default function Home() {
                   }
                 >
                   <MessageCircle className="mr-2 h-5 w-5" />
-                  Falar com a Mia
+                  Consultoria Privada
                 </Button>
               </div>
 
@@ -156,16 +156,16 @@ export default function Home() {
                   <img src={airplaneDestination} alt="Michels Travel" className="h-full w-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#07132d] via-[#07132d]/25 to-transparent" />
                   <div className="absolute left-5 top-5 rounded-full border border-white/[0.15] bg-[#07132d]/[0.70] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur-md">
-                    Suporte VIP 24h
+                    Concierge 24h
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
                     <div className="rounded-[26px] border border-white/[0.15] bg-white/10 p-5 backdrop-blur-xl">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-200/80">Sua Agência de Viagens</p>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-200/80">Experiência Sob Medida</p>
                       <h2 className="mt-2 text-2xl font-extrabold leading-tight text-white">
-                        Do planejamento ao embarque, nunca deixamos você voar sozinho.
+                        Assessoramos cada passo da sua jornada com uma presença invisível e contínua.
                       </h2>
                       <p className="mt-3 text-sm leading-6 text-white/80">
-                        Emissão imediata de passagens e atendimento dedicado para resolver impasses de malhas aéreas ou cancelamentos a qualquer hora do dia.
+                        Tranquilidade em todo o processo: desde a curadoria impecável da rota até nosso suporte proativo, antecipando imprevistos e ajustando planos antes que eles o afetem.
                       </p>
                     </div>
                   </div>
@@ -215,15 +215,15 @@ export default function Home() {
           <Card className="overflow-hidden rounded-[28px] border border-amber-200 bg-[linear-gradient(135deg,#fffaf1_0%,#fff3db_100%)] shadow-[0_30px_90px_-46px_rgba(180,83,9,0.35)]">
             <CardContent className="grid gap-6 p-6 md:grid-cols-[1.05fr_0.95fr] md:p-8">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-700">Atendimento senior</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-700">Design de Jornada</p>
                 <h2 className="mt-3 text-3xl font-extrabold leading-tight text-slate-950">
-                  Atendimento especializado: sem correria, sem complicação.
+                  Tranquilidade absoluta: ritmamos sua viagem ao seu tempo.
                 </h2>
                 <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
-                  Preparamos um ambiente simplificado e claro. Ideal para passageiros que preferem mais tranquilidade, com suporte humano para guiar cada passo da reserva, focando apenas no essencial da sua passagem.
+                  Desenvolvemos uma curadoria especial para nossos viajantes mais exigentes. Nossa tecnologia se funde ao cuidado humano para guiar de perto cada aspecto da reserva, sem sobressaltos e com absoluta clareza passo a passo.
                 </p>
                 <Button onClick={() => setLocation("/senior")} className="mt-6 rounded-full bg-slate-950 px-6 text-sm font-bold text-white hover:bg-slate-800">
-                  Abrir caminho senior
+                  Explorar Experiência
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
@@ -274,12 +274,12 @@ export default function Home() {
           <div className="rounded-[32px] border border-slate-200 bg-[#07132d] p-6 text-white shadow-[0_36px_100px_-52px_rgba(2,6,23,0.95)] md:p-8">
             <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div className="max-w-2xl">
-                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#b8ccff]">Jornada de compra</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#b8ccff]">A Experiência Michels</p>
                 <h2 className="mt-3 text-3xl font-extrabold leading-tight md:text-4xl">
-                  Como garantimos a melhor experiência de viagem para você.
+                  Onde a sofisticação de um serviço impecável cruza com rotas inteligentes.
                 </h2>
                 <p className="mt-4 text-sm leading-7 text-[#c7d7f7] sm:text-base">
-                  Um processo transparente e ágil, focado em trazer clareza para emissões e proteção absoluta no seu pagamento, blindando você contra surpresas desagradáveis e imprevistos de embarque.
+                  Elevamos a sua jornada a outro patamar de qualidade. Operamos com máxima fluidez para trazer clareza, proteção absoluta da transação e isenção total de preocupações ou surpresas.
                 </p>
               </div>
             </div>
