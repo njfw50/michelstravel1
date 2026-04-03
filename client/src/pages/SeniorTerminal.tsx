@@ -74,21 +74,24 @@ export default function SeniorTerminal() {
         
         {step === "auth" && (
           <div className="w-full max-w-2xl animate-in fade-in zoom-in duration-500">
-            <h2 className="text-5xl font-bold text-white mb-12 text-center leading-tight">
-              Para começar, qual o número do seu telefone?
+            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6 text-center leading-tight">
+              Para começar, digite seu telefone com o código do país:
             </h2>
+            <p className="text-xl text-blue-400 font-medium mb-10 text-center">
+              Exemplos: +1 (EUA), +55 (Brasil), +351 (Portugal)
+            </p>
             <div className="flex flex-col gap-6">
               <Input 
                 type="tel"
-                placeholder="(00) 00000-0000"
+                placeholder="+1 (555) 555-5555"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="h-32 text-6xl text-center rounded-[32px] border-4 border-blue-500 bg-slate-800 text-white placeholder:text-slate-500"
+                className="h-32 text-4xl sm:text-6xl text-center rounded-[32px] border-4 border-blue-500 bg-slate-800 text-white placeholder:text-slate-500 transition-all focus:border-blue-400"
                 autoFocus
               />
               <Button 
                 onClick={handleLogin}
-                disabled={phoneNumber.length < 5}
+                disabled={phoneNumber.length < 7}
                 className="h-24 text-3xl font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-full mt-8 shadow-[0_0_40px_rgba(37,99,235,0.3)] transition-all"
               >
                 Entrar <ArrowRight className="ml-4 h-8 w-8" />
