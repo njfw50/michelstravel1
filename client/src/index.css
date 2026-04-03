@@ -52,8 +52,7 @@
     @apply text-foreground antialiased;
     font-family: var(--font-body);
     overflow-x: hidden;
-    /* Fundo azul degradê do logo */
-    background: linear-gradient(180deg, #1a2b6d 0%, #0d1635 100%);
+    background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
     min-height: 100vh;
   }
   h1, h2, h3, h4, h5, h6 {
@@ -65,8 +64,8 @@
 /* ─── Scrollbar ─────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { @apply bg-white/20 rounded-full; }
-::-webkit-scrollbar-thumb:hover { @apply bg-white/30; }
+::-webkit-scrollbar-thumb { @apply bg-slate-300 rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-slate-400; }
 
 /* ─── Glass utilities ────────────────────────────────────── */
 .glass {
@@ -152,18 +151,18 @@
   align-items: center;
   justify-content: center;
   border-radius: 1.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 16px 36px rgba(2, 6, 23, 0.34);
   overflow: hidden;
   transition: all 0.3s ease;
 }
 
 .brand-mark-shell:hover {
   transform: translateY(-2px);
-  border-color: rgba(255, 127, 80, 0.5);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 127, 80, 0.45);
+  box-shadow: 0 20px 44px rgba(2, 6, 23, 0.42);
 }
 
 .brand-mark-shell--header {

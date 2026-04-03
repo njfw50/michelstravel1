@@ -1,41 +1,25 @@
 import { FlightSearchForm } from "@/components/FlightSearchForm";
 import SeniorCardImage from "@/components/SeniorCardImage";
-import { usePopularFlights, useAirlines, useFeaturedAirports, useFeaturedDeals, type PublicFeaturedDeal } from "@/hooks/use-flights";
-import { FlightBoard } from "@/components/FlightBoard";
 import AppLaunchPromo from "@/components/AppLaunchPromo";
+import { FlightBoard } from "@/components/FlightBoard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldCheck, Zap, Globe, ArrowRight, MapPin, Plane, Search, CreditCard, Ticket, Star, Clock, Headphones, Users, TrendingUp, ChevronRight, Sparkles, MessageCircle, CheckCircle2, Languages, UserCheck, HeartHandshake } from "lucide-react";
-import { motion } from "framer-motion";
+import { useAirlines, useFeaturedAirports, useFeaturedDeals, type PublicFeaturedDeal } from "@/hooks/use-flights";
+import { ArrowRight, CheckCircle2, CreditCard, Globe, MessageCircle, Plane, Search, Sparkles, Ticket, TrendingUp } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { useI18n } from "@/lib/i18n";
 import { SEO } from "@/components/SEO";
-import {
-  AGENCY_WHATSAPP_DISPLAY,
-  buildWhatsAppHref,
-  buildWhatsAppMessage,
-} from "@/lib/contact";
+import { AGENCY_WHATSAPP_DISPLAY, buildWhatsAppHref, buildWhatsAppMessage } from "@/lib/contact";
 import { openChatbotAssistant } from "@/lib/chatbot";
-
 import airplaneDestination from "@/assets/images/airplane-destination.jpg";
 import airplaneLightHero from "@/assets/images/airplane-light-hero.png";
-
 import imgNewYork from "@/assets/images/destinations/new-york.jpg";
 import imgLondon from "@/assets/images/destinations/london.jpg";
 import imgParis from "@/assets/images/destinations/paris.jpg";
 import imgMiami from "@/assets/images/destinations/miami.jpg";
-import imgLosAngeles from "@/assets/images/destinations/los-angeles.jpg";
-import imgDubai from "@/assets/images/destinations/dubai.jpg";
-import imgTokyo from "@/assets/images/destinations/tokyo.jpg";
-import imgBarcelona from "@/assets/images/destinations/barcelona.jpg";
 import imgSaoPaulo from "@/assets/images/destinations/sao-paulo.jpg";
-import imgRome from "@/assets/images/destinations/rome.jpg";
 import imgLisbon from "@/assets/images/destinations/lisbon.jpg";
-import imgCancun from "@/assets/images/destinations/cancun.jpg";
 import imgOrlando from "@/assets/images/destinations/orlando.jpg";
-import imgSanFrancisco from "@/assets/images/destinations/san-francisco.jpg";
-import imgChicago from "@/assets/images/destinations/chicago.jpg";
 
 const DESTINATION_IMAGES: Record<string, string> = {
   JFK: imgNewYork,
@@ -43,134 +27,35 @@ const DESTINATION_IMAGES: Record<string, string> = {
   LHR: imgLondon,
   CDG: imgParis,
   MIA: imgMiami,
-  LAX: imgLosAngeles,
-  DXB: imgDubai,
-  NRT: imgTokyo,
-  BCN: imgBarcelona,
   GRU: imgSaoPaulo,
-  FCO: imgRome,
   LIS: imgLisbon,
-  CUN: imgCancun,
   MCO: imgOrlando,
-  SFO: imgSanFrancisco,
-  ORD: imgChicago,
 };
-
-const COUNTRY_NAMES: Record<string, string> = {
-  US: "United States", BR: "Brazil", GB: "United Kingdom", FR: "France", ES: "Spain",
-  MX: "Mexico", AE: "United Arab Emirates", JP: "Japan", IT: "Italy", PT: "Portugal",
-  DE: "Germany", CA: "Canada", AU: "Australia", AR: "Argentina", CL: "Chile",
-  CO: "Colombia", PE: "Peru", NL: "Netherlands", CH: "Switzerland", SE: "Sweden",
-  NO: "Norway", DK: "Denmark", IE: "Ireland", AT: "Austria", BE: "Belgium",
-  GR: "Greece", TR: "Turkey", TH: "Thailand", SG: "Singapore", KR: "South Korea",
-  IN: "India", CN: "China", HK: "Hong Kong", EG: "Egypt", ZA: "South Africa",
-  IL: "Israel", QA: "Qatar", SA: "Saudi Arabia", MY: "Malaysia", ID: "Indonesia",
-  PH: "Philippines", NZ: "New Zealand", CZ: "Czech Republic", PL: "Poland",
-};
-
-function countryCodeToName(code: string): string {
-  return COUNTRY_NAMES[code] || code;
-}
 
 export default function Home() {
-  const { data: popularFlights, isLoading: popularLoading } = usePopularFlights();
-  const { data: airlines, isLoading: airlinesLoading } = useAirlines(40);
-  const { data: airports, isLoading: airportsLoading } = useFeaturedAirports();
+  const { data: airlines } = useAirlines(14);
+  const { data: airports } = useFeaturedAirports();
   const { data: featuredDeals, isLoading: dealsLoading } = useFeaturedDeals();
-  const [_, setLocation] = useLocation();
-  const { t, language } = useI18n();
+  const [, setLocation] = useLocation();
 
-  const topAirlines = airlines?.filter(a => a.logoSymbolUrl && a.iataCode) || [];
   const airlineCount = airlines?.length || 0;
   const airportCount = airports?.length || 0;
-  const catalogDeals = featuredDeals?.slice(0, 6) || [];
-  const locale = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
-  const easyModeContent = language === "en"
-      ? {
-        badge: "Senior support",
-        title: "Prefer to book with more time and less pressure?",
-        description: `If you want larger text, simpler steps, and Mia guiding you calmly, open the senior path. WhatsApp at ${AGENCY_WHATSAPP_DISPLAY} stays available when you want a human.`,
-        primary: "Open Senior Support",
-        secondary: "Talk to Mia",
-        features: [
-          "Larger text and clearer buttons",
-          "Less information on each step",
-          "Mia in the site, human backup on WhatsApp",
-        ],
-      }
-    : language === "es"
-      ? {
-          badge: "Atención senior",
-          title: "¿Prefiere reservar con más calma y menos presión?",
-          description: `Si quiere texto más grande, pasos más simples y a Mia guiando con calma, abra la ruta senior. WhatsApp al ${AGENCY_WHATSAPP_DISPLAY} sigue disponible cuando quiera un humano.`,
-          primary: "Abrir atención senior",
-          secondary: "Hablar con Mia",
-          features: [
-            "Texto más grande y botones más claros",
-            "Menos información en cada paso",
-            "Mia en el sitio y respaldo humano por WhatsApp",
-          ],
-        }
-      : {
-          badge: "Atendimento senior",
-          title: "Prefere reservar com mais calma e menos pressão?",
-          description: `Se voce quer letras maiores, etapas mais simples e a Mia guiando com calma, abra o caminho senior. O WhatsApp ${AGENCY_WHATSAPP_DISPLAY} continua disponivel quando voce quiser um humano.`,
-          primary: "Abrir Atendimento Senior",
-          secondary: "Falar com a Mia",
-          features: [
-            "Letras maiores e botões mais claros",
-            "Menos informação em cada etapa",
-            "Mia no site e apoio humano pelo WhatsApp",
-          ],
-        };
-
-  const newarkContent = language === "en"
-    ? {
-        title: "Looking for a travel agency in Ironbound, Newark?",
-        description: "If you live in Newark or Ironbound and want flights to Brazil with support in Portuguese, start here to compare options and continue your booking with more clarity.",
-        primary: "Newark support",
-        secondary: "Newark to Brazil",
-        contact: "Talk on WhatsApp",
-      }
-    : language === "es"
-      ? {
-          title: "¿Busca una agencia de viajes en Ironbound, Newark?",
-          description: "Si vive en Newark o Ironbound y quiere vuelos a Brasil con apoyo en portugués, entre por esta página para comparar opciones y continuar su reserva con más claridad.",
-          primary: "Atención en Newark",
-          secondary: "Vuelos Newark-Brasil",
-          contact: "Hablar por WhatsApp",
-        }
-      : {
-          title: "Procurando agência de viagens em Ironbound, Newark?",
-          description: "Se você mora em Newark ou Ironbound e quer voos para o Brasil com apoio em português, entre por esta página e veja o caminho mais direto para pesquisar, comparar e continuar sua reserva.",
-          primary: "Atendimento em Newark",
-          secondary: "Voos Newark-Brasil",
-          contact: "Falar no WhatsApp",
-        };
+  const catalogDeals = featuredDeals?.slice(0, 3) || [];
+  const topAirlines = (airlines || []).filter((airline) => airline.logoSymbolUrl && airline.iataCode).slice(0, 8);
+  const airportSpots = (airports || []).slice(0, 4);
   const newarkWhatsAppHref = buildWhatsAppHref(
     buildWhatsAppMessage({
-      language,
-      topic: language === "en" ? "Newark travel help" : language === "es" ? "Ayuda de viajes en Newark" : "Ajuda de viagem em Newark",
-      details: [language === "en" ? "I want help with flights leaving from Newark." : language === "es" ? "Quiero ayuda con vuelos saliendo de Newark." : "Quero ajuda com voos saindo de Newark."],
+      language: "pt",
+      topic: "Ajuda de viagem em Newark",
+      details: ["Quero ajuda com voos saindo de Newark."],
     }),
   );
-
-  const formatDealDate = (date: string) => {
-    if (!date) return "";
-    const parsed = new Date(`${date}T12:00:00`);
-    if (Number.isNaN(parsed.getTime())) return date;
-
-    return new Intl.DateTimeFormat(locale, {
-      day: "2-digit",
-      month: "short",
-    }).format(parsed);
-  };
 
   const formatDealPrice = (value: number | null, currency: string) => {
     if (value === null || Number.isNaN(value)) return null;
 
     try {
-      return new Intl.NumberFormat(locale, {
+      return new Intl.NumberFormat("pt-BR", {
         style: "currency",
         currency: currency || "USD",
         maximumFractionDigits: 2,
@@ -181,16 +66,10 @@ export default function Home() {
   };
 
   const openDealSearch = (deal: PublicFeaturedDeal) => {
-    const departureDate = deal.departure_date || (() => {
-      const fallback = new Date();
-      fallback.setDate(fallback.getDate() + 14);
-      return fallback.toISOString().split("T")[0];
-    })();
-
     const searchParams = new URLSearchParams({
       origin: deal.origin,
       destination: deal.destination,
-      date: departureDate,
+      date: deal.departure_date,
       passengers: "1",
       adults: "1",
       children: "0",
@@ -206,781 +85,428 @@ export default function Home() {
     setLocation(`/search?${searchParams.toString()}`);
   };
 
-  const openSeniorAssistant = () => {
-    openChatbotAssistant({
-      message:
-        language === "en"
-          ? "Mia, help me choose flights with more calm and less pressure."
-          : language === "es"
-            ? "Mia, ayudeme a elegir vuelos con mas calma y menos presion."
-            : "Mia, me ajude a escolher voos com mais calma e menos pressao.",
-      autoSend: true,
-    });
-  };
-
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="bg-[#f4f7ff] text-slate-900">
       <SEO
         title="Agência de viagens em Newark, NJ"
         description="Atendimento em português para passagens aéreas em Newark, NJ, com foco em voos para o Brasil, suporte humano e ajuda clara para clientes de Ironbound e região."
         path="/"
       />
-      <section className="relative min-h-[78vh] md:min-h-[90vh] flex items-center justify-center overflow-hidden bg-background">
-        <div className="absolute inset-0 select-none">
-          <img 
-            src={airplaneLightHero}
-            alt="Airplane flying through bright sky"
-            className="w-full h-full object-cover scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/40 to-background" />
+
+      <section className="relative overflow-hidden px-0 pb-14 pt-6 md:pt-10">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute left-[-10%] top-[-7rem] h-[28rem] w-[28rem] rounded-full bg-blue-300/20 blur-3xl" />
+          <div className="absolute right-[-6%] top-[2rem] h-[22rem] w-[22rem] rounded-full bg-cyan-200/25 blur-3xl" />
         </div>
 
-        <div className="container mx-auto px-4 md:px-6 relative z-10">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="text-center mb-10 md:mb-16 max-w-4xl mx-auto"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/25 rounded-full px-4 py-2 mb-6 sm:mb-8 shadow-sm"
-            >
-              <Sparkles className="h-3.5 w-3.5 text-blue-300" />
-              <span className="text-[11px] font-semibold text-white/90 uppercase tracking-[0.15em]">{t("home.badge")}</span>
-            </motion.div>
+        <div className="container relative z-10 mx-auto px-4 md:px-6">
+          <div className="grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr]">
+            <div className="max-w-3xl">
+              <Badge className="rounded-full border border-blue-200 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700 shadow-sm">
+                <Sparkles className="mr-2 h-3.5 w-3.5" />
+                Plataforma comercial Michels Travel
+              </Badge>
+              <h1 className="mt-6 text-[2.8rem] font-extrabold leading-[0.94] tracking-tight text-slate-950 sm:text-5xl md:text-6xl lg:text-[4.65rem]">
+                O site agora precisa vender com clareza, ritmo e presença comercial.
+              </h1>
+              <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
+                Esta nova home abre com uma estrutura mais forte: pesquisa real, apoio humano, rota senior, app e continuidade de compra no mesmo ambiente visual.
+              </p>
 
-            <h1 className="text-[2.75rem] sm:text-5xl md:text-7xl lg:text-8xl font-display font-extrabold text-white mb-5 md:mb-6 leading-[0.93] tracking-tight drop-shadow-[0_4px_24px_rgba(0,0,0,0.35)]" data-testid="text-hero-title">
-              {t("home.title.1")} <br/>
-              <span className="text-blue-300 drop-shadow-[0_2px_12px_rgba(59,130,246,0.5)]">{t("home.title.2")}</span>
-            </h1>
-            <p className="text-base sm:text-lg md:text-xl text-white/80 max-w-2xl mx-auto font-medium leading-relaxed" data-testid="text-hero-subtitle">
-              {t("home.subtitle")}
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-6xl mx-auto pb-10 md:pb-16"
-          >
-            <FlightSearchForm />
-          </motion.div>
-        </div>
-
-        <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-[hsl(220,20%,97%)] to-transparent pointer-events-none" />
-      </section>
-
-      <section className="relative mt-4 md:mt-6 z-20 pb-8">
-        <div className="container mx-auto px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-white rounded-[24px] p-4 sm:p-6 md:p-8 shadow-[0_4px_32px_-8px_hsl(213_90%_50%/0.12)] border border-gray-200/80"
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 md:gap-8">
-              {[
-                { value: airlineCount > 0 ? `${airlineCount}+` : "500+", labelKey: "home.stats.airlines", icon: Plane, color: "text-blue-500", bg: "bg-blue-50" },
-                { value: airportCount > 0 ? `${airportCount.toLocaleString()}+` : "3,000+", labelKey: "home.stats.destinations", icon: Globe, color: "text-blue-600", bg: "bg-blue-50" },
-                { value: "24/7", labelKey: "home.stats.support", icon: Headphones, color: "text-emerald-500", bg: "bg-emerald-50" },
-                { value: "100%", labelKey: "home.stats.secure", icon: ShieldCheck, color: "text-blue-500", bg: "bg-blue-50" },
-              ].map((stat, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.08 }}
-                  className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-4 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0"
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <Button
+                  className="rounded-full bg-[#2563eb] px-7 py-6 text-base font-bold text-white shadow-[0_18px_35px_-18px_rgba(37,99,235,0.75)] hover:bg-[#1d4ed8]"
+                  onClick={() => window.scrollTo({ top: 620, behavior: "smooth" })}
                 >
-                  <div className={`h-11 w-11 md:h-12 md:w-12 rounded-xl ${stat.bg} border border-gray-100 flex items-center justify-center ${stat.color} flex-shrink-0`}>
-                    <stat.icon className="h-5 w-5" />
+                  Buscar passagens
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="rounded-full border-slate-300 bg-white px-7 py-6 text-base font-bold text-slate-800 shadow-sm hover:bg-slate-50"
+                  onClick={() =>
+                    openChatbotAssistant({
+                      message: "Mia, me ajude a comecar esta viagem com as opcoes de voo certas.",
+                      autoSend: true,
+                    })
+                  }
+                >
+                  <MessageCircle className="mr-2 h-5 w-5" />
+                  Falar com a Mia
+                </Button>
+              </div>
+
+              <div className="mt-6 flex flex-wrap gap-2.5">
+                {[
+                  "Tarifas ao vivo",
+                  "Atendimento em portugues, ingles e espanhol",
+                  "Fluxo de compra com acompanhamento real",
+                ].map((item) => (
+                  <span key={item} className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="overflow-hidden rounded-[32px] border border-blue-100 bg-white shadow-[0_34px_80px_-38px_rgba(15,23,42,0.35)]">
+                <div className="relative h-[330px] overflow-hidden md:h-[380px]">
+                  <img src={airplaneDestination} alt="Michels Travel" className="h-full w-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#07132d] via-[#07132d]/25 to-transparent" />
+                  <div className="absolute left-5 top-5 rounded-full border border-white/15 bg-[#07132d]/70 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur-md">
+                    Apoio prioritario
                   </div>
-                  <div>
-                    <span className="text-xl sm:text-2xl md:text-3xl font-extrabold font-display text-gray-900 block leading-none">{stat.value}</span>
-                    <span className="text-[10px] sm:text-[11px] text-gray-400 mt-0.5 uppercase tracking-[0.15em] font-semibold block">{t(stat.labelKey)}</span>
+                  <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
+                    <div className="rounded-[26px] border border-white/15 bg-white/10 p-5 backdrop-blur-xl">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-200/80">Michels Travel</p>
+                      <h2 className="mt-2 text-2xl font-extrabold leading-tight text-white">
+                        Uma unica porta de entrada para voos, senior, app e pos-venda.
+                      </h2>
+                      <p className="mt-3 text-sm leading-6 text-white/80">
+                        A estrutura agora precisa ser clara: captacao, reserva, suporte e retencao dentro da mesma interface.
+                      </p>
+                    </div>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      <section className="pb-10 md:pb-14 section-light">
-        <div className="container mx-auto px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="relative overflow-hidden rounded-[26px] md:rounded-[32px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_55%,rgba(219,234,254,0.95))] p-5 sm:p-6 md:p-10 shadow-[0_20px_80px_-36px_rgba(37,99,235,0.35)]"
-          >
-            <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-200/50 blur-3xl" />
-            <div className="absolute bottom-0 left-1/3 h-32 w-32 rounded-full bg-emerald-100/70 blur-3xl" />
-            <div className="relative grid grid-cols-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,360px)] gap-6 md:gap-8 items-center">
-              <div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/90 px-3.5 py-2 text-[11px] sm:px-4 sm:text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
-                  <HeartHandshake className="h-4 w-4" />
-                  {easyModeContent.badge}
-                </span>
-                <h2 className="mt-5 text-[2rem] sm:text-3xl md:text-5xl font-display font-extrabold leading-tight text-slate-950">
-                  {easyModeContent.title}
-                </h2>
-                <p className="mt-4 max-w-2xl text-sm sm:text-base md:text-lg leading-relaxed text-slate-600">
-                  {easyModeContent.description}
-                </p>
-
-                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                  {easyModeContent.features.map((feature) => (
-                    <div key={feature} className="rounded-2xl border border-white/80 bg-white/85 px-4 py-4 text-sm font-semibold text-slate-700 shadow-sm">
-                      {feature}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-7 flex flex-col sm:flex-row sm:flex-wrap gap-3">
-                  <Button
-                    onClick={() => setLocation("/senior")}
-                    className="w-full sm:w-auto rounded-full px-6 py-5 sm:px-7 sm:py-6 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
-                    data-testid="button-open-easy-mode"
-                  >
-                    {easyModeContent.primary}
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={openSeniorAssistant}
-                    className="w-full sm:w-auto rounded-full px-6 py-5 sm:px-7 sm:py-6 text-base font-bold border-slate-300 bg-white/90 text-slate-800"
-                  >
-                    <MessageCircle className="mr-2 h-5 w-5" />
-                    {easyModeContent.secondary}
-                  </Button>
                 </div>
               </div>
 
-              <div className="rounded-[24px] md:rounded-[28px] overflow-hidden shadow-[0_24px_80px_-40px_rgba(15,23,42,0.9)] border border-slate-200">
-                <SeniorCardImage />
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      <section className="pb-6 md:pb-10">
-        <div className="container mx-auto px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="overflow-hidden rounded-[26px] md:rounded-[32px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_58%,rgba(219,234,254,0.95))] p-5 sm:p-6 shadow-[0_24px_70px_-44px_rgba(37,99,235,0.42)] md:p-9"
-          >
-            <div className="max-w-4xl">
-              <div className="max-w-3xl">
-                <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-blue-700">
-                  <MapPin className="h-3.5 w-3.5" />
-                  Newark / Ironbound
-                </span>
-                <h2 className="mt-4 text-[2rem] sm:text-3xl font-extrabold text-slate-950 md:text-4xl">
-                  {newarkContent.title}
-                </h2>
-                <p className="mt-4 max-w-2xl text-sm sm:text-base leading-7 text-slate-600">
-                  {newarkContent.description}
-                </p>
-
-                <div className="mt-6 flex flex-col sm:flex-row sm:flex-wrap gap-3">
-                  <Link href="/agencia-de-viagens-ironbound-newark">
-                    <Button className="w-full sm:w-auto rounded-full bg-blue-600 px-6 py-5 sm:py-6 text-base font-bold text-white hover:bg-blue-700">
-                      {newarkContent.primary} <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link href="/passagens-para-o-brasil-saindo-de-newark">
-                    <Button variant="outline" className="w-full sm:w-auto rounded-full px-6 py-5 sm:py-6 text-base font-bold border-blue-200 bg-white/90 text-slate-800">
-                      {newarkContent.secondary} <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <a href={newarkWhatsAppHref} target="_blank" rel="noreferrer">
-                    <Button variant="outline" className="w-full sm:w-auto rounded-full px-6 py-5 sm:py-6 text-base font-bold">
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      {newarkContent.contact}
-                    </Button>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      <AppLaunchPromo mode="all" source="home" />
-
-      <section className="py-16 md:py-32 section-light">
-        <div className="container mx-auto px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12 md:mb-16"
-          >
-            <span className="section-eyebrow">{t("home.how.title")}</span>
-            <h2 className="text-[1.9rem] sm:text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-4">{t("home.how.subtitle")}</h2>
-          </motion.div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
-            {[
-              { icon: Search, step: "01", titleKey: "home.how.step1_title", descKey: "home.how.step1_desc", color: "bg-blue-500" },
-              { icon: CreditCard, step: "02", titleKey: "home.how.step2_title", descKey: "home.how.step2_desc", color: "bg-blue-600" },
-              { icon: Ticket, step: "03", titleKey: "home.how.step3_title", descKey: "home.how.step3_desc", color: "bg-emerald-500" },
-            ].map((item, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.12 }}
-                className="step-card group"
-              >
-                <span className="text-[11px] font-bold text-blue-500 tracking-[0.3em] mb-6 block">{item.step}</span>
-                <div className={`h-16 w-16 rounded-2xl ${item.color} flex items-center justify-center mb-6 mx-auto shadow-md shadow-blue-500/20`}>
-                  <item.icon className="h-7 w-7 text-white" />
-                </div>
-                <h3 className="font-bold text-lg mb-3 text-gray-900">{t(item.titleKey)}</h3>
-                <p className="text-gray-500 leading-relaxed text-sm">{t(item.descKey)}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 md:py-32 section-white">
-        <div className="container mx-auto px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12 md:mb-16"
-          >
-            <span className="section-eyebrow">{t("home.trust.title")}</span>
-            <h2 className="text-[1.9rem] sm:text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-4">{t("home.trust.subtitle")}</h2>
-          </motion.div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
-            {[
-              { icon: ShieldCheck, titleKey: "home.trust.secure", descKey: "home.trust.secure_desc", color: "bg-emerald-500" },
-              { icon: Zap, titleKey: "home.trust.instant", descKey: "home.trust.instant_desc", color: "bg-blue-500" },
-              { icon: Globe, titleKey: "home.trust.support", descKey: "home.trust.support_desc", color: "bg-blue-600" }
-            ].map((item, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="guide-card p-6 sm:p-8 md:p-10"
-              >
-                <div className={`h-14 w-14 rounded-xl ${item.color} flex items-center justify-center mb-6 shadow-md shadow-blue-500/20`}>
-                  <item.icon className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="font-bold text-xl mb-3 text-gray-900">{t(item.titleKey)}</h3>
-                <p className="text-gray-500 leading-relaxed">{t(item.descKey)}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {topAirlines.length > 0 && (
-        <section className="py-16 section-light border-y border-gray-200/80">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="text-center mb-10">
-              <span className="section-eyebrow">{t("home.airlines")}</span>
-              <p className="text-gray-500 text-sm">{t("home.airlines_sub")}</p>
-            </div>
-            
-            <div className="relative overflow-hidden">
-              <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
-              <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
-              <div className="flex animate-marquee gap-4 py-4">
-                {[...topAirlines, ...topAirlines].map((airline, i) => (
-                  <div
-                    key={`${airline.id}-${i}`}
-                    className="flex-shrink-0 flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-5 py-3 transition-all hover:shadow-md hover:border-blue-200"
-                    data-testid={`airline-card-${airline.iataCode}`}
-                  >
-                    <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
-                      {airline.logoSymbolUrl ? (
-                        <img src={airline.logoSymbolUrl} alt={airline.name} className="h-5 w-5 object-contain" />
-                      ) : (
-                        <Plane className="h-4 w-4 text-gray-400" />
-                      )}
+              <div className="grid gap-4 sm:grid-cols-3">
+                {[
+                  { label: "Companhias", value: airlineCount > 0 ? `${airlineCount}+` : "500+", icon: Plane },
+                  { label: "Aeroportos", value: airportCount > 0 ? `${airportCount}+` : "3000+", icon: Globe },
+                  { label: "Busca ativa", value: "24/7", icon: TrendingUp },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_22px_60px_-40px_rgba(15,23,42,0.3)]">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                      <item.icon className="h-5 w-5" />
                     </div>
-                    <div>
-                      <span className="text-sm font-semibold text-gray-900 whitespace-nowrap">{airline.name}</span>
-                      {airline.iataCode && (
-                        <span className="text-xs text-blue-500 ml-2 font-mono">({airline.iataCode})</span>
-                      )}
-                    </div>
+                    <div className="mt-5 text-3xl font-extrabold text-slate-950">{item.value}</div>
+                    <div className="mt-1 text-sm font-semibold text-slate-500">{item.label}</div>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-        </section>
-      )}
 
-      {airports && airports.length > 0 && (
-        <section className="py-16 md:py-32 section-white" data-testid="section-destinations">
-          <div className="container mx-auto px-4 md:px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="flex justify-between items-end mb-12 flex-wrap gap-4"
-            >
+          <div className="mt-10 rounded-[32px] border border-slate-200 bg-white p-5 shadow-[0_30px_80px_-44px_rgba(15,23,42,0.35)] sm:p-6 md:p-8">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <span className="section-eyebrow">{t("home.popular.title")}</span>
-                <h2 className="text-[1.9rem] sm:text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-2">{t("home.popular.subtitle")}</h2>
+                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-blue-700">Buscar voos ao vivo</p>
+                <h2 className="mt-2 text-2xl font-extrabold text-slate-950 sm:text-3xl">Michels Travel</h2>
+                <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
+                  Pesquise ida, ida e volta ou multi destino e siga para o mesmo fluxo comercial da agencia.
+                </p>
               </div>
-            </motion.div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {airports.slice(0, 8).map((airport, i) => {
-                const destImage = airport.iataCode ? DESTINATION_IMAGES[airport.iataCode] : null;
-                return (
-                  <motion.div
-                    key={airport.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.05 }}
-                  >
-                    <div
-                      className="group relative overflow-hidden rounded-2xl cursor-pointer h-72 bg-gray-100 border border-gray-200 hover:shadow-xl transition-all duration-300"
-                      onClick={() => {
-                        if (airport.iataCode) {
-                          const d = new Date();
-                          d.setDate(d.getDate() + 14);
-                          const dateStr = d.toISOString().split("T")[0];
-                          setLocation(`/search?origin=EWR&destination=${airport.iataCode}&date=${dateStr}&passengers=1&adults=1&children=0&infants=0&cabinClass=economy`);
-                        }
-                      }}
-                      data-testid={`destination-card-${airport.iataCode}`}
-                    >
-                      {destImage ? (
-                        <img 
-                          src={destImage} 
-                          alt={airport.cityName || airport.name}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-blue-200 via-blue-100 to-transparent" />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                      
-                      <div className="absolute top-4 right-4">
-                        <span className="bg-white/90 backdrop-blur-md text-gray-900 text-xs font-mono font-bold px-3 py-1.5 rounded-lg border border-white/20">
-                          {airport.iataCode}
-                        </span>
-                      </div>
-
-                      <div className="absolute bottom-0 left-0 right-0 p-5">
-                        <div className="flex items-center gap-1.5 mb-2">
-                          <MapPin className="h-3 w-3 text-blue-300" />
-                          <span className="text-[11px] text-white/70 truncate font-medium">{countryCodeToName(airport.countryName || "")}</span>
-                        </div>
-                        <h3 className="font-bold text-xl text-white leading-tight truncate mb-3">
-                          {airport.cityName || airport.name}
-                        </h3>
-                        <div className="flex items-center gap-2 text-blue-300 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-2 group-hover:translate-y-0">
-                          {t("home.popular.check_prices")} <ArrowRight className="h-3.5 w-3.5" />
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
+              <div className="rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
+                Disponibilidade validada antes do pagamento
+              </div>
+            </div>
+            <div className="mt-6">
+              <FlightSearchForm />
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
-      <section className="py-16 md:py-32 section-light" data-testid="section-featured-catalog">
-        <div className="container mx-auto px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex justify-between items-end mb-12 flex-wrap gap-4"
-          >
-            <div>
-              <span className="section-eyebrow">{t("home.catalog.title")}</span>
-              <h2 className="text-[1.9rem] sm:text-3xl md:text-5xl font-extrabold font-display text-gray-900 mb-2">
-                {t("home.catalog.subtitle")}
+      <section className="pb-12 md:pb-16">
+        <div className="container mx-auto grid gap-6 px-4 md:grid-cols-2 md:px-6">
+          <Card className="overflow-hidden rounded-[28px] border border-amber-200 bg-[linear-gradient(135deg,#fffaf1_0%,#fff3db_100%)] shadow-[0_30px_90px_-46px_rgba(180,83,9,0.35)]">
+            <CardContent className="grid gap-6 p-6 md:grid-cols-[1.05fr_0.95fr] md:p-8">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-700">Atendimento senior</p>
+                <h2 className="mt-3 text-3xl font-extrabold leading-tight text-slate-950">
+                  O atendimento senior continua aberto sem separar a marca.
+                </h2>
+                <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
+                  Acoes maiores, guia mais calma e menos pressao para quem quer mais tempo sem perder o mesmo fluxo de reserva.
+                </p>
+                <Button onClick={() => setLocation("/senior")} className="mt-6 rounded-full bg-slate-950 px-6 text-sm font-bold text-white hover:bg-slate-800">
+                  Abrir caminho senior
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+              <SeniorCardImage />
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden rounded-[28px] border border-blue-200 bg-[linear-gradient(135deg,#ffffff_0%,#edf5ff_100%)] shadow-[0_30px_90px_-46px_rgba(37,99,235,0.35)]">
+            <CardContent className="p-6 md:p-8">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Newark / Ironbound</p>
+              <h2 className="mt-3 text-3xl font-extrabold leading-tight text-slate-950">
+                Suporte local para Newark, Ironbound e rotas para o Brasil.
               </h2>
+              <p className="mt-4 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
+                Use o mesmo fluxo digital com apoio direto no WhatsApp para voos, reservas e atendimento comercial mais proximo.
+              </p>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                {airportSpots.map((airport) => (
+                  <div key={airport.id} className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                    <div className="text-lg font-extrabold text-slate-950">{airport.iataCode || airport.icaoCode}</div>
+                    <div className="text-sm font-semibold text-slate-600">{airport.cityName || airport.name}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <Button asChild className="rounded-full bg-blue-600 px-6 text-sm font-bold text-white hover:bg-blue-700">
+                  <a href={newarkWhatsAppHref} target="_blank" rel="noreferrer">
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Falar no WhatsApp
+                  </a>
+                </Button>
+                <Link href="/agencia-de-viagens-ironbound-newark">
+                  <Button variant="outline" className="rounded-full border-slate-300 bg-white px-6 text-sm font-bold text-slate-800">
+                    Ironbound Newark
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <section className="pb-16 md:pb-20">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="rounded-[32px] border border-slate-200 bg-[#07132d] p-6 text-white shadow-[0_36px_100px_-52px_rgba(2,6,23,0.95)] md:p-8">
+            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-200/78">Jornada de compra</p>
+                <h2 className="mt-3 text-3xl font-extrabold leading-tight md:text-4xl">
+                  Um caminho mais limpo da pesquisa ate a emissao do bilhete.
+                </h2>
+                <p className="mt-4 text-sm leading-7 text-blue-100/74 sm:text-base">
+                  A pagina agora conduz melhor a venda: menos ruido, mais hierarquia e o suporte certo no momento certo.
+                </p>
+              </div>
             </div>
 
-            <Badge className="rounded-full px-4 py-2 bg-white text-blue-700 border border-blue-100 shadow-sm">
-              <TrendingUp className="h-3.5 w-3.5 mr-2" />
-              {catalogDeals.length > 0 ? `${catalogDeals.length} ${t("home.trending")}` : "Michels Travel"}
-            </Badge>
-          </motion.div>
-
-          {dealsLoading && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <Card key={index} className="overflow-hidden border border-gray-200 bg-white">
-                  <div className="h-52 bg-gradient-to-br from-blue-100 via-slate-100 to-white animate-pulse" />
-                  <CardContent className="p-6 space-y-4">
-                    <div className="h-5 w-28 rounded bg-gray-100 animate-pulse" />
-                    <div className="h-8 w-3/4 rounded bg-gray-100 animate-pulse" />
-                    <div className="h-4 w-full rounded bg-gray-100 animate-pulse" />
-                    <div className="h-4 w-5/6 rounded bg-gray-100 animate-pulse" />
-                    <div className="h-11 w-full rounded-xl bg-gray-100 animate-pulse" />
-                  </CardContent>
-                </Card>
+            <div className="mt-8 grid gap-4 lg:grid-cols-3">
+              {[
+                { number: "01", icon: Search, title: "Pesquise tarifas ao vivo", body: "Abra o inventario real da agencia informando rota, datas e perfil do passageiro." },
+                { number: "02", icon: CreditCard, title: "Compare e confirme", body: "Revise conexoes, bagagem e preco com menos ruido antes de entrar na reserva." },
+                { number: "03", icon: Ticket, title: "Emita e acompanhe", body: "Mantenha suporte, documentos e pos-venda no mesmo ambiente comercial." },
+              ].map((step) => (
+                <div key={step.number} className="rounded-[28px] border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-200/75">{step.number}</span>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-[#7cb0ff]">
+                      <step.icon className="h-5 w-5" />
+                    </div>
+                  </div>
+                  <h3 className="mt-10 text-2xl font-extrabold text-white">{step.title}</h3>
+                  <p className="mt-4 text-sm leading-7 text-blue-100/74 sm:text-base">{step.body}</p>
+                </div>
               ))}
             </div>
-          )}
+          </div>
+        </div>
+      </section>
 
-          {!dealsLoading && catalogDeals.length > 0 && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {catalogDeals.map((deal, index) => {
-                const coverImage = DESTINATION_IMAGES[deal.destination] || DESTINATION_IMAGES[deal.origin];
-                const formattedPrice = formatDealPrice(deal.price_value, deal.currency);
-
-                return (
-                  <motion.div
-                    key={deal.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.08 }}
-                  >
-                    <Card className="overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col">
-                      <div className="relative h-56 overflow-hidden">
-                        {coverImage ? (
-                          <img
-                            src={coverImage}
-                            alt={deal.destination_city}
-                            className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-blue-300 via-sky-100 to-white" />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/20 to-transparent" />
-                        <div className="absolute top-4 left-4 flex gap-2 flex-wrap">
-                          <Badge className="bg-white/90 text-gray-900 hover:bg-white border-0">
-                            {deal.airline || "Michels Travel"}
-                          </Badge>
-                          <Badge variant="secondary" className="bg-blue-500/90 text-white border-0 capitalize">
-                            {deal.cabin_class.replace("_", " ")}
-                          </Badge>
-                        </div>
-                        <div className="absolute bottom-4 left-4 right-4">
-                          <div className="flex items-center gap-2 text-white/80 text-xs uppercase tracking-[0.18em] mb-2">
-                            <MapPin className="h-3.5 w-3.5" />
-                            {deal.origin} <ArrowRight className="h-3.5 w-3.5" /> {deal.destination}
-                          </div>
-                          <h3 className="text-2xl font-display font-bold text-white leading-tight">
-                            {deal.destination_city || deal.destination}
-                          </h3>
-                        </div>
-                      </div>
-
-                      <CardContent className="p-6 flex flex-col flex-1">
-                        <div className="mb-5">
-                          <p className="text-sm font-semibold text-blue-600 mb-2">{deal.headline}</p>
-                          <p className="text-sm text-gray-500 leading-relaxed">
-                            {deal.description}
-                          </p>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3 mb-6">
-                          <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
-                            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400 block mb-2">
-                              {deal.origin_city || deal.origin}
-                            </span>
-                            <span className="text-sm font-bold text-gray-900">
-                              {formatDealDate(deal.departure_date)}
-                            </span>
-                          </div>
-                          <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
-                            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400 block mb-2">
-                              {deal.return_date ? (deal.destination_city || deal.destination) : deal.destination}
-                            </span>
-                            <span className="text-sm font-bold text-gray-900">
-                              {deal.return_date ? formatDealDate(deal.return_date) : t("search.one_way")}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="mt-auto">
-                          <div className="flex items-end justify-between gap-4 mb-5">
-                            <div>
-                              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400 block mb-1">
-                                {t("home.catalog.price_label")}
-                              </span>
-                              <span className="text-3xl font-display font-extrabold text-gray-900">
-                                {formattedPrice || deal.price}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-emerald-600 font-semibold">
-                              <CheckCircle2 className="h-4 w-4" />
-                              {deal.airline || "Michels Travel"}
-                            </div>
-                          </div>
-
-                          <Button
-                            className="w-full rounded-xl h-12"
-                            onClick={() => openDealSearch(deal)}
-                            data-testid={`button-featured-deal-${deal.id}`}
-                          >
-                            {t("home.catalog.book")}
-                            <ChevronRight className="h-4 w-4 ml-1" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
+      <section className="bg-white py-14 md:py-18">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Companhias e aeroportos ja conectados</p>
+              <h2 className="mt-3 text-3xl font-extrabold leading-tight text-slate-950 md:text-4xl">
+                O site agora precisa parecer e agir como uma plataforma comercial de verdade.
+              </h2>
             </div>
-          )}
+            <div className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-600">
+              {topAirlines.length > 0 ? `${topAirlines.length} logos ativos` : "Rede pronta para operar"}
+            </div>
+          </div>
 
-          {!dealsLoading && catalogDeals.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="max-w-3xl mx-auto"
-            >
-              <Card className="border border-dashed border-blue-200 bg-white/90 shadow-sm">
-                <CardContent className="p-10 md:p-14 text-center">
-                  <div className="h-16 w-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-6">
-                    <Clock className="h-7 w-7" />
+          <div className="mt-8 grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
+            <div className="rounded-[30px] border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#eef5ff_100%)] p-6 shadow-[0_28px_80px_-50px_rgba(37,99,235,0.34)] md:p-8">
+              <div className="flex flex-wrap gap-3">
+                {topAirlines.map((airline) => (
+                  <div key={airline.id} className="inline-flex items-center gap-3 rounded-full border border-slate-100 bg-white px-4 py-3 shadow-sm">
+                    <img src={airline.logoSymbolUrl || airline.logoUrl || ""} alt={airline.name} className="h-6 w-6 object-contain" loading="lazy" />
+                    <span className="text-sm font-semibold text-slate-700">{airline.name}</span>
                   </div>
-                  <h3 className="text-2xl font-display font-bold text-gray-900 mb-3">
-                    {t("home.catalog.empty")}
-                  </h3>
-                  <p className="text-gray-500 leading-relaxed mb-8">
-                    {t("home.catalog.empty_desc")}
-                  </p>
-                  <Button
-                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                    className="rounded-full px-8"
-                    data-testid="button-featured-catalog-empty-cta"
-                  >
-                    {t("home.catalog.empty_cta")}
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+                ))}
+              </div>
+              <div className="mt-5 grid gap-4 sm:grid-cols-3">
+                {[
+                  { title: "Suporte humano", body: "WhatsApp e Mia alinhados ao mesmo fluxo comercial." },
+                  { title: "Inventario ao vivo", body: "As buscas usam o mesmo inventario operacional conectado a agencia." },
+                  { title: "Retencao", body: "App, dashboard e centro de reservas continuam conectados depois da venda." },
+                ].map((item) => (
+                  <div key={item.title} className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="text-sm font-bold text-slate-950">{item.title}</div>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.body}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-[30px] border border-slate-200 bg-slate-950 text-white shadow-[0_32px_90px_-54px_rgba(2,6,23,0.95)]">
+              <div className="h-52 overflow-hidden">
+                <img src={airplaneLightHero} alt="Airplane" className="h-full w-full object-cover" />
+              </div>
+              <div className="p-6">
+                <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-200/75">Rotas em evidencia</div>
+                <div className="mt-4 space-y-3">
+                  {catalogDeals.slice(0, 3).map((deal) => (
+                    <button
+                      key={deal.id}
+                      onClick={() => openDealSearch(deal)}
+                      className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-left transition-colors hover:bg-white/10"
+                    >
+                      <div>
+                        <div className="text-sm font-bold text-white">{deal.origin} → {deal.destination}</div>
+                        <div className="mt-1 text-sm text-blue-100/70">{deal.headline}</div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-[#7cb0ff]" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 md:py-20">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Oportunidades em destaque</p>
+              <h2 className="mt-3 text-3xl font-extrabold leading-tight text-slate-950 md:text-4xl">
+                Tarifas e destinos destacados com intencao comercial.
+              </h2>
+              <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
+                Abra uma rota, valide disponibilidade e siga para o mesmo motor de reserva que a agencia ja usa no dia a dia.
+              </p>
+            </div>
+            <Link href="/blog">
+              <Button variant="outline" className="rounded-full border-slate-300 bg-white px-6 text-sm font-bold text-slate-800 shadow-sm">
+                Ver guia de viagem
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="mt-8 grid gap-6 lg:grid-cols-3">
+            {dealsLoading && Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+                <div className="h-56 animate-pulse bg-slate-100" />
+                <div className="space-y-4 p-6">
+                  <div className="h-5 w-28 animate-pulse rounded bg-slate-100" />
+                  <div className="h-8 w-3/4 animate-pulse rounded bg-slate-100" />
+                  <div className="h-4 w-full animate-pulse rounded bg-slate-100" />
+                </div>
+              </div>
+            ))}
+
+            {!dealsLoading && catalogDeals.map((deal) => {
+              const coverImage = DESTINATION_IMAGES[deal.destination] || DESTINATION_IMAGES[deal.origin];
+              const formattedPrice = formatDealPrice(deal.price_value, deal.currency);
+
+              return (
+                <Card key={deal.id} className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_28px_80px_-52px_rgba(15,23,42,0.32)] transition-transform duration-300 hover:-translate-y-1">
+                  <div className="relative h-56 overflow-hidden">
+                    {coverImage ? (
+                      <img src={coverImage} alt={deal.destination_city} className="h-full w-full object-cover transition-transform duration-700 hover:scale-105" loading="lazy" />
+                    ) : (
+                      <div className="h-full w-full bg-gradient-to-br from-blue-300 via-sky-100 to-white" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/20 to-transparent" />
+                    <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+                      <Badge className="border-0 bg-white/92 text-slate-900">{deal.airline || "Michels Travel"}</Badge>
+                    </div>
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/72">{deal.origin} → {deal.destination}</div>
+                      <div className="mt-2 text-3xl font-extrabold text-white">{deal.destination_city || deal.destination}</div>
+                    </div>
+                  </div>
+                  <CardContent className="flex h-full flex-col p-6">
+                    <p className="text-sm font-semibold text-blue-600">{deal.headline}</p>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">{deal.description}</p>
+                    <div className="mt-6 flex items-end justify-between gap-4">
+                      <div>
+                        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">A partir de</div>
+                        <div className="mt-1 text-3xl font-extrabold text-slate-950">{formattedPrice || deal.price}</div>
+                      </div>
+                      <Button className="rounded-full bg-[#2563eb] px-5 text-sm font-bold text-white hover:bg-[#1d4ed8]" onClick={() => openDealSearch(deal)}>
+                        Abrir tarifa
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </div>
       </section>
 
       <FlightBoard />
 
-      <section className="py-16 md:py-32 section-light">
-        <div className="container mx-auto px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12 md:mb-16"
-          >
-            <span className="section-eyebrow">{t("home.testimonials.title")}</span>
-            <h2 className="text-[1.9rem] sm:text-3xl md:text-5xl font-extrabold font-display text-gray-900">{t("home.testimonials.subtitle")}</h2>
-          </motion.div>
+      <AppLaunchPromo className="section-white" />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
-            {[
-              { nameKey: "home.testimonials.t1_name", locKey: "home.testimonials.t1_loc", textKey: "home.testimonials.t1_text" },
-              { nameKey: "home.testimonials.t2_name", locKey: "home.testimonials.t2_loc", textKey: "home.testimonials.t2_text" },
-              { nameKey: "home.testimonials.t3_name", locKey: "home.testimonials.t3_loc", textKey: "home.testimonials.t3_text" },
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="testimonial-card"
-              >
-                <div className="flex gap-1 mb-5">
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <Star key={j} className="h-4 w-4 text-amber-400 fill-amber-400" />
+      <section className="py-16 md:py-20">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-[linear-gradient(135deg,#07132d_0%,#133266_100%)] shadow-[0_36px_100px_-52px_rgba(2,6,23,0.95)]">
+            <div className="grid gap-8 p-6 md:grid-cols-[1.1fr_0.9fr] md:p-10 lg:p-12">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-200/80">Mia dentro da venda</p>
+                <h2 className="mt-3 text-3xl font-extrabold leading-tight text-white md:text-5xl">
+                  Use a assistente para conduzir a viagem, nao para substituir a venda.
+                </h2>
+                <p className="mt-4 max-w-2xl text-sm leading-7 text-blue-100/76 sm:text-base">
+                  A Mia ajuda a qualificar o pedido, explicar opcoes e devolver o cliente para o fluxo de reserva com a rota, as datas e o nivel de apoio corretos.
+                </p>
+                <div className="mt-7 grid gap-3 sm:grid-cols-2">
+                  {[
+                    "Qualifique a viagem antes da cotacao",
+                    "Devolva o viajante ao fluxo de reserva",
+                    "Mantenha o WhatsApp disponivel para escalacao",
+                    "Capture contexto para vendas futuras",
+                  ].map((item) => (
+                    <div key={item} className="rounded-2xl border border-white/12 bg-white/6 px-4 py-4 text-sm font-semibold text-white/84">
+                      <CheckCircle2 className="mb-2 h-4 w-4 text-blue-300" />
+                      {item}
+                    </div>
                   ))}
                 </div>
-                <p className="text-gray-500 text-sm leading-relaxed mb-6">"{t(item.textKey)}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">
-                    {t(item.nameKey).charAt(0)}
-                  </div>
-                  <div>
-                    <span className="text-gray-900 font-semibold text-sm block">{t(item.nameKey)}</span>
-                    <span className="text-gray-400 text-xs">{t(item.locKey)}</span>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 md:py-32 bg-white" data-testid="section-assistant">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="max-w-6xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="relative rounded-[28px] md:rounded-3xl overflow-hidden bg-gradient-to-br from-[#0a1628] via-[#0f2240] to-[#1a3a6e]"
-            >
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-10 left-10 w-72 h-72 bg-blue-400 rounded-full blur-3xl" />
-                <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-300 rounded-full blur-3xl" />
+                <Button
+                  onClick={() => openChatbotAssistant({ message: "Mia, me ajude a comecar esta viagem com as opcoes de voo certas.", autoSend: true })}
+                  className="mt-7 rounded-full bg-white px-7 py-6 text-base font-bold text-[#12356a] hover:bg-blue-50"
+                >
+                  <MessageCircle className="mr-2 h-5 w-5" />
+                  Falar com a Mia
+                </Button>
               </div>
 
-              <div className="relative z-10 flex flex-col lg:flex-row items-center gap-8 lg:gap-16 p-5 sm:p-7 md:p-12 lg:p-16">
-                <div className="flex-1 text-center lg:text-left">
-                  <span className="text-xs font-bold text-blue-300 uppercase tracking-[0.2em] mb-4 block">{t("home.assistant.label")}</span>
-                  <h2 className="text-[2rem] sm:text-3xl md:text-4xl lg:text-5xl font-extrabold font-display text-white mb-5 leading-tight">
-                    {t("home.assistant.title")}
-                  </h2>
-                  <p className="text-blue-200/80 text-sm sm:text-base md:text-lg leading-relaxed mb-7 md:mb-8 max-w-lg">
-                    {t("home.assistant.desc")}
-                  </p>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-                    {[
-                      { icon: Zap, text: t("home.assistant.feature1") },
-                      { icon: Plane, text: t("home.assistant.feature2") },
-                      { icon: Languages, text: t("home.assistant.feature3") },
-                      { icon: UserCheck, text: t("home.assistant.feature4") },
-                    ].map((feat, i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                          <feat.icon className="h-4 w-4 text-blue-300" />
-                        </div>
-                        <span className="text-sm text-blue-100/90 font-medium">{feat.text}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <Button
-                    size="lg"
-                    onClick={() =>
-                      openChatbotAssistant({
-                        message:
-                          language === "en"
-                            ? "Mia, help me start this trip with the right flight options."
-                            : language === "es"
-                              ? "Mia, ayudeme a empezar este viaje con las opciones de vuelo correctas."
-                              : "Mia, me ajude a comecar esta viagem com as opcoes de voo certas.",
-                        autoSend: true,
-                      })
-                    }
-                    className="w-full sm:w-auto rounded-full bg-white text-[#0f2240] border-white shadow-lg shadow-black/20"
-                    data-testid="button-open-assistant"
-                  >
-                    <MessageCircle className="mr-2 h-5 w-5" />
-                    {t("home.assistant.cta")}
-                  </Button>
-                </div>
-
-                <div className="flex-shrink-0 w-full max-w-xs lg:max-w-sm">
-                  <div className="relative">
-                    <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-5 space-y-3">
-                      <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
-                        <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
-                          <MessageCircle className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                          <span className="text-sm font-bold text-gray-900 block">Mia</span>
-                          <span className="text-[10px] text-emerald-500 font-medium flex items-center gap-1">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" /> Online
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2.5">
-                        <div className="flex justify-start">
-                          <div className="bg-gray-100 rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[85%]">
-                            <p className="text-sm text-gray-700">{t("home.assistant.chat_greeting")}</p>
-                          </div>
-                        </div>
-                        <div className="flex justify-end">
-                          <div className="bg-blue-500 rounded-2xl rounded-tr-md px-4 py-2.5 max-w-[85%]">
-                            <p className="text-sm text-white">{t("home.assistant.chat_user")}</p>
-                          </div>
-                        </div>
-                        <div className="flex justify-start">
-                          <div className="bg-gray-100 rounded-2xl rounded-tl-md px-4 py-2.5 max-w-[85%]">
-                            <p className="text-sm text-gray-700">{t("home.assistant.chat_reply")}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 pt-2">
-                        <div className="flex-1 bg-gray-50 rounded-full px-4 py-2.5 border border-gray-200">
-                          <span className="text-xs text-gray-400">{t("home.assistant.chat_placeholder")}</span>
-                        </div>
-                        <div className="h-9 w-9 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
-                          <ArrowRight className="h-4 w-4 text-white" />
-                        </div>
-                      </div>
+              <div className="grid gap-4">
+                <div className="rounded-[28px] border border-white/12 bg-white/8 p-5 backdrop-blur-sm">
+                  <div className="text-sm font-bold uppercase tracking-[0.18em] text-blue-200/80">Mia</div>
+                  <div className="mt-4 space-y-3">
+                    <div className="max-w-[90%] rounded-[20px] rounded-tl-md bg-white/10 px-4 py-3 text-sm leading-6 text-white/86">
+                      Quero um voo com menos conexoes e apoio em portugues.
                     </div>
-
-                    <div className="absolute -bottom-3 -right-3 h-20 w-20 bg-blue-500/10 rounded-full blur-xl" />
-                    <div className="absolute -top-3 -left-3 h-16 w-16 bg-blue-400/10 rounded-full blur-xl" />
+                    <div className="ml-auto max-w-[85%] rounded-[20px] rounded-tr-md bg-[#3d86ff] px-4 py-3 text-sm leading-6 text-white">
+                      Posso refinar a rota, comparar opcoes e manter um humano disponivel se voce precisar.
+                    </div>
                   </div>
                 </div>
+                <div className="rounded-[28px] border border-white/12 bg-white/8 p-5 backdrop-blur-sm">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-200/80">WhatsApp</div>
+                  <div className="mt-2 text-xl font-extrabold text-white">{AGENCY_WHATSAPP_DISPLAY}</div>
+                  <p className="mt-3 text-sm leading-7 text-blue-100/72">
+                    Quando o cliente quer uma pessoa, o fluxo digital mantem a passagem clara sem quebrar a jornada.
+                  </p>
+                </div>
               </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 md:py-32 section-white">
-        <div className="container mx-auto px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-5xl mx-auto guide-cta-section p-6 sm:p-8 md:p-16 text-center"
-          >
-            <span className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-5 py-2 text-xs font-bold text-blue-200 uppercase tracking-[0.15em] mb-8">
-              <Sparkles className="h-3.5 w-3.5" />
-              Michels Travel
-            </span>
-            <h2 className="text-[2.35rem] sm:text-4xl md:text-6xl font-extrabold font-display text-white mb-6 leading-tight">{t("home.cta.title")}</h2>
-            <p className="text-blue-200/80 text-base md:text-lg mb-8 md:mb-10 max-w-xl mx-auto leading-relaxed">{t("home.cta.subtitle")}</p>
-            <Button 
-              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="w-full sm:w-auto rounded-full px-8 sm:px-10 py-5 sm:py-6 text-base sm:text-lg font-bold bg-white text-blue-600 hover:bg-blue-50 shadow-xl shadow-black/20 transition-all duration-200 hover:-translate-y-0.5"
-              data-testid="button-cta-search"
-            >
-              {t("home.cta.button")} <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </motion.div>
-        </div>
-      </section>
-
-      {(!airports || airports.length === 0) && !airportsLoading && (!popularFlights || popularFlights.length === 0) && (
-        <section className="py-20 bg-transparent">
-          <div className="container mx-auto px-4 text-center">
-            <div className="text-gray-400 py-12">
-              {t("search.button")}
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
     </div>
   );
 }
