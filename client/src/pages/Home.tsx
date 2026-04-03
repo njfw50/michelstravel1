@@ -108,7 +108,7 @@ export default function Home() {
                 <Sparkles className="mr-2 h-3.5 w-3.5" />
                 {t("home.hero.badge") || "Curadoria de Viagens & Concierge Exclusivo"}
               </Badge>
-              <h1 className="mt-6 text-[2.8rem] font-extrabold leading-[0.94] tracking-tight text-slate-950 sm:text-5xl md:text-6xl lg:text-[4.65rem] text-balance">
+              <h1 className="mt-6 text-4xl sm:text-5xl md:text-6xl lg:text-[4.65rem] font-extrabold leading-[1] sm:leading-[0.94] tracking-tight text-slate-950 text-balance break-words">
                 {t("home.hero.title") || "A Arte de Viajar Bem: Excelência, Conforto e Suporte Exclusivo."}
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
@@ -218,7 +218,7 @@ export default function Home() {
             <CardContent className="grid gap-6 p-6 md:grid-cols-[1.05fr_0.95fr] md:p-8">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-700">{t("home.senior.badge") || "Design de Jornada"}</p>
-                <h2 className="mt-3 text-3xl font-extrabold leading-tight text-slate-950">
+                <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold leading-tight text-slate-950">
                   {t("home.senior.title") || "Tranquilidade absoluta: ritmamos sua viagem ao seu tempo."}
                 </h2>
                 <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
@@ -236,7 +236,7 @@ export default function Home() {
           <Card className="overflow-hidden rounded-[28px] border border-blue-200 bg-[linear-gradient(135deg,#ffffff_0%,#edf5ff_100%)] shadow-sm">
             <CardContent className="p-6 md:p-8">
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">{t("home.office.badge") || "Newark / Ironbound"}</p>
-              <h2 className="mt-3 text-3xl font-extrabold leading-tight text-slate-950">
+              <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold leading-tight text-slate-950">
                 {t("home.office.title") || "Liderança no mercado de viagens para o Brasil."}
               </h2>
               <p className="mt-4 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
@@ -277,7 +277,7 @@ export default function Home() {
             <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div className="max-w-2xl">
                 <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#b8ccff]">{t("home.exp.badge") || "A Experiência Michels"}</p>
-                <h2 className="mt-4 text-3xl font-extrabold leading-tight md:text-5xl">
+                <h2 className="mt-4 text-2xl sm:text-3xl font-extrabold leading-tight md:text-5xl">
                   {t("home.exp.title") || "Onde a sofisticação de um serviço impecável cruza com rotas inteligentes."}
                 </h2>
                 <p className="mt-5 text-sm leading-8 text-[#c7d7f7] sm:text-lg">
@@ -313,7 +313,7 @@ export default function Home() {
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="max-w-2xl">
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">{t("home.airlines.badge") || "Companhias e aeroportos ja conectados"}</p>
-              <h2 className="mt-3 text-3xl font-extrabold leading-tight text-slate-950 md:text-5xl">
+              <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold leading-tight text-slate-950 md:text-5xl text-balance">
                 {t("home.airlines.title") || "Nossos grandes parceiros, unidos pelo seu custo-benefício."}
               </h2>
             </div>
@@ -378,7 +378,7 @@ export default function Home() {
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="max-w-2xl">
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">{t("home.deals.badge") || "Oportunidades em destaque"}</p>
-              <h2 className="mt-3 text-3xl font-extrabold leading-tight text-slate-950 md:text-5xl">
+              <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold leading-tight text-slate-950 md:text-5xl text-balance">
                 {t("home.deals.title") || "Destinos Imperdíveis em Oferta Relâmpago."}
               </h2>
               <p className="mt-4 text-sm leading-8 text-slate-600 sm:text-lg">
@@ -457,7 +457,7 @@ export default function Home() {
             <div className="grid gap-8 p-6 md:grid-cols-[1.1fr_0.9fr] md:p-12 lg:p-16">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-200/80">{t("home.bot.badge") || "Mia dentro da venda"}</p>
-                <h2 className="mt-4 text-3xl font-extrabold leading-tight text-white md:text-5xl">
+                <h2 className="mt-4 text-2xl sm:text-3xl font-extrabold leading-tight text-white md:text-5xl text-balance">
                   {t("home.bot.title") || "Sua Consultora de Viagens Digital Inteligente."}
                 </h2>
                 <p className="mt-5 max-w-2xl text-sm leading-8 text-[#c7d7f7] sm:text-base">

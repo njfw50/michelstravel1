@@ -52,6 +52,7 @@
     @apply text-foreground antialiased;
     font-family: var(--font-body);
     overflow-x: hidden;
+    overflow-wrap: break-word;
     background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
     min-height: 100vh;
   }
