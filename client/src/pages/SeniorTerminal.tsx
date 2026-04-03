@@ -8,11 +8,20 @@ import PaymentForm from "@/components/PaymentForm";
 import FlightBaggageHighlights from "@/components/FlightBaggageHighlights";
 import { useDebounce } from "@/hooks/use-debounce";
 
-type FlowStep = "auth" | "greeting" | "ask_origin" | "destination" | "dates" | "ask_name" | "ask_dob" | "searching" | "offer" | "checkout";
+type FlowStep = "auth" | "greeting" | "ask_trip_type" | "ask_class" | "ask_origin" | "destination" | "dates" | "return_date" | "multi_add" | "ask_name" | "ask_dob" | "searching" | "offer" | "checkout";
+
+type Leg = { originQuery: string; originIata: string; destQuery: string; destIata: string; travelDate: string };
 
 export default function SeniorTerminal() {
   const [step, setStep] = useState<FlowStep>("auth");
   const [phoneNumber, setPhoneNumber] = useState("");
+  
+  // Trip details State
+  const [tripType, setTripType] = useState<"one-way" | "round-trip" | "multi-city">("one-way");
+  const [cabinClass, setCabinClass] = useState<string>("economy");
+  const [returnDate, setReturnDate] = useState("");
+  const [legs, setLegs] = useState<Leg[]>([]);
+  const [currentLeg, setCurrentLeg] = useState(1);
   
   // Origin State
   const [originQuery, setOriginQuery] = useState("");
@@ -97,7 +106,7 @@ export default function SeniorTerminal() {
     setOriginResults([]);
     setTimeout(() => {
       setStep("destination");
-      speak("Muito bem. E para qual cidade você quer viajar?");
+      speak(tripType === "multi-city" ? `Trecho ${currentLeg}: Para qual cidade você quer viajar?` : "Muito bem. E para qual cidade você quer viajar?");
     }, 500);
   };
 
@@ -107,14 +116,25 @@ export default function SeniorTerminal() {
     setDestResults([]);
     setTimeout(() => {
       setStep("dates");
-      speak("Certo. Qual é a data exata da sua viagem?");
+      speak(tripType === "round-trip" ? "Certo. Qual é a data da sua ida?" : tripType === "multi-city" ? `Qual é a data do trecho ${currentLeg}?` : "Certo. Qual é a data exata da sua viagem?");
     }, 500);
   };
 
   const handleDateNext = () => {
     if (!travelDate) return;
-    setStep("ask_name");
-    speak("Tudo certo. Agora, para emitir a passagem, por favor digite o seu nome de batismo da forma como está no documento");
+    
+    if (tripType === "one-way") {
+      setStep("ask_name");
+      speak("Tudo certo. Agora, para emitir a passagem, por favor digite o seu nome de batismo da forma como está no documento");
+    } else if (tripType === "round-trip") {
+      setStep("return_date");
+      speak("Certo, e qual será a data da sua volta?");
+    } else if (tripType === "multi-city") {
+      const newLeg: Leg = { originQuery, originIata, destQuery, destIata, travelDate };
+      setLegs(prev => [...prev, newLeg]);
+      setStep("multi_add");
+      speak("Trecho adicionado com sucesso. Deseja adicionar mais um trecho para outra cidade?");
+    }
   };
 
   const handleNameNext = () => {
@@ -130,7 +150,19 @@ export default function SeniorTerminal() {
     speak("Tudo certo. Nossa inteligência está procurando os melhores voos para você agora mesmo. Aguarde um momento.");
     
     try {
-      const res = await fetch(`/api/flights/search?origin=${originIata}&destination=${destIata}&date=${travelDate}&passengers=1&adults=1&children=0&infants=0&cabinClass=economy`);
+      let url = `/api/flights/search?passengers=1&adults=1&children=0&infants=0&cabinClass=${cabinClass}&tripType=${tripType}`;
+      
+      if (tripType === "multi-city") {
+        const flightsArray = legs.map(leg => ({ origin: leg.originIata, destination: leg.destIata, date: leg.travelDate }));
+        url += `&flights=${encodeURIComponent(JSON.stringify(flightsArray))}`;
+      } else {
+        url += `&origin=${originIata}&destination=${destIata}&date=${travelDate}`;
+        if (tripType === "round-trip" && returnDate) {
+          url += `&returnDate=${returnDate}`;
+        }
+      }
+      
+      const res = await fetch(url);
       const flights = await res.json();
       
       if (flights && flights.length > 0) {
@@ -261,8 +293,8 @@ export default function SeniorTerminal() {
             </p>
             <Button 
               onClick={() => {
-                setStep("ask_origin");
-                speak("De qual cidade você vai sair?");
+                setStep("ask_trip_type");
+                speak("Como você deseja viajar? Só ida, Ida e volta, ou Múltiplos Destinos?");
               }}
               className="w-full h-20 sm:h-32 text-2xl sm:text-4xl font-extrabold bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl sm:rounded-[32px] mt-8 sm:mt-12 shadow-[0_0_60px_rgba(16,185,129,0.3)]"
             >
@@ -271,9 +303,34 @@ export default function SeniorTerminal() {
           </div>
         )}
 
+        {step === "ask_trip_type" && (
+          <div className="w-full max-w-5xl text-center space-y-6 sm:space-y-8 animate-in slide-in-from-right duration-500">
+            <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6 leading-tight text-balance">Como você deseja viajar?</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+              <Button onClick={() => { setTripType("one-way"); setStep("ask_class"); speak("E em qual classe você prefere voar?"); }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-blue-600 text-white truncate text-balance whitespace-normal leading-tight">Só Ida</Button>
+              <Button onClick={() => { setTripType("round-trip"); setStep("ask_class"); speak("E em qual classe você prefere voar?"); }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-emerald-600 text-white truncate text-balance whitespace-normal leading-tight">Ida e Volta</Button>
+              <Button onClick={() => { setTripType("multi-city"); setStep("ask_class"); speak("E em qual classe você prefere voar?"); }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-purple-600 text-white truncate text-balance whitespace-normal leading-tight">Múltiplos Destinos</Button>
+            </div>
+          </div>
+        )}
+
+        {step === "ask_class" && (
+          <div className="w-full max-w-5xl text-center space-y-6 sm:space-y-8 animate-in slide-in-from-right duration-500">
+            <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6 leading-tight text-balance">Em qual classe você prefere voar?</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <Button onClick={() => { setCabinClass("economy"); setStep("ask_origin"); speak(tripType === "multi-city" ? `Trecho ${currentLeg}: De onde você vai sair?` : "De qual cidade você vai sair?"); }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-blue-600 text-white truncate text-balance whitespace-normal leading-tight">Econômica</Button>
+              <Button onClick={() => { setCabinClass("premium_economy"); setStep("ask_origin"); speak(tripType === "multi-city" ? `Trecho ${currentLeg}: De onde você vai sair?` : "De qual cidade você vai sair?"); }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-emerald-600 text-white truncate text-balance whitespace-normal leading-tight">Premium Economy</Button>
+              <Button onClick={() => { setCabinClass("business"); setStep("ask_origin"); speak(tripType === "multi-city" ? `Trecho ${currentLeg}: De onde você vai sair?` : "De qual cidade você vai sair?"); }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-purple-600 text-white truncate text-balance whitespace-normal leading-tight">Executiva</Button>
+              <Button onClick={() => { setCabinClass("first"); setStep("ask_origin"); speak(tripType === "multi-city" ? `Trecho ${currentLeg}: De onde você vai sair?` : "De qual cidade você vai sair?"); }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-amber-600 text-white truncate text-balance whitespace-normal leading-tight">Primeira Classe</Button>
+            </div>
+          </div>
+        )}
+
         {step === "ask_origin" && (
           <div className="w-full max-w-4xl text-center space-y-6 sm:space-y-8 animate-in slide-in-from-right duration-500">
-            <h2 className="text-3xl sm:text-5xl font-bold text-white mb-2 sm:mb-4 leading-tight text-balance">De qual cidade você vai sair?</h2>
+            <h2 className="text-3xl sm:text-5xl font-bold text-white mb-2 sm:mb-4 leading-tight text-balance">
+              {tripType === "multi-city" ? `Trecho ${currentLeg}: De qual cidade você vai sair?` : "De qual cidade você vai sair?"}
+            </h2>
             <p className="text-lg sm:text-2xl text-blue-400 mb-6 sm:mb-8 text-balance">Digite o nome da cidade ou aeroporto abaixo:</p>
             <div className="relative">
               <Input 
@@ -315,7 +372,9 @@ export default function SeniorTerminal() {
 
         {step === "destination" && (
           <div className="w-full max-w-4xl text-center space-y-6 sm:space-y-8 animate-in slide-in-from-right duration-500">
-            <h2 className="text-3xl sm:text-5xl font-bold text-white mb-2 sm:mb-4 leading-tight text-balance">Para onde você quer viajar?</h2>
+            <h2 className="text-3xl sm:text-5xl font-bold text-white mb-2 sm:mb-4 leading-tight text-balance">
+              {tripType === "multi-city" ? `Trecho ${currentLeg}: Para onde você quer viajar?` : "Para onde você quer viajar?"}
+            </h2>
             <p className="text-lg sm:text-2xl text-blue-400 mb-6 sm:mb-8 text-balance">Digite o nome da cidade ou aeroporto abaixo:</p>
             <div className="relative">
               <Input 
@@ -357,7 +416,9 @@ export default function SeniorTerminal() {
 
         {step === "dates" && (
           <div className="w-full max-w-4xl text-center space-y-8 sm:space-y-12 animate-in slide-in-from-right duration-500">
-            <h2 className="text-3xl sm:text-5xl font-bold text-white mb-4 sm:mb-8 leading-tight text-balance">Qual a data da viagem?</h2>
+            <h2 className="text-3xl sm:text-5xl font-bold text-white mb-4 sm:mb-8 leading-tight text-balance">
+              {tripType === "round-trip" ? "Qual a data da sua IDA?" : tripType === "multi-city" ? `Qual a data do Trecho ${currentLeg}?` : "Qual a data da viagem?"}
+            </h2>
             <div className="flex flex-col items-center gap-6 sm:gap-8">
               <Input 
                 type="date"
@@ -372,6 +433,55 @@ export default function SeniorTerminal() {
               >
                 Continuar <ArrowRight className="ml-2 sm:ml-4 h-6 w-6 sm:h-8 sm:w-8" />
               </Button>
+            </div>
+          </div>
+        )}
+
+        {step === "return_date" && (
+          <div className="w-full max-w-4xl text-center space-y-8 sm:space-y-12 animate-in slide-in-from-right duration-500">
+            <h2 className="text-3xl sm:text-5xl font-bold text-white mb-4 sm:mb-8 leading-tight text-balance">Qual será a data da sua VOLTA?</h2>
+            <div className="flex flex-col items-center gap-6 sm:gap-8">
+              <Input 
+                type="date"
+                value={returnDate}
+                onChange={(e) => setReturnDate(e.target.value)}
+                className="h-20 sm:h-32 w-full max-w-2xl text-2xl sm:text-5xl text-center rounded-2xl sm:rounded-[32px] border-4 border-slate-600 bg-slate-800 text-white focus:border-emerald-400 px-4"
+              />
+              <Button 
+                onClick={() => {
+                  if (!returnDate) return;
+                  setStep("ask_name");
+                  speak("Tudo certo. Agora, para emitir a passagem, digite seu nome...");
+                }}
+                disabled={!returnDate}
+                className="h-16 sm:h-24 px-8 sm:px-12 text-xl sm:text-3xl font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-full shadow-[0_0_40px_rgba(16,185,129,0.3)] transition-all w-full sm:w-auto"
+              >
+                Continuar <ArrowRight className="ml-2 sm:ml-4 h-6 w-6 sm:h-8 sm:w-8" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {step === "multi_add" && (
+          <div className="w-full max-w-5xl text-center space-y-6 sm:space-y-8 animate-in slide-in-from-right duration-500">
+            <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6 leading-tight text-balance">Deseja adicionar mais um trecho?</h2>
+            <p className="text-xl text-blue-400">Você já adicionou {legs.length} trecho(s).</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-8">
+              <Button onClick={() => {
+                setCurrentLeg(c => c + 1);
+                setOriginIata(destIata);
+                setOriginQuery(destQuery);
+                setDestIata("");
+                setDestQuery("");
+                setDestResults([]);
+                setTravelDate("");
+                setStep("ask_origin");
+                speak(`Trecho ${currentLeg + 1}: De qual cidade você vai sair agora?`);
+              }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-emerald-600 text-white truncate text-balance whitespace-normal leading-tight">Sim, adicionar trecho</Button>
+              <Button onClick={() => {
+                setStep("ask_name");
+                speak("Tudo certo. Agora, para emitir a passagem, digite seu nome de batismo.");
+              }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-blue-600 hover:bg-blue-500 text-white truncate text-balance whitespace-normal leading-tight">Não, buscar voos agora</Button>
             </div>
           </div>
         )}
