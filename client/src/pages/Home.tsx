@@ -155,11 +155,11 @@ export default function Home() {
                 <div className="relative h-[330px] overflow-hidden md:h-[380px]">
                   <img src={airplaneDestination} alt="Michels Travel" className="h-full w-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#07132d] via-[#07132d]/25 to-transparent" />
-                  <div className="absolute left-5 top-5 rounded-full border border-white/15 bg-[#07132d]/70 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur-md">
+                  <div className="absolute left-5 top-5 rounded-full border border-white/[0.15] bg-[#07132d]/[0.70] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur-md">
                     Apoio prioritario
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
-                    <div className="rounded-[26px] border border-white/15 bg-white/10 p-5 backdrop-blur-xl">
+                    <div className="rounded-[26px] border border-white/[0.15] bg-white/10 p-5 backdrop-blur-xl">
                       <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-200/80">Michels Travel</p>
                       <h2 className="mt-2 text-2xl font-extrabold leading-tight text-white">
                         Uma unica porta de entrada para voos, senior, app e pos-venda.
@@ -274,11 +274,11 @@ export default function Home() {
           <div className="rounded-[32px] border border-slate-200 bg-[#07132d] p-6 text-white shadow-[0_36px_100px_-52px_rgba(2,6,23,0.95)] md:p-8">
             <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
               <div className="max-w-2xl">
-                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-200/78">Jornada de compra</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#b8ccff]">Jornada de compra</p>
                 <h2 className="mt-3 text-3xl font-extrabold leading-tight md:text-4xl">
                   Um caminho mais limpo da pesquisa ate a emissao do bilhete.
                 </h2>
-                <p className="mt-4 text-sm leading-7 text-blue-100/74 sm:text-base">
+                <p className="mt-4 text-sm leading-7 text-[#c7d7f7] sm:text-base">
                   A pagina agora conduz melhor a venda: menos ruido, mais hierarquia e o suporte certo no momento certo.
                 </p>
               </div>
@@ -298,7 +298,7 @@ export default function Home() {
                     </div>
                   </div>
                   <h3 className="mt-10 text-2xl font-extrabold text-white">{step.title}</h3>
-                  <p className="mt-4 text-sm leading-7 text-blue-100/74 sm:text-base">{step.body}</p>
+                  <p className="mt-4 text-sm leading-7 text-[#c7d7f7] sm:text-base">{step.body}</p>
                 </div>
               ))}
             </div>
@@ -359,7 +359,7 @@ export default function Home() {
                     >
                       <div>
                         <div className="text-sm font-bold text-white">{deal.origin} → {deal.destination}</div>
-                        <div className="mt-1 text-sm text-blue-100/70">{deal.headline}</div>
+                        <div className="mt-1 text-sm text-[#bdd0f3]">{deal.headline}</div>
                       </div>
                       <ArrowRight className="h-4 w-4 text-[#7cb0ff]" />
                     </button>
@@ -417,10 +417,10 @@ export default function Home() {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/20 to-transparent" />
                     <div className="absolute left-4 top-4 flex flex-wrap gap-2">
-                      <Badge className="border-0 bg-white/92 text-slate-900">{deal.airline || "Michels Travel"}</Badge>
+                      <Badge className="border-0 bg-white/[0.92] text-slate-900">{deal.airline || "Michels Travel"}</Badge>
                     </div>
                     <div className="absolute bottom-4 left-4 right-4">
-                      <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/72">{deal.origin} → {deal.destination}</div>
+                      <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#dce8ff]">{deal.origin} → {deal.destination}</div>
                       <div className="mt-2 text-3xl font-extrabold text-white">{deal.destination_city || deal.destination}</div>
                     </div>
                   </div>
@@ -458,7 +458,7 @@ export default function Home() {
                 <h2 className="mt-3 text-3xl font-extrabold leading-tight text-white md:text-5xl">
                   Use a assistente para conduzir a viagem, nao para substituir a venda.
                 </h2>
-                <p className="mt-4 max-w-2xl text-sm leading-7 text-blue-100/76 sm:text-base">
+                <p className="mt-4 max-w-2xl text-sm leading-7 text-[#c7d7f7] sm:text-base">
                   A Mia ajuda a qualificar o pedido, explicar opcoes e devolver o cliente para o fluxo de reserva com a rota, as datas e o nivel de apoio corretos.
                 </p>
                 <div className="mt-7 grid gap-3 sm:grid-cols-2">
@@ -468,7 +468,7 @@ export default function Home() {
                     "Mantenha o WhatsApp disponivel para escalacao",
                     "Capture contexto para vendas futuras",
                   ].map((item) => (
-                    <div key={item} className="rounded-2xl border border-white/12 bg-white/6 px-4 py-4 text-sm font-semibold text-white/84">
+                    <div key={item} className="rounded-2xl border border-white/[0.12] bg-white/[0.06] px-4 py-4 text-sm font-semibold text-[#eef4ff]">
                       <CheckCircle2 className="mb-2 h-4 w-4 text-blue-300" />
                       {item}
                     </div>
@@ -484,10 +484,10 @@ export default function Home() {
               </div>
 
               <div className="grid gap-4">
-                <div className="rounded-[28px] border border-white/12 bg-white/8 p-5 backdrop-blur-sm">
+                <div className="rounded-[28px] border border-white/[0.12] bg-white/[0.08] p-5 backdrop-blur-sm">
                   <div className="text-sm font-bold uppercase tracking-[0.18em] text-blue-200/80">Mia</div>
                   <div className="mt-4 space-y-3">
-                    <div className="max-w-[90%] rounded-[20px] rounded-tl-md bg-white/10 px-4 py-3 text-sm leading-6 text-white/86">
+                    <div className="max-w-[90%] rounded-[20px] rounded-tl-md bg-white/10 px-4 py-3 text-sm leading-6 text-[#f2f7ff]">
                       Quero um voo com menos conexoes e apoio em portugues.
                     </div>
                     <div className="ml-auto max-w-[85%] rounded-[20px] rounded-tr-md bg-[#3d86ff] px-4 py-3 text-sm leading-6 text-white">
@@ -495,10 +495,10 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-                <div className="rounded-[28px] border border-white/12 bg-white/8 p-5 backdrop-blur-sm">
+                <div className="rounded-[28px] border border-white/[0.12] bg-white/[0.08] p-5 backdrop-blur-sm">
                   <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-200/80">WhatsApp</div>
                   <div className="mt-2 text-xl font-extrabold text-white">{AGENCY_WHATSAPP_DISPLAY}</div>
-                  <p className="mt-3 text-sm leading-7 text-blue-100/72">
+                  <p className="mt-3 text-sm leading-7 text-[#bdd0f3]">
                     Quando o cliente quer uma pessoa, o fluxo digital mantem a passagem clara sem quebrar a jornada.
                   </p>
                 </div>

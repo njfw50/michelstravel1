@@ -58,7 +58,7 @@ function LanguageSwitcher({ variant = "navbar" }: { variant?: "navbar" | "footer
             "gap-1.5 rounded-full px-3 text-xs font-semibold",
             variant === "navbar"
               ? "text-white/80 hover:bg-white/10 hover:text-white"
-              : "border border-white/15 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white",
+              : "border border-white/[0.15] bg-white/5 text-white/80 hover:bg-white/10 hover:text-white",
           )}
           data-testid="button-language-switcher"
         >
@@ -180,7 +180,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div
             className={cn(
               "flex items-center justify-between gap-4 rounded-[30px] border border-white/10 px-4 py-3 shadow-[0_18px_50px_-24px_rgba(2,6,23,0.8)] backdrop-blur-xl transition-all duration-300 md:px-6 md:py-4",
-              scrolled || !isHome ? "bg-[#07132d]/96" : "bg-[#07132d]/88",
+              scrolled || !isHome ? "bg-[#07132d]/[0.96]" : "bg-[#07132d]/[0.88]",
             )}
           >
             <div className="flex items-center gap-4 md:gap-7">
@@ -190,7 +190,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </div>
                 <div className="hidden lg:block">
                   <span className="block text-sm font-bold uppercase tracking-[0.2em] text-white/90">Michels Travel</span>
-                  <span className="block text-[11px] uppercase tracking-[0.22em] text-blue-200/65">Opcao eficiente</span>
+                  <span className="block text-[11px] uppercase tracking-[0.22em] text-[#b9d0ff]">Opcao eficiente</span>
                 </div>
               </Link>
 
@@ -203,7 +203,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       "relative rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200",
                       location === link.href
                         ? "bg-white/10 text-white"
-                        : "text-white/72 hover:bg-white/6 hover:text-white",
+                        : "text-[#d9e6ff] hover:bg-white/[0.06] hover:text-white",
                     )}
                   >
                     {link.label}
@@ -295,7 +295,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             exit={{ opacity: 0, y: -8 }}
             className="fixed inset-x-0 top-[88px] z-40 px-4 lg:hidden"
           >
-            <div className="container mx-auto rounded-[28px] border border-white/10 bg-[#07132d]/98 p-4 shadow-[0_25px_60px_-28px_rgba(2,6,23,0.95)] backdrop-blur-xl">
+            <div className="container mx-auto rounded-[28px] border border-white/10 bg-[#07132d]/[0.98] p-4 shadow-[0_25px_60px_-28px_rgba(2,6,23,0.95)] backdrop-blur-xl">
               <div className="space-y-2">
                 {navLinks.map((link) => (
                   <Link
@@ -304,7 +304,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={cn(
                       "block rounded-2xl px-4 py-3 text-base font-semibold transition-colors",
-                      location === link.href ? "bg-white/10 text-white" : "text-white/75 hover:bg-white/6 hover:text-white",
+                      location === link.href ? "bg-white/10 text-white" : "text-white/75 hover:bg-white/[0.06] hover:text-white",
                     )}
                   >
                     {link.label}
@@ -314,19 +314,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="mt-4 space-y-2 border-t border-white/10 pt-4">
                 {user ? (
                   <>
-                    <button onClick={() => { setIsMobileMenuOpen(false); setLocation("/messages"); }} className="flex w-full items-center gap-2 rounded-2xl px-4 py-3 text-left text-base font-semibold text-white/75 hover:bg-white/6 hover:text-white" data-testid="button-mobile-messages">
+                    <button onClick={() => { setIsMobileMenuOpen(false); setLocation("/messages"); }} className="flex w-full items-center gap-2 rounded-2xl px-4 py-3 text-left text-base font-semibold text-white/75 hover:bg-white/[0.06] hover:text-white" data-testid="button-mobile-messages">
                       <MessageSquare className="h-4 w-4" />
                       {t("nav.messages") || "Messages"}
                     </button>
-                    <button onClick={() => { setIsMobileMenuOpen(false); setLocation("/profile"); }} className="block w-full rounded-2xl px-4 py-3 text-left text-base font-semibold text-white/75 hover:bg-white/6 hover:text-white" data-testid="button-mobile-profile">
+                    <button onClick={() => { setIsMobileMenuOpen(false); setLocation("/profile"); }} className="block w-full rounded-2xl px-4 py-3 text-left text-base font-semibold text-white/75 hover:bg-white/[0.06] hover:text-white" data-testid="button-mobile-profile">
                       {t("nav.profile") || "My Profile"}
                     </button>
                     {adminCheck?.isAdmin && (
-                      <button onClick={() => { setIsMobileMenuOpen(false); setLocation("/admin"); }} className="block w-full rounded-2xl px-4 py-3 text-left text-base font-semibold text-blue-300 hover:bg-white/6" data-testid="button-mobile-admin-panel">
+                      <button onClick={() => { setIsMobileMenuOpen(false); setLocation("/admin"); }} className="block w-full rounded-2xl px-4 py-3 text-left text-base font-semibold text-blue-300 hover:bg-white/[0.06]" data-testid="button-mobile-admin-panel">
                         {t("nav.admin")}
                       </button>
                     )}
-                    <button onClick={() => logout()} className="block w-full rounded-2xl px-4 py-3 text-left text-base font-semibold text-red-300 hover:bg-white/6">
+                    <button onClick={() => logout()} className="block w-full rounded-2xl px-4 py-3 text-left text-base font-semibold text-red-300 hover:bg-white/[0.06]">
                       {t("nav.logout")}
                     </button>
                   </>
@@ -357,17 +357,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </div>
                 <div>
                   <div className="text-lg font-bold uppercase tracking-[0.16em] text-white">Michels Travel</div>
-                  <div className="text-xs uppercase tracking-[0.22em] text-blue-200/60">Opcao eficiente</div>
+                  <div className="text-xs uppercase tracking-[0.22em] text-[#b1c6ef]">Opcao eficiente</div>
                 </div>
               </div>
-              <p className="max-w-md text-sm leading-7 text-blue-100/72">{t("footer.slogan")}</p>
+              <p className="max-w-md text-sm leading-7 text-[#c6d6f4]">{t("footer.slogan")}</p>
               <div className="flex flex-wrap gap-2 pt-1">
                 {[
                   { icon: ShieldCheck, label: t("footer.seal_ssl") },
                   { icon: Lock, label: t("footer.seal_stripe") },
                   { icon: Award, label: t("footer.seal_iata") },
                 ].map((seal) => (
-                  <div key={seal.label} className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-3 py-1.5 text-xs font-semibold text-white/82">
+                  <div key={seal.label} className="inline-flex items-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.06] px-3 py-1.5 text-xs font-semibold text-[#eef4ff]">
                     <seal.icon className="h-3.5 w-3.5 text-[#7cb0ff]" />
                     {seal.label}
                   </div>
@@ -376,8 +376,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="md:col-span-2">
-              <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-blue-200/65">{t("footer.company")}</h4>
-              <ul className="space-y-3 text-sm text-white/76">
+              <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-[#b9d0ff]">{t("footer.company")}</h4>
+              <ul className="space-y-3 text-sm text-[#dfe8ff]">
                 <li><Link href="/about" className="transition-colors hover:text-white">{t("footer.about")}</Link></li>
                 <li><Link href="/agencia-de-viagens-ironbound-newark" className="transition-colors hover:text-white">Ironbound Newark</Link></li>
                 <li><Link href="/passagens-para-o-brasil-saindo-de-newark" className="transition-colors hover:text-white">Brasil saindo de Newark</Link></li>
@@ -386,8 +386,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="md:col-span-2">
-              <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-blue-200/65">{t("footer.support")}</h4>
-              <ul className="space-y-3 text-sm text-white/76">
+              <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-[#b9d0ff]">{t("footer.support")}</h4>
+              <ul className="space-y-3 text-sm text-[#dfe8ff]">
                 <li><a href="/help" className="transition-colors hover:text-white">{t("footer.help")}</a></li>
                 <li><a href="/terms" className="transition-colors hover:text-white">{t("footer.terms")}</a></li>
                 <li><a href="/privacy" className="transition-colors hover:text-white">{t("footer.privacy")}</a></li>
@@ -395,15 +395,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="md:col-span-4">
-              <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-blue-200/65">{t("footer.contact_title")}</h4>
-              <p className="mb-5 max-w-sm text-sm leading-7 text-blue-100/72">{t("footer.contact_desc")}</p>
+              <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-[#b9d0ff]">{t("footer.contact_title")}</h4>
+              <p className="mb-5 max-w-sm text-sm leading-7 text-[#c6d6f4]">{t("footer.contact_desc")}</p>
               <ul className="space-y-4 text-sm">
                 <li className="flex items-start gap-3">
                   <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-white/8 text-[#7cb0ff]">
                     <MessageSquare className="h-4 w-4" />
                   </div>
                   <div>
-                    <span className="block text-[11px] font-bold uppercase tracking-[0.18em] text-blue-200/58">WhatsApp</span>
+                    <span className="block text-[11px] font-bold uppercase tracking-[0.18em] text-[#9db4de]">WhatsApp</span>
                     <a href={footerWhatsAppHref} target="_blank" rel="noreferrer" className="text-base font-semibold text-white hover:text-[#7cb0ff]">{AGENCY_WHATSAPP_DISPLAY}</a>
                   </div>
                 </li>
@@ -412,7 +412,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     <Mail className="h-4 w-4" />
                   </div>
                   <div>
-                    <span className="block text-[11px] font-bold uppercase tracking-[0.18em] text-blue-200/58">{t("footer.email_label")}</span>
+                    <span className="block text-[11px] font-bold uppercase tracking-[0.18em] text-[#9db4de]">{t("footer.email_label")}</span>
                     <a href={`mailto:${AGENCY_EMAIL}`} className="text-base font-semibold text-white hover:text-[#7cb0ff]">{AGENCY_EMAIL}</a>
                   </div>
                 </li>
@@ -433,15 +433,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-white">{seal.title}</div>
-                  <div className="text-xs text-blue-100/60">{seal.subtitle}</div>
+                  <div className="text-xs text-[#9fb2d0]">{seal.subtitle}</div>
                 </div>
               </div>
             ))}
           </div>
 
           <div className="flex flex-col items-center justify-between gap-4 border-t border-white/10 py-6 text-center md:flex-row md:text-left">
-            <span className="text-xs text-blue-100/58">&copy; {new Date().getFullYear()} Michels Travel. {t("footer.rights")}</span>
-            <div className="flex items-center gap-3 text-sm text-white/70">
+            <span className="text-xs text-[#97adc9]">&copy; {new Date().getFullYear()} Michels Travel. {t("footer.rights")}</span>
+            <div className="flex items-center gap-3 text-sm text-[#d4e2fa]">
               <span className="hidden sm:inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em]">
                 <ArrowRight className="h-3.5 w-3.5" /> Atendimento claro e suporte humano
               </span>
