@@ -176,7 +176,7 @@ export function LoginDialog({ open, onOpenChange, authError }: LoginDialogProps)
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm p-6 sm:p-8 rounded-[24px]">
         {step === "login" && (
           <>
             <DialogHeader className="text-center items-center">
