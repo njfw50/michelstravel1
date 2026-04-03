@@ -43,69 +43,69 @@ export default function AppSeniorDownload() {
   const copy = useMemo(() => {
     if (language === "en") {
       return {
-        badge: "Android app",
-        title: "Install the Michels Travel app on your Android phone.",
+        badge: "Android App",
+        title: "Get the Michels Travel app on your Android device.",
         subtitle:
-          "Search flights, stay signed in, manage your trips, and scan your documents directly from your phone without starting over in the browser.",
-        download: android.playStoreUrl ? "Open in Google Play" : "Download Android app",
-        whatsApp: "Talk on WhatsApp",
-        useSite: "Use Michels Travel on the site",
+          "Easily search flights, stay logged in, manage your trips, and scan documents directly from your phone—all without restarting in your browser.",
+        download: android.playStoreUrl ? "Open in Google Play" : "Download Android App",
+        whatsApp: "Chat with us on WhatsApp",
+        useSite: "Explore Michels Travel on the website",
         noteReady: androidDevice
-          ? "After the download finishes, Android may ask you to allow installs from this browser the first time."
-          : "Open this page on your Android phone to download and install the app directly.",
+          ? "Once the download completes, your Android device may ask permission to install apps from this browser the first time.",
+          : "Open this page on your Android device to download and install the app directly.",
         notePending: android.installNotes[language],
         version: "Version",
         packageLabel: "Package",
-        minAndroid: "Android",
-        released: "Released",
-        featureSignedIn: "Stay signed in on your own device",
-        featureScanner: "Scan documents on the phone and send them to your booking",
-        featureSupport: "Continue your booking with support, alerts, and simpler follow-up",
+        minAndroid: "Android Required",
+        released: "Release Date",
+        featureSignedIn: "Stay securely logged in on your device",
+        featureScanner: "Scan documents with your phone and send them to your booking",
+        featureSupport: "Manage your booking with support, alerts, and smooth follow-up",
       };
     }
 
     if (language === "es") {
       return {
         badge: "App Android",
-        title: "Instale la app Michels Travel en su telefono Android.",
+        title: "Descarga la app Michels Travel en tu teléfono Android.",
         subtitle:
-          "Busque vuelos, siga conectado, acompanhe sus viajes y escanee documentos directamente desde su celular sin volver a empezar en el navegador.",
+          "Busca vuelos, mantente conectado, administra tus viajes y escanea documentos directamente desde tu celular sin reiniciar el navegador.",
         download: android.playStoreUrl ? "Abrir en Google Play" : "Descargar app Android",
-        whatsApp: "Hablar por WhatsApp",
-        useSite: "Usar Michels Travel en el sitio",
+        whatsApp: "Chatea con nosotros por WhatsApp",
+        useSite: "Explorar Michels Travel en el sitio web",
         noteReady: androidDevice
-          ? "Cuando termine la descarga, Android puede pedir permiso para instalar apps desde este navegador la primera vez."
-          : "Abra esta pagina en su telefono Android para descargar e instalar la app directamente.",
+          ? "Al terminar la descarga, tu Android puede pedir permiso para instalar apps desde este navegador por primera vez."
+          : "Abre esta página en tu teléfono Android para descargar e instalar la app directamente.",
         notePending: android.installNotes[language],
-        version: "Version",
+        version: "Versión",
         packageLabel: "Paquete",
-        minAndroid: "Android",
-        released: "Publicado",
-        featureSignedIn: "Seguir conectado en su propio dispositivo",
-        featureScanner: "Escanear documentos en el celular y enviarlos a la reserva",
-        featureSupport: "Continuar su reserva con ayuda, avisos y seguimiento mas simple",
+        minAndroid: "Requiere Android",
+        released: "Fecha de publicación",
+        featureSignedIn: "Mantente conectado de forma segura en tu dispositivo",
+        featureScanner: "Escanea documentos con tu celular y envíalos a tu reserva",
+        featureSupport: "Gestiona tu reserva con soporte, alertas y seguimiento sencillo",
       };
     }
 
     return {
       badge: "App Android",
-      title: "Instale o app Michels Travel no seu celular Android.",
+      title: "Baixe o aplicativo Michels Travel no seu celular Android.",
       subtitle:
-        "Busque voos, fique logado, acompanhe suas viagens e escaneie documentos direto do telefone sem recomecar no navegador.",
-      download: android.playStoreUrl ? "Abrir no Google Play" : "Baixar app Android",
-      whatsApp: "Falar no WhatsApp",
-      useSite: "Usar Michels Travel no site",
+        "Pesquise voos, mantenha-se conectado, acompanhe suas viagens e escaneie documentos diretamente do seu aparelho, sem precisar recomeçar no navegador.",
+      download: android.playStoreUrl ? "Abrir no Google Play" : "Baixar aplicativo Android",
+      whatsApp: "Fale conosco pelo WhatsApp",
+      useSite: "Explore o Michels Travel pelo site",
       noteReady: androidDevice
-        ? "Quando o download terminar, o Android pode pedir permissao para instalar apps deste navegador na primeira vez."
-        : "Abra esta pagina no seu celular Android para baixar e instalar o app diretamente.",
+        ? "Ao concluir o download, seu Android poderá solicitar permissão para instalar apps deste navegador pela primeira vez."
+        : "Abra esta página no seu celular Android para baixar e instalar o app diretamente.",
       notePending: android.installNotes[language],
-      version: "Versao",
+      version: "Versão",
       packageLabel: "Pacote",
-      minAndroid: "Android",
-      released: "Publicado",
-      featureSignedIn: "Ficar logado no proprio aparelho",
-      featureScanner: "Escanear documentos no celular e mandar para a reserva",
-      featureSupport: "Continuar sua reserva com ajuda, avisos e acompanhamento mais simples",
+      minAndroid: "Requer Android",
+      released: "Data de lançamento",
+      featureSignedIn: "Permaneça conectado de forma segura no seu dispositivo",
+      featureScanner: "Escaneie documentos pelo celular e envie para sua reserva",
+      featureSupport: "Gerencie sua reserva com suporte, alertas e acompanhamento facilitado",
     };
   }, [android.installNotes, android.playStoreUrl, androidDevice, language]);
 
@@ -121,8 +121,8 @@ export default function AppSeniorDownload() {
       details: [
         manifest.senior.appName,
         releaseReady
-          ? `Versao: ${android.version || "disponivel"}`
-          : "Quero saber quando o app Android estiver pronto.",
+          ? `Versão: ${android.version || "disponível"}`
+          : "Quero ser avisado quando o app Android estiver disponível.",
       ],
     }),
   );
@@ -130,8 +130,8 @@ export default function AppSeniorDownload() {
   return (
     <>
       <SEO
-        title="Baixar App Android Michels Travel"
-        description="Pagina oficial da Michels Travel para instalar o app Android, continuar sua reserva no celular e escanear documentos direto do aparelho."
+        title="Baixe o App Android Michels Travel"
+        description="Página oficial Michels Travel para instalar o app Android, continuar suas reservas no celular e escanear documentos diretamente do aparelho."
         path="/apps/michels-travel"
       />
 
@@ -199,7 +199,7 @@ export default function AppSeniorDownload() {
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
                       <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{copy.released}</p>
-                      <p className="mt-1 text-base font-semibold text-slate-900">{releasedAt || "Aguardando primeira publicacao"}</p>
+                      <p className="mt-1 text-base font-semibold text-slate-900">{releasedAt || "Aguardando primeira publicação"}</p>
                     </div>
                   </div>
                 </CardContent>

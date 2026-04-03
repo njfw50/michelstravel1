@@ -59,77 +59,77 @@ export default function AppAdminDownload() {
   const copy = useMemo(() => {
     if (language === "en") {
       return {
-        badge: "Admin app",
-        title: "Install Michels Travel Admin on your Android phone.",
+        badge: "Admin App",
+        title: "Get Michels Travel Admin on your Android device.",
         subtitle:
-          "This is the separate operations app for you, not the senior app and not the customer booking app.",
-        download: android.playStoreUrl ? "Open in Google Play" : "Install admin app",
+          "The dedicated operations app designed for you — not the senior app nor the customer booking app.",
+        download: android.playStoreUrl ? "Open in Google Play" : "Install Admin App",
         pending: "Admin installer coming soon",
-        backDashboard: "Back to dashboard",
+        backDashboard: "Back to Dashboard",
         noteReady: androidDevice
-          ? "The installer should start on your phone. If Android blocks the first install, allow installs from this browser and open the button again."
-          : "Open this page on your Android phone to install the admin app directly.",
+          ? "The installer is launching on your device. If Android blocks the installation, enable app installs from this browser and try again."
+          : "Visit this page on your Android device to install the Admin app instantly.",
         notePending: android.installNotes[language],
         version: "Version",
         packageLabel: "Package",
-        minAndroid: "Android",
-        released: "Released",
-        featureAlerts: "Real alerts and follow-up on your own phone",
-        featureCases: "Open the correct case directly from a notification",
-        featureOps: "Dedicated app only for your operations",
+        minAndroid: "Minimum Android",
+        released: "Release Date",
+        featureAlerts: "Receive real-time alerts and manage follow-ups on your phone",
+        featureCases: "Open the right case straight from notifications",
+        featureOps: "A dedicated app built exclusively for your operations",
       };
     }
 
     if (language === "es") {
       return {
         badge: "App Admin",
-        title: "Instale Michels Travel Admin en su telefono Android.",
+        title: "Instale Michels Travel Admin en su dispositivo Android.",
         subtitle:
-          "Esta es la app separada de operacion para usted, no la app senior ni la app del cliente comprador.",
-        download: android.playStoreUrl ? "Abrir en Google Play" : "Instalar app admin",
-        pending: "Instalador admin en preparacion",
-        backDashboard: "Volver al dashboard",
+          "La aplicación dedicada para operaciones, diseñada para usted — no es la app senior ni la app para clientes.",
+        download: android.playStoreUrl ? "Abrir en Google Play" : "Instalar App Admin",
+        pending: "Instalador admin próximamente disponible",
+        backDashboard: "Volver al Panel",
         noteReady: androidDevice
-          ? "El instalador debe comenzar en su telefono. Si Android bloquea la primera instalacion, permita instalaciones desde este navegador y abra el boton otra vez."
-          : "Abra esta pagina en su telefono Android para instalar la app admin directamente.",
+          ? "El instalador se está ejecutando en su dispositivo. Si Android bloquea la instalación, permita instalar aplicaciones desde este navegador y vuelva a intentarlo."
+          : "Abra esta página en su dispositivo Android para instalar App Admin al instante.",
         notePending: android.installNotes[language],
-        version: "Version",
+        version: "Versión",
         packageLabel: "Paquete",
-        minAndroid: "Android",
-        released: "Publicado",
-        featureAlerts: "Alertas reales y follow-up en su propio celular",
-        featureCases: "Abrir el caso correcto directo desde la notificacion",
-        featureOps: "App dedicada solo para su operacion",
+        minAndroid: "Android Mínimo",
+        released: "Fecha de Lanzamiento",
+        featureAlerts: "Reciba alertas en tiempo real y gestione seguimientos desde su teléfono",
+        featureCases: "Abra el caso adecuado directamente desde las notificaciones",
+        featureOps: "Una app dedicada exclusivamente a sus operaciones",
       };
     }
 
     return {
       badge: "App Admin",
-      title: "Instale o Michels Travel Admin no seu celular Android.",
+      title: "Tenha o Michels Travel Admin no seu celular Android.",
       subtitle:
-        "Este e o app separado da sua operacao, nao o app senior e nao o app de busca e compra do cliente.",
-      download: android.playStoreUrl ? "Abrir no Google Play" : "Instalar app admin",
-      pending: "Instalador admin em preparo",
-      backDashboard: "Voltar ao dashboard",
+        "O aplicativo dedicado para a sua operação — diferente do app sênior e do app de reservas para clientes.",
+      download: android.playStoreUrl ? "Abrir no Google Play" : "Instalar App Admin",
+      pending: "Instalador Admin em breve disponível",
+      backDashboard: "Voltar ao Painel",
       noteReady: androidDevice
-        ? "O instalador deve comecar no seu celular. Se o Android bloquear a primeira instalacao, permita instalar apps deste navegador e abra o botao novamente."
-        : "Abra esta pagina no seu celular Android para instalar o app admin diretamente.",
+        ? "O instalador está iniciando no seu celular. Se o Android bloquear a instalação, permita instalar apps deste navegador e tente novamente."
+        : "Acesse esta página pelo seu celular Android para instalar o App Admin de forma rápida e prática.",
       notePending: android.installNotes[language],
-      version: "Versao",
+      version: "Versão",
       packageLabel: "Pacote",
-      minAndroid: "Android",
-      released: "Publicado",
-      featureAlerts: "Alertas reais e follow-up no seu proprio celular",
-      featureCases: "Abrir o caso certo direto da notificacao",
-      featureOps: "App dedicado so para sua operacao",
+      minAndroid: "Android Mínimo",
+      released: "Data de Lançamento",
+      featureAlerts: "Receba alertas em tempo real e faça o acompanhamento direto no celular",
+      featureCases: "Abra o caso correto diretamente das notificações",
+      featureOps: "Aplicativo exclusivo, feito só para a sua operação",
     };
   }, [android.installNotes, android.playStoreUrl, androidDevice, language]);
 
   return (
     <>
       <SEO
-        title="Instalar App Michels Travel Admin"
-        description="Pagina oficial para instalar o app Michels Travel Admin, separado do senior e do app de compra do cliente."
+        title="Instale o App Michels Travel Admin"
+        description="Página oficial para baixar o Michels Travel Admin, aplicativo exclusivo para operações, separado dos apps senior e cliente."
         path="/apps/michels-travel-admin"
       />
 
@@ -195,7 +195,7 @@ export default function AppAdminDownload() {
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
                       <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{copy.released}</p>
-                      <p className="mt-1 text-base font-semibold text-slate-900">{releasedAt || "Aguardando primeira publicacao"}</p>
+                      <p className="mt-1 text-base font-semibold text-slate-900">{releasedAt || "Aguardando primeira publicação"}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -225,3 +225,4 @@ export default function AppAdminDownload() {
     </>
   );
 }
+```
