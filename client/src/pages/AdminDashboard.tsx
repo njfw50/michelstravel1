@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Line, ComposedChart } from 'recharts';
-import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare, AlertTriangle, CheckCircle2, XCircle, Lock, Phone, Smartphone, Megaphone, Plus, Trash2, ExternalLink, Copy, Search, RefreshCw, ChevronDown, ChevronUp, Calendar, MapPin, ArrowRightLeft } from "lucide-react";
+import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare, AlertTriangle, CheckCircle2, XCircle, Lock, Phone, Smartphone, Megaphone, Plus, Trash2, ExternalLink, Copy, Search, RefreshCw, ChevronDown, ChevronUp, Calendar, MapPin, ArrowRightLeft, LayoutDashboard, Settings } from "lucide-react";
 import { VoiceEscalations } from "@/components/VoiceEscalations";
 import { DocumentScannerForm } from "@/components/document/DocumentScannerForm";
 import { AdminCommandCenter } from "@/components/AdminCommandCenter";
@@ -1221,62 +1221,143 @@ export default function AdminDashboard() {
   const topRoutes = (stats as any)?.topRoutes || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex justify-between items-center flex-wrap gap-4">
-          <div>
-            <h1 className="text-3xl font-bold font-display text-gray-900" data-testid="text-admin-title">{t("admin.dashboard")}</h1>
-            <p className="text-gray-500">{t("admin.welcome")}. {t("admin.happening")}</p>
+    <div className="flex h-screen overflow-hidden bg-gray-50 font-sans selection:bg-blue-200">
+      {/* Sidebar Area */}
+      <aside className="hidden md:flex w-72 flex-col bg-slate-950 shadow-2xl z-20">
+        <div className="p-8 border-b border-white/10 flex flex-col items-start">
+          <div className="h-10 w-10 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center mb-4">
+            <LayoutDashboard className="h-5 w-5 text-blue-400" />
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Button
-              data-testid="button-admin-live-chat"
-              variant="default"
-              onClick={() => setLocation("/admin/live-chat")}
-              className="gap-2"
+          <h2 className="text-xl font-extrabold text-white tracking-tight">Michels Concierge</h2>
+          <p className="text-[10px] text-white/50 tracking-[0.2em] uppercase font-semibold mt-1">Painel Administrativo</p>
+        </div>
+        
+        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1.5 custom-scrollbar">
+          <Button 
+            variant="ghost" 
+            className={`w-full justify-start gap-3 rounded-xl transition-all ${activeTab === "command" ? "bg-blue-600/10 text-blue-400 hover:bg-blue-600/20" : "text-white/60 hover:text-white hover:bg-white/5"}`} 
+            onClick={() => setActiveTab("command")}
+          >
+            <ShieldCheck className="h-4 w-4" />
+            <span className="font-medium text-sm">Painel Concierge</span>
+          </Button>
+
+          <Button 
+            variant="ghost" 
+            className={`w-full justify-start gap-3 rounded-xl transition-all ${activeTab === "senior" ? "bg-blue-600/10 text-blue-400 hover:bg-blue-600/20" : "text-white/60 hover:text-white hover:bg-white/5"}`} 
+            onClick={() => setActiveTab("senior")}
+          >
+            <Phone className="h-4 w-4" />
+            <span className="font-medium text-sm">Monitoramento Sênior</span>
+          </Button>
+
+          <Button 
+            variant="ghost" 
+            className={`w-full justify-start gap-3 rounded-xl transition-all ${activeTab === "overview" ? "bg-blue-600/10 text-blue-400 hover:bg-blue-600/20" : "text-white/60 hover:text-white hover:bg-white/5"}`} 
+            onClick={() => setActiveTab("overview")}
+          >
+            <TrendingUp className="h-4 w-4" />
+            <span className="font-medium text-sm">Inteligência Estratégica</span>
+          </Button>
+
+          <Button 
+            variant="ghost" 
+            className={`w-full justify-start gap-3 rounded-xl transition-all ${activeTab === "bookings" ? "bg-blue-600/10 text-blue-400 hover:bg-blue-600/20" : "text-white/60 hover:text-white hover:bg-white/5"}`} 
+            onClick={() => setActiveTab("bookings")}
+          >
+            <Plane className="h-4 w-4" />
+            <span className="font-medium text-sm">Jornadas sob Curadoria</span>
+          </Button>
+
+          <Button 
+            variant="ghost" 
+            className={`w-full justify-start gap-3 rounded-xl transition-all ${activeTab === "settings" ? "bg-blue-600/10 text-blue-400 hover:bg-blue-600/20" : "text-white/60 hover:text-white hover:bg-white/5"}`} 
+            onClick={() => setActiveTab("settings")}
+          >
+            <Settings className="h-4 w-4" />
+            <span className="font-medium text-sm">Ajustes da Agência</span>
+          </Button>
+        </nav>
+        
+        <div className="p-6 border-t border-white/10">
+          <Button 
+            variant="ghost" 
+            onClick={handleLogout} 
+            className="w-full justify-start gap-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Encerrar Sessão</span>
+          </Button>
+        </div>
+      </aside>
+
+      {/* Main Area */}
+      <main className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Header */}
+        <header className="h-[72px] bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-6 md:px-10 z-10 sticky top-0">
+          <div className="md:hidden flex items-center gap-3">
+            <LayoutDashboard className="h-5 w-5 text-blue-600" />
+            <h1 className="text-lg font-bold font-display text-slate-900 leading-none">Concierge</h1>
+          </div>
+          
+          <div className="hidden md:flex flex-col">
+            <h1 className="text-lg font-bold text-gray-900 tracking-tight">
+              {activeTab === "command" && "Painel Concierge Automático"}
+              {activeTab === "senior" && "Suporte de Elite para a Melhor Idade"}
+              {activeTab === "overview" && "Visão Global Executiva"}
+              {activeTab === "bookings" && "Controle de Viagens Premium"}
+              {activeTab === "settings" && "Configurações Operacionais da Agência"}
+            </h1>
+            <p className="text-[11px] font-medium text-gray-500 uppercase tracking-widest mt-0.5">
+              {t("admin.welcome")}. Visão atualizada
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <Button 
+              data-testid="button-admin-live-chat" 
+              onClick={() => setLocation("/admin/live-chat")} 
+              className="gap-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white shadow-md rounded-full px-5 py-5 font-semibold transition-all transform hover:scale-105 active:scale-95"
             >
               <MessageSquare className="h-4 w-4" />
-              Atendimento ao Vivo
+              <span className="hidden sm:inline">Assistência ao Vivo</span>
             </Button>
-            <Button
-              data-testid="button-admin-logout"
-              variant="outline"
-              onClick={handleLogout}
-              className="gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              {t("admin.logout")}
-            </Button>
+            <div className="md:hidden">
+              <Button variant="ghost" size="icon" onClick={() => setActiveTab(activeTab === "command" ? "overview" : "command")} className="text-gray-500 rounded-full mr-2">
+                <LayoutDashboard className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleLogout} className="text-gray-500 rounded-full">
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
-        </div>
+        </header>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "command" | "overview" | "bookings" | "settings" | "senior")} className="w-full">
-          <div className="w-full overflow-x-auto pb-2">
-            <TabsList className="inline-flex min-w-max md:w-full md:grid md:grid-cols-5 max-w-3xl" data-testid="tabs-admin-nav">
-              <TabsTrigger value="command" data-testid="tab-command">Command Center</TabsTrigger>
-              <TabsTrigger value="overview" data-testid="tab-overview">Visao Geral</TabsTrigger>
-              <TabsTrigger value="bookings" data-testid="tab-bookings">Reservas</TabsTrigger>
-              <TabsTrigger value="senior" data-testid="tab-senior">Assistência Sênior</TabsTrigger>
-              <TabsTrigger value="settings" data-testid="tab-settings">Configuracoes</TabsTrigger>
-            </TabsList>
-          </div>
+        {/* Scrollable Document Area */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 scrollbar-thin">
+          <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
 
-            <TabsContent value="command" className="space-y-6 mt-4">
-              <AdminCommandCenter
+            {activeTab === "command" && (
+              <div className="animate-in fade-in duration-300">
+                <AdminCommandCenter
                 onOpenLiveDesk={(options) =>
                   setLocation(options?.sessionId ? `/admin/live-chat?session=${options.sessionId}` : "/admin/live-chat")
                 }
                 onOpenBookings={openBookingsView}
                 onOpenSettings={openSettingsView}
               />
-            </TabsContent>
+              </div>
+            )}
 
-          <TabsContent value="senior" className="space-y-6 mt-6">
-            <SeniorCareDesk />
-          </TabsContent>
+            {activeTab === "senior" && (
+              <div className="animate-in fade-in duration-300">
+                <SeniorCareDesk />
+              </div>
+            )}
 
-          <TabsContent value="overview" className="space-y-6 mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {activeTab === "overview" && (
+              <div className="animate-in fade-in duration-300">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="bg-white border border-gray-200 shadow-sm">
                 <CardContent className="p-6 flex items-center justify-between gap-4">
                   <div>
@@ -1452,10 +1533,12 @@ export default function AdminDashboard() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+              </div>
+            )}
 
-          <TabsContent value="bookings" className="space-y-6 mt-6">
-            <Card className="bg-white border border-gray-200 shadow-sm">
+            {activeTab === "bookings" && (
+              <div className="animate-in fade-in duration-300">
+                <Card className="bg-white border border-gray-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-gray-900">Gerenciamento de Reservas</CardTitle>
               </CardHeader>
@@ -1643,10 +1726,12 @@ export default function AdminDashboard() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+              </div>
+            )}
 
-          <TabsContent value="settings" className="space-y-6 mt-6">
-            <TestModeControl />
+            {activeTab === "settings" && (
+              <div className="animate-in fade-in duration-300">
+                <TestModeControl />
             <MobileAppChannelControl />
             <MobileAppReleaseControl />
             <CommissionControl />
@@ -1666,9 +1751,12 @@ export default function AdminDashboard() {
                 <DocumentScannerForm />
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
