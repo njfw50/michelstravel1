@@ -104,13 +104,13 @@ export default function Home() {
             <div className="max-w-3xl">
               <Badge className="rounded-full border border-blue-200 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700 shadow-sm">
                 <Sparkles className="mr-2 h-3.5 w-3.5" />
-                Plataforma comercial Michels Travel
+                Passagens Aéreas e Consultoria Premium
               </Badge>
               <h1 className="mt-6 text-[2.8rem] font-extrabold leading-[0.94] tracking-tight text-slate-950 sm:text-5xl md:text-6xl lg:text-[4.65rem]">
-                O site agora precisa vender com clareza, ritmo e presença comercial.
+                Voe Mais Longe com as Melhores Tarifas e Suporte Humano Real.
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
-                Esta nova home abre com uma estrutura mais forte: pesquisa real, apoio humano, rota senior, app e continuidade de compra no mesmo ambiente visual.
+                Sua próxima viagem começa aqui. Compare centenas de companhias aéreas, garanta os voos mais baratos e conte com a Michels Travel para cuidar de cada detalhe com segurança e exclusividade.
               </p>
 
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -156,16 +156,16 @@ export default function Home() {
                   <img src={airplaneDestination} alt="Michels Travel" className="h-full w-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#07132d] via-[#07132d]/25 to-transparent" />
                   <div className="absolute left-5 top-5 rounded-full border border-white/[0.15] bg-[#07132d]/[0.70] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-white backdrop-blur-md">
-                    Apoio prioritario
+                    Suporte VIP 24h
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
                     <div className="rounded-[26px] border border-white/[0.15] bg-white/10 p-5 backdrop-blur-xl">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-200/80">Michels Travel</p>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-200/80">Sua Agência de Viagens</p>
                       <h2 className="mt-2 text-2xl font-extrabold leading-tight text-white">
-                        Uma unica porta de entrada para voos, senior, app e pos-venda.
+                        Do planejamento ao embarque, nunca deixamos você voar sozinho.
                       </h2>
                       <p className="mt-3 text-sm leading-6 text-white/80">
-                        A estrutura agora precisa ser clara: captacao, reserva, suporte e retencao dentro da mesma interface.
+                        Emissão imediata de passagens e atendimento dedicado para resolver impasses de malhas aéreas ou cancelamentos a qualquer hora do dia.
                       </p>
                     </div>
                   </div>
@@ -194,9 +194,9 @@ export default function Home() {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-blue-700">Buscar voos ao vivo</p>
-                <h2 className="mt-2 text-2xl font-extrabold text-slate-950 sm:text-3xl">Michels Travel</h2>
+                <h2 className="mt-2 text-2xl font-extrabold text-slate-950 sm:text-3xl">Para onde deseja viajar?</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-                  Pesquise ida, ida e volta ou multi destino e siga para o mesmo fluxo comercial da agencia.
+                  Encontre e reserve seu voo agora mesmo. Comparação inteligente em tempo real para os melhores preços do mercado.
                 </p>
               </div>
               <div className="rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
@@ -217,10 +217,10 @@ export default function Home() {
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-700">Atendimento senior</p>
                 <h2 className="mt-3 text-3xl font-extrabold leading-tight text-slate-950">
-                  O atendimento senior continua aberto sem separar a marca.
+                  Atendimento especializado: sem correria, sem complicação.
                 </h2>
                 <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
-                  Acoes maiores, guia mais calma e menos pressao para quem quer mais tempo sem perder o mesmo fluxo de reserva.
+                  Preparamos um ambiente simplificado e claro. Ideal para passageiros que preferem mais tranquilidade, com suporte humano para guiar cada passo da reserva, focando apenas no essencial da sua passagem.
                 </p>
                 <Button onClick={() => setLocation("/senior")} className="mt-6 rounded-full bg-slate-950 px-6 text-sm font-bold text-white hover:bg-slate-800">
                   Abrir caminho senior
@@ -235,10 +235,10 @@ export default function Home() {
             <CardContent className="p-6 md:p-8">
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Newark / Ironbound</p>
               <h2 className="mt-3 text-3xl font-extrabold leading-tight text-slate-950">
-                Suporte local para Newark, Ironbound e rotas para o Brasil.
+                Liderança no mercado de viagens para o Brasil.
               </h2>
               <p className="mt-4 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
-                Use o mesmo fluxo digital com apoio direto no WhatsApp para voos, reservas e atendimento comercial mais proximo.
+                Estamos no coração de Ironbound (Newark, NJ) garantindo tarifas exclusivas para sua família voar para o Brasil, Europa, e por todos os Estados Unidos. Nosso atendimento humanizado pelo WhatsApp garante o conforto que você precisa antes de voar.
               </p>
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -276,19 +276,19 @@ export default function Home() {
               <div className="max-w-2xl">
                 <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#b8ccff]">Jornada de compra</p>
                 <h2 className="mt-3 text-3xl font-extrabold leading-tight md:text-4xl">
-                  Um caminho mais limpo da pesquisa ate a emissao do bilhete.
+                  Como garantimos a melhor experiência de viagem para você.
                 </h2>
                 <p className="mt-4 text-sm leading-7 text-[#c7d7f7] sm:text-base">
-                  A pagina agora conduz melhor a venda: menos ruido, mais hierarquia e o suporte certo no momento certo.
+                  Um processo transparente e ágil, focado em trazer clareza para emissões e proteção absoluta no seu pagamento, blindando você contra surpresas desagradáveis e imprevistos de embarque.
                 </p>
               </div>
             </div>
 
             <div className="mt-8 grid gap-4 lg:grid-cols-3">
               {[
-                { number: "01", icon: Search, title: "Pesquise tarifas ao vivo", body: "Abra o inventario real da agencia informando rota, datas e perfil do passageiro." },
-                { number: "02", icon: CreditCard, title: "Compare e confirme", body: "Revise conexoes, bagagem e preco com menos ruido antes de entrar na reserva." },
-                { number: "03", icon: Ticket, title: "Emita e acompanhe", body: "Mantenha suporte, documentos e pos-venda no mesmo ambiente comercial." },
+                { number: "01", icon: Search, title: "Conexões Inteligentes", body: "Nosso sistema cruza a malha aérea mundial instantaneamente para encontrar as rotas mais imperdíveis com o menor preço online." },
+                { number: "02", icon: CreditCard, title: "Reserva Descomplicada", body: "Confirmamos as regras de bagagem, os assentos e emitimos seus recibos em uma plataforma blindada de alto padrão e sem burocracia." },
+                { number: "03", icon: Ticket, title: "Emissão Imediata", body: "Sua passagem gerada aprovada em segundos entregue de imediato no seu e-mail particular e app, acompanhada de total suporte comercial pré-embarque." },
               ].map((step) => (
                 <div key={step.number} className="rounded-[28px] border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
                   <div className="flex items-center justify-between">
@@ -312,7 +312,7 @@ export default function Home() {
             <div className="max-w-2xl">
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Companhias e aeroportos ja conectados</p>
               <h2 className="mt-3 text-3xl font-extrabold leading-tight text-slate-950 md:text-4xl">
-                O site agora precisa parecer e agir como uma plataforma comercial de verdade.
+                Nossos grandes parceiros, unidos pelo seu custo-benefício.
               </h2>
             </div>
             <div className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-600">
@@ -332,9 +332,9 @@ export default function Home() {
               </div>
               <div className="mt-5 grid gap-4 sm:grid-cols-3">
                 {[
-                  { title: "Suporte humano", body: "WhatsApp e Mia alinhados ao mesmo fluxo comercial." },
-                  { title: "Inventario ao vivo", body: "As buscas usam o mesmo inventario operacional conectado a agencia." },
-                  { title: "Retencao", body: "App, dashboard e centro de reservas continuam conectados depois da venda." },
+                  { title: "Acordos Comerciais Fortes", body: "Negociamos taxas de bagagem e horários preferenciais direto na fonte das companhias para bater o preço do mercado livre." },
+                  { title: "Inventário Global Ao Vivo", body: "Tenha acesso às prateleiras e passagens de última hora de todas as companhias disponíveis mundialmente." },
+                  { title: "Sua Viagem Com Apoio Premium", body: "Tenha a Michels Travel do seu lado. Apoio no WhatsApp com consultores verdadeiros, aptos a ajudá-lo na resolução rápida de problemas ou remarcação se necessário." },
                 ].map((item) => (
                   <div key={item.title} className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
                     <div className="text-sm font-bold text-slate-950">{item.title}</div>
@@ -377,10 +377,10 @@ export default function Home() {
             <div className="max-w-2xl">
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">Oportunidades em destaque</p>
               <h2 className="mt-3 text-3xl font-extrabold leading-tight text-slate-950 md:text-4xl">
-                Tarifas e destinos destacados com intencao comercial.
+                Destinos Imperdíveis em Oferta Relâmpago.
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
-                Abra uma rota, valide disponibilidade e siga para o mesmo motor de reserva que a agencia ja usa no dia a dia.
+                Explore os destinos mais incríveis por preços que cabem no bolso da sua família. Selecionamos passagens aéreas e rotas estratégicas focando na perfeita aliança entre excelência, baixo preço de cotação e exclusividade antes de subirem de preço.
               </p>
             </div>
             <Link href="/blog">
@@ -456,17 +456,17 @@ export default function Home() {
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-200/80">Mia dentro da venda</p>
                 <h2 className="mt-3 text-3xl font-extrabold leading-tight text-white md:text-5xl">
-                  Use a assistente para conduzir a viagem, nao para substituir a venda.
+                  Sua Consultora de Viagens Digital Inteligente.
                 </h2>
                 <p className="mt-4 max-w-2xl text-sm leading-7 text-[#c7d7f7] sm:text-base">
-                  A Mia ajuda a qualificar o pedido, explicar opcoes e devolver o cliente para o fluxo de reserva com a rota, as datas e o nivel de apoio corretos.
+                  Pode fazer pesquisas ilimitadas! A Mia é a nossa robô amigável criada com base nas políticas da empresa, preparada para identificar seus desejos e indicar a tarifa final que mais te favorece, e te transferir aos nossos agentes ao vivo quando solicitado.
                 </p>
                 <div className="mt-7 grid gap-3 sm:grid-cols-2">
                   {[
-                    "Qualifique a viagem antes da cotacao",
-                    "Devolva o viajante ao fluxo de reserva",
-                    "Mantenha o WhatsApp disponivel para escalacao",
-                    "Capture contexto para vendas futuras",
+                    "Cotação avançadíssima em qualquer idioma",
+                    "Apresentação assertiva da rota mais segura e econômica via Chat",
+                    "Redirecionamento automático e transparente ao fluxo final seguro",
+                    "Conexão com um atendente humano instantaneamente caso queira suporte pessoal",
                   ].map((item) => (
                     <div key={item} className="rounded-2xl border border-white/[0.12] bg-white/[0.06] px-4 py-4 text-sm font-semibold text-[#eef4ff]">
                       <CheckCircle2 className="mb-2 h-4 w-4 text-blue-300" />
@@ -499,7 +499,7 @@ export default function Home() {
                   <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-200/80">WhatsApp</div>
                   <div className="mt-2 text-xl font-extrabold text-white">{AGENCY_WHATSAPP_DISPLAY}</div>
                   <p className="mt-3 text-sm leading-7 text-[#bdd0f3]">
-                    Quando o cliente quer uma pessoa, o fluxo digital mantem a passagem clara sem quebrar a jornada.
+                    Com apenas um toque você conversa em tempo real com diretores da Michels Travel, unificando a segurança das agências do passado à praticidade premium do futuro. 
                   </p>
                 </div>
               </div>
