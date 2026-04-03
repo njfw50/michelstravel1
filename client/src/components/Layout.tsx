@@ -57,7 +57,7 @@ function LanguageSwitcher({ variant = "navbar" }: { variant?: "navbar" | "footer
           className={cn(
             "gap-1.5 rounded-full px-3 text-xs font-semibold",
             variant === "navbar"
-              ? "border border-slate-200/50 bg-white/40 text-slate-800 hover:bg-white/60"
+              ? "text-white/80 hover:bg-white/10 hover:text-white"
               : "border border-white/[0.15] bg-white/5 text-white/80 hover:bg-white/10 hover:text-white",
           )}
           data-testid="button-language-switcher"
@@ -175,17 +175,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#f4f7ff] text-slate-900 selection:bg-blue-500/15 selection:text-slate-950">
-      <header className={cn("fixed inset-x-0 top-0 z-50 transition-all duration-300", scrolled || !isHome ? "bg-white/[0.93] backdrop-blur-xl shadow-[0_8px_30px_-12px_rgba(0,0,0,0.08)] border-b border-slate-200/50" : "bg-transparent py-2")}>
-        <div className="container mx-auto px-4 py-3 md:px-6 md:py-4">
-          <div className="flex items-center justify-between gap-4">
+      <header className="fixed inset-x-0 top-0 z-50">
+        <div className="container mx-auto px-4 pb-2 pt-4 md:px-6 md:pb-3 md:pt-5">
+          <div
+            className={cn(
+              "flex items-center justify-between gap-4 rounded-[30px] border border-white/10 px-4 py-3 shadow-[0_18px_50px_-24px_rgba(2,6,23,0.8)] backdrop-blur-xl transition-all duration-300 md:px-6 md:py-4",
+              scrolled || !isHome ? "bg-[#07132d]/[0.96]" : "bg-[#07132d]/[0.88]",
+            )}
+          >
             <div className="flex items-center gap-4 md:gap-7">
               <Link href="/" className="group flex items-center gap-4">
                 <div className="brand-mark-shell brand-mark-shell--header">
                   <img src={brandMark} alt="Michels Travel" className="transition-transform duration-300 group-hover:scale-[1.03]" />
                 </div>
                 <div className="hidden lg:block">
-                  <span className={cn("block text-sm font-bold uppercase tracking-[0.2em] transition-colors", scrolled || !isHome ? "text-slate-900" : "text-white/90")}>Michels Travel</span>
-                  <span className={cn("block text-[11px] uppercase tracking-[0.22em] transition-colors", scrolled || !isHome ? "text-blue-600" : "text-[#b9d0ff]")}>Opcao eficiente</span>
+                  <span className="block text-sm font-bold uppercase tracking-[0.2em] text-white/90">Michels Travel</span>
+                  <span className="block text-[11px] uppercase tracking-[0.22em] text-[#b9d0ff]">Opcao eficiente</span>
                 </div>
               </Link>
 
@@ -197,8 +202,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     className={cn(
                       "relative rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200",
                       location === link.href
-                        ? (scrolled || !isHome ? "bg-slate-100 text-blue-700" : "bg-white/10 text-white")
-                        : (scrolled || !isHome ? "text-slate-600 hover:bg-slate-50 hover:text-slate-900" : "text-[#d9e6ff] hover:bg-white/[0.06] hover:text-white"),
+                        ? "bg-white/10 text-white"
+                        : "text-[#d9e6ff] hover:bg-white/[0.06] hover:text-white",
                     )}
                   >
                     {link.label}
@@ -220,7 +225,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 {user ? (
                   <>
                     <Link href="/messages" data-testid="button-messages-nav">
-                      <Button variant="ghost" size="icon" className={cn("relative rounded-full transition-colors", scrolled || !isHome ? "text-slate-600 hover:bg-slate-100 hover:text-slate-900" : "text-white/80 hover:bg-white/10 hover:text-white")}>
+                      <Button variant="ghost" size="icon" className="relative rounded-full text-white/80 hover:bg-white/10 hover:text-white">
                         <MessageSquare className="h-4 w-4" />
                         <UnreadBadge />
                       </Button>
@@ -229,7 +234,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
-                          className={cn("gap-2 rounded-full px-2 pr-4 transition-colors", scrolled || !isHome ? "border border-slate-200 bg-white text-slate-800 hover:bg-slate-50" : "border border-white/10 bg-white/5 text-white/90 hover:bg-white/10")}
+                          className="gap-2 rounded-full border border-white/10 bg-white/5 px-2 pr-4 text-white/90 hover:bg-white/10"
                           data-testid="button-user-menu"
                         >
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ff7f50] text-white">
@@ -271,7 +276,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
 
               <button
-                className={cn("flex h-11 w-11 items-center justify-center rounded-2xl transition-colors lg:hidden", scrolled || !isHome ? "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50" : "border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white")}
+                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/80 transition-colors hover:bg-white/10 hover:text-white lg:hidden"
                 onClick={() => setIsMobileMenuOpen((value) => !value)}
                 data-testid="button-mobile-menu"
               >
