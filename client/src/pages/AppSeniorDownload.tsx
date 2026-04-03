@@ -51,7 +51,7 @@ export default function AppSeniorDownload() {
         whatsApp: "Chat with us on WhatsApp",
         useSite: "Explore Michels Travel on the website",
         noteReady: androidDevice
-          ? "Once the download completes, your Android device may ask permission to install apps from this browser the first time.",
+          ? "Once the download completes, your Android device may ask permission to install apps from this browser the first time."
           : "Open this page on your Android device to download and install the app directly.",
         notePending: android.installNotes[language],
         version: "Version",
