@@ -258,7 +258,7 @@ export default function BaggageSelector({
           <>
             <div className="flex items-center gap-2">
               <div className="h-px flex-1 bg-gray-200" />
-              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider whitespace-normal text-balance text-left">
                 {t("baggage.extra_options")}
               </span>
               <div className="h-px flex-1 bg-gray-200" />
