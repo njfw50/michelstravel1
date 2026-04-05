@@ -4,6 +4,7 @@ import { registerRoutes } from "./routes";
 import { registerVoiceEscalationRoutes } from "./routes/voice_escalation";
 import { registerCustomerMobileRoutes } from "./routes/customer_mobile";
 import { registerOwnerPushRoutes } from "./routes/owner_push";
+import { registerSeniorCareRoutes } from "./routes/senior_care";
 import { serveStatic } from "./static";
 import { getStripeSync } from "./stripeClient";
 import { WebhookHandlers } from "./webhookHandlers";
@@ -205,6 +206,7 @@ app.use((req, res, next) => {
   registerCustomerMobileRoutes(app);
   registerVoiceEscalationRoutes(app);
   registerOwnerPushRoutes(app);
+  registerSeniorCareRoutes(app);
   startOwnerPushLoop();
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {

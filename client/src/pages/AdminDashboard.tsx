@@ -1323,9 +1323,6 @@ export default function AdminDashboard() {
               <span className="hidden sm:inline">Assistência ao Vivo</span>
             </Button>
             <div className="md:hidden">
-              <Button variant="ghost" size="icon" onClick={() => setActiveTab(activeTab === "command" ? "overview" : "command")} className="text-gray-500 rounded-full mr-2">
-                <LayoutDashboard className="h-5 w-5" />
-              </Button>
               <Button variant="ghost" size="icon" onClick={handleLogout} className="text-gray-500 rounded-full">
                 <LogOut className="h-5 w-5" />
               </Button>
@@ -1757,6 +1754,55 @@ export default function AdminDashboard() {
           </div>
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation — acessa todas as abas */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-200 flex items-center justify-around px-2 py-1 shadow-lg">
+        <button
+          onClick={() => setActiveTab("command")}
+          className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors ${
+            activeTab === "command" ? "text-blue-600 bg-blue-50" : "text-gray-500"
+          }`}
+        >
+          <ShieldCheck className="h-5 w-5" />
+          <span className="text-[10px] font-semibold">Painel</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("senior")}
+          className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors ${
+            activeTab === "senior" ? "text-blue-600 bg-blue-50" : "text-gray-500"
+          }`}
+        >
+          <Phone className="h-5 w-5" />
+          <span className="text-[10px] font-semibold">Sênior</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("overview")}
+          className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors ${
+            activeTab === "overview" ? "text-blue-600 bg-blue-50" : "text-gray-500"
+          }`}
+        >
+          <TrendingUp className="h-5 w-5" />
+          <span className="text-[10px] font-semibold">Visão</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("bookings")}
+          className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors ${
+            activeTab === "bookings" ? "text-blue-600 bg-blue-50" : "text-gray-500"
+          }`}
+        >
+          <Plane className="h-5 w-5" />
+          <span className="text-[10px] font-semibold">Reservas</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("settings")}
+          className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors ${
+            activeTab === "settings" ? "text-blue-600 bg-blue-50" : "text-gray-500"
+          }`}
+        >
+          <Settings className="h-5 w-5" />
+          <span className="text-[10px] font-semibold">Config</span>
+        </button>
+      </nav>
     </div>
   );
 }

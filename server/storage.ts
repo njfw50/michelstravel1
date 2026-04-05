@@ -5,6 +5,7 @@ import {
   flightSearches, bookings, siteSettings, blogPosts, users,
   liveSessions, liveSessionBlocks, liveSessionMessages,
   internalThreads, internalMessages, voiceEscalations, featuredDeals,
+  seniorAlerts,
   type FlightSearch, type InsertFlightSearch,
   type Booking, type InsertBooking,
   type SiteSetting, type InsertSiteSetting,
@@ -16,6 +17,7 @@ import {
   type InternalMessage, type InsertInternalMessage,
   type VoiceEscalation, type InsertVoiceEscalation,
   type FeaturedDeal, type InsertFeaturedDeal,
+  type SeniorAlert, type InsertSeniorAlert,
 } from "@shared/schema";
 
 // Import Auth Storage
@@ -86,6 +88,11 @@ export interface IStorage extends IAuthStorage {
   createFeaturedDeal(deal: InsertFeaturedDeal): Promise<FeaturedDeal>;
   updateFeaturedDeal(id: number, updates: Partial<InsertFeaturedDeal>): Promise<FeaturedDeal | undefined>;
   deleteFeaturedDeal(id: number): Promise<void>;
+
+  // Senior Alerts
+  getSeniorAlerts(statusFilter?: string): Promise<SeniorAlert[]>;
+  createSeniorAlert(alert: InsertSeniorAlert): Promise<SeniorAlert>;
+  updateSeniorAlert(id: number, updates: Partial<InsertSeniorAlert>): Promise<SeniorAlert | undefined>;
 
   // Stripe
   getProduct(productId: string): Promise<any>;
@@ -462,6 +469,26 @@ export class DatabaseStorage implements IStorage {
 
   async deleteFeaturedDeal(id: number): Promise<void> {
     await db.delete(featuredDeals).where(eq(featuredDeals.id, id));
+  }
+
+  // --- Senior Alerts ---
+  async getSeniorAlerts(statusFilter?: string): Promise<SeniorAlert[]> {
+    if (statusFilter) {
+      return await db.select().from(seniorAlerts).where(eq(seniorAlerts.status, statusFilter)).orderBy(desc(seniorAlerts.createdAt));
+    }
+    return await db.select().from(seniorAlerts).orderBy(desc(seniorAlerts.createdAt));
+  }
+
+  async createSeniorAlert(alert: InsertSeniorAlert): Promise<SeniorAlert> {
+    const [newAlert] = await db.insert(seniorAlerts).values(alert).returning();
+    return newAlert;
+  }
+
+  async updateSeniorAlert(id: number, updates: Partial<InsertSeniorAlert>): Promise<SeniorAlert | undefined> {
+    const payload: any = { ...updates };
+    if (updates.status === 'resolved') payload.resolvedAt = new Date();
+    const [updated] = await db.update(seniorAlerts).set(payload).where(eq(seniorAlerts.id, id)).returning();
+    return updated;
   }
 }
 
