@@ -43,7 +43,7 @@ const MRZ_DOC_MAP: Record<string, TsaDocumentType> = {
   P: "passport",
   A: "diplomatic_passport" as any, // will normalize to passport
   C: "passport_card",
-  I: "id_card" as any,
+  I: "state_id",
   V: "visa",
   D: "passport",
 };
@@ -52,7 +52,7 @@ export function docTypeFromMrzCode(code: string | undefined): TsaDocumentType {
   if (!code) return "other";
   const normalized = MRZ_DOC_MAP[code.toUpperCase()];
   if (normalized === "diplomatic_passport") return "passport";
-  if (normalized === "id_card") return "state_id";
+  // no longer needed as MRZ_DOC_MAP now uses state_id directly
   return normalized || "other";
 }
 

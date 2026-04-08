@@ -71,10 +71,10 @@ function LanguageSwitcher({ variant = "navbar" }: { variant?: "navbar" | "footer
           <DropdownMenuItem
             key={lang.code}
             onClick={() => setLanguage(lang.code)}
-            className={cn("cursor-pointer gap-2 rounded-xl", language === lang.code && "font-bold")}
+            className={cn("cursor-pointer gap-2 rounded-xl text-slate-700 hover:text-slate-900 focus:text-slate-900", language === lang.code && "font-bold text-slate-900")}
             data-testid={`button-switch-lang-${lang.code}`}
           >
-            <span className="w-5 text-xs font-bold text-slate-400">{lang.flag}</span>
+            <span className="w-5 text-xs font-bold text-slate-500">{lang.flag}</span>
             <span>{lang.label}</span>
             {language === lang.code && <Check className="ml-auto h-3.5 w-3.5 text-blue-500" />}
           </DropdownMenuItem>
@@ -244,21 +244,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl">
-                        <DropdownMenuItem className="cursor-pointer rounded-xl" onClick={() => setLocation("/profile")} data-testid="button-profile">
+                        <DropdownMenuItem className="cursor-pointer rounded-xl text-slate-700 hover:text-slate-900 focus:text-slate-900" onClick={() => setLocation("/profile")} data-testid="button-profile">
                           <User className="mr-2 h-4 w-4" /> {t("nav.profile") || "My Profile"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer rounded-xl" onClick={() => setLocation("/my-trips")} data-testid="button-my-trips">
+                        <DropdownMenuItem className="cursor-pointer rounded-xl text-slate-700 hover:text-slate-900 focus:text-slate-900" onClick={() => setLocation("/my-trips")} data-testid="button-my-trips">
                           <Briefcase className="mr-2 h-4 w-4" /> {t("nav.my_trips") || "My Trips"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer rounded-xl" onClick={() => setLocation("/messages")} data-testid="button-messages-dropdown">
+                        <DropdownMenuItem className="cursor-pointer rounded-xl text-slate-700 hover:text-slate-900 focus:text-slate-900" onClick={() => setLocation("/messages")} data-testid="button-messages-dropdown">
                           <MessageSquare className="mr-2 h-4 w-4" /> {t("nav.messages") || "Messages"}
                         </DropdownMenuItem>
-                        {adminCheck?.isAdmin && (
-                          <DropdownMenuItem className="cursor-pointer rounded-xl text-blue-600" onClick={() => setLocation("/admin")} data-testid="button-admin-panel">
-                            <Shield className="mr-2 h-4 w-4" /> {t("nav.admin")}
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem className="cursor-pointer rounded-xl text-red-500 focus:text-red-600" onClick={() => logout()} data-testid="button-logout">
+                        <DropdownMenuItem className="cursor-pointer rounded-xl mt-1 border-t border-slate-100 pt-2 text-red-500 hover:text-red-600 focus:text-red-600" onClick={() => logout()} data-testid="button-logout">
                           <LogOut className="mr-2 h-4 w-4" /> {t("nav.logout")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -321,11 +316,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     <button onClick={() => { setIsMobileMenuOpen(false); setLocation("/profile"); }} className="block w-full rounded-2xl px-4 py-3 text-left text-base font-semibold text-white/75 hover:bg-white/[0.06] hover:text-white" data-testid="button-mobile-profile">
                       {t("nav.profile") || "My Profile"}
                     </button>
-                    {adminCheck?.isAdmin && (
-                      <button onClick={() => { setIsMobileMenuOpen(false); setLocation("/admin"); }} className="block w-full rounded-2xl px-4 py-3 text-left text-base font-semibold text-blue-300 hover:bg-white/[0.06]" data-testid="button-mobile-admin-panel">
-                        {t("nav.admin")}
-                      </button>
-                    )}
                     <button onClick={() => logout()} className="block w-full rounded-2xl px-4 py-3 text-left text-base font-semibold text-red-300 hover:bg-white/[0.06]">
                       {t("nav.logout")}
                     </button>

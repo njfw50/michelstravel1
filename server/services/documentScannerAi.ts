@@ -69,7 +69,7 @@ function parseMrzText(mrzText: string): { candidate: DocumentScannerAiCandidate 
     const parsed = parseMrz(lines.join("\n"));
     if (!parsed || !parsed.fields) return { candidate: null, warnings: ["mrz_parse_failed"] };
     const f: any = parsed.fields;
-    const checksumWarnings = (parsed.errors || []).map((err: any) => `mrz_checksum:${err.code ?? "unknown"}`);
+    const checksumWarnings = ((parsed as any).errors || (parsed as any).details || []).map((err: any) => `mrz_checksum:${err.code ?? "unknown"}`);
     warnings.push(...checksumWarnings);
     const candidate: DocumentScannerAiCandidate = {
       givenName: (f.firstName || "").replace(/</g, " ").trim(),

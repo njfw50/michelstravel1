@@ -220,7 +220,7 @@ export function LoginDialog({ open, onOpenChange, authError }: LoginDialogProps)
                   <span className="w-full border-t border-gray-200" />
                 </div>
                 <div className="relative flex justify-center text-xs">
-                  <span className="bg-white px-2 text-gray-400">{t("login.or")}</span>
+                  <span className="bg-white/80 backdrop-blur-sm px-2 text-gray-400">{t("login.or")}</span>
                 </div>
               </div>
 

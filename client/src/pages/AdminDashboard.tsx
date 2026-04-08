@@ -1057,46 +1057,82 @@ function AdminLoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-sm border border-gray-200 shadow-sm">
-        <CardHeader className="text-center space-y-2">
-          <div className="mx-auto h-14 w-14 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center">
-            <Lock className="h-7 w-7 text-blue-600" />
-          </div>
-          <CardTitle className="text-xl text-gray-900">Admin Access</CardTitle>
-          <p className="text-sm text-gray-500">Enter your admin password to continue</p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="admin-password" className="text-sm text-gray-700">Password</Label>
-              <Input
-                id="admin-password"
-                data-testid="input-admin-password"
-                type="password"
-                placeholder="Enter admin password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoFocus
-              />
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-950">
+      {/* Background decorative blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-blue-600/20 blur-[120px]" />
+        <div className="absolute -bottom-60 -right-20 w-[600px] h-[600px] rounded-full bg-indigo-600/15 blur-[140px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-violet-600/10 blur-[100px]" />
+      </div>
+
+      {/* Glass card */}
+      <div className="relative w-full max-w-sm">
+        <div className="rounded-[28px] border border-white/10 bg-white/5 backdrop-blur-2xl shadow-2xl shadow-black/40 p-8">
+          {/* Icon */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="h-16 w-16 rounded-2xl bg-blue-500/10 border border-blue-400/20 backdrop-blur-sm flex items-center justify-center mb-5 shadow-inner">
+              <ShieldCheck className="h-8 w-8 text-blue-400" />
             </div>
+            <h1 className="text-2xl font-bold text-white tracking-tight">Acesso Administrativo</h1>
+            <p className="text-sm text-white/50 mt-1.5 text-center">
+              Painel exclusivo — Michels Travel
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <label
+                htmlFor="admin-password"
+                className="block text-xs font-semibold uppercase tracking-widest text-white/50"
+              >
+                Senha de Acesso
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+                <input
+                  id="admin-password"
+                  data-testid="input-admin-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoFocus
+                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/8 border border-white/10 text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-all text-sm backdrop-blur-sm"
+                  style={{ background: 'rgba(255,255,255,0.06)' }}
+                />
+              </div>
+            </div>
+
             {error && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm" data-testid="text-login-error">
+              <div
+                className="p-3 rounded-xl bg-red-500/10 border border-red-400/20 text-red-300 text-sm flex items-center gap-2"
+                data-testid="text-login-error"
+              >
+                <ShieldAlert className="h-4 w-4 shrink-0" />
                 {error}
               </div>
             )}
-            <Button
+
+            <button
               data-testid="button-admin-login"
               type="submit"
-              className="w-full gap-2"
               disabled={isLoading || !password}
+              className="w-full flex items-center justify-center gap-2.5 py-3 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-blue-600/20 hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0"
             >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-              Login
-            </Button>
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ShieldCheck className="h-4 w-4" />
+              )}
+              Entrar no Painel
+            </button>
           </form>
-        </CardContent>
-      </Card>
+
+          <p className="mt-6 text-center text-xs text-white/25">
+            Michels Travel · Área Restrita
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

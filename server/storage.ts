@@ -1,4 +1,3 @@
-
 import { db } from "./db";
 import { eq, desc, sql, and } from "drizzle-orm";
 import {
@@ -170,10 +169,10 @@ export class DatabaseStorage implements IStorage {
     // Only one settings row allowed, simplified upsert logic
     const existing = await this.getSiteSettings();
     if (existing) {
-      const [updated] = await db.update(siteSettings).set({ ...settings, updatedAt: new Date() }).where(eq(siteSettings.id, existing.id)).returning();
+      const [updated] = await db.update(siteSettings).set({ ...settings, updatedAt: new Date() } as any).where(eq(siteSettings.id, existing.id)).returning();
       return updated;
     } else {
-      const [created] = await db.insert(siteSettings).values(settings).returning();
+      const [created] = await db.insert(siteSettings).values(settings as any).returning();
       return created;
     }
   }
@@ -209,7 +208,7 @@ export class DatabaseStorage implements IStorage {
 
   // --- Profile ---
   async updateUserProfile(userId: string, profile: { firstName?: string; lastName?: string; phone?: string }) {
-    const [user] = await db.update(users).set({ ...profile, updatedAt: new Date() }).where(eq(users.id, userId)).returning();
+    const [user] = await db.update(users).set({ ...profile, updatedAt: new Date() } as any).where(eq(users.id, userId)).returning();
     return user;
   }
 
@@ -342,7 +341,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateLiveSessionBlock(id: number, updates: Partial<InsertLiveSessionBlock>): Promise<LiveSessionBlock | undefined> {
-    const [b] = await db.update(liveSessionBlocks).set({ ...updates, updatedAt: new Date() }).where(eq(liveSessionBlocks.id, id)).returning();
+    const [b] = await db.update(liveSessionBlocks).set({ ...updates, updatedAt: new Date() } as any).where(eq(liveSessionBlocks.id, id)).returning();
     return b;
   }
 

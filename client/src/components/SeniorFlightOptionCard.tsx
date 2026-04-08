@@ -201,7 +201,10 @@ export default function SeniorFlightOptionCard({
           </div>
         </div>
 
-        <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
+        <div className="mt-5 grid gap-4 lg:grid-cols-[200px_minmax(0,1fr)_260px]">
+          <div className="hidden lg:block">
+            <SeniorCardImage />
+          </div>
           <div className="space-y-4">
             {routeSlices.map((slice, index) => {
               const firstSegment = slice.segments[0];

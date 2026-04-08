@@ -69,8 +69,8 @@ export function registerSeniorCareRoutes(app: Express) {
     try {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) return res.status(400).json({ error: 'Invalid alert ID' });
-      const { status, notes } = req.body;
-      const updated = await storage.updateSeniorAlert(id, { status, notes });
+      const { status, notes, message } = req.body;
+      const updated = await storage.updateSeniorAlert(id, { status, message: notes || message });
       if (!updated) return res.status(404).json({ error: 'Alert not found' });
       res.json(updated);
     } catch (error) {
