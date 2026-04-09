@@ -8,6 +8,7 @@ import PaymentForm from "@/components/PaymentForm";
 import FlightBaggageHighlights from "@/components/FlightBaggageHighlights";
 import { useDebounce } from "@/hooks/use-debounce";
 import SeniorCardImage from "@/components/SeniorCardImage";
+import { useI18n } from "@/lib/i18n";
 
 type FlowStep = "auth" | "greeting" | "ask_class" | "ask_origin" | "destination" | "dates" | "ask_return_intention" | "return_date" | "ask_multi_intention" | "ask_name" | "ask_dob" | "searching" | "offer" | "checkout";
 
@@ -65,6 +66,7 @@ const T: Record<Lang, Record<string, any>> = {
     outboundDone: "Sua Seleção de Ida (Concluída)", outboundOpts: "Opções de Ida", returnOpts: "Opções de Volta",
     estTotal: "Preço Total Estimado do Pacote", flyingWith: "Voando com",
     direct: "Voo Direto", stop1: (c: string) => `1 Parada em ${c}`, stops: (n: number) => `${n} Paradas`,
+    speakLabel: "Falar", speakAgent: "em Áudio com Agente",
     // voice
     v_welcome: "Olá. Bem-vindo ao terminal de acesso rápido. Vamos ajudar você a comprar a sua passagem.",
     v_askClass: "Em qual classe você prefere voar?",
@@ -140,6 +142,7 @@ const T: Record<Lang, Record<string, any>> = {
     outboundDone: "Your Outbound Selection (Done)", outboundOpts: "Outbound Options", returnOpts: "Return Options",
     estTotal: "Estimated Total Package Price", flyingWith: "Flying with",
     direct: "Direct Flight", stop1: (c: string) => `1 Stop in ${c}`, stops: (n: number) => `${n} Stops`,
+    speakLabel: "Speak", speakAgent: "to Agent by Audio",
     v_welcome: "Hello. Welcome to the express senior terminal. We will help you purchase your ticket.",
     v_askClass: "Which cabin class would you prefer?",
     v_fromCity: "Which city are you departing from?",
@@ -214,6 +217,7 @@ const T: Record<Lang, Record<string, any>> = {
     outboundDone: "Su Selección de Ida (Completada)", outboundOpts: "Opciones de Ida", returnOpts: "Opciones de Vuelta",
     estTotal: "Precio Total Estimado del Paquete", flyingWith: "Volando con",
     direct: "Vuelo Directo", stop1: (c: string) => `1 Escala en ${c}`, stops: (n: number) => `${n} Escalas`,
+    speakLabel: "Hablar", speakAgent: "con Agente por Audio",
     v_welcome: "Hola. Bienvenido al terminal de atención rápida senior. Lo ayudaremos a comprar su pasaje.",
     v_askClass: "¿En qué clase prefiere volar?",
     v_fromCity: "¿De qué ciudad parte usted?",
@@ -245,8 +249,10 @@ const T: Record<Lang, Record<string, any>> = {
 const langVoice: Record<Lang, string> = { pt: "pt-BR", en: "en-US", es: "es-ES" };
 
 export default function SeniorTerminal() {
-  const [lang, setLang] = useState<Lang>("pt");
+  const { language: globalLang, setLanguage: setGlobalLang } = useI18n();
+  const lang = (globalLang || "pt") as Lang;
   const t = T[lang];
+  const [isListening, setIsListening] = useState(false);
 
   const [step, setStep] = useState<FlowStep>("auth");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -290,6 +296,50 @@ export default function SeniorTerminal() {
     utterance.lang = langVoice[lang];
     utterance.rate = 0.95;
     window.speechSynthesis.speak(utterance);
+  };
+
+  const startVoiceRecognition = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({
+        title: "Erro",
+        description: "Reconhecimento de voz não suportado neste navegador.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = langVoice[lang];
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      window.speechSynthesis.cancel();
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      console.log("Reconhecido:", transcript);
+      
+      if (step === "auth") {
+        const numbers = transcript.replace(/\D/g, "");
+        if (numbers) setPhoneNumber(prev => prev + numbers);
+      } else if (step === "ask_origin") {
+        setOriginQuery(transcript);
+        setOriginIata("");
+      } else if (step === "destination") {
+        setDestQuery(transcript);
+        setDestIata("");
+      } else if (step === "ask_name") {
+        setFirstName(transcript);
+      }
+    };
+
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+    recognition.start();
   };
 
   useEffect(() => {
@@ -569,7 +619,7 @@ export default function SeniorTerminal() {
         </div>
         <div className="flex items-center gap-2">
           {(['pt','en','es'] as Lang[]).map(l => (
-            <button key={l} onClick={() => setLang(l)} className={`px-3 py-2 rounded-xl text-sm font-bold uppercase border transition-all ${
+            <button key={l} onClick={() => setGlobalLang(l)} className={`px-3 py-2 rounded-xl text-sm font-bold uppercase border transition-all ${
               lang === l ? 'bg-blue-600 text-white border-blue-500' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
             }`}>{l.toUpperCase()}</button>
           ))}
@@ -612,7 +662,7 @@ export default function SeniorTerminal() {
                  disabled={phoneNumber.length < 7}
                  className="h-16 sm:h-24 text-xl sm:text-3xl font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-full mt-4 sm:mt-8 shadow-[0_0_40px_rgba(37,99,235,0.3)] transition-all"
                >
-                 Entrar <span className="hidden sm:inline">& Iniciar Processo</span> <ArrowRight className="ml-2 sm:ml-4 h-6 w-6 sm:h-8 sm:w-8" />
+                                   {t.enter as string} <ArrowRight className="ml-2 sm:ml-4 h-6 w-6 sm:h-8 sm:w-8" />
                </Button>
              </div>
            </div>
@@ -632,11 +682,11 @@ export default function SeniorTerminal() {
              <Button 
                onClick={() => {
                  setStep("ask_class");
-                 speak("Em qual classe você prefere voar?");
+                 speak(t.v_askClass as string);
                }}
                className="w-full h-20 sm:h-32 text-2xl sm:text-4xl font-extrabold bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl sm:rounded-[32px] mt-8 sm:mt-12 shadow-[0_0_60px_rgba(16,185,129,0.3)]"
              >
-                Iniciar Compra <ArrowRight className="ml-2 sm:ml-4 h-8 w-8 sm:h-10 sm:w-10 inline" />
+                                 {t.startBuy as string} <ArrowRight className="ml-2 sm:ml-4 h-8 w-8 sm:h-10 sm:w-10 inline" />
              </Button>
            </div>
          )}
@@ -667,7 +717,7 @@ export default function SeniorTerminal() {
                     setOriginQuery(e.target.value);
                     setOriginIata("");
                   }}
-                  placeholder="Ex: Nova York, Londres..."
+                                     placeholder={t.originPH as string}
                   className="h-20 sm:h-32 text-2xl sm:text-4xl text-center rounded-2xl sm:rounded-[32px] border-4 border-slate-600 bg-slate-800 text-white focus:border-blue-400 px-4 shadow-inner"
                 />
                 {originResults.length > 0 && !originIata && (
@@ -711,7 +761,7 @@ export default function SeniorTerminal() {
                    setDestQuery(e.target.value);
                    setDestIata("");
                  }}
-                 placeholder="Ex: Lisboa, São Paulo..."
+                                   placeholder={t.destPH as string}
                  className="h-20 sm:h-32 text-2xl sm:text-4xl text-center rounded-2xl sm:rounded-[32px] border-4 border-slate-600 bg-slate-800 text-white focus:border-emerald-400 px-4 shadow-inner"
                />
                {destResults.length > 0 && !destIata && (
@@ -758,7 +808,7 @@ export default function SeniorTerminal() {
                  disabled={!travelDate}
                  className="h-16 sm:h-24 px-8 sm:px-12 text-xl sm:text-3xl font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-[0_0_40px_rgba(37,99,235,0.3)] transition-all w-full sm:w-auto"
                >
-                 Continuar <ArrowRight className="ml-2 sm:ml-4 h-6 w-6 sm:h-8 sm:w-8 inline" />
+                 {t.continue as string} <ArrowRight className="ml-2 sm:ml-4 h-6 w-6 sm:h-8 sm:w-8 inline" />
                </Button>
              </div>
            </div>
@@ -773,13 +823,13 @@ export default function SeniorTerminal() {
                <Button onClick={() => {
                  setTripType("round-trip");
                  setStep("return_date");
-                 speak("Excelente. Selecione qual será a data exata da sua volta ao calendário.");
-               }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-emerald-600 hover:bg-emerald-500 text-white truncate text-balance whitespace-normal leading-tight shadow-md">Sim, adicionar volta</Button>
+                 speak(t.v_yesReturn as string);
+               }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-emerald-600 hover:bg-emerald-500 text-white truncate text-balance whitespace-normal leading-tight shadow-md">{t.yesReturn as string}</Button>
                <Button onClick={() => {
                  setTripType("one-way");
                  setStep("ask_multi_intention");
-                 speak("Entendi, será apenas ida. E você tem planos de ir para alguma outra cidade depois desta?");
-               }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-slate-700 text-white truncate text-balance whitespace-normal leading-tight border border-slate-700 shadow-md">Não, viajo apenas ida</Button>
+                 speak(t.v_noReturn as string);
+               }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-slate-700 text-white truncate text-balance whitespace-normal leading-tight border border-slate-700 shadow-md">{t.noReturn as string}</Button>
              </div>
            </div>
          )}
@@ -798,12 +848,12 @@ export default function SeniorTerminal() {
                  onClick={() => {
                    if (!returnDate) return;
                    setStep("ask_name");
-                   speak("Tudo certo. Agora, para emitir a passagem, por favor digite o seu nome...");
+                   speak(t.v_askName as string);
                  }}
                  disabled={!returnDate}
                  className="h-16 sm:h-24 px-8 sm:px-12 text-xl sm:text-3xl font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-full shadow-[0_0_40px_rgba(16,185,129,0.3)] transition-all w-full sm:w-auto"
                >
-                 Continuar <ArrowRight className="ml-2 sm:ml-4 h-6 w-6 sm:h-8 sm:w-8 inline" />
+                 {t.continue as string} <ArrowRight className="ml-2 sm:ml-4 h-6 w-6 sm:h-8 sm:w-8 inline" />
                </Button>
              </div>
            </div>
@@ -825,16 +875,16 @@ export default function SeniorTerminal() {
                  setDestQuery("");
                  setDestResults([]);
                  setTravelDate("");
-                 speak(`Perfeito. Então, partindo de ${destIata}, para onde você quer ir depois?`);
-               }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-purple-600 hover:bg-purple-500 text-white truncate text-balance whitespace-normal leading-tight shadow-md">Sim, vou para outra cidade</Button>
+                 speak((t.v_multiNext as any)(destIata));
+               }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-purple-600 hover:bg-purple-500 text-white truncate text-balance whitespace-normal leading-tight shadow-md">{t.yesMulti as string}</Button>
                <Button onClick={() => {
                  if (currentLeg > 1) {
                    const newLeg = { originQuery, originIata, destQuery, destIata, travelDate };
                    setLegs(prev => [...prev, newLeg]);
                  }
                  setStep("ask_name");
-                 speak("Tudo certo. A sua rota está montada. Por favor, para emitir a passagem, digite seu nome de batismo.");
-               }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-slate-700 text-white truncate text-balance whitespace-normal leading-tight border border-slate-700 shadow-md">Não, minha viagem encerra aqui</Button>
+                 speak(t.v_routeReady as string);
+               }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-slate-700 text-white truncate text-balance whitespace-normal leading-tight border border-slate-700 shadow-md">{t.noMulti as string}</Button>
              </div>
            </div>
          )}
@@ -852,14 +902,14 @@ export default function SeniorTerminal() {
              <div className="flex flex-col gap-4 sm:gap-6">
                <Input 
                  type="text"
-                 placeholder="Primeiro Nome"
+                                   placeholder={t.firstName as string}
                  value={firstName}
                  onChange={(e) => setFirstName(e.target.value)}
                  className="h-16 sm:h-24 text-xl sm:text-4xl text-center rounded-2xl sm:rounded-[24px] border-4 border-slate-600 bg-slate-800 text-white placeholder:text-slate-500 focus:border-blue-400 px-4 shadow-inner"
                />
                <Input 
                  type="text"
-                 placeholder="Sobrenome"
+                                   placeholder={t.lastName as string}
                  value={lastName}
                  onChange={(e) => setLastName(e.target.value)}
                  className="h-16 sm:h-24 text-xl sm:text-4xl text-center rounded-2xl sm:rounded-[24px] border-4 border-slate-600 bg-slate-800 text-white placeholder:text-slate-500 focus:border-blue-400 px-4 shadow-inner"
@@ -869,7 +919,7 @@ export default function SeniorTerminal() {
                  disabled={!firstName || !lastName}
                  className="h-16 sm:h-24 text-xl sm:text-3xl font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-full mt-2 sm:mt-4 shadow-[0_0_40px_rgba(37,99,235,0.3)] transition-all"
                >
-                 Continuar <ArrowRight className="ml-2 sm:ml-4 h-6 w-6 sm:h-8 sm:w-8 inline" />
+                 {t.continue as string} <ArrowRight className="ml-2 sm:ml-4 h-6 w-6 sm:h-8 sm:w-8 inline" />
                </Button>
              </div>
            </div>
@@ -884,14 +934,14 @@ export default function SeniorTerminal() {
                <div className="flex gap-4 w-full sm:w-1/2">
                  <Input 
                    type="number"
-                   placeholder="Dia"
+                                       placeholder={t.day as string}
                    value={dobDay}
                    onChange={(e) => setDobDay(e.target.value)}
                    className="h-16 sm:h-24 w-1/2 text-2xl sm:text-4xl text-center rounded-2xl sm:rounded-[24px] border-4 border-slate-600 bg-slate-800 text-white focus:border-blue-400 px-2 shadow-inner"
                  />
                  <Input 
                    type="number"
-                   placeholder="Mês"
+                                       placeholder={t.month as string}
                    value={dobMonth}
                    onChange={(e) => setDobMonth(e.target.value)}
                    className="h-16 sm:h-24 w-1/2 text-2xl sm:text-4xl text-center rounded-2xl sm:rounded-[24px] border-4 border-slate-600 bg-slate-800 text-white focus:border-blue-400 px-2 shadow-inner"
@@ -899,7 +949,7 @@ export default function SeniorTerminal() {
                </div>
                <Input 
                  type="number"
-                 placeholder="Ano"
+                                   placeholder={t.year as string}
                  value={dobYear}
                  onChange={(e) => setDobYear(e.target.value)}
                  className="h-16 sm:h-24 w-full sm:w-1/2 text-2xl sm:text-4xl text-center rounded-2xl sm:rounded-[24px] border-4 border-slate-600 bg-slate-800 text-white focus:border-blue-400 px-4 shadow-inner"
@@ -910,7 +960,7 @@ export default function SeniorTerminal() {
                disabled={!dobDay || !dobMonth || !dobYear || dobYear.length < 4}
                className="w-full h-16 sm:h-24 text-xl sm:text-3xl font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-full mt-6 sm:mt-8 shadow-[0_0_40px_rgba(37,99,235,0.3)] transition-all"
              >
-               Pesquisar <span className="hidden sm:inline">Passagens</span> <ArrowRight className="ml-2 sm:ml-4 h-6 w-6 sm:h-8 sm:w-8 inline" />
+                               {t.search as string} <ArrowRight className="ml-2 sm:ml-4 h-6 w-6 sm:h-8 sm:w-8 inline" />
              </Button>
            </div>
          )}
@@ -936,25 +986,25 @@ export default function SeniorTerminal() {
            <div className="w-full max-w-[1400px] text-center space-y-6 sm:space-y-8 animate-in slide-in-from-bottom duration-700">
              <h2 className="text-3xl sm:text-5xl font-bold text-white leading-tight text-balance mb-8">
                {(tripType === "round-trip" || tripType === "multi-city") && !selectedOutboundSlice 
-                 ? "Escolha o seu voo de IDA:" 
+                 ? t.chooseOutbound as string 
                  : (tripType === "round-trip" || tripType === "multi-city") && selectedOutboundSlice
-                 ? "Ida Garantida! Agora escolha a VOLTA:"
-                 : "Escolha o voo de sua preferência:"}
+                 ? t.chooseReturn as string
+                 : t.chooseFlight as string}
              </h2>
 
              {selectedOutboundSlice && (
                 <div className="bg-slate-800/90 border-4 border-blue-500 rounded-[32px] p-6 lg:p-8 mb-12 text-left shadow-2xl relative overflow-hidden animate-in fade-in zoom-in duration-500">
                    <div className="absolute top-0 right-0 bg-blue-500 text-white rounded-bl-2xl px-6 py-2 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-md">
-                      Sua Seleção de Ida (Concluída)
+                      {t.outboundDone as string}
                    </div>
                    <div className="flex flex-col md:flex-row gap-6 sm:gap-10 items-center mt-2">
                       <div className="flex-1 w-full bg-slate-900/50 p-4 rounded-3xl border border-slate-700/50 shadow-inner">
                          {displaySliceTimes(selectedOutboundSlice.slices[0], selectedOutboundSlice.slices[0].segments[0], selectedOutboundSlice.slices[0].segments[selectedOutboundSlice.slices[0].segments.length - 1], true)}
                       </div>
                       <div className="text-center md:text-right md:border-l-2 border-slate-700 md:pl-8 w-full md:w-auto">
-                         <p className="text-slate-400 font-medium text-sm sm:text-base">Preço Total Estimado do Pacote</p>
+                         <p className="text-slate-400 font-medium text-sm sm:text-base">{t.estTotal as string}</p>
                          <p className="text-blue-400 font-black text-3xl sm:text-5xl capitalize truncate break-all">{selectedOutboundSlice.currency} {selectedOutboundSlice.price}</p>
-                         <p className="text-slate-400 font-medium text-sm sm:text-base mt-2">Voando com {selectedOutboundSlice.airline}</p>
+                         <p className="text-slate-400 font-medium text-sm sm:text-base mt-2">{t.flyingWith as string} {selectedOutboundSlice.airline}</p>
                       </div>
                    </div>
                 </div>
@@ -972,18 +1022,18 @@ export default function SeniorTerminal() {
                      
                      {(!selectedOutboundSlice && (tripType === "round-trip" || tripType === "multi-city")) && (
                         <div className="absolute top-0 right-0 bg-blue-500 text-white px-4 py-1.5 sm:px-6 sm:py-2 rounded-bl-3xl font-extrabold uppercase tracking-widest text-[10px] sm:text-xs shadow-md">
-                           Opções de Ida
+                           {t.outboundOpts as string}
                         </div>
                      )}
                      {(selectedOutboundSlice) && (
                         <div className="absolute top-0 right-0 bg-emerald-600 text-white px-4 py-1.5 sm:px-6 sm:py-2 rounded-bl-3xl font-extrabold uppercase tracking-widest text-[10px] sm:text-xs shadow-md">
-                           Opções de Volta
+                           {t.returnOpts as string}
                         </div>
                      )}
 
                      <div className="flex justify-between items-start mt-4 sm:mt-2">
                        <div>
-                         <p className="text-base sm:text-lg text-slate-400 font-medium">Companhia Aérea</p>
+                         <p className="text-base sm:text-lg text-slate-400 font-medium">{t.airline as string}</p>
                          <p className="text-2xl sm:text-3xl font-extrabold text-white mt-1 capitalize truncate" title={flight.airline}>{flight.airline}</p>
                        </div>
                        {flight.logoUrl && <img src={flight.logoUrl} className="h-10 w-10 sm:h-14 sm:w-14 bg-white rounded-xl p-1.5 shadow-sm" alt="Logo" />}
@@ -994,10 +1044,10 @@ export default function SeniorTerminal() {
                      </div>
 
                      <div className="py-2">
-                       <p className="text-base sm:text-lg text-slate-400 font-medium">Preço Final (Taxas inclusas)</p>
+                       <p className="text-base sm:text-lg text-slate-400 font-medium">{t.price as string}</p>
                        <p className="text-3xl sm:text-4xl font-extrabold text-emerald-400 mt-1 uppercase truncate">{flight.currency} {flight.price}</p>
                        {(!selectedOutboundSlice && (tripType === "round-trip" || tripType === "multi-city")) && (
-                         <p className="text-xs text-emerald-600 font-bold mt-1 uppercase tracking-wider">*Preço total do pacote (Ida e Volta)</p>
+                         <p className="text-xs text-emerald-600 font-bold mt-1 uppercase tracking-wider">{t.roundPriceNote as string}</p>
                        )}
                      </div>
  
@@ -1009,7 +1059,7 @@ export default function SeniorTerminal() {
                        onClick={() => handleSelectFlightOption(flight)}
                        className="w-full h-16 sm:h-20 text-xl md:text-2xl font-extrabold bg-emerald-500 hover:bg-emerald-400 text-white rounded-[20px] mt-2 shadow-xl transition-all"
                      >
-                       {(!selectedOutboundSlice && (tripType === "round-trip" || tripType === "multi-city")) ? "Selecionar Ida" : "Comprar Voo"} <ArrowRight className="ml-2 h-6 w-6 inline" />
+                       {(!selectedOutboundSlice && (tripType === "round-trip" || tripType === "multi-city")) ? t.selectGo as string : t.buyFlight as string} <ArrowRight className="ml-2 h-6 w-6 inline" />
                      </Button>
                    </div>
                  );
@@ -1022,7 +1072,7 @@ export default function SeniorTerminal() {
                    onClick={() => { setOfferPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                    className="h-16 sm:h-20 px-8 sm:px-12 text-lg sm:text-xl font-bold rounded-full bg-slate-700 text-white hover:bg-slate-600 shadow-xl border border-slate-600"
                  >
-                   Ver mais opções (Mais {(displayedFlights.length - (offerPage + 1) * 3)} voos disponíveis) <ArrowRight className="ml-2 h-6 w-6 inline" />
+                   {t.moreFlights(displayedFlights.length - (offerPage + 1) * 3)} <ArrowRight className="ml-2 h-6 w-6 inline" />
                  </Button>
                )}
                
@@ -1032,7 +1082,7 @@ export default function SeniorTerminal() {
                    variant="ghost"
                    className="h-12 px-6 text-base sm:text-lg font-bold text-slate-400 hover:text-white"
                  >
-                   Voltar para opções anteriores
+                                       {t.backOptions as string}
                  </Button>
                )}
              </div>
@@ -1050,7 +1100,7 @@ export default function SeniorTerminal() {
                  amount={bookingData.amount}
                  currency={bookingData.currency}
                  onSuccess={() => {
-                   speak("Compra confirmada com sucesso! O comprovante vai chegar em breve.");
+                   speak(t.v_success as string);
                    toast({
                      title: "Compra Confirmada!",
                      description: "Reserva aprovada. Seu voo está garantido."
@@ -1059,7 +1109,7 @@ export default function SeniorTerminal() {
                  }}
                  onError={(msg) => {
                    toast({ title: "Erro no Cartão", description: msg, variant: "destructive" });
-                   speak("Houve um problema com a validação do cartão. Corrija a informação de pagamento.");
+                   speak(t.v_cardError as string);
                  }}
                />
              </div>
@@ -1069,9 +1119,13 @@ export default function SeniorTerminal() {
        </main>
  
        <footer className="p-4 sm:p-8 bg-slate-950 flex justify-center items-center sticky bottom-0 z-50 border-t border-slate-800">
-         <Button variant="ghost" className="h-16 sm:h-20 px-4 sm:px-8 rounded-full text-base sm:text-xl font-bold bg-white/5 text-white hover:bg-white/10 gap-2 sm:gap-4 border border-white/10">
-           <Mic className="h-6 w-6 sm:h-8 sm:w-8 text-blue-400" />
-           Falar <span className="hidden sm:inline">em Áudio com Agente</span>
+         <Button 
+            onClick={startVoiceRecognition}
+            variant="ghost" 
+            className={`h-16 sm:h-20 px-4 sm:px-8 rounded-full text-base sm:text-xl font-bold bg-white/5 text-white hover:bg-white/10 gap-2 sm:gap-4 border border-white/10 transition-all ${isListening ? 'animate-pulse shadow-[0_0_30px_rgba(59,130,246,0.5)] border-blue-500 bg-blue-500/10' : ''}`}
+          >
+           <Mic className={`h-6 w-6 sm:h-8 sm:w-8 ${isListening ? 'text-blue-400' : 'text-slate-400'}`} />
+           {t.speakLabel as string} <span className="hidden sm:inline">{t.speakAgent as string}</span>
          </Button>
        </footer>
      </div>
