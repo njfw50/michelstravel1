@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 
-export type ChatbotAiProvider = "gemini" | "cerebras" | "none";
+export type ChatbotAiProvider = "gemini" | "cerebras" | "groq" | "none";
 
 export interface ChatbotAiStatus {
   provider: ChatbotAiProvider;
@@ -19,6 +19,7 @@ export interface ChatbotAiClientConfig extends ChatbotAiStatus {
 
 const DEFAULT_GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/";
 const DEFAULT_CEREBRAS_BASE_URL = "https://api.cerebras.ai/v1";
+const DEFAULT_GROQ_BASE_URL = "https://api.groq.com/openai/v1";
 
 let cachedConfig: ChatbotAiClientConfig | null = null;
 
@@ -26,6 +27,7 @@ function pickProvider(): { provider: ChatbotAiProvider; apiKey: string | null; b
   const requestedProvider = (process.env.AI_PROVIDER || "auto").trim().toLowerCase();
   const geminiKey = process.env.GEMINI_API_KEY?.trim() || null;
   const cerebrasKey = process.env.CEREBRAS_API_KEY?.trim() || null;
+  const groqKey = process.env.GROQ_API_KEY?.trim() || null;
 
   if (requestedProvider === "cerebras" && cerebrasKey) {
     return {
@@ -43,6 +45,14 @@ function pickProvider(): { provider: ChatbotAiProvider; apiKey: string | null; b
     };
   }
 
+  if (requestedProvider === "groq" && groqKey) {
+    return {
+      provider: "groq",
+      apiKey: groqKey,
+      baseURL: process.env.GROQ_BASE_URL?.trim() || DEFAULT_GROQ_BASE_URL,
+    };
+  }
+
   if (cerebrasKey) {
     return {
       provider: "cerebras",
@@ -56,6 +66,14 @@ function pickProvider(): { provider: ChatbotAiProvider; apiKey: string | null; b
       provider: "gemini",
       apiKey: geminiKey,
       baseURL: process.env.GEMINI_BASE_URL?.trim() || DEFAULT_GEMINI_BASE_URL,
+    };
+  }
+
+  if (groqKey) {
+    return {
+      provider: "groq",
+      apiKey: groqKey,
+      baseURL: process.env.GROQ_BASE_URL?.trim() || DEFAULT_GROQ_BASE_URL,
     };
   }
 
@@ -102,6 +120,13 @@ export function getChatbotAiClient(): ChatbotAiClientConfig {
             primaryModel: process.env.CHATBOT_PRIMARY_MODEL?.trim() || "llama3.1-8b",
             fallbackModel: process.env.CHATBOT_FALLBACK_MODEL?.trim() || "llama3.1-8b",
             agentModel: process.env.CHATBOT_AGENT_MODEL?.trim() || "llama3.1-8b",
+          }
+      : providerSelection.provider === "groq"
+        ? {
+            label: "Groq",
+            primaryModel: process.env.CHATBOT_PRIMARY_MODEL?.trim() || "llama-3.3-70b-versatile",
+            fallbackModel: process.env.CHATBOT_FALLBACK_MODEL?.trim() || "llama-3.1-8b-instant",
+            agentModel: process.env.CHATBOT_AGENT_MODEL?.trim() || "llama-3.3-70b-versatile",
           }
         : {
             label: "Basic",

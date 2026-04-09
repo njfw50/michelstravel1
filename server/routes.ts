@@ -2956,6 +2956,55 @@ ${confirmation}`);
     res.json(chatbotAiStatus);
   });
 
+  app.post('/api/senior/chat', async (req, res) => {
+    try {
+      const { transcript, currentStep, language, state } = req.body;
+      const chatbotAi = getServiceAiStatus();
+      
+      if (!chatbotAi.available) {
+        return res.json({ understood: false });
+      }
+
+      const systemPrompt = `You are Mia, the voice assistant for the Senior Terminal of Michels Travel.
+Your goal is to extract information from the user's transcript based on the CURRENT STEP.
+
+CURRENT STEP: ${currentStep}
+CURRENT STATE: ${JSON.stringify(state)}
+
+RULES:
+1. Extract the specific piece of data requested for this step.
+2. Respond in the user's language (${language}).
+3. Be EXTREMELY concise and supportive.
+4. If it's a "yes/no" step, return a boolean in "value".
+5. If it's "ask_class", return one of: "economy", "premium_economy", "business", "first" in "value".
+6. If the user says something unrelated or you don't understand, set "understood" to false.
+
+OUTPUT FORMAT (JSON only):
+{
+  "understood": boolean,
+  "value": any,
+  "response": "short friendly confirmation or clarification"
+}`;
+
+      const response = await createServiceAiCompletionWithFallback({
+        model: chatbotAi.agentModel,
+        fallbackModel: chatbotAi.fallbackModel,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: transcript }
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 256,
+      });
+
+      const result = JSON.parse(response.choices[0].message.content || "{}");
+      res.json(result);
+    } catch (error) {
+      console.error('Senior AI chat failed:', error);
+      res.status(500).json({ understood: false });
+    }
+  });
+
   app.post('/api/chatbot/session', async (req, res) => {
     try {
       const { visitorId, language } = req.body;

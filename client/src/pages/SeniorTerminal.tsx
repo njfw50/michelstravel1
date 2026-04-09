@@ -319,21 +319,107 @@ export default function SeniorTerminal() {
       window.speechSynthesis.cancel();
     };
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = async (event: any) => {
       const transcript = event.results[0][0].transcript;
       console.log("Reconhecido:", transcript);
       
+      let matched = false;
+
+      // Fase 1: Correspondência por palavras-chave (Rápido e Estático)
       if (step === "auth") {
         const numbers = transcript.replace(/\D/g, "");
-        if (numbers) setPhoneNumber(prev => prev + numbers);
-      } else if (step === "ask_origin") {
-        setOriginQuery(transcript);
-        setOriginIata("");
-      } else if (step === "destination") {
-        setDestQuery(transcript);
-        setDestIata("");
-      } else if (step === "ask_name") {
-        setFirstName(transcript);
+        if (numbers) { setPhoneNumber(prev => prev + numbers); matched = true; }
+      } else if (step === "ask_class") {
+        const text = transcript.toLowerCase();
+        if (text.includes("econom") || text.includes("eco")) { setCabinClass("economy"); setStep("ask_origin"); speak(t.v_fromCity as string); matched = true; }
+        else if (text.includes("premi")) { setCabinClass("premium_economy"); setStep("ask_origin"); speak(t.v_fromCity as string); matched = true; }
+        else if (text.includes("busin") || text.includes("execut") || text.includes("ejecut")) { setCabinClass("business"); setStep("ask_origin"); speak(t.v_fromCity as string); matched = true; }
+        else if (text.includes("first") || text.includes("primeir") || text.includes("primer")) { setCabinClass("first"); setStep("ask_origin"); speak(t.v_fromCity as string); matched = true; }
+      } else if (step === "ask_return_intention") {
+        const text = transcript.toLowerCase();
+        if (text.includes("si") || text.includes("yes") || text.includes("sim")) {
+          setTripType("round-trip");
+          setStep("return_date");
+          speak(t.v_yesReturn as string);
+          matched = true;
+        } else if (text.includes("no") || text.includes("não")) {
+          setTripType("one-way");
+          setStep("ask_multi_intention");
+          speak(t.v_noReturn as string);
+          matched = true;
+        }
+      } else if (step === "ask_multi_intention") {
+        const text = transcript.toLowerCase();
+        if (text.includes("si") || text.includes("yes") || text.includes("sim")) {
+          setTripType("multi-city");
+          const newLeg = { originQuery, originIata, destQuery, destIata, travelDate };
+          setLegs(prev => [...prev, newLeg]);
+          setCurrentLeg(c => c + 1);
+          setStep("destination"); 
+          setOriginIata(destIata);
+          setOriginQuery(destQuery);
+          setDestIata("");
+          setDestQuery("");
+          setDestResults([]);
+          setTravelDate("");
+          speak((t.v_multiNext as any)(destIata));
+          matched = true;
+        } else if (text.includes("no") || text.includes("não")) {
+          if (currentLeg > 1) {
+            const newLeg = { originQuery, originIata, destQuery, destIata, travelDate };
+            setLegs(prev => [...prev, newLeg]);
+          }
+          setStep("ask_name");
+          speak(t.v_routeReady as string);
+          matched = true;
+        }
+      }
+
+      // Fase 2: IA Complementar (Smart)
+      if (!matched) {
+        try {
+          const res = await fetch("/api/senior/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              transcript,
+              currentStep: step,
+              language: lang,
+              state: { originQuery, destQuery, travelDate, tripType, cabinClass }
+            })
+          });
+          const data = await res.json();
+          if (data.understood) {
+            if (step === "ask_class" && data.value) {
+              setCabinClass(data.value);
+              setStep("ask_origin");
+              speak(data.response || t.v_fromCity as string);
+            } else if (step === "ask_return_intention" && typeof data.value === "boolean") {
+              if (data.value) { setTripType("round-trip"); setStep("return_date"); speak(data.response || t.v_yesReturn as string); }
+              else { setTripType("one-way"); setStep("ask_multi_intention"); speak(data.response || t.v_noReturn as string); }
+            } else if (step === "ask_multi_intention" && typeof data.value === "boolean") {
+              if (data.value) { 
+                setTripType("multi-city");
+                const newLeg = { originQuery, originIata, destQuery, destIata, travelDate };
+                setLegs(prev => [...prev, newLeg]);
+                setCurrentLeg(c => c + 1);
+                setStep("destination"); setOriginIata(destIata); setOriginQuery(destQuery); setDestIata(""); setDestQuery(""); setTravelDate("");
+                speak(data.response || (t.v_multiNext as any)(destIata));
+              } else {
+                if (currentLeg > 1) { const newLeg = { originQuery, originIata, destQuery, destIata, travelDate }; setLegs(prev => [...prev, newLeg]); }
+                setStep("ask_name"); speak(data.response || t.v_routeReady as string);
+              }
+            } else {
+              // Outros passos ou apenas resposta por áudio
+              if (data.response) speak(data.response);
+              if (step === "ask_origin") setOriginQuery(transcript);
+              if (step === "destination") setDestQuery(transcript);
+              if (step === "ask_name") setFirstName(transcript);
+            }
+          }
+        } catch (e) {
+          console.error("Erro na Mia Smart Support:", e);
+        }
       }
     };
 
@@ -502,8 +588,8 @@ export default function SeniorTerminal() {
         setStep("checkout");
         speak(t.v_cardReady as string);
       } else {
-         toast({ title: "Aviso", description: data.error || "Tente novamente.", variant: "destructive" });
-         speak("Houve um pequeno problema com a confirmação. Tente novamente.");
+         toast({ title: t.v_cardError as string, description: data.error || "Tente novamente.", variant: "destructive" });
+         speak(t.v_cardError as string);
       }
     } catch (e) {
       toast({ title: "Erro na reserva", description: "Problema ao conectar com o banco de dados.", variant: "destructive" });
