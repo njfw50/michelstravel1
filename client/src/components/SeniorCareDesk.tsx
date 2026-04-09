@@ -28,9 +28,19 @@ type SeniorAlert = {
   resolvedAt?: string | null;
 };
 
+type VoiceLog = {
+  id: number;
+  sessionId: number;
+  role: string;
+  content: string;
+  createdAt: string;
+  customerName?: string | null;
+};
+
 type SeniorCareData = {
   seniorSessions: SeniorSession[];
   alerts: SeniorAlert[];
+  voiceLogs: VoiceLog[];
   summary: {
     totalSeniorSessions: number;
     pendingAlerts: number;
@@ -266,6 +276,43 @@ export function SeniorCareDesk() {
                 ))}
               </div>
             )}
+          </div>
+          
+          {/* Monitoramento de Voz em Tempo Real */}
+          <div className="rounded-2xl border border-violet-100 bg-violet-50/30 p-6">
+            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <Mic className="h-5 w-5 text-violet-600" />
+              Feed de Voz (Mia AI)
+            </h3>
+            
+            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin">
+              {data.voiceLogs.length === 0 ? (
+                <div className="text-center py-8 text-slate-400 font-medium">
+                  Nenhuma interação de voz recente.
+                </div>
+              ) : (
+                data.voiceLogs.map((log) => (
+                  <div key={log.id} className="flex gap-3 items-start animate-in fade-in slide-in-from-top-1 duration-300">
+                    <Badge variant="outline" className={`mt-1 h-6 w-6 rounded-full p-0 flex items-center justify-center shrink-0 border-2 ${log.role === 'mia_voice' ? 'bg-violet-100 text-violet-700 border-violet-200' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
+                      {log.role === 'mia_voice' ? <Mic className="h-3 w-3" /> : <Users className="h-3 w-3" />}
+                    </Badge>
+                    <div className="space-y-1 flex-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
+                          {log.role === 'mia_voice' ? "Mia" : (log.customerName || "Usuário")}
+                        </span>
+                        <span className="text-[9px] text-slate-400 font-mono">
+                          {timeSince(log.createdAt)}
+                        </span>
+                      </div>
+                      <p className={`text-sm leading-relaxed rounded-2xl px-4 py-2 shadow-sm ${log.role === 'mia_voice' ? 'bg-violet-600 text-white font-medium rounded-tl-none' : 'bg-white border-slate-200 text-slate-800 rounded-tr-none border'}`}>
+                        {log.content}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
           {/* Sessões sênior ativas */}

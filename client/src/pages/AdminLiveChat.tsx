@@ -43,6 +43,7 @@ import {
   Plus,
   Trash2,
   Users,
+  Mic,
   PanelLeftOpen,
   PanelLeftClose,
 } from "lucide-react";
@@ -759,6 +760,33 @@ function LiveSalesPanel() {
       await fetchSessionDetail();
     } catch {} finally {
       setSendingMessage(false);
+    }
+  };
+
+  const [sendingVoicePrompt, setSendingVoicePrompt] = useState(false);
+  const handleSpeakThroughMia = async () => {
+    if (!liveMessage.trim() || !selectedSessionId || sendingVoicePrompt) return;
+    setSendingVoicePrompt(true);
+    try {
+      await adminFetch(`/api/live-sessions/admin/${selectedSessionId}/blocks`, {
+        method: "POST",
+        body: JSON.stringify({
+          blockType: "voice_prompt",
+          payload: { text: liveMessage.trim() },
+          shared: true,
+        }),
+      });
+      // Também logar no chat para registro
+      await adminFetch(`/api/live-sessions/admin/${selectedSessionId}/messages`, {
+        method: "POST",
+        body: JSON.stringify({ content: `[Mia Speak] ${liveMessage.trim()}` }),
+      });
+      setLiveMessage("");
+      await fetchSessionDetail();
+    } catch (err) {
+      console.error("Falha ao enviar comando de voz:", err);
+    } finally {
+      setSendingVoicePrompt(false);
     }
   };
 
@@ -1635,6 +1663,18 @@ function LiveSalesPanel() {
                       {sendingMessage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                     </Button>
                   </div>
+                  {isSeniorLead && (
+                    <Button
+                      onClick={handleSpeakThroughMia}
+                      disabled={!liveMessage.trim() || sendingVoicePrompt}
+                      variant="outline"
+                      className="w-full mt-2 gap-2 border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 hover:text-violet-800"
+                      size="sm"
+                    >
+                      {sendingVoicePrompt ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
+                      Falar texto através da Mia (Voz)
+                    </Button>
+                  )}
                 </div>
               </div>
             )}

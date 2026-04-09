@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import { storage } from "../storage";
+import { db } from "../db";
+import { sql } from "drizzle-orm";
 
 function requireAdmin(req: any, res: any, next: any) {
   const session = (req as any).session;
@@ -12,7 +14,7 @@ function requireAdmin(req: any, res: any, next: any) {
 export function registerSeniorCareRoutes(app: Express) {
   // === SENIOR CARE DESK — dados reais ===
   // GET /api/admin/senior-care
-  // Returns senior live sessions + unresolved alerts from the last 48h
+  // Returns senior live sessions + unresolved alerts + voice logs
   app.get('/api/admin/senior-care', requireAdmin, async (_req, res) => {
     try {
       const [allActiveSessions, allAlerts, requestedSessions] = await Promise.all([
@@ -31,7 +33,26 @@ export function registerSeniorCareRoutes(app: Express) {
         (a) => a.status !== 'resolved' && a.createdAt && new Date(a.createdAt as any) >= cutoff48h
       );
 
+      // Get recent voice logs across all senior sessions
+      const voiceLogsResult = await db.execute(sql`
+        SELECT m.id, m.session_id, m.role, m.content, m.created_at, s.customer_name
+        FROM live_session_messages m
+        JOIN live_sessions s ON m.session_id = s.id
+        WHERE s.service_mode = 'senior' 
+          AND (m.role = 'client_voice' OR m.role = 'mia_voice')
+        ORDER BY m.created_at DESC
+        LIMIT 15
+      `);
+
       res.json({
+        voiceLogs: voiceLogsResult.rows.map((m: any) => ({
+          id: m.id,
+          sessionId: m.session_id,
+          role: m.role,
+          content: m.content,
+          createdAt: m.created_at,
+          customerName: m.customer_name
+        })),
         seniorSessions: seniorSessions.slice(0, 10).map((s) => ({
           id: s.id,
           customerName: s.customerName,

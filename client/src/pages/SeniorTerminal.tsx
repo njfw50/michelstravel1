@@ -298,6 +298,46 @@ export default function SeniorTerminal() {
     window.speechSynthesis.speak(utterance);
   };
 
+  const [visitorId] = useState(() => {
+    let vid = localStorage.getItem("senior_visitor_id");
+    if (!vid) {
+      vid = "sen_" + Math.random().toString(36).substring(2, 11);
+      localStorage.setItem("senior_visitor_id", vid);
+    }
+    return vid;
+  });
+
+  const [confusionCounter, setConfusionCounter] = useState(0);
+
+  // Monitorar blocos para comandos de voz do admin (TTS Remoto)
+  useEffect(() => {
+    if (step === "auth") return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/live-sessions/visitor/${visitorId}/blocks?sharedOnly=true`);
+        if (res.ok) {
+          const blocks = await res.json();
+          const lastVoicePrompt = blocks
+            .filter((b: any) => b.blockType === "voice_prompt")
+            .sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0];
+
+          if (lastVoicePrompt && lastVoicePrompt.payload?.text) {
+            const lastProcessed = localStorage.getItem("last_voice_prompt_id");
+            if (lastProcessed !== String(lastVoicePrompt.id)) {
+              speak(lastVoicePrompt.payload.text);
+              localStorage.setItem("last_voice_prompt_id", String(lastVoicePrompt.id));
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao verificar blocos de voz:", err);
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [visitorId, step]);
+
   const startVoiceRecognition = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -385,11 +425,13 @@ export default function SeniorTerminal() {
               transcript,
               currentStep: step,
               language: lang,
+              visitorId,
               state: { originQuery, destQuery, travelDate, tripType, cabinClass }
             })
           });
           const data = await res.json();
           if (data.understood) {
+            setConfusionCounter(0);
             if (step === "ask_class" && data.value) {
               setCabinClass(data.value);
               setStep("ask_origin");
@@ -416,6 +458,8 @@ export default function SeniorTerminal() {
               if (step === "destination") setDestQuery(transcript);
               if (step === "ask_name") setFirstName(transcript);
             }
+          } else {
+            setConfusionCounter(prev => prev + 1);
           }
         } catch (e) {
           console.error("Erro na Mia Smart Support:", e);

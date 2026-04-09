@@ -2958,11 +2958,40 @@ ${confirmation}`);
 
   app.post('/api/senior/chat', async (req, res) => {
     try {
-      const { transcript, currentStep, language, state } = req.body;
+      const { transcript, currentStep, language, state, visitorId } = req.body;
       const chatbotAi = getServiceAiStatus();
       
       if (!chatbotAi.available) {
         return res.json({ understood: false });
+      }
+
+      // 1. Tentar encontrar a sessão ativa para logar o áudio
+      const session = visitorId ? await storage.getLiveSessionByVisitor(visitorId) : null;
+      if (session) {
+        await storage.createLiveSessionMessage({
+          sessionId: session.id,
+          role: "client_voice",
+          content: transcript,
+        });
+
+        // 1b. Verificar se admin assumiu o controle (intervenção recente)
+        const messages = await storage.getLiveSessionMessages(session.id);
+        const blocks = await storage.getLiveSessionBlocks(session.id);
+        
+        const now = new Date().getTime();
+        const cutoff = 5 * 60 * 1000; // 5 minutos
+        
+        const lastAdminMsg = messages.filter(m => m.role === 'admin' || m.role === 'mia_voice').pop(); // mia_voice manual counts too
+        const lastVoicePrompt = blocks.filter(b => b.blockType === 'voice_prompt').pop();
+        
+        let adminActive = false;
+        if (lastAdminMsg && (now - new Date(lastAdminMsg.createdAt!).getTime() < cutoff)) adminActive = true;
+        if (lastVoicePrompt && (now - new Date((lastVoicePrompt as any).updatedAt!).getTime() < cutoff)) adminActive = true;
+        
+        if (adminActive) {
+          console.log(`Sessão ${session.id} sob controle admin. Mia em silêncio.`);
+          return res.json({ understood: false, response: "" }); // Fica em silêncio se admin está ativo
+        }
       }
 
       const systemPrompt = `You are Mia, the voice assistant for the Senior Terminal of Michels Travel.
@@ -2998,6 +3027,32 @@ OUTPUT FORMAT (JSON only):
       });
 
       const result = JSON.parse(response.choices[0].message.content || "{}");
+
+      // 2. Logar a resposta da Mia
+      if (session && result.response) {
+        await storage.createLiveSessionMessage({
+          sessionId: session.id,
+          role: "mia_voice",
+          content: result.response,
+        });
+      }
+
+      // 3. Alerta de confusão (se habilitado no state ou inferido)
+      if (session && result.understood === false) {
+          // Incremento de confusão pode ser feito verificando as últimas mensagens
+          const recentMsgs = await storage.getLiveSessionMessages(session.id);
+          const failedCount = recentMsgs.slice(-5).filter(m => m.role === "mia_voice" && m.content.includes("could not understand") || m.content.length > 100).length; // simplificado
+          
+          if (failedCount >= 2) {
+             await storage.createSeniorAlert({
+                userId: session.visitorId || "anonymous",
+                type: "confusion_detected",
+                status: "pending",
+                message: `O cliente parece confuso no passo: ${currentStep}. Transcrição: ${transcript}`,
+             });
+          }
+      }
+
       res.json(result);
     } catch (error) {
       console.error('Senior AI chat failed:', error);
@@ -3635,6 +3690,19 @@ OUTPUT FORMAT (JSON only):
       res.json({ session });
     } catch (error) {
       res.status(500).json({ error: "Failed to check session" });
+    }
+  });
+
+  app.get('/api/live-sessions/visitor/:visitorId/blocks', async (req, res) => {
+    try {
+      const { visitorId } = req.params;
+      const { sharedOnly } = req.query;
+      const session = await storage.getLiveSessionByVisitor(visitorId);
+      if (!session) return res.status(404).json({ error: "Session not found" });
+      const blocks = await storage.getLiveSessionBlocks(session.id, sharedOnly === 'true');
+      res.json(blocks);
+    } catch (err) {
+      res.status(500).json({ error: "Failed to fetch visitor blocks" });
     }
   });
 
