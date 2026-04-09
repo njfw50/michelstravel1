@@ -137,22 +137,22 @@ function QueueCard({
   tone: "danger" | "attention" | "calm" | "growth";
 }) {
   const toneStyles = {
-    danger: "border-red-200 bg-red-50 text-red-700",
-    attention: "border-amber-200 bg-amber-50 text-amber-700",
-    calm: "border-blue-200 bg-blue-50 text-blue-700",
-    growth: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    danger: "border-rose-500/30 bg-rose-500/10 text-rose-300 shadow-[0_0_15px_rgba(244,63,94,0.1)]",
+    attention: "border-amber-500/30 bg-amber-500/10 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.1)]",
+    calm: "border-cyan-500/30 bg-cyan-500/10 text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.1)]",
+    growth: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.1)]",
   }[tone];
 
   return (
-    <Card className="border border-gray-200 shadow-sm">
-      <CardContent className="p-5">
+    <Card className="glass-card border-white/5 hover:border-white/20 transition-all duration-500 group">
+      <CardContent className="p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-gray-500">{title}</p>
-            <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
-            <p className="mt-2 text-sm text-gray-500">{description}</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500 group-hover:text-indigo-400 transition-colors uppercase">{title}</p>
+            <p className="mt-3 text-3xl font-bold text-white font-display tracking-tight">{value}</p>
+            <p className="mt-2 text-xs text-slate-400 font-medium leading-relaxed">{description}</p>
           </div>
-          <div className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${toneStyles}`}>
+          <div className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${toneStyles} transition-transform group-hover:scale-110`}>
             {icon}
           </div>
         </div>
@@ -179,29 +179,30 @@ function ProductAppCard({
   secondaryAction?: { label: string; onClick: () => void };
 }) {
   return (
-    <Card className="border border-gray-200 shadow-sm">
-      <CardContent className="p-5">
+    <Card className="glass-card border-white/5 hover:border-indigo-500/20 transition-all duration-500 overflow-hidden relative group">
+      <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 blur-[40px] -mr-12 -mt-12 group-hover:bg-indigo-500/15 transition-all" />
+      <CardContent className="p-6 relative z-10">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <Badge className="border border-blue-200 bg-blue-50 text-blue-700">{audience}</Badge>
-            <h3 className="mt-3 text-xl font-semibold text-gray-900">{title}</h3>
-            <p className="mt-2 text-sm text-gray-600">{description}</p>
-            <p className="mt-3 text-xs uppercase tracking-[0.16em] text-gray-400">{status}</p>
+            <Badge className="border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 font-bold px-3 py-0.5 rounded-full text-[10px] uppercase">{audience}</Badge>
+            <h3 className="mt-4 text-xl font-bold text-white font-display tracking-tight">{title}</h3>
+            <p className="mt-2 text-sm text-slate-400 font-medium leading-relaxed">{description}</p>
+            <p className="mt-4 text-[10px] uppercase tracking-[0.18em] font-black text-slate-500">{status}</p>
           </div>
-          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 text-gray-700">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-400 group-hover:text-indigo-400 transition-colors">
             {icon}
           </div>
         </div>
 
         {(primaryAction || secondaryAction) && (
-          <div className="mt-5 flex flex-wrap gap-2">
+          <div className="mt-6 flex flex-wrap gap-3">
             {primaryAction && (
-              <Button className="gap-2" onClick={primaryAction.onClick}>
+              <Button className="gap-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-5" onClick={primaryAction.onClick}>
                 {primaryAction.label}
               </Button>
             )}
             {secondaryAction && (
-              <Button variant="outline" className="gap-2" onClick={secondaryAction.onClick}>
+              <Button variant="ghost" className="gap-2.5 rounded-xl border border-white/10 text-slate-300 hover:bg-white/10 font-bold px-5" onClick={secondaryAction.onClick}>
                 {secondaryAction.label}
               </Button>
             )}
@@ -664,82 +665,118 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
   const healthStyles = getHealthStyles(data.health.level);
 
   return (
-    <div className="space-y-6">
-      <Card className={`overflow-hidden border shadow-sm ${healthStyles.shell}`}>
+    <div className="space-y-8 pb-10">
+      <Card className={`overflow-hidden border border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-[32px]`}>
         <CardContent className="p-0">
-          <div className="grid gap-8 p-6 lg:grid-cols-[1.6fr,1fr]">
-            <div>
-              <div className="flex items-center gap-2">
-                <Badge className={`border ${healthStyles.badge}`}>Mission Control</Badge>
-                <Badge className="border border-white/10 bg-white/5 text-white/80">Score {data.health.score}</Badge>
-                <Badge className="border border-white/10 bg-white/5 text-white/80">
-                  {data.mission.testMode ? "Test mode" : "Production mode"}
+          <div className="grid gap-10 p-8 sm:p-10 lg:grid-cols-[1.6fr,1fr] relative overflow-hidden">
+            {/* Ambient background glows */}
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/10 blur-[120px] pointer-events-none" />
+
+            <div className="relative z-10">
+              <div className="flex flex-wrap items-center gap-3">
+                <Badge className="border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 font-bold px-3 py-1 rounded-full uppercase tracking-widest text-[10px]">
+                  Mission Control Pro
+                </Badge>
+                <Badge className="border border-white/10 bg-white/5 text-slate-400 font-medium px-3 py-1 rounded-full text-[10px]">
+                  Score Global {data.health.score}
+                </Badge>
+                <Badge className={`border px-3 py-1 rounded-full text-[10px] font-black uppercase ${data.mission.testMode ? "border-amber-500/40 bg-amber-500/15 text-amber-300" : "border-emerald-500/40 bg-emerald-500/15 text-emerald-300"}`}>
+                  {data.mission.testMode ? "Mode Teste Ativo" : "Produção Live"}
                 </Badge>
               </div>
-              <h2 className="mt-4 max-w-3xl text-3xl font-bold tracking-tight">{data.health.headline}</h2>
-              <p className="mt-3 max-w-3xl text-sm text-white/75">{data.health.summary}</p>
-              <div className="mt-6 flex flex-wrap items-center gap-3">
-                <Button className="gap-2 bg-white text-slate-900 hover:bg-white/90" onClick={() => onOpenLiveDesk()}>
-                  <MessageSquare className="h-4 w-4" />
-                  Open live desk
+              <h2 className="mt-8 max-w-3xl text-4xl sm:text-5xl font-bold tracking-tight text-white font-display">
+                {data.health.headline.split(" ").map((word, i) => i === 0 || i === 1 ? <span key={i}>{word} </span> : <span key={i} className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">{word} </span>)}
+              </h2>
+              <p className="mt-6 max-w-2xl text-lg text-slate-400 font-medium leading-relaxed italic">
+                "{data.health.summary}"
+              </p>
+              <div className="mt-10 flex flex-wrap items-center gap-4">
+                <Button 
+                  className="gap-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-14 px-8 shadow-[0_0_25px_rgba(99,102,241,0.3)] transform transition hover:scale-105 active:scale-95" 
+                  onClick={() => onOpenLiveDesk()}
+                >
+                  <MessageSquare className="h-5 w-5" />
+                  Abrir Atendimento Live
                 </Button>
                 <Button
-                  variant="outline"
-                  className="gap-2 border-white/20 bg-white/5 text-white hover:bg-white/10"
+                  variant="secondary"
+                  className="gap-3 rounded-2xl border border-white/10 bg-white/5 text-slate-300 hover:bg-white/15 hover:text-white h-14 px-7 font-bold transition-all"
                   onClick={handleOpenAdminInstallPage}
                 >
-                  <Smartphone className="h-4 w-4" />
-                  Install admin app
+                  <Smartphone className="h-5 w-5" />
+                  Instalar App Admin
                 </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2 border-white/20 bg-white/5 text-white hover:bg-white/10"
-                  onClick={handleCopyAdminInstallLink}
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Copy install link
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2 border-white/20 bg-white/5 text-white hover:bg-white/10"
-                  onClick={handleCopyBrief}
-                >
-                  <Copy className="h-4 w-4" />
-                  Copy shift brief
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2 border-white/20 bg-white/5 text-white hover:bg-white/10"
-                  onClick={() => onOpenBookings({ status: "pending" })}
-                >
-                  <ShieldAlert className="h-4 w-4" />
-                  Rescue bookings
-                </Button>
+                
+                <div className="flex items-center gap-2">
+                   <Button
+                    variant="secondary"
+                    size="icon"
+                    className="h-14 w-14 rounded-2xl border border-white/10 bg-white/5 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/30 transition-all"
+                    onClick={handleCopyAdminInstallLink}
+                    title="Copiar link do app"
+                  >
+                    <ExternalLink className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="h-14 w-14 rounded-2xl border border-white/10 bg-white/5 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/30 transition-all"
+                    onClick={handleCopyBrief}
+                    title="Copiar briefing do turno"
+                  >
+                    <Copy className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="h-14 w-14 rounded-2xl border border-white/10 bg-white/5 text-slate-400 hover:text-rose-400 hover:border-rose-500/30 transition-all"
+                    onClick={() => onOpenBookings({ status: "pending" })}
+                    title="Resgatar Reservas"
+                  >
+                    <ShieldAlert className="h-5 w-5" />
+                  </Button>
+                </div>
               </div>
             </div>
 
-            <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/5 p-4 backdrop-blur mt-6 lg:mt-0">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-3 sm:p-4">
-                  <p className="text-[10px] sm:text-xs uppercase tracking-[0.16em] text-white/50">Revenue today</p>
-                  <p className="mt-1 sm:mt-2 text-xl sm:text-2xl font-bold">{formatCurrency(data.revenue.today)}</p>
+            <div className="relative z-10 grid gap-4 rounded-[32px] border border-white/10 bg-white/5 p-6 backdrop-blur shadow-inner shadow-white/5">
+              <div className="grid grid-cols-2 gap-4 h-full">
+                <div className="rounded-2xl border border-white/5 bg-slate-950/40 p-6 flex flex-col justify-center">
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 mb-2">Revenue Today</p>
+                  <p className="text-3xl font-bold text-white font-display tracking-tight">{formatCurrency(data.revenue.today)}</p>
+                  <div className="mt-4 flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
+                    <TrendingUp className="h-3.5 w-3.5" />
+                    Fluxo Positivo
+                  </div>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-3 sm:p-4">
-                  <p className="text-[10px] sm:text-xs uppercase tracking-[0.16em] text-white/50">At risk</p>
-                  <p className="mt-1 sm:mt-2 text-xl sm:text-2xl font-bold">{formatCurrency(data.revenue.atRisk)}</p>
+                <div className="rounded-2xl border border-white/5 bg-slate-950/40 p-6 flex flex-col justify-center">
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 mb-2">Exposure At Risk</p>
+                  <p className="text-3xl font-bold text-rose-400 font-display tracking-tight">{formatCurrency(data.revenue.atRisk)}</p>
+                  <div className="mt-4 flex items-center gap-1.5 text-[10px] font-bold text-rose-500/60 uppercase tracking-widest">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    Precisa Resgate
+                  </div>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-3 sm:p-4">
-                  <p className="text-[10px] sm:text-xs uppercase tracking-[0.16em] text-white/50">Bookings today</p>
-                  <p className="mt-1 sm:mt-2 text-xl sm:text-2xl font-bold">{data.counters.todayBookings}</p>
+                <div className="rounded-2xl border border-white/5 bg-slate-950/40 p-6 flex flex-col justify-center">
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 mb-2">Bookings (24h)</p>
+                  <p className="text-3xl font-bold text-white font-display tracking-tight">{data.counters.todayBookings}</p>
+                  <p className="mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Atividade de Venda</p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-3 sm:p-4">
-                  <p className="text-[10px] sm:text-xs uppercase tracking-[0.16em] text-white/50">Searches today</p>
-                  <p className="mt-1 sm:mt-2 text-xl sm:text-2xl font-bold">{data.counters.todaySearches}</p>
+                <div className="rounded-2xl border border-white/5 bg-slate-950/40 p-6 flex flex-col justify-center">
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 mb-2">Searches (24h)</p>
+                  <p className="text-3xl font-bold text-cyan-400 font-display tracking-tight">{data.counters.todaySearches}</p>
+                  <p className="mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Intenção de Compra</p>
                 </div>
               </div>
-              <p className="text-xs text-white/55 mt-2">
-                Updated {formatMoment(data.generatedAt)}. Average booking value {formatCurrency(data.revenue.avgBookingValue)}.
-              </p>
+              <div className="mt-2 flex items-center justify-between px-2">
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                  Updated {formatMoment(data.generatedAt)}
+                </p>
+                <p className="text-[10px] text-indigo-400/60 font-black uppercase tracking-widest">
+                  AVG Ticket: {formatCurrency(data.revenue.avgBookingValue)}
+                </p>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -772,46 +809,57 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-gray-900">
-              <ShieldAlert className="h-4 w-4 text-blue-500" />
-              Painel elétrico
+        <Card className="glass-card border-white/5 shadow-2xl overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 blur-[30px] -mr-12 -mt-12 pointer-events-none" />
+          <CardHeader className="pb-4 border-b border-white/5">
+            <CardTitle className="flex items-center gap-3 text-white font-display tracking-tight text-base">
+              <div className="h-8 w-8 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                <ShieldAlert className="h-4 w-4" />
+              </div>
+              Monitoramento (Runtime)
             </CardTitle>
-            <CardDescription className="text-xs text-gray-500">
-              Estado do runtime Node/Render
+            <CardDescription className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+              Estado Vital do Cluster Node/Render
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm text-gray-700">
-            {systemHealthLoading && <div className="text-gray-500 text-xs">Carregando...</div>}
+          <CardContent className="p-6 space-y-3">
+            {systemHealthLoading && (
+              <div className="flex items-center gap-2 text-indigo-400 text-[10px] font-black uppercase tracking-widest animate-pulse">
+                <RefreshCw className="h-3 w-3 animate-spin" />
+                Interrogando Sistema...
+              </div>
+            )}
             {systemHealth ? (
-              <>
-                <div className="flex justify-between">
-                  <span>Uptime</span>
-                  <span className="font-semibold">{Math.round(systemHealth.uptimeSec / 60)} min</span>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Uptime Executivo</span>
+                  <span className="text-xs font-black text-white">{Math.round(systemHealth.uptimeSec / 60)} min</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Memória (RSS)</span>
-                  <span className="font-semibold">{formatBytes(systemHealth.memory.rss)}</span>
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Memória Alocada</span>
+                  <span className="text-xs font-black text-cyan-400">{formatBytes(systemHealth.memory.rss)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Heap usado</span>
-                  <span className="font-semibold">{formatBytes(systemHealth.memory.heapUsed)}</span>
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Heap Dinâmico</span>
+                  <span className="text-xs font-black text-white">{formatBytes(systemHealth.memory.heapUsed)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Node</span>
-                  <span className="font-semibold">{systemHealth.nodeVersion}</span>
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Binário Node</span>
+                  <span className="text-xs font-mono font-bold text-slate-400">{systemHealth.nodeVersion}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Env</span>
-                  <span className="font-semibold uppercase">{systemHealth.env}</span>
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ambiente</span>
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 uppercase">{systemHealth.env}</span>
                 </div>
-                <p className="text-[11px] text-gray-400">
+                <p className="pt-2 text-[8px] font-black text-slate-600 uppercase tracking-widest border-t border-white/5">
                   Atualizado {formatDistanceToNowStrict(new Date(systemHealth.timestamp), { addSuffix: true })}
                 </p>
-              </>
+              </div>
             ) : !systemHealthLoading ? (
-              <div className="text-xs text-red-500">Falha ao obter saúde do sistema</div>
+              <div className="flex items-center gap-2 text-rose-400 text-[10px] font-black uppercase tracking-widest">
+                <AlertTriangle className="h-4 w-4" />
+                Erro Critical no Telemetria
+              </div>
             ) : null}
           </CardContent>
         </Card>
@@ -858,79 +906,99 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
 
       <div className="grid gap-6 xl:grid-cols-[1.6fr,1fr]">
         <div className="space-y-6">
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader className="flex flex-row items-start justify-between gap-4">
+          <Card className="glass-card border-white/5 shadow-2xl overflow-hidden transition-all duration-500 group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 blur-[50px] -mr-16 -mt-16 pointer-events-none" />
+            <CardHeader className="flex flex-row items-center justify-between gap-4 p-8 border-b border-white/5">
               <div>
-                <CardTitle className="text-gray-900">Revenue Rescue Board</CardTitle>
-                <CardDescription>
-                  Prioritized bookings that can lose money or trust if you do not act quickly.
+                <CardTitle className="text-white font-display uppercase tracking-widest text-sm font-black">Revenue Rescue Board</CardTitle>
+                <CardDescription className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                  Reservas de Risco que Demandam Resgate Imediato
                 </CardDescription>
               </div>
-              <Button variant="outline" className="gap-2" onClick={() => onOpenBookings({ status: "pending" })}>
-                Open bookings
-                <ArrowRight className="h-4 w-4" />
+              <Button 
+                variant="ghost" 
+                className="rounded-xl font-bold text-[10px] uppercase tracking-widest text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/10 px-5 h-11 transition-all" 
+                onClick={() => onOpenBookings({ status: "pending" })}
+              >
+                Ativar Arquivo Global
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="p-8 space-y-4">
               {data.urgentBookings.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
-                  No urgent bookings right now. The revenue rescue queue is under control.
+                <div className="rounded-[24px] border border-dashed border-emerald-500/20 bg-emerald-500/5 p-10 text-center">
+                  <CheckCircle2 className="h-10 w-10 text-emerald-500/40 mx-auto mb-4" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400/60">Controle Operacional Total - Sem Riscos Detectados</p>
                 </div>
               ) : (
                 data.urgentBookings.map((booking) => (
-                  <div key={booking.id} className="rounded-2xl border border-gray-200 bg-white p-4">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-sm font-semibold text-gray-900">{booking.route}</p>
-                          <Badge className="border border-red-200 bg-red-50 text-red-700">urgency {booking.urgency}</Badge>
-                          <Badge variant="outline" className="capitalize">{booking.status}</Badge>
-                          <Badge variant="outline" className="capitalize">{booking.ticketStatus}</Badge>
+                  <div key={booking.id} className="rounded-3xl border border-white/5 bg-slate-950/40 p-6 hover:bg-white/5 transition-colors group/item">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <p className="text-sm font-bold text-white tracking-tight">{booking.route}</p>
+                          <Badge className="border border-rose-500/30 bg-rose-500/15 text-rose-400 text-[9px] font-black uppercase tracking-widest rounded-lg">Urgência {booking.urgency}</Badge>
+                          <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest text-slate-500 bg-white/5 border border-white/5">{booking.status}</Badge>
                         </div>
-                        <p className="mt-2 text-sm text-gray-600">{booking.reason}</p>
-                        <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                          <span>{booking.contactEmail}</span>
-                          {booking.referenceCode && <span className="font-mono text-blue-600">{booking.referenceCode}</span>}
-                          <span>{formatMoment(booking.createdAt)}</span>
+                        <p className="text-xs text-slate-400 font-medium leading-relaxed max-w-lg">{booking.reason}</p>
+                        <div className="flex flex-wrap items-center gap-4 pt-1">
+                           <div className="flex items-center gap-2">
+                             <Mail className="h-3 w-3 text-slate-600" />
+                             <span className="text-[10px] font-bold text-slate-500">{booking.contactEmail}</span>
+                           </div>
+                           {booking.referenceCode && (
+                             <div className="flex items-center gap-2">
+                               <span className="text-[10px] font-black text-indigo-400/60 font-mono tracking-tighter uppercase">#{booking.referenceCode}</span>
+                             </div>
+                           )}
+                           <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">{formatMoment(booking.createdAt)}</span>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-bold text-gray-900">{formatCurrency(booking.totalPrice, booking.currency)}</p>
-                        <p className="text-xs text-gray-500">Potentially exposed revenue</p>
+                        <p className="text-xl font-black text-white font-display tracking-tight">{formatCurrency(booking.totalPrice, booking.currency)}</p>
+                        <p className="text-[9px] font-bold text-rose-500/60 uppercase tracking-widest mt-1">Exposição Financeira</p>
                       </div>
                     </div>
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    <div className="mt-6 flex flex-wrap gap-2.5">
                       <Button
                         size="sm"
-                        variant="outline"
-                        className="gap-2"
+                        variant="secondary"
+                        className="h-10 rounded-xl border border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-widest text-slate-300 hover:bg-white/10"
                         onClick={() => onOpenBookings({
                           status: booking.status === "payment_pending" ? "pending" : "all",
                           search: booking.referenceCode || booking.contactEmail,
                           bookingId: booking.id,
                         })}
                       >
-                        <ExternalLink className="h-4 w-4" />
-                        Open booking
+                        <ExternalLink className="mr-2 h-3.5 w-3.5 text-indigo-400" />
+                        Inspecionar
                       </Button>
                       <Button
                         size="sm"
-                        variant="outline"
-                        className="gap-2"
+                        variant="secondary"
+                        className="h-10 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-400 transition-all"
                         disabled={syncBookingMutation.isPending}
                         onClick={() => syncBookingMutation.mutate(booking.id)}
                       >
-                        <RefreshCw className={`h-4 w-4 ${syncBookingMutation.isPending ? "animate-spin" : ""}`} />
-                        Sync
+                        <RefreshCw className={`mr-2 h-3.5 w-3.5 ${syncBookingMutation.isPending ? "animate-spin" : ""}`} />
+                        Sync Provid.
                       </Button>
-                      <Button size="sm" variant="outline" className="gap-2" onClick={() => openEmail(booking.contactEmail)}>
-                        <Mail className="h-4 w-4" />
-                        Email
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="h-10 w-10 p-0 rounded-xl border border-white/10 text-slate-400 hover:text-white hover:bg-white/10" 
+                        onClick={() => openEmail(booking.contactEmail)}
+                      >
+                        <Mail className="h-3.5 w-3.5" />
                       </Button>
                       {booking.contactPhone && (
-                        <Button size="sm" variant="outline" className="gap-2" onClick={() => openPhone(booking.contactPhone)}>
-                          <Phone className="h-4 w-4" />
-                          Call
+                        <Button 
+                           size="sm" 
+                           variant="ghost" 
+                           className="h-10 w-10 p-0 rounded-xl border border-white/10 text-slate-400 hover:text-white hover:bg-white/10" 
+                           onClick={() => openPhone(booking.contactPhone)}
+                        >
+                          <Phone className="h-3.5 w-3.5" />
                         </Button>
                       )}
                     </div>
@@ -939,60 +1007,61 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
               )}
             </CardContent>
           </Card>
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-gray-900">Growth Radar</CardTitle>
-              <CardDescription>
-                Demand signals, content coverage and recently won bookings.
+          <Card className="glass-card border-white/5 shadow-2xl overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-[50px] -mr-16 -mt-16 pointer-events-none" />
+            <CardHeader className="p-8 border-b border-white/5">
+              <CardTitle className="text-white font-display uppercase tracking-widest text-sm font-black">Growth Radar</CardTitle>
+              <CardDescription className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                Sinais de Demanda, Cobertura de Conteúdo e Conversões Recentes
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                  <p className="text-xs uppercase tracking-[0.16em] text-emerald-700">Active deals</p>
-                  <p className="mt-2 text-2xl font-bold text-emerald-900">{data.counters.activeDeals}</p>
+            <CardContent className="p-8 space-y-8">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-[24px] border border-white/5 bg-slate-950/40 p-6 flex flex-col justify-center">
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 mb-2">Ofertas Ativas</p>
+                  <p className="text-3xl font-bold text-emerald-400 font-display tracking-tight">{data.counters.activeDeals}</p>
                 </div>
-                <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-                  <p className="text-xs uppercase tracking-[0.16em] text-blue-700">Published posts</p>
-                  <p className="mt-2 text-2xl font-bold text-blue-900">{data.counters.publishedPosts}</p>
+                <div className="rounded-[24px] border border-white/5 bg-slate-950/40 p-6 flex flex-col justify-center">
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 mb-2">Posts Publicados</p>
+                  <p className="text-3xl font-bold text-cyan-400 font-display tracking-tight">{data.counters.publishedPosts}</p>
                 </div>
               </div>
 
               <div>
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-gray-900">Demand gaps</h3>
-                  <Button size="sm" variant="outline" className="gap-2" onClick={onOpenSettings}>
-                    <Sparkles className="h-4 w-4" />
-                    Open growth controls
+                <div className="mb-5 flex items-center justify-between">
+                  <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.25em]">Janelas de Oportunidade</h3>
+                  <Button variant="ghost" size="sm" className="h-9 rounded-xl border border-white/5 text-[9px] font-black uppercase text-slate-400 hover:bg-white/5" onClick={onOpenSettings}>
+                    <Sparkles className="mr-2 h-3.5 w-3.5" />
+                    Growth Controls
                   </Button>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {data.opportunityRoutes.length === 0 ? (
-                    <p className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
-                      Current demand is already supported by active promotions.
+                    <p className="rounded-2xl border border-dashed border-white/5 bg-white/5 p-8 text-center text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                      Demanda Totalmente Suportada
                     </p>
                   ) : (
                     data.opportunityRoutes.map((route) => (
-                      <div key={route.routeKey} className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                        <div className="flex items-center justify-between gap-3">
+                      <div key={route.routeKey} className="rounded-2xl border border-white/5 bg-slate-950/20 p-5 hover:bg-white/5 transition-colors">
+                        <div className="flex items-center justify-between gap-4">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">{route.route}</p>
-                            <p className="mt-1 text-xs text-gray-500">
-                              {route.searches} searches · {route.bookings} bookings
+                            <p className="text-sm font-bold text-white tracking-tight">{route.route}</p>
+                            <p className="mt-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">
+                              {route.searches} Buscas · {route.bookings} Conversões
                             </p>
                           </div>
-                          <div className="text-right text-sm font-semibold text-gray-900">
+                          <div className="text-right text-sm font-black text-white font-display">
                             {formatCurrency(route.revenue)}
                           </div>
                         </div>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          <Button size="sm" variant="outline" className="gap-2" onClick={() => openDealLaunchpad(route)}>
-                            <Sparkles className="h-4 w-4" />
-                            Launch deal
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <Button size="sm" variant="ghost" className="h-9 px-4 rounded-xl border border-indigo-500/20 bg-indigo-500/10 text-[9px] font-black uppercase tracking-widest text-indigo-300 hover:bg-indigo-500/20" onClick={() => openDealLaunchpad(route)}>
+                            <Sparkles className="mr-2 h-3.5 w-3.5" />
+                            Lançar Oferta
                           </Button>
-                          <Button size="sm" variant="outline" className="gap-2" onClick={() => copyCampaignBrief(route)}>
-                            <Copy className="h-4 w-4" />
-                            Copy brief
+                          <Button size="sm" variant="ghost" className="h-9 px-4 rounded-xl border border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5" onClick={() => copyCampaignBrief(route)}>
+                            <Copy className="mr-2 h-3.5 w-3.5" />
+                            Briefing
                           </Button>
                         </div>
                       </div>
@@ -1002,22 +1071,22 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
               </div>
 
               <div>
-                <h3 className="mb-3 text-sm font-semibold text-gray-900">Recent wins</h3>
+                <h3 className="mb-5 text-[10px] font-black text-white/40 uppercase tracking-[0.25em]">Recent Victories</h3>
                 <div className="space-y-3">
                   {data.recentWins.length === 0 ? (
-                    <p className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
-                      Confirmed bookings will appear here as you close sales.
+                    <p className="rounded-2xl border border-dashed border-white/5 bg-white/5 p-8 text-center text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                      Aguardando Novas Conversões
                     </p>
                   ) : (
                     data.recentWins.map((booking) => (
-                      <div key={booking.id} className="flex items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                      <div key={booking.id} className="flex items-center justify-between gap-4 rounded-2xl border border-white/5 bg-white/[0.02] p-4 group-hover:bg-white/5 transition-colors">
                         <div>
-                          <p className="text-sm font-semibold text-gray-900">{booking.route}</p>
-                          <p className="mt-1 text-xs text-gray-500">{booking.contactEmail}</p>
+                          <p className="text-xs font-bold text-white opacity-80">{booking.route}</p>
+                          <p className="mt-0.5 text-[9px] font-medium text-slate-500">{booking.contactEmail}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-gray-900">{formatCurrency(booking.totalPrice, booking.currency)}</p>
-                          <p className="mt-1 text-xs text-gray-500">{formatMoment(booking.createdAt)}</p>
+                          <p className="text-sm font-black text-white">{formatCurrency(booking.totalPrice, booking.currency)}</p>
+                          <p className="mt-0.5 text-[8px] font-black text-indigo-400/40 uppercase tracking-tighter">{formatMoment(booking.createdAt)}</p>
                         </div>
                       </div>
                     ))
@@ -1027,34 +1096,34 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
             </CardContent>
           </Card>
 
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-gray-900">Action Playbooks</CardTitle>
-              <CardDescription>
-                Real-time operational suggestions based on bookings, service and demand.
+          <Card className="glass-card border-white/5 shadow-2xl overflow-hidden group">
+            <CardHeader className="p-8 border-b border-white/5">
+              <CardTitle className="text-white font-display uppercase tracking-widest text-sm font-black">Action Playbooks</CardTitle>
+              <CardDescription className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                Sugestões Operacionais baseadas em Inteligência Live
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="p-8 space-y-4">
               {data.recommendedActions.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
-                  No urgent playbooks right now. You can focus on growth and service polish.
+                <div className="rounded-2xl border border-dashed border-white/5 bg-white/5 p-8 text-center text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                  Sem Pendências Estratégicas
                 </div>
               ) : (
                 data.recommendedActions.map((item) => {
                   const tone =
                     item.level === "critical"
-                      ? "border-red-200 bg-red-50 text-red-700"
+                      ? "border-rose-500/30 bg-rose-500/10 text-rose-300"
                       : item.level === "attention"
-                        ? "border-amber-200 bg-amber-50 text-amber-700"
-                        : "border-emerald-200 bg-emerald-50 text-emerald-700";
+                        ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
+                        : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300";
 
                   return (
-                    <div key={item.id} className="rounded-2xl border border-gray-200 bg-white p-4">
-                      <Badge className={`border ${tone}`}>{item.level}</Badge>
-                      <p className="mt-3 text-sm font-semibold text-gray-900">{item.title}</p>
-                      <p className="mt-2 text-sm text-gray-600">{item.description}</p>
-                      <Button className="mt-4 w-full gap-2" variant="outline" onClick={() => runRecommendedAction(item.action)}>
-                        {item.level === "growth" ? <TrendingUp className="h-4 w-4" /> : item.level === "attention" ? <Users className="h-4 w-4" /> : <DollarSign className="h-4 w-4" />}
+                    <div key={item.id} className="rounded-2xl border border-white/5 bg-slate-950/40 p-5 hover:bg-white/5 transition-colors">
+                      <Badge className={`text-[8px] font-black uppercase tracking-[0.2em] rounded-md border ${tone}`}>{item.level}</Badge>
+                      <p className="mt-3 text-sm font-bold text-white tracking-tight">{item.title}</p>
+                      <p className="mt-2 text-xs text-slate-400 font-medium leading-relaxed">{item.description}</p>
+                      <Button className="mt-5 w-full h-10 gap-2 rounded-xl border border-white/10 bg-white/5 text-[9px] font-black uppercase text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-400 transition-all" variant="ghost" onClick={() => runRecommendedAction(item.action)}>
+                        {item.level === "growth" ? <TrendingUp className="h-3.5 w-3.5" /> : item.level === "attention" ? <Users className="h-3.5 w-3.5" /> : <DollarSign className="h-3.5 w-3.5" />}
                         {item.actionLabel}
                       </Button>
                     </div>
@@ -1065,68 +1134,62 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
           </Card>
         </div>
         <div className="space-y-6">
-          <Card className="border border-gray-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-gray-900">Service Radar</CardTitle>
-              <CardDescription>
-                Human assistance, live queue and escalation recovery in one place.
+          <Card className="glass-card border-white/5 shadow-2xl overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-[50px] -mr-16 -mt-16 pointer-events-none" />
+            <CardHeader className="p-8 border-b border-white/5">
+              <CardTitle className="text-white font-display uppercase tracking-widest text-sm font-black">Service Radar</CardTitle>
+              <CardDescription className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                Atendimento Humano, Fila Live e Resgate de Jornadas (Escalation)
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                <div className="flex items-center justify-between">
+            <CardContent className="p-8 space-y-6">
+              <div className="rounded-[24px] border border-white/5 bg-slate-950/40 p-6">
+                <div className="flex items-center justify-between mb-6">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.16em] text-gray-500">Live requests</p>
-                    <p className="mt-1 text-2xl font-bold text-gray-900">{data.counters.liveRequests}</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">Live Requests</p>
+                    <p className="mt-1 text-3xl font-bold text-white font-display tracking-tight">{data.counters.liveRequests}</p>
                   </div>
-                  <Button size="sm" className="gap-2" onClick={() => onOpenLiveDesk()}>
-                    <MessageSquare className="h-4 w-4" />
-                    Open desk
+                  <Button size="sm" className="h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-indigo-600/20" onClick={() => onOpenLiveDesk()}>
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Open Desk
                   </Button>
                 </div>
-                <div className="mt-4 space-y-3">
+                <div className="space-y-3">
                   {data.liveRequests.length === 0 ? (
-                    <p className="text-sm text-gray-500">No live requests in queue.</p>
+                    <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest italic py-4">Fila de Espera Vazia</p>
                   ) : (
                     data.liveRequests.map((session) => (
-                      <div key={session.id} className="rounded-2xl border border-white bg-white p-3">
+                      <div key={session.id} className="rounded-2xl border border-white/5 bg-white/[0.03] p-4 transition-colors hover:bg-white/[0.05]">
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">
+                            <p className="text-xs font-bold text-white opacity-90">
                               {session.customerName || session.customerEmail || `Visitor ${session.id}`}
                             </p>
-                            <p className="mt-1 text-xs text-gray-500">
+                            <p className="mt-1 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
                               {session.language?.toUpperCase() || "PT"} · {formatMoment(session.createdAt)}
                             </p>
                           </div>
-                          <Badge variant="outline">{session.status}</Badge>
+                          <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest bg-white/5 border border-white/5 text-slate-400">{session.status}</Badge>
                         </div>
-                        <div className="mt-3 flex flex-wrap gap-2">
+                        <div className="mt-4 flex flex-wrap gap-2">
                           <Button
                             size="sm"
-                            variant="outline"
-                            className="gap-2"
+                            variant="secondary"
+                            className="h-9 px-4 rounded-xl border border-indigo-500/20 bg-indigo-500/10 text-[9px] font-black uppercase tracking-widest text-indigo-300 hover:bg-indigo-500/20"
                             disabled={acceptLiveMutation.isPending}
                             onClick={() => acceptLiveMutation.mutate(session.id)}
                           >
-                            {acceptLiveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                            {acceptLiveMutation.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-2 h-3.5 w-3.5" />}
                             Accept
                           </Button>
                           <Button
                             size="sm"
-                            variant="outline"
-                            className="gap-2"
+                            variant="secondary"
+                            className="h-9 w-9 p-0 rounded-xl border border-white/5 text-slate-400 hover:text-white hover:bg-white/10"
                             onClick={() => onOpenLiveDesk({ sessionId: session.id })}
                           >
-                            <ExternalLink className="h-4 w-4" />
-                            Open desk
+                            <ExternalLink className="h-3.5 w-3.5" />
                           </Button>
-                          {session.customerPhone && (
-                            <Button size="sm" variant="outline" className="gap-2" onClick={() => openPhone(session.customerPhone)}>
-                              <Phone className="h-4 w-4" />
-                              Call
-                            </Button>
-                          )}
                         </div>
                       </div>
                     ))
@@ -1134,49 +1197,50 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                <div className="flex items-center justify-between">
+              <div className="rounded-[24px] border border-white/5 bg-slate-950/40 p-6">
+                <div className="flex items-center justify-between mb-6">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.16em] text-gray-500">Service rescue</p>
-                    <p className="mt-1 text-2xl font-bold text-gray-900">{data.counters.openEscalations}</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] font-black text-rose-500/60">Service Rescue</p>
+                    <p className="mt-1 text-3xl font-bold text-rose-400 font-display tracking-tight">{data.counters.openEscalations}</p>
                   </div>
-                  <div className="text-right text-xs text-gray-500">
-                    {data.counters.activeLiveSessions} active live session{data.counters.activeLiveSessions === 1 ? "" : "s"}
+                  <div className="text-right">
+                    <p className="text-[8px] font-black text-slate-600 uppercase tracking-[0.2em]">
+                      {data.counters.activeLiveSessions} Active Sessions
+                    </p>
                   </div>
                 </div>
-                <div className="mt-4 space-y-3">
+                <div className="space-y-3">
                   {data.escalations.length === 0 ? (
-                    <p className="text-sm text-gray-500">No open escalations.</p>
+                    <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest italic py-4 text-center">Nenhuma Escalada Pendente</p>
                   ) : (
                     data.escalations.map((escalation) => (
-                      <div key={escalation.id} className="rounded-2xl border border-white bg-white p-3">
+                      <div key={escalation.id} className="rounded-2xl border border-rose-500/10 bg-rose-500/5 p-4">
                         <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="text-sm font-semibold text-gray-900">{escalation.reason}</p>
-                            <p className="mt-1 text-xs text-gray-500">
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-white truncate">{escalation.reason}</p>
+                            <p className="mt-1 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
                               {escalation.type} · {formatMoment(escalation.createdAt)}
                             </p>
-                            {escalation.summary && <p className="mt-2 text-sm text-gray-600">{escalation.summary}</p>}
+                            {escalation.summary && <p className="mt-2 text-xs text-slate-400 font-medium leading-relaxed italic line-clamp-2">"{escalation.summary}"</p>}
                           </div>
-                          <Badge className="border border-red-200 bg-red-50 text-red-700">{escalation.status}</Badge>
+                          <Badge className="border border-rose-500/40 bg-rose-500/20 text-rose-300 text-[8px] font-black uppercase tracking-widest rounded-md">{escalation.status}</Badge>
                         </div>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {escalation.customerPhone && (
-                            <Button size="sm" variant="outline" className="gap-2" onClick={() => openPhone(escalation.customerPhone)}>
-                              <Phone className="h-4 w-4" />
-                              Call
-                            </Button>
-                          )}
+                        <div className="mt-4 flex flex-wrap gap-2">
                           <Button
                             size="sm"
-                            variant="outline"
-                            className="gap-2"
+                            variant="secondary"
+                            className="h-9 px-4 rounded-xl border border-rose-500/10 bg-rose-500/10 text-[9px] font-black uppercase tracking-widest text-rose-300 hover:bg-rose-500/20"
                             disabled={resolveEscalationMutation.isPending}
                             onClick={() => resolveEscalationMutation.mutate(escalation.id)}
                           >
-                            {resolveEscalationMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                            {resolveEscalationMutation.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-2 h-3.5 w-3.5" />}
                             Resolve
                           </Button>
+                          {escalation.customerPhone && (
+                            <Button size="sm" variant="ghost" className="h-9 w-9 p-0 rounded-xl border border-white/5 text-slate-400 hover:text-white hover:bg-white/10" onClick={() => openPhone(escalation.customerPhone)}>
+                              <Phone className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))
@@ -1186,25 +1250,28 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
             </CardContent>
           </Card>
 
-          <Card id="client-inbox-relay" className="border border-gray-200 shadow-sm">
-            <CardHeader className="flex flex-row items-start justify-between gap-4">
+          <Card id="client-inbox-relay" className="glass-card border-white/5 shadow-2xl overflow-hidden group">
+            <CardHeader className="flex flex-row items-start justify-between gap-4 p-8 border-b border-white/5">
               <div>
-                <CardTitle className="text-gray-900">Client Inbox Relay</CardTitle>
-                <CardDescription>
-                  Reply with macros, empathy and fast escalation without leaving the dashboard.
+                <CardTitle className="text-white font-display uppercase tracking-widest text-sm font-black">Client Inbox Relay</CardTitle>
+                <CardDescription className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                  Atendimento Multicanal com Macros, Empatia e Escalada Imediata
                 </CardDescription>
               </div>
-              <Badge className="border border-blue-200 bg-blue-50 text-blue-700">{data.counters.unreadInboxMessages} unread</Badge>
+              <Badge className="border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 font-black px-3 py-1 rounded-full uppercase tracking-widest text-[9px]">
+                {data.counters.unreadInboxMessages} Unread
+              </Badge>
             </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 lg:grid-cols-[220px,1fr]">
-                <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
+            <CardContent className="p-0">
+              <div className="grid gap-0 lg:grid-cols-[280px,1fr] min-h-[500px]">
+                {/* Sidebar - Thread List */}
+                <div className="border-r border-white/5 bg-slate-950/20 max-h-[600px] overflow-y-auto custom-scrollbar">
                   {threads.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
-                      No customer threads yet.
+                    <div className="p-8 text-center text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                      Nenhuma Conversa Detectada
                     </div>
                   ) : (
-                    threads.slice(0, 12).map((thread) => {
+                    threads.slice(0, 15).map((thread) => {
                       const unreadCount = Number(thread.unreadCount || 0);
                       const isActive = thread.id === selectedThreadId;
                       return (
@@ -1212,69 +1279,85 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                           key={thread.id}
                           type="button"
                           onClick={() => setSelectedThreadId(thread.id)}
-                          className={`w-full rounded-2xl border p-3 text-left transition-colors ${
+                          className={`w-full p-5 text-left transition-all relative border-b border-white/[0.03] ${
                             isActive
-                              ? "border-blue-300 bg-blue-50"
-                              : "border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50/50"
+                              ? "bg-indigo-500/10"
+                              : "hover:bg-white/[0.02]"
                           }`}
                         >
+                          {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500" />}
                           <div className="flex items-start justify-between gap-2">
-                            <p className="line-clamp-2 text-sm font-semibold text-gray-900">{thread.subject}</p>
+                            <p className={`line-clamp-2 text-xs font-bold ${isActive ? "text-white" : "text-slate-300"}`}>{thread.subject}</p>
                             {unreadCount > 0 && (
-                              <Badge className="border border-amber-200 bg-amber-50 text-amber-700">{unreadCount}</Badge>
+                              <Badge className="border-0 bg-indigo-600 text-white text-[8px] font-black h-4 min-w-4 p-0 flex items-center justify-center rounded-full">{unreadCount}</Badge>
                             )}
                           </div>
-                          <p className="mt-1 text-xs text-gray-500">
+                          <p className="mt-1.5 text-[10px] font-medium text-slate-500 italic">
                             {thread.userName || thread.userEmail || `User ${thread.userId}`}
                           </p>
-                          <p className="mt-2 text-[11px] uppercase tracking-[0.14em] text-gray-400">
-                            {thread.status} · {formatMoment(thread.lastMessageAt)}
-                          </p>
+                          <div className="mt-3 flex items-center justify-between">
+                            <span className="text-[8px] font-black uppercase tracking-widest text-slate-600">{thread.status}</span>
+                            <span className="text-[8px] font-bold text-slate-600">{formatMoment(thread.lastMessageAt)}</span>
+                          </div>
                         </button>
                       );
                     })
                   )}
                 </div>
 
-                <div className="rounded-[24px] border border-gray-200 bg-gray-50 p-4">
+                {/* Chat Area */}
+                <div className="bg-slate-900/40 flex flex-col h-full max-h-[600px]">
                   {!selectedThread ? (
-                    <div className="flex min-h-[360px] items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white text-sm text-gray-500">
-                      Select a thread to start replying.
+                    <div className="flex flex-1 items-center justify-center p-10">
+                      <div className="text-center">
+                        <MessageSquare className="h-10 w-10 text-slate-800 mx-auto mb-4" />
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Selecione uma transmissão para iniciar o relay</p>
+                      </div>
                     </div>
                   ) : (
-                    <div className="flex min-h-[360px] flex-col gap-4">
-                      <div className="rounded-2xl border border-white bg-white p-4">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <p className="text-sm font-semibold text-gray-900">{selectedThread.subject}</p>
-                            <p className="mt-1 text-xs text-gray-500">
-                              {selectedThread.userName || selectedThread.userEmail || `User ${selectedThread.userId}`}
-                            </p>
-                          </div>
+                    <div className="flex flex-col h-full">
+                      {/* Thread Header */}
+                      <div className="p-6 border-b border-white/5 bg-slate-950/40 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-black text-white tracking-tight">{selectedThread.subject}</p>
+                          <p className="text-[10px] font-bold text-indigo-400 opacity-60 uppercase tracking-widest mt-1">
+                            {selectedThread.userName || selectedThread.userEmail || `ID: ${selectedThread.userId}`}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
                           {selectedThread.userEmail && (
-                            <Button size="sm" variant="outline" onClick={() => openEmail(selectedThread.userEmail)}>
-                              <Mail className="h-4 w-4" />
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              className="h-10 w-10 rounded-xl border border-white/10 text-slate-400 hover:text-white hover:bg-white/10"
+                              onClick={() => openEmail(selectedThread.userEmail)}
+                            >
+                              <Mail className="h-4.5 w-4.5" />
                             </Button>
                           )}
                         </div>
                       </div>
 
-                      <div className="max-h-[220px] flex-1 space-y-3 overflow-y-auto rounded-2xl border border-white bg-white p-4">
+                      {/* Messages Flow */}
+                      <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-slate-950/20 shadow-inner">
                         {threadMessages.length === 0 ? (
-                          <p className="text-sm text-gray-500">No messages loaded yet.</p>
+                          <div className="flex flex-col items-center justify-center py-20 opacity-20">
+                             <Loader2 className="h-6 w-6 animate-spin mb-3" />
+                             <p className="text-[10px] font-black uppercase tracking-[0.3em]">Carregando Histórico...</p>
+                          </div>
                         ) : (
                           threadMessages.map((message) => {
                             const isAdmin = message.senderRole === "admin";
                             return (
                               <div key={message.id} className={`flex ${isAdmin ? "justify-end" : "justify-start"}`}>
-                                <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${
+                                <div className={`max-w-[80%] rounded-3xl px-5 py-3 text-sm relative group/msg ${
                                   isAdmin
-                                    ? "rounded-br-md bg-blue-600 text-white"
-                                    : "rounded-bl-md bg-gray-100 text-gray-900"
+                                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/10 rounded-tr-none"
+                                    : "bg-slate-800/80 text-slate-200 border border-white/5 rounded-tl-none backdrop-blur-sm"
                                 }`}>
-                                  <p className="whitespace-pre-wrap">{message.content}</p>
-                                  <p className={`mt-2 text-[11px] ${isAdmin ? "text-blue-100" : "text-gray-500"}`}>
-                                    {format(new Date(message.createdAt), "MM/dd HH:mm")}
+                                  <p className="font-medium leading-relaxed">{message.content}</p>
+                                  <p className={`mt-2 text-[8px] font-black uppercase tracking-widest opacity-40 ${isAdmin ? "text-indigo-200" : "text-slate-400"}`}>
+                                    {format(new Date(message.createdAt), "HH:mm")}
                                   </p>
                                 </div>
                               </div>
@@ -1283,26 +1366,27 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                         )}
                       </div>
 
-                      <div className="rounded-2xl border border-white bg-white p-3">
-                        <div className="mb-3 flex flex-wrap gap-2">
+                      {/* Input Area */}
+                      <div className="p-6 bg-slate-950/40 border-t border-white/5">
+                        <div className="mb-4 flex flex-wrap gap-2">
                           {replyMacros.map((macro) => (
                             <Button
                               key={macro.label}
-                              type="button"
                               size="sm"
-                              variant="outline"
-                              className="rounded-full"
+                              variant="secondary"
+                              className="h-8 px-4 rounded-full border border-white/10 bg-white/5 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-white/10 transition-all"
                               onClick={() => setReplyText(macro.create(selectedThread.userName))}
                             >
                               {macro.label}
                             </Button>
                           ))}
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-3">
                           <Input
                             value={replyText}
                             onChange={(event) => setReplyText(event.target.value)}
-                            placeholder="Reply as Michels Travel..."
+                            placeholder="Responda como Michels Travel Intelligence..."
+                            className="flex-1 h-12 bg-slate-950/60 border-white/10 text-white font-medium rounded-2xl focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-600"
                             onKeyDown={(event) => {
                               if (event.key === "Enter" && !event.shiftKey && replyText.trim() && selectedThreadId) {
                                 event.preventDefault();
@@ -1311,15 +1395,15 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                             }}
                           />
                           <Button
-                            className="gap-2"
+                            className="h-12 px-6 gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-600/20 transition-all active:scale-95"
                             disabled={!replyText.trim() || !selectedThreadId || replyMutation.isPending}
                             onClick={() => {
                               if (!selectedThreadId || !replyText.trim()) return;
                               replyMutation.mutate({ threadId: selectedThreadId, content: replyText.trim() });
                             }}
                           >
-                            {replyMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                            Send
+                            {replyMutation.isPending ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : <Send className="h-4.5 w-4.5" />}
+                            Relay
                           </Button>
                         </div>
                       </div>
@@ -1333,30 +1417,29 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
       </div>
 
       <Dialog open={Boolean(dealDraft)} onOpenChange={(open) => { if (!open) setDealDraft(null); }}>
-        <DialogContent className="sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Growth Launchpad</DialogTitle>
-            <DialogDescription>
-              Publish a featured deal directly from live demand on the site.
+        <DialogContent className="sm:max-w-xl bg-slate-900/90 backdrop-blur-3xl border border-white/5 shadow-3xl rounded-[32px] ring-0">
+          <DialogHeader className="p-6 border-b border-white/5">
+            <DialogTitle className="text-2xl font-black text-white font-display tracking-tight">Growth Launchpad</DialogTitle>
+            <DialogDescription className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+              Publicação de Ofertas Estratégicas Baseada em Demanda Live
             </DialogDescription>
           </DialogHeader>
 
           {dealDraft && (
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900 flex items-center justify-between gap-3">
-                <div>
-                  <p className="font-semibold">Buscar tarifas para pré-preencher</p>
-                  <p className="text-xs text-blue-800">
-                    Configure datas, cabine e passageiros. Buscamos voos em tempo real e você edita antes de publicar.
+            <div className="p-8 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+              <div className="rounded-[24px] border border-indigo-500/20 bg-indigo-500/10 p-6 flex flex-col md:flex-row items-center justify-between gap-6 transition-all border-glow-indigo">
+                <div className="flex-1">
+                  <p className="font-black uppercase text-[10px] tracking-[0.2em] text-indigo-400">Curadoria de Inteligência</p>
+                  <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                    Configure os parâmetros abaixo para buscar tarifas em tempo real e pré-preencher a oferta estratégica.
                   </p>
                 </div>
                 <Button
                   size="sm"
-                  variant="outline"
-                  className="border-blue-300 text-blue-900"
-                  disabled={dealSearchLoading || !dealDraft.origin || !dealDraft.destination}
+                  className="h-12 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-[10px] font-black uppercase tracking-[0.1em] text-white shadow-lg shadow-indigo-600/30 transition-all active:scale-95"
+                  disabled={dealSearchLoading || !dealDraft?.origin || !dealDraft?.destination}
                   onClick={async () => {
-                    if (!dealDraft.origin || !dealDraft.destination) return;
+                    if (!dealDraft?.origin || !dealDraft?.destination) return;
                     setDealSearchLoading(true);
                     setDealSearchError(null);
                     setDealOffers([]);
@@ -1382,7 +1465,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                         adults: dealSearchParams.adults,
                         children: dealSearchParams.children,
                         infants: dealSearchParams.infants,
-                        cabinClass: dealSearchParams.cabinClass || dealDraft.cabinClass || "economy",
+                        cabinClass: dealSearchParams.cabinClass || dealDraft?.cabinClass || "economy",
                         tripType: dealSearchParams.tripType,
                       });
                       const res = await fetch(`/api/flights/search?${qs.toString()}`);
@@ -1418,97 +1501,92 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                     }
                   }}
                 >
-                  {dealSearchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                  Buscar tarifas
+                  {dealSearchLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                  Scanner Providores
                 </Button>
               </div>
 
               {dealSearchError && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-[10px] font-black uppercase text-rose-400">
                   {dealSearchError}
                 </div>
               )}
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <Label className="text-xs">Tipo</Label>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Missão</Label>
                   <select
-                    className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm"
+                    className="w-full h-11 rounded-xl border border-white/10 bg-slate-950/60 px-4 text-sm text-white font-medium focus:border-indigo-500/50 outline-none"
                     value={dealSearchParams.tripType}
                     onChange={(e) => setDealSearchParams((s) => ({ ...s, tripType: e.target.value }))}
                   >
-                    <option value="one-way">Só ida</option>
-                    <option value="round-trip">Ida e volta</option>
+                    <option value="one-way">Só Ida</option>
+                    <option value="round-trip">Ida e Volta</option>
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Ida</Label>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Janela de Ida</Label>
                   <Input
                     type="date"
+                    className="h-11 bg-slate-950/60 border-white/10 text-white font-medium rounded-xl"
                     value={dealSearchParams.departureDate}
                     onChange={(e) => setDealSearchParams((s) => ({ ...s, departureDate: e.target.value }))}
                   />
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Volta</Label>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Janela de Volta</Label>
                   <Input
                     type="date"
+                    className="h-11 bg-slate-950/60 border-white/10 text-white font-medium rounded-xl disabled:opacity-30"
                     disabled={dealSearchParams.tripType !== "round-trip"}
                     value={dealSearchParams.returnDate}
                     onChange={(e) => setDealSearchParams((s) => ({ ...s, returnDate: e.target.value }))}
                   />
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Cabine</Label>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Cabine Operacional</Label>
                   <select
-                    className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm"
+                    className="w-full h-11 rounded-xl border border-white/10 bg-slate-950/60 px-4 text-sm text-white font-medium focus:border-indigo-500/50 outline-none"
                     value={dealSearchParams.cabinClass}
                     onChange={(e) => setDealSearchParams((s) => ({ ...s, cabinClass: e.target.value }))}
                   >
-                    <option value="economy">Econômica</option>
-                    <option value="premium_economy">Premium</option>
-                    <option value="business">Executiva</option>
-                    <option value="first">Primeira</option>
+                    <option value="economy">Economy</option>
+                    <option value="premium_economy">P. Economy</option>
+                    <option value="business">Business</option>
+                    <option value="first">First</option>
                   </select>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Adultos</Label>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Adultos</Label>
                   <Input
                     type="number"
                     min={1}
+                    className="h-11 bg-slate-950/60 border-white/10 text-white font-medium rounded-xl"
                     value={dealSearchParams.adults}
                     onChange={(e) => setDealSearchParams((s) => ({ ...s, adults: e.target.value }))}
                   />
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Crianças</Label>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Crianças</Label>
                   <Input
                     type="number"
                     min={0}
+                    className="h-11 bg-slate-950/60 border-white/10 text-white font-medium rounded-xl"
                     value={dealSearchParams.children}
                     onChange={(e) => setDealSearchParams((s) => ({ ...s, children: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Infantes</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={dealSearchParams.infants}
-                    onChange={(e) => setDealSearchParams((s) => ({ ...s, infants: e.target.value }))}
                   />
                 </div>
               </div>
 
               {dealOffers.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray-700">Sugestões de tarifa (clique para aplicar):</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className="space-y-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Inteligência de Mercado:</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {dealOffers.map((offer) => (
                       <button
                         key={offer.id}
                         type="button"
-                        className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-left hover:border-blue-300 hover:shadow-sm transition"
+                        className="rounded-2xl border border-white/5 bg-slate-950/60 p-5 text-left hover:bg-indigo-500/10 hover:border-indigo-500/30 transition-all group/offer"
                         onClick={() => {
                           setDealDraft((current) =>
                             current
@@ -1516,23 +1594,26 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                                   ...current,
                                   price: offer.price ? String(offer.price) : current.price,
                                   currency: offer.currency || current.currency,
-                                  headline: `${offer.airline || "Tarifa especial"} ${offer.origin} → ${offer.destination}`,
-                                  description: `${offer.airline || "Companhia"} a partir de ${offer.currency || "USD"} ${offer.price ?? ""}. Ajuste o valor e publique.`,
+                                  headline: `${offer.airline || "Tarifa Especial"} ${offer.origin} → ${offer.destination}`,
+                                  description: `Voo operado por ${offer.airline || "Parceiro"} a partir de ${offer.currency || "USD"} ${offer.price ?? ""}. Curadoria premium.`,
                                 }
                               : current,
                           );
                         }}
                       >
-                        <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center justify-between gap-4">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">
+                            <p className="text-sm font-black text-white tracking-tight">
                               {offer.origin} → {offer.destination}
                             </p>
-                            <p className="text-xs text-gray-500">{offer.airline || "—"}</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase mt-0.5 tracking-widest">{offer.airline || "—"}</p>
                           </div>
-                          <p className="text-sm font-bold text-blue-700">
-                            {offer.currency || "USD"} {offer.price ?? "—"}
-                          </p>
+                          <div className="text-right">
+                             <p className="text-sm font-black text-indigo-400 font-display">
+                               {offer.currency || "USD"} {offer.price ?? "—"}
+                             </p>
+                             <p className="text-[8px] font-bold text-slate-600 uppercase">Live Rate</p>
+                          </div>
                         </div>
                       </button>
                     ))}
@@ -1540,62 +1621,68 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className="text-xs">Origin</Label>
-                  <Input value={dealDraft.origin} onChange={(event) => setDealDraft((current) => current ? { ...current, origin: event.target.value.toUpperCase() } : current)} />
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 pt-6 border-t border-white/5">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Origem (IATA)</Label>
+                  <Input value={dealDraft.origin} className="h-11 bg-slate-950/60 border-white/10 text-white font-black uppercase rounded-xl" onChange={(event) => setDealDraft((current) => current ? { ...current, origin: event.target.value.toUpperCase() } : current)} />
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Destination</Label>
-                  <Input value={dealDraft.destination} onChange={(event) => setDealDraft((current) => current ? { ...current, destination: event.target.value.toUpperCase() } : current)} />
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Destino (IATA)</Label>
+                  <Input value={dealDraft.destination} className="h-11 bg-slate-950/60 border-white/10 text-white font-black uppercase rounded-xl" onChange={(event) => setDealDraft((current) => current ? { ...current, destination: event.target.value.toUpperCase() } : current)} />
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Origin city</Label>
-                  <Input value={dealDraft.originCity} onChange={(event) => setDealDraft((current) => current ? { ...current, originCity: event.target.value } : current)} />
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Cidade Origem</Label>
+                  <Input value={dealDraft.originCity} className="h-11 bg-slate-950/60 border-white/10 text-white font-medium rounded-xl" onChange={(event) => setDealDraft((current) => current ? { ...current, originCity: event.target.value } : current)} />
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Destination city</Label>
-                  <Input value={dealDraft.destinationCity} onChange={(event) => setDealDraft((current) => current ? { ...current, destinationCity: event.target.value } : current)} />
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Cidade Destino</Label>
+                  <Input value={dealDraft.destinationCity} className="h-11 bg-slate-950/60 border-white/10 text-white font-medium rounded-xl" onChange={(event) => setDealDraft((current) => current ? { ...current, destinationCity: event.target.value } : current)} />
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Price</Label>
-                  <Input value={dealDraft.price} placeholder="599.00" onChange={(event) => setDealDraft((current) => current ? { ...current, price: event.target.value } : current)} />
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Tarifa Sugerida</Label>
+                  <Input value={dealDraft.price} placeholder="599.00" className="h-11 bg-slate-950/60 border-white/10 text-indigo-400 font-black text-lg rounded-xl" onChange={(event) => setDealDraft((current) => current ? { ...current, price: event.target.value } : current)} />
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Currency</Label>
-                  <Input value={dealDraft.currency} onChange={(event) => setDealDraft((current) => current ? { ...current, currency: event.target.value.toUpperCase() } : current)} />
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Moeda ISO</Label>
+                  <Input value={dealDraft.currency} className="h-11 bg-slate-950/60 border-white/10 text-white font-black uppercase rounded-xl" onChange={(event) => setDealDraft((current) => current ? { ...current, currency: event.target.value.toUpperCase() } : current)} />
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs">Headline</Label>
-                <Input value={dealDraft.headline} onChange={(event) => setDealDraft((current) => current ? { ...current, headline: event.target.value } : current)} />
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Headline Publicitária</Label>
+                <Input 
+                   value={dealDraft?.headline || ""} 
+                   className="h-11 bg-slate-950/60 border-white/10 text-white font-bold rounded-xl placeholder:text-slate-700"
+                   onChange={(event) => setDealDraft((current) => current ? { ...current, headline: event.target.value } : current)} 
+                />
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs">Description</Label>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Narrativa da Oferta</Label>
                 <Textarea
                   rows={4}
-                  className="resize-none"
-                  value={dealDraft.description}
+                  className="resize-none bg-slate-950/60 border-white/10 text-white font-medium rounded-2xl focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-700 custom-scrollbar"
+                  value={dealDraft?.description || ""}
                   onChange={(event) => setDealDraft((current) => current ? { ...current, description: event.target.value } : current)}
                 />
               </div>
             </div>
           )}
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDealDraft(null)}>Cancel</Button>
+          <DialogFooter className="p-8 border-t border-white/5 bg-slate-950/40">
+            <Button variant="secondary" className="h-12 px-6 rounded-2xl border border-white/10 bg-white/5 text-[10px] font-black uppercase text-slate-400 hover:text-white hover:bg-white/10 transition-all" onClick={() => setDealDraft(null)}>
+              Abortar Missão
+            </Button>
             <Button
-              className="gap-2"
-              disabled={!dealDraft || !dealDraft.origin || !dealDraft.destination || createDealMutation.isPending}
+              className="h-12 px-8 gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-[10px] font-black uppercase tracking-widest text-white shadow-xl shadow-indigo-600/20 transition-all active:scale-95"
+              disabled={!dealDraft || !dealDraft?.origin || !dealDraft?.destination || createDealMutation.isPending}
               onClick={() => {
                 if (!dealDraft) return;
                 createDealMutation.mutate(dealDraft);
               }}
             >
-              {createDealMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              Publish featured deal
+              {createDealMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4 text-cyan-400" />}
+              Lançar Oferta no Radar
             </Button>
           </DialogFooter>
         </DialogContent>
