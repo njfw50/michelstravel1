@@ -19,7 +19,7 @@ type SeniorSession = {
 
 type SeniorAlert = {
   id: number;
-  userId: string;
+  userId: string | null;
   bookingId?: number | null;
   type: string;
   status: string;
@@ -243,7 +243,7 @@ export function SeniorCareDesk() {
                           <p className="mt-2 text-sm text-slate-600">{alert.message}</p>
                         )}
                         <p className="mt-1 text-xs text-slate-400">
-                          {timeSince(alert.createdAt)} · Usuário #{alert.userId.slice(0, 8)}
+                          {timeSince(alert.createdAt)} · Usuário #{alert.userId?.slice(0, 8) || "Guest"}
                           {alert.bookingId && ` · Reserva #${alert.bookingId}`}
                         </p>
                       </div>

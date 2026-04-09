@@ -19,9 +19,9 @@ export function registerSeniorCareRoutes(app: Express) {
   app.get('/api/admin/senior-care', requireAdmin, async (_req, res) => {
     try {
       const [allActiveSessions, allAlerts, requestedSessions] = await Promise.all([
-        storage.getActiveLiveSessions(),
-        storage.getSeniorAlerts(),
-        storage.getLiveSessionRequests(),
+        storage.getActiveLiveSessions() || [],
+        storage.getSeniorAlerts() || [],
+        storage.getLiveSessionRequests() || [],
       ]);
 
       const seniorSessions = [...allActiveSessions, ...requestedSessions].filter(
@@ -81,9 +81,9 @@ export function registerSeniorCareRoutes(app: Express) {
           resolvedAt: a.resolvedAt,
         })),
         summary: {
-          totalSeniorSessions: seniorSessions.length,
-          pendingAlerts: relevantAlerts.filter((a) => a.status === 'pending').length,
-          inProgressAlerts: relevantAlerts.filter((a) => a.status === 'in_progress').length,
+          totalSeniorSessions: seniorSessions?.length || 0,
+          pendingAlerts: relevantAlerts?.filter((a) => a?.status === 'pending').length || 0,
+          inProgressAlerts: relevantAlerts?.filter((a) => a?.status === 'in_progress').length || 0,
         },
       });
     } catch (error) {
