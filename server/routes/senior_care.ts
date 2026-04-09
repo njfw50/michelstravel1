@@ -18,67 +18,78 @@ export function registerSeniorCareRoutes(app: Express) {
   // Returns senior live sessions + unresolved alerts + voice logs
   app.get('/api/admin/senior-care', requireAdmin, async (_req, res) => {
     try {
+      // Fetch core data with individual try-catches to be 100% safe
+      const getSessions = async () => { try { return await storage.getActiveLiveSessions() || []; } catch { return []; } };
+      const getAlerts = async () => { try { return await storage.getSeniorAlerts() || []; } catch { return []; } };
+      const getRequests = async () => { try { return await storage.getLiveSessionRequests() || []; } catch { return []; } };
+
       const [allActiveSessions, allAlerts, requestedSessions] = await Promise.all([
-        storage.getActiveLiveSessions() || [],
-        storage.getSeniorAlerts() || [],
-        storage.getLiveSessionRequests() || [],
+        getSessions(),
+        getAlerts(),
+        getRequests(),
       ]);
 
-      const seniorSessions = [...allActiveSessions, ...requestedSessions].filter(
-        (s) => (s as any).serviceMode === 'senior'
+      const seniorSessions = [...(allActiveSessions || []), ...(requestedSessions || [])].filter(
+        (s) => s && (s as any).serviceMode === 'senior'
       );
 
       const now = new Date();
       const cutoff48h = new Date(now.getTime() - 48 * 60 * 60 * 1000);
-      const relevantAlerts = allAlerts.filter(
-        (a) => a.status !== 'resolved' && a.createdAt && new Date(a.createdAt as any) >= cutoff48h
+      const relevantAlerts = (allAlerts || []).filter(
+        (a) => a && a.status !== 'resolved' && a.createdAt && new Date(a.createdAt as any) >= cutoff48h
       );
 
-      // Get recent voice logs across all senior sessions
-      const voiceLogsResult = await db
-        .select({
-          id: liveSessionMessages.id,
-          sessionId: liveSessionMessages.sessionId,
-          role: liveSessionMessages.role,
-          content: liveSessionMessages.content,
-          createdAt: liveSessionMessages.createdAt,
-          customerName: liveSessions.customerName,
-        })
-        .from(liveSessionMessages)
-        .innerJoin(liveSessions, eq(liveSessionMessages.sessionId, liveSessions.id))
-        .where(
-          and(
-            eq(liveSessions.serviceMode, 'senior'),
-            or(
-              eq(liveSessionMessages.role, 'client_voice'),
-              eq(liveSessionMessages.role, 'mia_voice')
+      // Get recent voice logs across all senior sessions - ISOLATED to prevent 500s
+      let voiceLogsResult: any[] = [];
+      try {
+        voiceLogsResult = await db
+          .select({
+            id: liveSessionMessages.id,
+            sessionId: liveSessionMessages.sessionId,
+            role: liveSessionMessages.role,
+            content: liveSessionMessages.content,
+            createdAt: liveSessionMessages.createdAt,
+            customerName: liveSessions.customerName,
+          })
+          .from(liveSessionMessages)
+          .innerJoin(liveSessions, eq(liveSessionMessages.sessionId, liveSessions.id))
+          .where(
+            and(
+              eq(liveSessions.serviceMode, 'senior'),
+              or(
+                eq(liveSessionMessages.role, 'client_voice'),
+                eq(liveSessionMessages.role, 'mia_voice')
+              )
             )
           )
-        )
-        .orderBy(desc(liveSessionMessages.createdAt))
-        .limit(15);
+          .orderBy(desc(liveSessionMessages.createdAt))
+          .limit(15);
+      } catch (voiceError) {
+        console.error('Senior voice logs fetch error (ignoring to keep dashboard alive):', voiceError);
+        voiceLogsResult = [];
+      }
 
       res.json({
         voiceLogs: voiceLogsResult,
-        seniorSessions: seniorSessions.slice(0, 10).map((s) => ({
-          id: s.id,
-          customerName: s.customerName,
-          customerPhone: s.customerPhone,
-          customerEmail: s.customerEmail,
-          status: s.status,
-          bookingStatus: s.bookingStatus,
-          language: s.language,
-          createdAt: s.createdAt,
+        seniorSessions: (seniorSessions || []).slice(0, 10).map((s) => ({
+          id: s?.id,
+          customerName: s?.customerName,
+          customerPhone: s?.customerPhone,
+          customerEmail: s?.customerEmail,
+          status: s?.status,
+          bookingStatus: s?.bookingStatus,
+          language: s?.language,
+          createdAt: s?.createdAt,
         })),
-        alerts: relevantAlerts.slice(0, 20).map((a) => ({
-          id: a.id,
-          userId: a.userId,
-          bookingId: a.bookingId,
-          type: a.type,
-          status: a.status,
-          message: a.message,
-          createdAt: a.createdAt,
-          resolvedAt: a.resolvedAt,
+        alerts: (relevantAlerts || []).slice(0, 20).map((a) => ({
+          id: a?.id,
+          userId: a?.userId,
+          bookingId: a?.bookingId,
+          type: a?.type,
+          status: a?.status,
+          message: a?.message,
+          createdAt: a?.createdAt,
+          resolvedAt: a?.resolvedAt,
         })),
         summary: {
           totalSeniorSessions: seniorSessions?.length || 0,
@@ -86,9 +97,9 @@ export function registerSeniorCareRoutes(app: Express) {
           inProgressAlerts: relevantAlerts?.filter((a) => a?.status === 'in_progress').length || 0,
         },
       });
-    } catch (error) {
-      console.error('Senior care desk error:', error);
-      res.status(500).json({ error: 'Failed to load senior care data' });
+    } catch (error: any) {
+      console.error('Senior care desk global error:', error);
+      res.status(500).json({ error: 'Failed to load senior care data', details: error?.message });
     }
   });
 

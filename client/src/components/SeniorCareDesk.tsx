@@ -153,6 +153,10 @@ export function SeniorCareDesk() {
       <Card className="border border-red-200 bg-red-50">
         <CardContent className="p-6 text-center">
           <p className="text-red-600 font-medium">Não foi possível carregar o Senior Care Desk.</p>
+          {/* Diagnostic info to stop guessing */}
+          <div className="mt-2 text-xs text-red-400 font-mono bg-red-100/50 p-2 rounded border border-red-200">
+            {isError && (data as any)?.details ? (data as any).details : "Verifique os logs do servidor"}
+          </div>
           <Button variant="outline" onClick={() => refetch()} className="mt-4 gap-2">
             <RefreshCw className="h-4 w-4" /> Tentar novamente
           </Button>
