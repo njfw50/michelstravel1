@@ -4,7 +4,7 @@ import {
   flightSearches, bookings, siteSettings, blogPosts, users,
   liveSessions, liveSessionBlocks, liveSessionMessages,
   internalThreads, internalMessages, voiceEscalations, featuredDeals,
-  seniorAlerts,
+  seniorAlerts, customers, transactions, bookingLogs, knowledgeBase,
   type FlightSearch, type InsertFlightSearch,
   type Booking, type InsertBooking,
   type SiteSetting, type InsertSiteSetting,
@@ -17,6 +17,10 @@ import {
   type VoiceEscalation, type InsertVoiceEscalation,
   type FeaturedDeal, type InsertFeaturedDeal,
   type SeniorAlert, type InsertSeniorAlert,
+  type Customer, type InsertCustomer,
+  type Transaction, type InsertTransaction,
+  type BookingLog, type InsertBookingLog,
+  type KnowledgeBaseEntry, type InsertKnowledgeBaseEntry,
 } from "@shared/schema";
 
 // Import Auth Storage
@@ -102,6 +106,24 @@ export interface IStorage extends IAuthStorage {
   getPricesForProduct(productId: string): Promise<any[]>;
   getSubscription(subscriptionId: string): Promise<any>;
   updateUserStripeInfo(userId: string, stripeInfo: { stripeCustomerId?: string; stripeSubscriptionId?: string }): Promise<any>;
+
+  // Customer CRM
+  createCustomer(customer: InsertCustomer): Promise<Customer>;
+  getCustomerByVisitor(visitorId: string): Promise<Customer | undefined>;
+  updateCustomer(id: number, updates: Partial<InsertCustomer>): Promise<Customer | undefined>;
+
+  // Transactions
+  createTransaction(tx: InsertTransaction): Promise<Transaction>;
+  getTransactionsByBooking(bookingId: number): Promise<Transaction[]>;
+
+  // Booking Logs
+  createBookingLog(log: InsertBookingLog): Promise<BookingLog>;
+  getBookingLogs(bookingId: number): Promise<BookingLog[]>;
+
+  // Knowledge Base
+  createKnowledgeBaseEntry(entry: InsertKnowledgeBaseEntry): Promise<KnowledgeBaseEntry>;
+  getKnowledgeBaseEntries(category?: string): Promise<KnowledgeBaseEntry[]>;
+  searchKnowledgeBase(query: string, category?: string): Promise<KnowledgeBaseEntry[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -488,6 +510,89 @@ export class DatabaseStorage implements IStorage {
     if (updates.status === 'resolved') payload.resolvedAt = new Date();
     const [updated] = await db.update(seniorAlerts).set(payload).where(eq(seniorAlerts.id, id)).returning();
     return updated;
+  }
+
+  // --- Customer CRM ---
+  async createCustomer(customer: InsertCustomer): Promise<Customer> {
+    const [c] = await db.insert(customers).values(customer).returning();
+    return c;
+  }
+
+  async getCustomerByVisitor(visitorId: string): Promise<Customer | undefined> {
+    const [c] = await db.select().from(customers).where(eq(customers.visitorId, visitorId));
+    return c;
+  }
+
+  async updateCustomer(id: number, updates: Partial<InsertCustomer>): Promise<Customer | undefined> {
+    const [c] = await db.update(customers).set({ ...updates, updatedAt: new Date() } as any).where(eq(customers.id, id)).returning();
+    return c;
+  }
+
+  // --- Transactions ---
+  async createTransaction(tx: InsertTransaction): Promise<Transaction> {
+    const [t] = await db.insert(transactions).values(tx).returning();
+    return t;
+  }
+
+  async getTransactionsByBooking(bookingId: number): Promise<Transaction[]> {
+    return await db.select().from(transactions).where(eq(transactions.bookingId, bookingId)).orderBy(desc(transactions.createdAt));
+  }
+
+  // --- Booking Logs ---
+  async createBookingLog(log: InsertBookingLog): Promise<BookingLog> {
+    const [l] = await db.insert(bookingLogs).values(log).returning();
+    return l;
+  }
+
+  async getBookingLogs(bookingId: number): Promise<BookingLog[]> {
+    return await db.select().from(bookingLogs).where(eq(bookingLogs.bookingId, bookingId)).orderBy(desc(bookingLogs.createdAt));
+  }
+
+  // --- Knowledge Base ---
+  async createKnowledgeBaseEntry(entry: InsertKnowledgeBaseEntry): Promise<KnowledgeBaseEntry> {
+    const [e] = await db.insert(knowledgeBase).values(entry).returning();
+    return e;
+  }
+
+  async getKnowledgeBaseEntries(category?: string): Promise<KnowledgeBaseEntry[]> {
+    if (category) {
+      return await db.select().from(knowledgeBase).where(and(eq(knowledgeBase.category, category), eq(knowledgeBase.isActive, true))).orderBy(desc(knowledgeBase.updatedAt));
+    }
+    return await db.select().from(knowledgeBase).where(eq(knowledgeBase.isActive, true)).orderBy(desc(knowledgeBase.updatedAt));
+  }
+
+  async searchKnowledgeBase(query: string, category?: string): Promise<KnowledgeBaseEntry[]> {
+    let baseQuery = db.select().from(knowledgeBase).where(
+      and(
+        sql`${knowledgeBase.question} ILIKE ${'%' + query + '%'} OR ${knowledgeBase.answer} ILIKE ${'%' + query + '%'}`,
+        eq(knowledgeBase.isActive, true)
+      )
+    );
+
+    if (category) {
+      // Drizzle handles adding where constraints sequentially if you structure it right, or just one big where.
+      baseQuery = db.select().from(knowledgeBase).where(
+        and(
+          sql`${knowledgeBase.question} ILIKE ${'%' + query + '%'} OR ${knowledgeBase.answer} ILIKE ${'%' + query + '%'}`,
+          eq(knowledgeBase.isActive, true),
+          eq(knowledgeBase.category, category)
+        )
+      );
+    }
+
+    return await baseQuery.orderBy(desc(knowledgeBase.updatedAt));
+  }
+
+  async deleteKnowledgeBaseEntry(id: number): Promise<void> {
+    await db.delete(knowledgeBase).where(eq(knowledgeBase.id, id));
+  }
+
+  async getCustomers(limit = 100): Promise<Customer[]> {
+    return await db.select().from(customers).orderBy(desc(customers.createdAt)).limit(limit);
+  }
+
+  async getTransactions(): Promise<Transaction[]> {
+    return await db.select().from(transactions).orderBy(desc(transactions.createdAt));
   }
 }
 

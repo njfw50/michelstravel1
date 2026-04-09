@@ -163,7 +163,7 @@ export const voiceEscalations = pgTable("voice_escalations", {
 // === SENIOR ALERTS (Assistência Sênior) ===
 export const seniorAlerts = pgTable("senior_alerts", {
   id: serial("id").primaryKey(),
-  userId: text("user_id").notNull().references(() => users.id),
+  userId: text("user_id").references(() => users.id),
   bookingId: integer("booking_id").references(() => bookings.id),
   type: text("type").notNull(), // 'panic_button', 'confusion_detected', 'connection_risk', 'gate_change'
   status: text("status").default("pending").notNull(), // pending, in_progress, resolved
@@ -192,6 +192,55 @@ export const featuredDeals = pgTable("featured_deals", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// === CUSTOMER CRM (Customer 360) ===
+export const customers = pgTable("customers", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").references(() => users.id),
+  visitorId: text("visitor_id").unique(), // For linking anonymous visitors
+  fullName: text("full_name"),
+  email: text("email"),
+  phone: text("phone"),
+  whatsapp: text("whatsapp"),
+  loyaltyPoints: integer("loyalty_points").default(0),
+  preferences: jsonb("preferences"), // JSON for travel preferences, restrictions, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// === FINANCIAL TRANSACTIONS ===
+export const transactions = pgTable("transactions", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id").notNull().references(() => bookings.id, { onDelete: "cascade" }),
+  paymentIntentId: text("payment_intent_id"),
+  type: text("type").notNull(), // 'payment', 'refund', 'commission_payout'
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: text("currency").default("USD").notNull(),
+  status: text("status").notNull(), // 'pending', 'succeeded', 'failed', 'refunded'
+  metadata: jsonb("metadata"), // Raw gateway response or details
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === BOOKING LOGS (Trip Timeline) ===
+export const bookingLogs = pgTable("booking_logs", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id").notNull().references(() => bookings.id, { onDelete: "cascade" }),
+  event: text("event").notNull(), // 'created', 'confirmed', 'docs_requested', 'gate_change_notified', etc.
+  message: text("message"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === KNOWLEDGE BASE (Admin Training for Mia) ===
+export const knowledgeBase = pgTable("knowledge_base", {
+  id: serial("id").primaryKey(),
+  category: text("category").notNull(), // 'senior', 'flights', 'policy', 'safety'
+  question: text("question").notNull(),
+  answer: text("answer").notNull(),
+  language: text("language").default("pt").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // === RELATIONS ===
 export const bookingsRelations = relations(bookings, ({ one }) => ({
   user: one(users, {
@@ -213,6 +262,10 @@ export const insertInternalMessageSchema = createInsertSchema(internalMessages).
 export const insertVoiceEscalationSchema = createInsertSchema(voiceEscalations).omit({ id: true, createdAt: true, resolvedAt: true });
 export const insertSeniorAlertSchema = createInsertSchema(seniorAlerts).omit({ id: true, createdAt: true, resolvedAt: true });
 export const insertFeaturedDealSchema = createInsertSchema(featuredDeals).omit({ id: true, createdAt: true, lastPublishedAt: true });
+export const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertTransactionSchema = createInsertSchema(transactions).omit({ id: true, createdAt: true });
+export const insertBookingLogSchema = createInsertSchema(bookingLogs).omit({ id: true, createdAt: true });
+export const insertKnowledgeBaseSchema = createInsertSchema(knowledgeBase).omit({ id: true, updatedAt: true });
 
 // === TYPES ===
 export type FlightSearch = typeof flightSearches.$inferSelect;
@@ -247,6 +300,18 @@ export type InsertSeniorAlert = z.infer<typeof insertSeniorAlertSchema>;
 
 export type FeaturedDeal = typeof featuredDeals.$inferSelect;
 export type InsertFeaturedDeal = z.infer<typeof insertFeaturedDealSchema>;
+
+export type Customer = typeof customers.$inferSelect;
+export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
+
+export type Transaction = typeof transactions.$inferSelect;
+export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+
+export type BookingLog = typeof bookingLogs.$inferSelect;
+export type InsertBookingLog = z.infer<typeof insertBookingLogSchema>;
+
+export type KnowledgeBaseEntry = typeof knowledgeBase.$inferSelect;
+export type InsertKnowledgeBaseEntry = z.infer<typeof insertKnowledgeBaseSchema>;
 
 // === API TYPES ===
 // Search Query Params

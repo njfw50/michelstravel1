@@ -599,20 +599,27 @@ export function registerRoutes(app: Express) {
             userId: resolvedUserId ? String(resolvedUserId) : null
         }).returning();
 
-        if (resolvedUserId) {
-          await ensureCustomerProfile(String(resolvedUserId), {
-            preferredAirport: flightDataWithMode.originCode || flightDataWithMode.origin || null,
-            lastActiveBookingId: booking.id,
-            lastActiveOfferId: requestedOfferId,
-            savedPassengers: (bookingData.passengerDetails || bookingData.passengers || []).map((passenger: any) => ({
-              type: passenger.type,
-              givenName: passenger.givenName,
-              familyName: passenger.familyName,
-              bornOn: passenger.bornOn,
-              documentType: passenger.documentType,
-              nationality: passenger.nationality,
-            })),
-          });
+        // [TRAVEL INTELLIGENCE] Log the lifecycle event
+        await storage.createBookingLog({
+          bookingId: booking.id,
+          event: 'created',
+          message: `Booking created with reference ${refCode}`,
+          metadata: { price, currency: booking.currency }
+        });
+
+         if (resolvedUserId) {
+           const passengerSummary = (bookingData.passengerDetails || bookingData.passengers || [])
+             .map((p: any) => `${p.givenName || ''} ${p.familyName || ''}`.trim())
+             .filter(Boolean)
+             .join(', ');
+
+           // [TRAVEL INTELLIGENCE] Update centralized CRM Customer profile
+           await storage.createCustomer({
+             userId: String(resolvedUserId),
+             fullName: passengerSummary.split(',')[0], // Primary passenger
+             email: resolvedContactEmail,
+             phone: bookingData.contactPhone || null
+           }).catch(() => { /* Silence duplicate visitorId unique constraint errors */ });
 
           await db
             .update(customerProfiles)
@@ -675,7 +682,7 @@ export function registerRoutes(app: Express) {
           testMode: isTestModeActive 
         });
 
-    } catch (error: any) {
+      } catch (error: any) {
         const isTestModeForLog = (await storage.getSiteSettings())?.testMode ?? true;
         console.error(`Booking creation error [${isTestModeForLog ? 'TEST' : 'LIVE'} mode]:`, error?.message || error);
         console.error("Booking creation error details:", JSON.stringify({
@@ -1056,6 +1063,23 @@ export function registerRoutes(app: Express) {
         await db.update(bookings)
           .set(updates)
           .where(eq(bookings.id, id));
+
+        // [TRAVEL INTELLIGENCE] Log sync events
+        if (updates.ticketStatus === 'issued') {
+          await storage.createBookingLog({
+            bookingId: id,
+            event: 'issued',
+            message: `Tickets issued: ${updates.ticketNumber}`,
+            metadata: { duffelOrderId }
+          });
+        } else {
+          await storage.createBookingLog({
+            bookingId: id,
+            event: 'synced',
+            message: 'Booking synchronized with Duffel',
+            metadata: updates
+          });
+        }
       }
 
       const updatedBooking = await storage.getBooking(id);
@@ -4059,6 +4083,25 @@ OUTPUT FORMAT (JSON only):
 
       if (status === "confirmed" && session.bookingId) {
         await storage.updateBooking(session.bookingId, { status: "confirmed" });
+
+        // [TRAVEL INTELLIGENCE] Log detailed timeline and transaction
+        const booking = await storage.getBooking(session.bookingId);
+        if (booking) {
+          await storage.createBookingLog({
+            bookingId: booking.id,
+            event: 'confirmed',
+            message: 'Payment confirmed manually by admin'
+          });
+
+          await storage.createTransaction({
+            bookingId: booking.id,
+            type: 'payment',
+            amount: booking.totalPrice.toString(),
+            currency: booking.currency || 'USD',
+            status: 'succeeded',
+            metadata: { source: 'manual_admin_confirmation', liveSessionId: id }
+          });
+        }
       }
 
       notifyLiveSessionClients(id, "booking_update", {
@@ -4220,6 +4263,69 @@ OUTPUT FORMAT (JSON only):
     } catch (error) {
       console.error('Erro ao buscar senior alerts:', error);
       res.status(500).json({ error: 'Erro ao buscar alertas sênior' });
+    }
+  });
+
+  // === TRAVEL INTELLIGENCE ADMIN APIs ===
+  
+  // Knowledge Base
+  app.get('/api/admin/knowledge-base', requireAdmin, async (_req, res) => {
+    try {
+      const items = await storage.getKnowledgeBaseEntries();
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch knowledge base" });
+    }
+  });
+
+  app.post('/api/admin/knowledge-base', requireAdmin, async (req, res) => {
+    try {
+      const entry = await storage.createKnowledgeBaseEntry(req.body);
+      res.json(entry);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create knowledge entry" });
+    }
+  });
+
+  app.delete('/api/admin/knowledge-base/:id', requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteKnowledgeBaseEntry(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete knowledge entry" });
+    }
+  });
+
+  // CRM - Customers
+  app.get('/api/admin/customers', requireAdmin, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string || "100");
+      const list = await storage.getCustomers(limit);
+      res.json(list);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch customers" });
+    }
+  });
+
+  // Financial - Transactions
+  app.get('/api/admin/transactions', requireAdmin, async (_req, res) => {
+    try {
+      const list = await storage.getTransactions();
+      res.json(list);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch transactions" });
+    }
+  });
+
+  // Operational - Booking Logs
+  app.get('/api/admin/bookings/:id/logs', requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const logs = await storage.getBookingLogs(id);
+      res.json(logs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch booking logs" });
     }
   });
 }

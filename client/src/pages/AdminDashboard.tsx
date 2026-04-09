@@ -9,12 +9,14 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Line, ComposedChart } from 'recharts';
-import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare, AlertTriangle, CheckCircle2, XCircle, Lock, Phone, Smartphone, Megaphone, Plus, Trash2, ExternalLink, Copy, Search, RefreshCw, ChevronDown, ChevronUp, Calendar, MapPin, ArrowRightLeft, LayoutDashboard, Settings } from "lucide-react";
+import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare, AlertTriangle, CheckCircle2, XCircle, Lock, Phone, Smartphone, Megaphone, Plus, Trash2, ExternalLink, Copy, Search, RefreshCw, ChevronDown, ChevronUp, Calendar, MapPin, ArrowRightLeft, LayoutDashboard, Settings, BookOpen } from "lucide-react";
 import { VoiceEscalations } from "@/components/VoiceEscalations";
 import { DocumentScannerForm } from "@/components/document/DocumentScannerForm";
 import { AdminCommandCenter } from "@/components/AdminCommandCenter";
 import { SeniorCareDesk } from "@/components/SeniorCareDesk";
 import { useI18n } from "@/lib/i18n";
+import { AdminKnowledgeHub } from "@/components/AdminKnowledgeHub";
+import { AdminCustomerInsights } from "@/components/AdminCustomerInsights";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
@@ -1179,7 +1181,7 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [expandedBookingId, setExpandedBookingId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<"command" | "overview" | "bookings" | "settings" | "senior">("command");
+  const [activeTab, setActiveTab] = useState<"command" | "overview" | "bookings" | "settings" | "senior" | "crm" | "kb">("command");
 
   const { data: adminCheck, isLoading: adminCheckLoading } = useQuery<{ isAdmin: boolean }>({
     queryKey: ["/api/admin/check"],
@@ -1307,6 +1309,24 @@ export default function AdminDashboard() {
 
           <Button 
             variant="ghost" 
+            className={`w-full justify-start gap-3 rounded-xl transition-all ${activeTab === "crm" ? "bg-blue-600/10 text-blue-400 hover:bg-blue-600/20" : "text-white/60 hover:text-white hover:bg-white/5"}`} 
+            onClick={() => setActiveTab("crm")}
+          >
+            <Users className="h-4 w-4" />
+            <span className="font-medium text-sm">Clientes & CRM</span>
+          </Button>
+
+          <Button 
+            variant="ghost" 
+            className={`w-full justify-start gap-3 rounded-xl transition-all ${activeTab === "kb" ? "bg-blue-600/10 text-blue-400 hover:bg-blue-600/20" : "text-white/60 hover:text-white hover:bg-white/5"}`} 
+            onClick={() => setActiveTab("kb")}
+          >
+            <BookOpen className="h-4 w-4" />
+            <span className="font-medium text-sm">Treinamento (IA)</span>
+          </Button>
+
+          <Button 
+            variant="ghost" 
             className={`w-full justify-start gap-3 rounded-xl transition-all ${activeTab === "settings" ? "bg-blue-600/10 text-blue-400 hover:bg-blue-600/20" : "text-white/60 hover:text-white hover:bg-white/5"}`} 
             onClick={() => setActiveTab("settings")}
           >
@@ -1341,6 +1361,8 @@ export default function AdminDashboard() {
               {activeTab === "command" && "Painel Concierge Automático"}
               {activeTab === "senior" && "Suporte de Elite para a Melhor Idade"}
               {activeTab === "overview" && "Visão Global Executiva"}
+              {activeTab === "crm" && "Inteligência de Clientes & Financeiro"}
+              {activeTab === "kb" && "Central de Conhecimento (Treinar Mia)"}
               {activeTab === "bookings" && "Controle de Viagens Premium"}
               {activeTab === "settings" && "Configurações Operacionais da Agência"}
             </h1>
@@ -1385,6 +1407,18 @@ export default function AdminDashboard() {
             {activeTab === "senior" && (
               <div className="animate-in fade-in duration-300">
                 <SeniorCareDesk />
+              </div>
+            )}
+
+            {activeTab === "crm" && (
+              <div className="animate-in fade-in duration-300">
+                <AdminCustomerInsights />
+              </div>
+            )}
+
+            {activeTab === "kb" && (
+              <div className="animate-in fade-in duration-300">
+                <AdminKnowledgeHub />
               </div>
             )}
 

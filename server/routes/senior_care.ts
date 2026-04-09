@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { storage } from "../storage";
 import { db } from "../db";
-import { sql } from "drizzle-orm";
+import { sql, eq, and, or, desc } from "drizzle-orm";
+import { liveSessions, liveSessionMessages } from "@shared/schema";
 
 function requireAdmin(req: any, res: any, next: any) {
   const session = (req as any).session;
@@ -34,25 +35,31 @@ export function registerSeniorCareRoutes(app: Express) {
       );
 
       // Get recent voice logs across all senior sessions
-      const voiceLogsResult = await db.execute(sql`
-        SELECT m.id, m.session_id, m.role, m.content, m.created_at, s.customer_name
-        FROM live_session_messages m
-        JOIN live_sessions s ON m.session_id = s.id
-        WHERE s.service_mode = 'senior' 
-          AND (m.role = 'client_voice' OR m.role = 'mia_voice')
-        ORDER BY m.created_at DESC
-        LIMIT 15
-      `);
+      const voiceLogsResult = await db
+        .select({
+          id: liveSessionMessages.id,
+          sessionId: liveSessionMessages.sessionId,
+          role: liveSessionMessages.role,
+          content: liveSessionMessages.content,
+          createdAt: liveSessionMessages.createdAt,
+          customerName: liveSessions.customerName,
+        })
+        .from(liveSessionMessages)
+        .innerJoin(liveSessions, eq(liveSessionMessages.sessionId, liveSessions.id))
+        .where(
+          and(
+            eq(liveSessions.serviceMode, 'senior'),
+            or(
+              eq(liveSessionMessages.role, 'client_voice'),
+              eq(liveSessionMessages.role, 'mia_voice')
+            )
+          )
+        )
+        .orderBy(desc(liveSessionMessages.createdAt))
+        .limit(15);
 
       res.json({
-        voiceLogs: voiceLogsResult.rows.map((m: any) => ({
-          id: m.id,
-          sessionId: m.session_id,
-          role: m.role,
-          content: m.content,
-          createdAt: m.created_at,
-          customerName: m.customer_name
-        })),
+        voiceLogs: voiceLogsResult,
         seniorSessions: seniorSessions.slice(0, 10).map((s) => ({
           id: s.id,
           customerName: s.customerName,
