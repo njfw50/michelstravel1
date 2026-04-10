@@ -183,24 +183,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
               scrolled || !isHome ? "bg-[#07132d]/[0.96]" : "bg-[#07132d]/[0.88]",
             )}
           >
-            <div className="flex items-center gap-4 md:gap-7">
-              <Link href="/" className="group flex items-center gap-4">
+            <div className="flex min-w-0 items-center gap-4 md:gap-7">
+              <Link href="/" className="group flex min-w-0 items-center gap-4">
                 <div className="brand-mark-shell brand-mark-shell--header">
                   <img src={brandMark} alt="Michels Travel" className="transition-transform duration-300 group-hover:scale-[1.03]" />
                 </div>
-                <div className="hidden lg:block">
-                  <span className="block text-sm font-bold uppercase tracking-[0.2em] text-white/90">Michels Travel</span>
-                  <span className="block text-[11px] uppercase tracking-[0.22em] text-[#b9d0ff]">Opcao eficiente</span>
+                <div className="hidden min-w-0 lg:block">
+                  <span className="block whitespace-nowrap text-sm font-bold uppercase tracking-[0.2em] text-white/90">Michels Travel</span>
+                  <span className="block whitespace-nowrap text-[11px] uppercase tracking-[0.22em] text-[#b9d0ff]">Opcao eficiente</span>
                 </div>
               </Link>
 
-              <nav className="hidden items-center gap-1 lg:flex">
+              <nav className="hidden min-w-0 items-center gap-1 lg:flex">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     className={cn(
-                      "relative rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200",
+                      "relative whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200",
                       location === link.href
                         ? "bg-white/10 text-white"
                         : "text-[#d9e6ff] hover:bg-white/[0.06] hover:text-white",
@@ -219,7 +219,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </nav>
             </div>
 
-            <div className="flex items-center gap-2 md:gap-3">
+            <div className="flex min-w-0 items-center gap-2 md:gap-3">
               <LanguageSwitcher variant="navbar" />
               <div className="hidden items-center gap-3 md:flex">
                 {user ? (
@@ -262,7 +262,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 ) : (
                   <Button
                     onClick={() => openLoginDialog()}
-                    className="rounded-full bg-[#3d86ff] px-6 text-sm font-bold text-white shadow-[0_12px_30px_-14px_rgba(61,134,255,0.85)] hover:bg-[#2c74ea]"
+                    className="whitespace-nowrap rounded-full bg-[#3d86ff] px-6 text-sm font-bold text-white shadow-[0_12px_30px_-14px_rgba(61,134,255,0.85)] hover:bg-[#2c74ea]"
                     data-testid="button-signin"
                   >
                     {t("nav.signin")}

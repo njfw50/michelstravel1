@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Line, ComposedChart } from 'recharts';
 import { Loader2, DollarSign, Users, Plane, TrendingUp, ShieldCheck, ShieldAlert, ToggleLeft, ToggleRight, Percent, Save, LogOut, MessageSquare, AlertTriangle, CheckCircle2, XCircle, Lock, Phone, Smartphone, Megaphone, Plus, Trash2, ExternalLink, Copy, Search, RefreshCw, ChevronDown, ChevronUp, Calendar, MapPin, ArrowRightLeft, LayoutDashboard, Settings, BookOpen, Activity } from "lucide-react";
 import { VoiceEscalations } from "@/components/VoiceEscalations";
+import { AutoFitText } from "@/components/ui/auto-fit-text";
 import { DocumentScannerForm } from "@/components/document/DocumentScannerForm";
 import { AdminCommandCenter } from "@/components/AdminCommandCenter";
 import { SeniorCareDesk } from "@/components/SeniorCareDesk";
@@ -1329,6 +1330,20 @@ export default function AdminDashboard() {
 
   const statusBreakdown = (stats as any)?.statusBreakdown || {};
   const topRoutes = (stats as any)?.topRoutes || [];
+  const activeTitle =
+    activeTab === "command"
+      ? "Painel Concierge Automático"
+      : activeTab === "senior"
+        ? "Suporte de Elite para a Melhor Idade"
+        : activeTab === "overview"
+          ? "Visão Global Executiva"
+          : activeTab === "crm"
+            ? "Inteligência de Clientes & Financeiro"
+            : activeTab === "kb"
+              ? "Central de Conhecimento (Treinar Mia)"
+              : activeTab === "bookings"
+                ? "Controle de Viagens Premium"
+                : "Configurações Operacionais da Agência";
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-950 font-sans selection:bg-indigo-500/30">
@@ -1430,41 +1445,41 @@ export default function AdminDashboard() {
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full pointer-events-none" />
 
         {/* Header - Glassmorphic Blur */}
-        <header className="h-[80px] bg-slate-900/20 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-6 md:px-12 z-10 sticky top-0">
-          <div className="md:hidden flex items-center gap-4">
+        <header className="sticky top-0 z-10 flex h-[80px] items-center justify-between border-b border-white/5 bg-slate-900/20 px-6 backdrop-blur-xl md:px-12">
+          <div className="flex min-w-0 items-center gap-4 md:hidden">
             <LayoutDashboard className="h-6 w-6 text-indigo-500" />
             <h1 className="text-xl font-bold font-display text-white tracking-tight">Concierge</h1>
           </div>
           
-          <div className="hidden md:flex flex-col">
-            <h1 className="text-xl font-bold text-white tracking-tight font-display">
-              {activeTab === "command" && "Painel Concierge Automático"}
-              {activeTab === "senior" && "Suporte de Elite para a Melhor Idade"}
-              {activeTab === "overview" && "Visão Global Executiva"}
-              {activeTab === "crm" && "Inteligência de Clientes & Financeiro"}
-              {activeTab === "kb" && "Central de Conhecimento (Treinar Mia)"}
-              {activeTab === "bookings" && "Controle de Viagens Premium"}
-              {activeTab === "settings" && "Configurações Operacionais da Agência"}
-            </h1>
+          <div className="hidden min-w-0 flex-1 md:flex md:max-w-[min(52vw,44rem)] md:flex-col">
+            <AutoFitText
+              as="h1"
+              minFontSize={18}
+              maxFontSize={34}
+              maxLines={1}
+              className="font-display font-bold tracking-tight text-white leading-tight"
+            >
+              {activeTitle}
+            </AutoFitText>
             <p className="text-[10px] font-bold text-indigo-400/60 uppercase tracking-[0.3em] mt-1.5">
               {t("admin.welcome")}. Visão atualizada
             </p>
           </div>
           
-          <div className="flex items-center gap-5">
-            <div className="hidden lg:flex items-center bg-white/5 rounded-2xl px-4 py-2 border border-white/5 focus-within:border-indigo-500/50 transition-all group">
+          <div className="flex min-w-0 items-center gap-3 md:gap-5">
+            <div className="group hidden items-center rounded-2xl border border-white/5 bg-white/5 px-4 py-2 transition-all focus-within:border-indigo-500/50 lg:flex lg:min-w-[13rem] lg:max-w-[16rem] xl:min-w-[16rem]">
               <Search className="h-4 w-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
               <input 
                 type="text" 
                 placeholder="Pesquisa rápida..." 
-                className="bg-transparent border-none focus:outline-none focus:ring-0 text-white text-sm px-3 w-48 placeholder-slate-600"
+                className="w-full border-none bg-transparent px-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-0"
               />
             </div>
 
             <Button 
               data-testid="button-admin-live-chat" 
               onClick={() => setLocation("/admin/live-chat")} 
-              className="gap-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.3)] rounded-2xl px-6 py-6 font-bold transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+              className="gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-6 font-bold text-white shadow-[0_0_20px_rgba(99,102,241,0.3)] transition-all whitespace-nowrap hover:scale-[1.02] hover:from-indigo-500 hover:to-violet-500 active:scale-[0.98] sm:px-6"
             >
               <MessageSquare className="h-4.5 w-4.5" />
               <span className="hidden sm:inline">Assistência ao Vivo</span>

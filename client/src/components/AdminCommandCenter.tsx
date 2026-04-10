@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { AutoFitText } from "@/components/ui/auto-fit-text";
 import { AdminOwnerDesk } from "@/components/AdminOwnerDesk";
 import { useAdminCommandCenter, useAdminOwnerDesk, type AdminCommandCenterData, type AdminOwnerDeskData } from "@/hooks/use-admin";
 import { useToast } from "@/hooks/use-toast";
@@ -668,12 +669,12 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
     <div className="space-y-8 pb-10">
       <Card className={`overflow-hidden border border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-[32px]`}>
         <CardContent className="p-0">
-          <div className="grid gap-10 p-8 sm:p-10 lg:grid-cols-[1.6fr,1fr] relative overflow-hidden">
+          <div className="relative grid gap-8 overflow-hidden p-8 sm:p-10 xl:grid-cols-[minmax(0,1.8fr)_minmax(360px,0.95fr)] 2xl:grid-cols-[minmax(0,1.95fr)_minmax(380px,0.9fr)]">
             {/* Ambient background glows */}
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 blur-[120px] pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/10 blur-[120px] pointer-events-none" />
 
-            <div className="relative z-10">
+            <div className="relative z-10 min-w-0">
               <div className="flex flex-wrap items-center gap-3">
                 <Badge className="border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 font-bold px-3 py-1 rounded-full uppercase tracking-widest text-[10px]">
                   Mission Control Pro
@@ -685,15 +686,30 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                   {data.mission.testMode ? "Mode Teste Ativo" : "Produção Live"}
                 </Badge>
               </div>
-              <h2 className="mt-8 max-w-3xl text-4xl sm:text-5xl font-bold tracking-tight text-white font-display">
-                {data.health.headline.split(" ").map((word, i) => i === 0 || i === 1 ? <span key={i}>{word} </span> : <span key={i} className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">{word} </span>)}
-              </h2>
+              <AutoFitText
+                as="h2"
+                minFontSize={30}
+                maxFontSize={76}
+                maxLines={2}
+                containerClassName="mt-8 max-w-[min(100%,42rem)]"
+                className="font-display font-bold tracking-tight text-white leading-[0.92]"
+              >
+                {data.health.headline.split(" ").map((word, i) =>
+                  i === 0 || i === 1 ? (
+                    <span key={i}>{word} </span>
+                  ) : (
+                    <span key={i} className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">
+                      {word}{" "}
+                    </span>
+                  ),
+                )}
+              </AutoFitText>
               <p className="mt-6 max-w-2xl text-lg text-slate-400 font-medium leading-relaxed italic">
                 "{data.health.summary}"
               </p>
               <div className="mt-10 flex flex-wrap items-center gap-4">
                 <Button 
-                  className="gap-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-14 px-8 shadow-[0_0_25px_rgba(99,102,241,0.3)] transform transition hover:scale-105 active:scale-95" 
+                  className="h-14 gap-3 rounded-2xl bg-indigo-600 px-6 font-bold text-white shadow-[0_0_25px_rgba(99,102,241,0.3)] transition whitespace-nowrap hover:scale-105 hover:bg-indigo-500 active:scale-95 sm:px-8" 
                   onClick={() => onOpenLiveDesk()}
                 >
                   <MessageSquare className="h-5 w-5" />
@@ -701,7 +717,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                 </Button>
                 <Button
                   variant="secondary"
-                  className="gap-3 rounded-2xl border border-white/10 bg-white/5 text-slate-300 hover:bg-white/15 hover:text-white h-14 px-7 font-bold transition-all"
+                  className="h-14 gap-3 rounded-2xl border border-white/10 bg-white/5 px-6 font-bold text-slate-300 transition-all whitespace-nowrap hover:bg-white/15 hover:text-white sm:px-7"
                   onClick={handleOpenAdminInstallPage}
                 >
                   <Smartphone className="h-5 w-5" />
@@ -740,7 +756,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
               </div>
             </div>
 
-            <div className="relative z-10 grid gap-4 rounded-[32px] border border-white/10 bg-white/5 p-6 backdrop-blur shadow-inner shadow-white/5">
+            <div className="relative z-10 grid w-full gap-4 rounded-[32px] border border-white/10 bg-white/5 p-6 shadow-inner shadow-white/5 backdrop-blur xl:max-w-[31rem] xl:justify-self-end">
               <div className="grid grid-cols-2 gap-4 h-full">
                 <div className="rounded-2xl border border-white/5 bg-slate-950/40 p-6 flex flex-col justify-center">
                   <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 mb-2">Revenue Today</p>
