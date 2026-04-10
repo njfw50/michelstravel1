@@ -1,10 +1,15 @@
 import fs from "fs/promises";
 import path from "path";
-import { pool } from "./db";
+import { getPool, isDatabaseConfigured } from "./db";
 
 const MIGRATIONS_DIR = path.resolve(process.cwd(), "migrations");
 
 export async function runAppMigrations() {
+  if (!isDatabaseConfigured()) {
+    console.warn("[migrations] DATABASE_URL not configured, skipping SQL migrations");
+    return;
+  }
+
   let migrationFiles: string[];
 
   try {
@@ -26,7 +31,7 @@ export async function runAppMigrations() {
     return;
   }
 
-  const client = await pool.connect();
+  const client = await getPool().connect();
 
   try {
     await client.query(`

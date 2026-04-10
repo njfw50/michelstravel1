@@ -1,7 +1,7 @@
 import webpush, { type PushSubscription } from "web-push";
 import { and, desc, eq, gt, lt } from "drizzle-orm";
 
-import { db } from "../db";
+import { db, isDatabaseConfigured } from "../db";
 import { ownerPushDeliveries, ownerPushSubscriptions } from "@shared/models/auth";
 import {
   buildOwnerDeskSnapshot,
@@ -374,6 +374,11 @@ async function ownerPushLoopTick() {
 
 export function startOwnerPushLoop() {
   if (ownerPushLoopStarted) {
+    return;
+  }
+
+  if (!isDatabaseConfigured()) {
+    console.warn("[OWNER PUSH] DATABASE_URL not configured, skipping owner push loop");
     return;
   }
 

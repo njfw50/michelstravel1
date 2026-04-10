@@ -31,13 +31,44 @@ const allowlist = [
   "zod-validation-error",
 ];
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableViteTempLockError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+
+  return (
+    message.includes("vite:esbuild-transpile") &&
+    message.includes("being used by another process")
+  );
+}
+
+async function buildClientWithRetry(maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      await viteBuild();
+      return;
+    } catch (error) {
+      if (attempt >= maxAttempts || !isRetryableViteTempLockError(error)) {
+        throw error;
+      }
+
+      console.warn(
+        `[build] Vite hit a locked temp file on attempt ${attempt}/${maxAttempts}. Retrying...`,
+      );
+      await sleep(1000);
+    }
+  }
+}
+
 async function buildAll() {
   await rm("dist", { recursive: true, force: true });
 
   await syncMobileReleaseAssets();
 
   console.log("building client...");
-  await viteBuild();
+  await buildClientWithRetry();
 
   console.log("building server...");
   const pkg = JSON.parse(await readFile("package.json", "utf-8"));

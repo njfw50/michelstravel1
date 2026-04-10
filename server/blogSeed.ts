@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { blogPosts } from "@shared/schema";
-import { db } from "./db";
+import { db, isDatabaseConfigured } from "./db";
 
 const BLOG_COVER_DISNEY =
   "https://images.unsplash.com/photo-1513883049090-d0b7439799bf?auto=format&fit=crop&w=1200&q=80";
@@ -252,6 +252,11 @@ function shouldRetirePost(post: typeof blogPosts.$inferSelect) {
 }
 
 export async function ensureDefaultBlogPosts() {
+  if (!isDatabaseConfigured()) {
+    console.warn("[blog-seed] DATABASE_URL not configured, skipping default blog sync");
+    return;
+  }
+
   const existingPosts = await db.select().from(blogPosts);
   const existingBySlug = new Map(existingPosts.map((post) => [post.slug, post]));
   const managedIds = new Set<number>();
