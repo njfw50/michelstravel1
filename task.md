@@ -8,3 +8,8 @@
 - [x] Overhaul `AdminCommandCenter.tsx` (Command Center Upgrade)
 - [x] Redesign `overview` cards in `AdminDashboard.tsx`
 - [x] Final verification of animations and responsiveness
+- [x] Overhaul `AdminLiveChat.tsx` unified glassmorphic structure
+- [x] Integrate Media Hub (Video & Voice) in Sales Desktop
+- [x] Ensure i18n support for Concierge labels
+- [x] Fix JSX syntax errors and component fragmentation
+- [x] Finalize Midnight SaaS aesthetic across Admin suite

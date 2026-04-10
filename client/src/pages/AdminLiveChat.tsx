@@ -67,6 +67,15 @@ import {
   isSeniorServiceMode,
   type LiveSessionContextSnapshot,
 } from "@/lib/live-session-context";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useI18n } from "@/lib/i18n";
 
 interface PlaceResult {
   id: string;
@@ -365,6 +374,61 @@ function LiveSalesPanel() {
   const [chatOpen, setChatOpen] = useState(false);
   const liveMsgEndRef = useRef<HTMLDivElement>(null);
   const prefilledSessionRef = useRef<number | null>(null);
+  const { t } = useI18n();
+
+  // Media States
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const jitsiContainerRef = useRef<HTMLDivElement>(null);
+
+  const startVideoCall = () => {
+    setVideoModalOpen(true);
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+
+      recorder.onstop = () => {
+        const audioBlob = new Blob(chunks, { type: "audio/webm" });
+        // Em um cenário real, faríamos upload aqui. Para o MVP, simularemos o envio.
+        console.log("Audio extraído:", audioBlob);
+        handleSendLiveMessage(`[Audio Message] ${t("admin.live_chat.voice_message")}`);
+        setAudioChunks([]);
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Erro ao acessar microfone:", err);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      mediaRecorder.stream.getTracks().forEach(t => t.stop());
+    }
+  };
+
+  const cancelRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      mediaRecorder.stream.getTracks().forEach(t => t.stop());
+      setAudioChunks([]);
+    }
+  };
 
   const selectedSession = sessionDetail?.session;
   const effectiveServiceMode = selectedSession?.serviceMode === "senior" ? "senior" : selectedSession?.serviceMode === "standard" ? "standard" : workspaceModeOverride;
@@ -840,847 +904,368 @@ function LiveSalesPanel() {
   const canSearchStandard = tripType !== "multi_city" && searchOrigin && searchDestination && searchDate;
 
   return (
-    <div className="flex h-full min-h-0">
-      {sessionsPanelOpen && (
-        <div className="w-56 flex-shrink-0 border-r border-border flex flex-col bg-muted/30">
-          <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border">
-            <span className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5" /> Sessões
-            </span>
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => setSessionsPanelOpen(false)}
-              data-testid="button-close-sessions-panel"
-            >
-              <PanelLeftClose className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
-            {loadingList ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : totalSessions === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                <Plane className="h-8 w-8 mb-2 opacity-20" />
-                <p className="text-[11px]">Sem sessões ativas</p>
-              </div>
-            ) : (
-              <>
-                {requests.length > 0 && (
-                  <div className="mb-1">
-                    <p className="text-[10px] font-semibold uppercase text-destructive px-1 py-0.5 mb-1">
-                      Pendentes ({requests.length})
-                    </p>
-                    {requests.map((req) => (
-                      <div
-                        key={req.id}
-                        className={`p-2 rounded-md border mb-1 ${isSeniorServiceMode(req.serviceMode) ? "bg-amber-50 border-amber-200" : "bg-destructive/5 border-destructive/20"}`}
-                        data-testid={`session-request-${req.id}`}
-                      >
-                        <div className="flex items-center justify-between gap-1 mb-1">
-                          <span className="text-xs font-medium text-foreground truncate">
-                            #{req.id}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            {isSeniorServiceMode(req.serviceMode) && (
-                              <Badge className="text-[9px] px-1 py-0 bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
-                                Senior
-                              </Badge>
-                            )}
-                            <Badge variant="destructive" className="text-[9px] px-1 py-0">Novo</Badge>
-                          </div>
-                        </div>
-                        <div className="text-[9px] text-muted-foreground mb-1">
-                          {formatLiveSessionEntryPoint(req.entryPoint)}{req.language ? ` - ${req.language.toUpperCase()}` : ""}
-                        </div>
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="text-[9px] text-muted-foreground truncate">
-                            {req.visitorId || "Visitante"}
-                          </span>
-                          <Button
-                            size="sm"
-                            onClick={() => handleAcceptSession(req.id)}
-                            className="h-6 text-[10px] px-2"
-                            data-testid={`button-accept-session-${req.id}`}
-                          >
-                            Aceitar
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {activeSessions.length > 0 && (
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase text-muted-foreground px-1 py-0.5 mb-1">
-                      Ativas ({activeSessions.length})
-                    </p>
-                    {activeSessions.map((session) => (
-                      (() => {
-                        const rowTheme = getLiveSessionTheme(session.serviceMode);
-                        const seniorRow = isSeniorServiceMode(session.serviceMode);
-                        return (
-                      <button
-                        key={session.id}
-                        onClick={() => setSelectedSessionId(session.id)}
-                        className={`w-full text-left p-2 rounded-md mb-1 ${
-                          selectedSessionId === session.id
-                            ? rowTheme.activeRowClass
-                            : "hover-elevate"
-                        }`}
-                        data-testid={`session-active-${session.id}`}
-                      >
-                        <div className="flex items-center justify-between gap-1 mb-0.5">
-                          <span className="text-xs font-medium text-foreground truncate flex items-center gap-1">
-                            <Plane className="h-3 w-3 flex-shrink-0" />
-                            #{session.id}
-                          </span>
-                          {selectedSessionId === session.id && (
-                            <div className="h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0" />
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1 flex-wrap mb-1">
-                          {seniorRow && (
-                            <Badge className="text-[9px] px-1 py-0 bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
-                              Senior
-                            </Badge>
-                          )}
-                          <span className={`text-[9px] ${seniorRow ? "text-amber-700" : "text-muted-foreground"}`}>
-                            {formatLiveSessionEntryPoint(session.entryPoint)}
-                          </span>
-                        </div>
-                        <span className="text-[9px] text-muted-foreground truncate block">
-                          {session.visitorId || "Visitante"}
-                        </span>
-                      </button>
-                        );
-                      })()
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          {selectedSessionId && (
-            <div className="border-t border-border p-2 space-y-1">
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-[10px] text-muted-foreground">Sessão #{selectedSessionId}</span>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={handleCloseSession}
-                  className="h-6 text-[10px] px-2"
-                  data-testid="button-close-session"
-                >
-                  <X className="h-3 w-3 mr-0.5" /> Encerrar
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="flex-1 flex flex-col min-w-0 min-h-0">
-        <div className={`flex items-center gap-2 px-3 py-2 flex-shrink-0 ${isSeniorLead ? sessionTheme.headerClass : "border-b border-border bg-[#0074DE] text-white"}`}>
-          {!sessionsPanelOpen && (
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => setSessionsPanelOpen(true)}
-              className={isSeniorLead ? "text-amber-950 hover:bg-amber-100/70 flex-shrink-0" : "text-white no-default-hover-elevate flex-shrink-0"}
-              data-testid="button-open-sessions-panel"
-            >
-              <PanelLeftOpen className="h-4 w-4" />
-            </Button>
-          )}
-          <Plane className="h-4 w-4 flex-shrink-0" />
-          <span className="text-sm font-medium">
-            {isSeniorLead ? "Workspace Senior" : "Workspace de Vendas"}
-          </span>
-          <div className="flex-1" />
-          {!sessionsPanelOpen && totalSessions > 0 && (
-            <Badge
-              variant="secondary"
-              className="text-[10px] cursor-pointer"
-              onClick={() => setSessionsPanelOpen(true)}
-            >
-              {totalSessions} sessão(ões)
-            </Badge>
-          )}
-          {selectedSessionId && (
-            <div className="flex items-center gap-2">
-              {isSeniorLead && (
-                <Badge className="text-[10px] bg-white text-amber-900 border-amber-200 hover:bg-white">
-                  Senior
-                </Badge>
-              )}
-              <Badge variant="secondary" className={selectedSessionId && isSeniorLead ? "text-[10px] bg-amber-100 text-amber-900 border-amber-200" : "text-[10px] bg-white/20 text-white border-white/30"}>
-                Sessao #{selectedSessionId}
-              </Badge>
-            </div>
-          )}
-        </div>
-
-        <div className="flex-1 overflow-y-auto min-h-0">
-          <div className="p-3 border-b space-y-2">
-            <div className={`rounded-2xl border p-3 ${isSeniorLead ? "border-amber-200 bg-amber-50/80" : "border-slate-200 bg-slate-50"}`}>
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Modo do workspace</p>
-                  <h2 className="mt-1 text-base font-bold text-slate-900">
-                    {isSeniorLead ? "Venda assistida para senior" : "Workspace padrao de vendas"}
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-600">
-                    {isSeniorLead
-                      ? selectedSessionId
-                        ? "Esse lead sera lido com prioridade para menos cansaco, menos ruido e explicacao mais humana."
-                        : "Ative este modo para testar o buscador senior mesmo sem sessao ativa."
-                      : "Buscador tradicional da equipe com leitura comercial padrao."}
-                  </p>
-                </div>
-
-                {!selectedSessionId && (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={workspaceModeOverride === "standard" ? "default" : "outline"}
-                      onClick={() => setWorkspaceModeOverride("standard")}
-                      className={workspaceModeOverride === "standard" ? "bg-[#0074DE] hover:bg-[#005bb5] text-white" : ""}
-                      data-testid="button-workspace-standard"
-                    >
-                      Padrao
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={workspaceModeOverride === "senior" ? "default" : "outline"}
-                      onClick={() => setWorkspaceModeOverride("senior")}
-                      className={workspaceModeOverride === "senior" ? "bg-amber-600 hover:bg-amber-700 text-white" : "border-amber-200 text-amber-900 hover:bg-amber-50"}
-                      data-testid="button-workspace-senior"
-                    >
-                      Senior
-                    </Button>
-                  </div>
-                )}
-              </div>
+    <div className="site-admin-shell h-full min-h-0 bg-slate-950 overflow-hidden">
+      <div className="flex h-full min-h-0 relative z-10 gap-4">
+        {sessionsPanelOpen && (
+          <div className="w-64 flex-shrink-0 flex flex-col glass rounded-3xl overflow-hidden border-white/5 shadow-2xl">
+            <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-white/10 bg-white/5">
+              <span className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 font-display">
+                <Users className="h-3.5 w-3.5" /> Sessões
+              </span>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setSessionsPanelOpen(false)}
+                className="hover:bg-white/10 text-white/70"
+                data-testid="button-close-sessions-panel"
+              >
+                <PanelLeftClose className="h-4 w-4" />
+              </Button>
             </div>
 
-            {(selectedSessionId && selectedSession) || showSeniorWorkspacePreview ? (
-              <div className={`rounded-2xl p-4 ${sessionTheme.softPanelClass}`}>
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge className={sessionTheme.badgeClass}>
-                        {isSeniorLead ? "Lead senior" : "Lead padrao"}
-                      </Badge>
-                      <Badge variant="outline" className="text-[11px]">
-                        {selectedSession ? formatLiveSessionEntryPoint(selectedSession.entryPoint) : "Teste interno do senior"}
-                      </Badge>
-                      {selectedSession?.language && (
-                        <Badge variant="outline" className="text-[11px]">
-                          {selectedSession.language.toUpperCase()}
-                        </Badge>
-                      )}
-                    </div>
-                    <h2 className="mt-3 text-base font-bold">
-                      {isSeniorLead
-                        ? "Este contato pede menos ruido e mais orientacao humana."
-                        : "Use este workspace para buscar, compartilhar e fechar a venda."}
-                    </h2>
-                    {sessionSummaryItems.length > 0 && (
-                      <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-                        {sessionSummaryItems.map((item) => (
-                          <div key={item.label} className="rounded-xl border border-white/70 bg-white/70 px-3 py-3">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">{item.label}</p>
-                            <p className="mt-1 text-sm font-semibold text-slate-900">{item.value}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {isSeniorLead && seniorAgentTips.length > 0 && (
-                    <div className="lg:max-w-sm">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Como conduzir</p>
-                      <div className="mt-3 space-y-2">
-                        {seniorAgentTips.map((tip) => (
-                          <div key={tip} className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs leading-relaxed text-slate-700">
-                            {tip}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+              {loadingList ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-3">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sincronizando...</span>
                 </div>
-              </div>
-            ) : null}
-
-            {isSeniorLead && (
-              <div className="rounded-2xl border border-amber-200 bg-white p-4">
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-700">Criterios do senior</p>
-                    <p className="mt-1 text-sm text-slate-600">
-                      O buscador passa a priorizar conforto, menos conexao, horario mais tranquilo e bagagem adequada antes do menor preco puro.
-                    </p>
-                  </div>
-
-                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Prioridade</label>
-                      <Select
-                        value={seniorPreferences.priority}
-                        onValueChange={(value) =>
-                          !selectedSession && setManualSeniorPreferences((prev) => ({ ...prev, priority: value as SeniorPreferences["priority"] }))
-                        }
-                        disabled={!!selectedSession}
-                      >
-                        <SelectTrigger className="h-9 text-sm border-amber-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="comfort">Menos cansaco</SelectItem>
-                          <SelectItem value="fastest">Menos tempo total</SelectItem>
-                          <SelectItem value="balanced">Equilibrio</SelectItem>
-                          <SelectItem value="cheapest">Menor preco</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Conexao</label>
-                      <Select
-                        value={seniorPreferences.connections}
-                        onValueChange={(value) =>
-                          !selectedSession && setManualSeniorPreferences((prev) => ({ ...prev, connections: value as SeniorPreferences["connections"] }))
-                        }
-                        disabled={!!selectedSession}
-                      >
-                        <SelectTrigger className="h-9 text-sm border-amber-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Sem conexao</SelectItem>
-                          <SelectItem value="one">No maximo 1 conexao</SelectItem>
-                          <SelectItem value="any">Pode comparar tudo</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Bagagem</label>
-                      <Select
-                        value={seniorPreferences.bags}
-                        onValueChange={(value) =>
-                          !selectedSession && setManualSeniorPreferences((prev) => ({ ...prev, bags: value as SeniorPreferences["bags"] }))
-                        }
-                        disabled={!!selectedSession}
-                      >
-                        <SelectTrigger className="h-9 text-sm border-amber-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="checked">Com mala despachada</SelectItem>
-                          <SelectItem value="carry">Com bagagem de mao</SelectItem>
-                          <SelectItem value="flexible">Bagagem flexivel</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Horario</label>
-                      <Select
-                        value={seniorPreferences.time}
-                        onValueChange={(value) =>
-                          !selectedSession && setManualSeniorPreferences((prev) => ({ ...prev, time: value as SeniorPreferences["time"] }))
-                        }
-                        disabled={!!selectedSession}
-                      >
-                        <SelectTrigger className="h-9 text-sm border-amber-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="day">Evitar madrugada</SelectItem>
-                          <SelectItem value="any">Qualquer horario</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <Badge className="bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
-                      {seniorPriorityLabels[seniorPreferences.priority]}
-                    </Badge>
-                    <Badge className="bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
-                      {seniorConnectionLabels[seniorPreferences.connections]}
-                    </Badge>
-                    <Badge className="bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
-                      {seniorBagLabels[seniorPreferences.bags]}
-                    </Badge>
-                    <Badge className="bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
-                      {seniorTimeLabels[seniorPreferences.time]}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2 flex-wrap">
-              <Select value={tripType} onValueChange={(v) => setTripType(v as "round_trip" | "one_way" | "multi_city")}>
-                <SelectTrigger className="w-[140px] h-8 text-xs" data-testid="select-trip-type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="round_trip">Ida e Volta</SelectItem>
-                  <SelectItem value="one_way">Somente Ida</SelectItem>
-                  <SelectItem value="multi_city">Multi-cidades</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={searchPassengers} onValueChange={setSearchPassengers}>
-                <SelectTrigger className="w-[80px] h-8 text-xs" data-testid="select-passengers">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4, 5, 6].map((n) => (
-                    <SelectItem key={n} value={String(n)}>{n} pax</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={searchCabinClass} onValueChange={setSearchCabinClass}>
-                <SelectTrigger className="w-[110px] h-8 text-xs" data-testid="select-cabin">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="economy">Economy</SelectItem>
-                  <SelectItem value="premium_economy">Premium</SelectItem>
-                  <SelectItem value="business">Business</SelectItem>
-                  <SelectItem value="first">First</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {tripType === "multi_city" ? (
-              <div className="space-y-2">
-                {multiCityLegs.map((leg, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="text-[10px] text-muted-foreground font-medium w-4 flex-shrink-0">{i + 1}.</span>
-                    <div className="flex-1 grid grid-cols-3 gap-1.5">
-                      <AdminLocationInput
-                        value={leg.origin}
-                        onChange={(v) => updateMultiLeg(i, "origin", v)}
-                        placeholder="Origem"
-                        testId={`input-multi-origin-${i}`}
-                      />
-                      <AdminLocationInput
-                        value={leg.destination}
-                        onChange={(v) => updateMultiLeg(i, "destination", v)}
-                        placeholder="Destino"
-                        testId={`input-multi-dest-${i}`}
-                      />
-                      <div className="relative">
-                        <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-                        <Input
-                          type="date"
-                          value={leg.date}
-                          onChange={(e) => updateMultiLeg(i, "date", e.target.value)}
-                          className="pl-7 text-xs h-9"
-                          data-testid={`input-multi-date-${i}`}
-                        />
-                      </div>
-                    </div>
-                    {multiCityLegs.length > 2 && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => removeMultiLeg(i)}
-                        data-testid={`button-remove-leg-${i}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                {multiCityLegs.length < 5 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={addMultiLeg}
-                    className="w-full text-xs"
-                    data-testid="button-add-leg"
-                  >
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar trecho
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-2 gap-2">
-                  <AdminLocationInput value={searchOrigin} onChange={setSearchOrigin} placeholder="Origem" testId="input-search-origin" />
-                  <AdminLocationInput value={searchDestination} onChange={setSearchDestination} placeholder="Destino" testId="input-search-destination" />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="relative">
-                    <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                    <Input
-                      type="date"
-                      value={searchDate}
-                      onChange={(e) => setSearchDate(e.target.value)}
-                      className="pl-7 text-sm h-9"
-                      data-testid="input-search-date"
-                    />
-                  </div>
-                  {tripType === "round_trip" && (
-                    <div className="relative">
-                      <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                      <Input
-                        type="date"
-                        value={searchReturnDate}
-                        onChange={(e) => setSearchReturnDate(e.target.value)}
-                        className="pl-7 text-sm h-9"
-                        data-testid="input-search-return-date"
-                      />
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
-            <Button
-              onClick={handleSearchFlights}
-              disabled={(!canSearchStandard && !canSearchMultiCity) || searchingFlights}
-              className={`w-full ${isSeniorLead ? "bg-amber-600 hover:bg-amber-700 text-white" : ""}`}
-              data-testid="button-search-flights"
-            >
-              {searchingFlights ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : (
-                <Search className="h-4 w-4 mr-2" />
-              )}
-              {isSeniorLead ? "Buscar opcoes mais calmas" : "Buscar Voos"}
-            </Button>
-          </div>
-
-          {searchingFlights && (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-[#0074DE]" />
-            </div>
-          )}
-
-          {!searchingFlights && flightResults.length > 0 && (
-            <div className="p-2 space-y-1">
-              {isSeniorLead && seniorFlightRanking && (
-                <div className={`rounded-xl px-3 py-3 mb-2 ${sessionTheme.guidanceCardClass}`}>
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Leitura senior do buscador</p>
-                      <p className="mt-1 text-sm font-semibold text-slate-900">
-                        Resultados ordenados por conforto, conexao e clareza antes do preco puro.
+                <>
+                  {requests.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-[10px] font-black uppercase text-coral-500/80 px-2 py-1 tracking-tighter mb-1">
+                        Solicitações ({requests.length})
                       </p>
-                    </div>
-                    {seniorFlightRanking.fallbackApplied && (
-                      <Badge className="bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
-                        Sem voo estrito, mostrando melhor aproximacao
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              )}
-              {sharedCount > 0 && selectedSessionId && (
-                <div className={`flex items-center justify-between gap-2 px-2 py-1.5 rounded-md mb-2 ${isSeniorLead ? "bg-amber-50 border border-amber-200" : "bg-emerald-50 dark:bg-emerald-950/30"}`}>
-                  <span className={`text-xs font-medium ${isSeniorLead ? "text-amber-800" : "text-emerald-700 dark:text-emerald-400"}`}>
-                    {sharedCount} compartilhado(s) - {sharedCurrency} {sharedTotal.toFixed(2)}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleSendPricingSummary}
-                    disabled={sendingPricingSummary}
-                    className="h-7 text-xs"
-                    data-testid="button-send-pricing"
-                  >
-                    {sendingPricingSummary ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Receipt className="h-3 w-3 mr-1" />}
-                    {isSeniorLead ? "Enviar resumo simples" : "Enviar Resumo"}
-                  </Button>
-                </div>
-              )}
-              {orderedFlightResults.map((flight) => {
-                const isShared = !!sharedBlockMap[flight.id];
-                const customPrice = customPrices[flight.id];
-                const hasCustomPrice = customPrice && !isNaN(parseFloat(customPrice)) && parseFloat(customPrice) !== flight.price;
-                const recommendation = recommendationMap.get(flight.id);
-                return (
-                  <div
-                    key={flight.id}
-                    className={`p-2.5 rounded-md border text-sm ${
-                      isShared
-                        ? isSeniorLead
-                          ? "border-amber-300 bg-amber-50/70"
-                          : "border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20"
-                        : "border-border"
-                    }`}
-                    data-testid={`flight-result-${flight.id}`}
-                  >
-                    {recommendation && (
-                      <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <Badge className="bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
-                          {getSeniorRecommendationLabel(recommendation.kind)}
-                        </Badge>
-                        <span className="text-[11px] text-slate-600">{recommendation.reasonLine}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        {flight.logoUrl && (
-                          <img src={flight.logoUrl} alt="" className="h-4 w-4 rounded-sm flex-shrink-0" />
-                        )}
-                        <span className="font-medium text-foreground truncate">{flight.airline}</span>
-                        <Badge variant="secondary" className="text-[10px] px-1 py-0">{flight.flightNumber}</Badge>
-                      </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        {isShared && hasCustomPrice && (
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleUpdateSharedPrice(flight)}
-                            data-testid={`button-update-price-${flight.id}`}
-                          >
-                            <RefreshCw className="h-3 w-3" />
-                          </Button>
-                        )}
-                        {selectedSessionId && (
-                          <Button
-                            size="icon"
-                            variant={isShared ? "default" : "ghost"}
-                            onClick={() => handleToggleShare(flight)}
-                            disabled={togglingFlight === flight.id}
-                            className={isShared && isSeniorLead ? "bg-amber-600 hover:bg-amber-700 text-white" : undefined}
-                            data-testid={`button-share-${flight.id}`}
-                          >
-                            {togglingFlight === flight.id ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : isShared ? (
-                              <Eye className="h-3 w-3" />
-                            ) : (
-                              <Share2 className="h-3 w-3" />
-                            )}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                      <span>{formatTime(flight.departureTime)}</span>
-                      <span className="text-[10px]">→</span>
-                      <span>{formatTime(flight.arrivalTime)}</span>
-                      <span className="text-[10px]">({flight.duration})</span>
-                      {flight.stops === 0 ? (
-                        <Badge variant="secondary" className="text-[9px] px-1 py-0">Direto</Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-[9px] px-1 py-0">{flight.stops} parada(s)</Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-muted-foreground">
-                        {flight.currency} {flight.price.toFixed(2)}
-                      </span>
-                      {editingPrice === flight.id ? (
-                        <div className="flex items-center gap-1">
-                          <Input
-                            type="number"
-                            value={customPrices[flight.id] || ""}
-                            onChange={(e) => setCustomPrices((prev) => ({ ...prev, [flight.id]: e.target.value }))}
-                            className="w-20 h-6 text-xs"
-                            placeholder="Novo"
-                            data-testid={`input-custom-price-${flight.id}`}
-                          />
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => setEditingPrice(null)}
-                          >
-                            <CheckCircle2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ) : (
+                      {requests.map((s) => (
                         <button
-                          onClick={() => setEditingPrice(flight.id)}
-                          className="flex items-center gap-0.5 text-xs text-[#0074DE] hover:underline"
-                          data-testid={`button-edit-price-${flight.id}`}
+                          key={s.id}
+                          onClick={() => handleAcceptSession(s.id)}
+                          className="w-full text-left p-3 rounded-2xl mb-1 transition-all bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 group"
                         >
-                          <Pencil className="h-2.5 w-2.5" />
-                          {hasCustomPrice && (
-                            <span className="font-medium">{flight.currency} {parseFloat(customPrice).toFixed(2)}</span>
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {!searchingFlights && flightResults.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <Search className={`h-10 w-10 mb-3 opacity-30 ${isSeniorLead ? "text-amber-500" : ""}`} />
-              <p className="text-sm">{isSeniorLead ? "Monte a recomendacao senior acima" : "Busque voos acima"}</p>
-              <p className="text-xs mt-1">
-                {isSeniorLead
-                  ? "A leitura vai priorizar menos cansaco, conexao mais segura e explicacao mais simples."
-                  : "Resultados aparecem aqui"}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {selectedSessionId && (
-          <div className="flex-shrink-0 border-t border-border">
-            <div className="p-2 border-b border-border">
-              <div className="flex items-center gap-2">
-                <StickyNote className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                <Input
-                  value={noteText}
-                  onChange={(e) => setNoteText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendNote();
-                    }
-                  }}
-                  placeholder={isSeniorLead ? "Nota simples para o cliente (ex: Esta opcao tem menos cansaco e 1 conexao)" : "Nota para o cliente (ex: Inclui 1 mala de 23kg)"}
-                  disabled={sendingNote}
-                  className="flex-1 h-8 text-sm"
-                  data-testid="input-admin-note"
-                />
-                <Button
-                  size="icon"
-                  onClick={handleSendNote}
-                  disabled={!noteText.trim() || sendingNote}
-                  data-testid="button-send-note"
-                >
-                  {sendingNote ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                </Button>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setChatOpen(!chatOpen)}
-              className="w-full flex items-center justify-between gap-2 px-3 py-1.5 hover-elevate"
-              data-testid="button-toggle-chat"
-            >
-              <div className="flex items-center gap-2">
-                <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-xs font-semibold uppercase text-muted-foreground">Chat da Sessão</span>
-                {!chatOpen && unreadCount > 0 && (
-                  <Badge variant="secondary" className="text-[10px]">{unreadCount}</Badge>
-                )}
-              </div>
-              {chatOpen ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />}
-            </button>
-
-            {chatOpen && (
-              <div className="border-t border-border">
-                <div className="max-h-36 overflow-y-auto p-2 space-y-1.5">
-                  {(!sessionDetail?.messages || sessionDetail.messages.length === 0) && (
-                    <p className="text-xs text-muted-foreground text-center py-2">Sem mensagens</p>
-                  )}
-                  {sessionDetail?.messages?.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex gap-1.5 ${msg.role === "client" ? "flex-row" : "flex-row-reverse"}`}
-                    >
-                      <div
-                        className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full ${
-                          msg.role === "client"
-                            ? sessionTheme.userAvatarClass
-                            : "bg-emerald-600 text-white"
-                        }`}
-                      >
-                        {msg.role === "client" ? (
-                          <User className="h-2.5 w-2.5" />
-                        ) : (
-                          <UserCheck className="h-2.5 w-2.5" />
-                        )}
-                      </div>
-                      <div className="max-w-[80%]">
-                        <div
-                          className={`rounded-xl px-2.5 py-1.5 text-xs ${
-                            msg.role === "client"
-                              ? `${sessionTheme.guidanceCardClass} text-foreground rounded-bl-sm`
-                              : "bg-emerald-50 dark:bg-emerald-950/40 text-foreground rounded-br-sm border border-emerald-200 dark:border-emerald-800"
-                          }`}
-                        >
-                          {msg.content}
-                        </div>
-                        <p className="text-[9px] text-muted-foreground mt-0.5 px-1">
-                          {formatDate(msg.createdAt)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                  <div ref={liveMsgEndRef} />
-                </div>
-                <div className="p-2 pt-0">
-                  {seniorQuickReplies.length > 0 && (
-                    <div className="mb-2 flex flex-wrap gap-1.5">
-                      {seniorQuickReplies.map((replyText) => (
-                        <button
-                          key={replyText}
-                          type="button"
-                          onClick={() => handleUseQuickReply(replyText)}
-                          className={`rounded-full px-2.5 py-1 text-[10px] font-medium transition-colors ${sessionTheme.chipClass}`}
-                        >
-                          {replyText}
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="text-xs font-bold text-emerald-400">Novo Atendimento</span>
+                            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                          </div>
+                          <p className="text-[10px] text-emerald-200/70 font-medium">#{s.id} - {s.serviceMode === 'senior' ? 'SÊNIOR' : 'STANDARD'}</p>
                         </button>
                       ))}
                     </div>
                   )}
-                  <div className="flex items-center gap-2">
-                    <Input
-                      value={liveMessage}
-                      onChange={(e) => setLiveMessage(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendLiveMessage();
-                        }
-                      }}
-                      placeholder={isSeniorLead ? "Mensagem calma e passo a passo..." : "Mensagem..."}
-                      disabled={sendingMessage}
-                      className="flex-1 h-8 text-sm"
-                      data-testid="input-live-message"
-                    />
+
+                  {activeSessions.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-slate-500 px-2 py-1 tracking-widest mb-1">
+                        Em Andamento ({activeSessions.length})
+                      </p>
+                      {activeSessions.map((s) => (
+                        <button
+                          key={s.id}
+                          onClick={() => setSelectedSessionId(s.id)}
+                          className={`w-full text-left p-3 rounded-2xl mb-1 transition-all border ${
+                            selectedSessionId === s.id
+                              ? "bg-primary/20 border-primary/40 shadow-lg shadow-primary/10"
+                              : "glass bg-white/5 border-white/5 hover:bg-white/10"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className={`text-xs font-bold ${selectedSessionId === s.id ? 'text-white' : 'text-slate-300'}`}>
+                              #{s.id} - {s.visitorId || "Visitante"}
+                            </span>
+                            <Badge variant="outline" className={`text-[9px] border-white/10 ${s.serviceMode === 'senior' ? 'bg-amber-500/20 text-amber-500 border-amber-500/30' : 'bg-blue-500/20 text-blue-400'}`}>
+                              {s.serviceMode === 'senior' ? 'SÊNIOR' : 'STD'}
+                            </Badge>
+                          </div>
+                          <p className="text-[9px] text-slate-500 font-medium">{formatDate(s.createdAt)}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 flex flex-col min-w-0 glass rounded-3xl border-white/5 shadow-2xl relative overflow-hidden">
+          <div className="flex items-center justify-between gap-4 p-4 border-b border-white/10 bg-white/5">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/30">
+                <Plane className="h-5 w-5 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold font-display uppercase tracking-widest text-white">
+                  {selectedSessionId ? `Missão #${selectedSessionId}` : "Espaço de Vendas"}
+                </h2>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <p className="text-[10px] text-slate-400 font-medium tracking-tight">
+                    {effectiveServiceMode === "senior" ? "CONCIERGE SÊNIOR ATIVO" : "TERMINAL DE VENDAS"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {selectedSessionId && (
+                <div className="flex items-center gap-1 bg-black/40 p-1 rounded-2xl border border-white/10">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 rounded-xl gap-2 hover:bg-white/10 text-white"
+                    onClick={startVideoCall}
+                  >
+                    <Video className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline text-xs font-bold">Videochamada</span>
+                  </Button>
+                  
+                  <div className="w-px h-4 bg-white/10 mx-1" />
+                  
+                  {isRecording ? (
+                    <div className="flex items-center gap-2 px-2">
+                      <span className="flex h-2 w-2 rounded-full bg-red-500 animate-ping" />
+                      <span className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">Gravando</span>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full bg-red-500/20 text-red-500" onClick={stopRecording}>
+                        <Square className="h-3 w-3 fill-current" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-white/10" onClick={cancelRecording}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
                     <Button
-                      size="icon"
-                      onClick={handleSendLiveMessage}
-                      disabled={!liveMessage.trim() || sendingMessage}
-                      data-testid="button-send-live-message"
-                    >
-                      {sendingMessage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  {isSeniorLead && (
-                    <Button
-                      onClick={handleSpeakThroughMia}
-                      disabled={!liveMessage.trim() || sendingVoicePrompt}
-                      variant="outline"
-                      className="w-full mt-2 gap-2 border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 hover:text-violet-800"
+                      variant="ghost"
                       size="sm"
+                      className="h-8 rounded-xl gap-2 hover:bg-white/10 text-white"
+                      onClick={startRecording}
                     >
-                      {sendingVoicePrompt ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
-                      Falar texto através da Mia (Voz)
+                      <Mic className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline text-xs font-bold">Áudio</span>
                     </Button>
                   )}
                 </div>
-              </div>
-            )}
+              )}
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setSessionsPanelOpen(!sessionsPanelOpen)}
+                className="hover:bg-white/10"
+                data-testid="button-toggle-sessions"
+              >
+                <PanelLeft className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        )}
+
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
+            <div className={`p-4 ${isSeniorLead ? "space-y-6" : "space-y-4"}`}>
+              <div className="glass-dark p-6 rounded-3xl border-white/5 space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Search className="h-4 w-4 text-primary" />
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">Pesquisa de Tarifas</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <AdminLocationInput
+                    label="Origem"
+                    value={searchOrigin}
+                    onChange={setSearchOrigin}
+                    placeholder="Cidade ou aeroporto"
+                    isSenior={isSeniorLead}
+                  />
+                  <AdminLocationInput
+                    label="Destino"
+                    value={searchDestination}
+                    onChange={setSearchDestination}
+                    placeholder="Cidade ou aeroporto"
+                    isSenior={isSeniorLead}
+                  />
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Data de Ida</label>
+                    <Input
+                      type="date"
+                      value={searchDate}
+                      onChange={(e) => setSearchDate(e.target.value)}
+                      className="glass bg-white/5 border-white/10 h-10 rounded-xl"
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <Button
+                      className="w-full h-10 rounded-xl font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
+                      onClick={handleSearchFlights}
+                      disabled={searchingFlights || !canSearchStandard}
+                    >
+                      {searchingFlights ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
+                      Pesquisar agora
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                {searchingFlights ? (
+                  <div className="flex flex-col items-center justify-center py-20 animate-pulse">
+                    <Plane className="h-12 w-12 text-slate-600 animate-bounce mb-4" />
+                    <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Sincronizando Melhores Ofertas...</p>
+                  </div>
+                ) : flightResults.length > 0 ? (
+                  <div className="space-y-4">
+                     {flightResults.map((flight) => {
+                       const isShared = (sessionDetail?.sharedFlights || []).some(sf => sf.id === flight.id);
+                       
+                       return (
+                         <div 
+                           key={flight.id} 
+                           className={`glass hover:border-primary/50 transition-all p-5 rounded-3xl border-white/10 group ${isShared ? 'ring-2 ring-primary/50 bg-primary/5' : ''}`}
+                         >
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 glass-dark rounded-xl flex items-center justify-center border border-white/10">
+                                  {flight.logoUrl ? (
+                                    <img src={flight.logoUrl} alt="" className="h-6 w-6 object-contain" />
+                                  ) : (
+                                    <Plane className="h-5 w-5 text-white/40" />
+                                  )}
+                                </div>
+                                <div>
+                                  <h4 className="text-sm font-bold text-white leading-none mb-1">{flight.airline}</h4>
+                                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{flight.flightNumber}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className={`rounded-xl px-4 h-9 font-bold transition-all ${isShared ? 'bg-primary text-white' : 'glass-dark text-slate-400 hover:text-white'}`}
+                                  onClick={() => handleToggleShare(flight)}
+                                  disabled={togglingFlight === flight.id}
+                                >
+                                  {togglingFlight === flight.id ? <Loader2 className="h-3 w-3 animate-spin" /> : isShared ? 'compartilhado' : 'compartilhar'}
+                                </Button>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-6 px-2">
+                               <div className="text-center">
+                                 <p className="text-lg font-bold text-white font-display leading-none">{formatTime(flight.departureTime)}</p>
+                                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">SAÍDA</p>
+                               </div>
+                               
+                               <div className="flex-1 flex flex-col items-center gap-1">
+                                 <div className="w-full h-px bg-white/10 relative">
+                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-950 px-2">
+                                      <Plane className="h-3 w-3 text-primary rotate-90" />
+                                    </div>
+                                 </div>
+                                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{flight.duration}</p>
+                               </div>
+
+                               <div className="text-center">
+                                 <p className="text-lg font-bold text-white font-display leading-none">{formatTime(flight.arrivalTime)}</p>
+                                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">CHEGADA</p>
+                               </div>
+
+                               <div className="ml-4 pl-4 border-l border-white/10">
+                                  <p className="text-xl font-bold text-emerald-400 font-display">
+                                    {flight.currency} {flight.price.toFixed(2)}
+                                  </p>
+                               </div>
+                            </div>
+                         </div>
+                       );
+                     })}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-20 glass rounded-3xl border-dashed border-white/10">
+                    <Search className="h-10 w-10 text-slate-700 mb-4 opacity-30" />
+                    <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">Nenhum voo pesquisado</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {selectedSessionId && (
+            <div className="glass-dark border-t border-white/10 p-4">
+              <div className="flex flex-col gap-3">
+                 <div className="flex items-center gap-3">
+                   <div className="flex-1 relative">
+                     <StickyNote className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                     <Input
+                        value={noteText}
+                        onChange={(e) => setNoteText(e.target.value)}
+                        placeholder="Adicionar nota para o viajante..."
+                        className="glass bg-white/5 border-white/10 pl-10 h-10 rounded-xl text-xs font-medium"
+                     />
+                   </div>
+                   <Button 
+                    className="h-10 rounded-xl font-bold px-6 bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-500/20"
+                    onClick={handleSendNote}
+                    disabled={!noteText.trim() || sendingNote}
+                   >
+                     {sendingNote ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                   </Button>
+                 </div>
+
+                 <Button
+                  onClick={() => setChatOpen(!chatOpen)}
+                  variant="ghost"
+                  className="w-full glass bg-white/5 border-white/10 hover:bg-white/10 h-10 rounded-xl justify-between px-4"
+                 >
+                   <div className="flex items-center gap-2">
+                     <MessageSquare className="h-4 w-4 text-slate-400" />
+                     <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Canal de Chat</span>
+                     {chatOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                   </div>
+                 </Button>
+
+                 {chatOpen && (
+                    <div className="glass-dark rounded-2xl p-4 border border-white/5 h-64 flex flex-col">
+                       <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-2 custom-scrollbar">
+                         {sessionDetail?.messages?.map((msg) => (
+                           <div key={msg.id} className={`flex ${msg.role === 'client' ? 'justify-start' : 'justify-end'}`}>
+                              <div className={`max-w-[80%] p-3 rounded-2xl text-[11px] leading-relaxed ${msg.role === 'client' ? 'bg-white/10 text-white rounded-bl-sm' : 'bg-primary/20 text-white border border-primary/30 rounded-br-sm'}`}>
+                                {msg.content}
+                              </div>
+                           </div>
+                         ))}
+                         <div ref={liveMsgEndRef} />
+                       </div>
+                       <div className="flex items-center gap-2">
+                          <Input 
+                            value={liveMessage}
+                            onChange={(e) => setLiveMessage(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleSendLiveMessage()}
+                            placeholder="Sua mensagem..."
+                            className="glass bg-white/10 border-white/10 h-9 rounded-xl text-xs"
+                          />
+                          <Button size="icon" className="h-9 w-9 rounded-xl bg-primary" onClick={handleSendLiveMessage}>
+                            <Send className="h-3.5 w-3.5" />
+                          </Button>
+                       </div>
+                    </div>
+                 )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+
+      <Dialog open={videoModalOpen} onOpenChange={setVideoModalOpen}>
+        <DialogContent className="max-w-4xl h-[80vh] bg-slate-950 border-white/10 p-0 overflow-hidden">
+          <DialogHeader className="p-4 border-b border-white/10 bg-black/40">
+            <DialogTitle className="text-white font-display uppercase tracking-widest flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              Sala de Consulta Segura
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 w-full h-full min-h-0 bg-black">
+            <iframe
+              src={`https://meet.jit.si/MichelsTravel_Session_${selectedSessionId || 'General'}`}
+              allow="camera; microphone; fullscreen; display-capture; autoplay"
+              className="w-full h-full border-0"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1762,8 +1347,8 @@ export default function AdminLiveChat() {
     },
     onSuccess: () => {
       setReply("");
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/chatbot/conversations", selectedConvId, "messages"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/chatbot/conversations"] });
+      qc.invalidateQueries({ queryKey: ["/api/admin/chatbot/conversations", selectedConvId, "messages"] });
+      qc.invalidateQueries({ queryKey: ["/api/admin/chatbot/conversations"] });
     },
   });
 
@@ -1772,7 +1357,7 @@ export default function AdminLiveChat() {
       await apiRequest("POST", `/api/admin/chatbot/escalations/${id}/resolve`, {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/chatbot/conversations"] });
+      qc.invalidateQueries({ queryKey: ["/api/admin/chatbot/conversations"] });
     },
   });
 
@@ -1787,10 +1372,7 @@ export default function AdminLiveChat() {
   }, [selectedMessages, scrollToBottom]);
 
   const selectedConv = conversations.find((c) => c.id === selectedConvId);
-
   const escalatedConvs = conversations.filter((c) => c.escalated && !c.resolved);
-  const resolvedConvs = conversations.filter((c) => c.resolved);
-  const otherConvs = conversations.filter((c) => !c.escalated && !c.resolved);
 
   const formatDate = (dateStr: string) => {
     try {
@@ -1801,301 +1383,44 @@ export default function AdminLiveChat() {
     }
   };
 
-  const getLastMessage = (conv: Conversation) => {
-    if (conv.messages.length === 0) return "Sem mensagens";
-    const last = conv.messages[conv.messages.length - 1];
-    return last.content.substring(0, 60) + (last.content.length > 60 ? "..." : "");
-  };
-
-  const handleSendReply = () => {
-    if (!reply.trim() || !selectedConvId) return;
-    sendReply.mutate(reply.trim());
-  };
-
-  const handleSelectConv = (id: number) => {
-    setSelectedConvId(id);
-  };
-
-  const handleBackToList = () => {
-    setSelectedConvId(null);
-  };
-
-  const renderConversationItem = (conv: Conversation) => {
-    const hasUnread = conv.escalated && !conv.resolved;
-    const lastMsg = conv.messages[conv.messages.length - 1];
-    const isFromUser = lastMsg?.role === "user";
-
-    return (
-      <button
-        key={conv.id}
-        onClick={() => handleSelectConv(conv.id)}
-        className={`w-full text-left p-3 rounded-md transition-colors ${
-          selectedConvId === conv.id
-            ? "bg-[#0074DE]/10 border border-[#0074DE]/30"
-            : "hover-elevate"
-        }`}
-        data-testid={`conv-item-${conv.id}`}
-      >
-        <div className="flex items-center justify-between gap-2 mb-1">
-          <span className="text-sm font-medium text-foreground truncate">
-            #{conv.id} - {conv.visitorId || "Visitante"}
-          </span>
-          {conv.escalated && !conv.resolved && (
-            <Badge variant="destructive" className="text-[10px] px-1.5 py-0 flex-shrink-0">
-              <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
-              Escalado
-            </Badge>
-          )}
-          {conv.resolved && (
-            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex-shrink-0">
-              <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />
-              Resolvido
-            </Badge>
-          )}
-        </div>
-        <p className="text-xs text-muted-foreground truncate">{getLastMessage(conv)}</p>
-        <div className="flex items-center gap-1 mt-1 text-[10px] text-muted-foreground">
-          <Clock className="h-2.5 w-2.5" />
-          {formatDate(conv.createdAt)}
-          {isFromUser && hasUnread && (
-            <span className="ml-auto bg-destructive text-destructive-foreground rounded-full h-4 w-4 flex items-center justify-center text-[9px] font-bold">!</span>
-          )}
-          {!hasUnread && <span className="ml-auto">{conv.messages.length} msgs</span>}
-        </div>
-      </button>
-    );
-  };
-
-  const conversationList = (
-    <div className="flex flex-col h-full min-h-0">
-      <div className="p-3 border-b">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Conversas do Chatbot</span>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="ml-auto"
-            onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/chatbot/conversations"] })}
-            data-testid="button-refresh-conversations"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-2 space-y-1">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-            Carregando...
-          </div>
-        ) : conversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-sm text-muted-foreground">
-            <MessageSquare className="h-8 w-8 mb-2 opacity-30" />
-            <span>Nenhuma conversa</span>
-          </div>
-        ) : (
-          <>
-            {escalatedConvs.length > 0 && (
-              <div className="mb-2">
-                <p className="text-[10px] font-semibold uppercase text-destructive px-2 py-1">
-                  Aguardando Resposta ({escalatedConvs.length})
-                </p>
-                {escalatedConvs.map(renderConversationItem)}
-              </div>
-            )}
-            {otherConvs.length > 0 && (
-              <div className="mb-2">
-                <p className="text-[10px] font-semibold uppercase text-muted-foreground px-2 py-1">
-                  Ativas ({otherConvs.length})
-                </p>
-                {otherConvs.map(renderConversationItem)}
-              </div>
-            )}
-            {resolvedConvs.length > 0 && (
-              <div>
-                <p className="text-[10px] font-semibold uppercase text-muted-foreground px-2 py-1">
-                  Resolvidas ({resolvedConvs.length})
-                </p>
-                {resolvedConvs.map(renderConversationItem)}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-
-  const chatView = (
-    <div className="flex flex-col h-full min-h-0">
-      <div className="flex items-center justify-between gap-2 p-3 border-b">
-        <div className="flex items-center gap-2 min-w-0">
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={handleBackToList}
-            className="flex-shrink-0"
-            data-testid="button-back-to-list"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <div className="min-w-0">
-            <p className="text-sm font-medium truncate">
-              #{selectedConvId}
-              {selectedConv?.visitorId && (
-                <span className="text-muted-foreground font-normal ml-1">
-                  ({selectedConv.visitorId})
-                </span>
-              )}
-            </p>
-            <p className="text-[10px] text-muted-foreground">
-              {selectedConv?.language || "pt"} | {selectedConv ? formatDate(selectedConv.createdAt) : ""}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {selectedConv?.escalated && !selectedConv?.resolved && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => resolveConv.mutate(selectedConvId!)}
-              disabled={resolveConv.isPending}
-              data-testid="button-resolve-conversation"
-            >
-              <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-              <span className="hidden sm:inline">Resolver</span>
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <div
-        ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3"
-        onScroll={() => {
-          const el = messagesContainerRef.current;
-          if (!el) return;
-          const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-          autoScrollEnabledRef.current = distanceFromBottom < 160;
-        }}
-      >
-        {selectedMessages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
-          >
-            <div
-              className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full ${
-                msg.role === "user"
-                  ? "bg-[#0074DE] text-white"
-                  : msg.role === "admin"
-                  ? "bg-emerald-600 text-white"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {msg.role === "user" ? (
-                <User className="h-3.5 w-3.5" />
-              ) : msg.role === "admin" ? (
-                <UserCheck className="h-3.5 w-3.5" />
-              ) : (
-                <Bot className="h-3.5 w-3.5" />
-              )}
-            </div>
-            <div className="max-w-[80%] md:max-w-[70%]">
-              <div
-                className={`rounded-2xl px-3 py-2 text-sm leading-relaxed ${
-                  msg.role === "user"
-                    ? "bg-[#0074DE] text-white rounded-br-md"
-                    : msg.role === "admin"
-                    ? "bg-emerald-50 dark:bg-emerald-950/40 text-foreground rounded-bl-md border border-emerald-200 dark:border-emerald-800"
-                    : "bg-muted text-foreground rounded-bl-md"
-                }`}
-                data-testid={`admin-msg-${msg.id}`}
-              >
-                {msg.role === "admin" && (
-                  <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 block mb-0.5">
-                    Agente
-                  </span>
-                )}
-                {msg.content.replace(/\[ESCALATE\]/gi, "").replace(/\[AGENT:.*?\]/g, "").trim()}
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-0.5 px-1">
-                {formatDate(msg.createdAt)}
-              </p>
-            </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-
-      <div className="border-t p-3">
-        <div className="flex items-center gap-2">
-          <Input
-            value={reply}
-            onChange={(e) => setReply(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSendReply();
-              }
-            }}
-            placeholder="Digite sua resposta..."
-            disabled={sendReply.isPending}
-            className="flex-1"
-            data-testid="input-admin-reply"
-          />
-          <Button
-            size="icon"
-            onClick={handleSendReply}
-            disabled={!reply.trim() || sendReply.isPending}
-            data-testid="button-admin-send"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-
   if (adminCheckLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-[#0074DE]" />
+      <div className="flex items-center justify-center min-h-screen bg-slate-950">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!adminCheck?.isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0074DE] p-4">
-        <Card className="w-full max-w-sm p-6">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
+        <Card className="w-full max-w-sm glass p-6 border-white/10">
           <div className="flex flex-col items-center mb-6">
-            <div className="h-16 w-16 rounded-2xl bg-[#0074DE] flex items-center justify-center mb-3">
-              <Headphones className="h-8 w-8 text-white" />
+            <div className="h-16 w-16 rounded-2xl bg-primary/20 flex items-center justify-center mb-3 border border-primary/30">
+              <Headphones className="h-8 w-8 text-primary" />
             </div>
-            <h1 className="text-xl font-bold text-foreground">Atendimento ao Vivo</h1>
-            <p className="text-sm text-muted-foreground">Faça login para acessar</p>
+            <h1 className="text-xl font-bold text-white font-display uppercase tracking-widest">{t("admin.live_chat.title")}</h1>
+            <p className="text-xs text-slate-400 font-medium">{t("admin.security_auth")}</p>
           </div>
           <form onSubmit={handleAdminLogin} className="space-y-4">
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
               <Input
                 type="password"
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
-                placeholder="Senha de administrador"
-                className="pl-10"
+                placeholder={t("admin.login_password_placeholder")}
+                className="pl-10 glass bg-white/5 border-white/10 text-white"
                 autoFocus
                 disabled={loginLoading}
-                data-testid="input-livechat-admin-password"
               />
             </div>
             {loginError && (
-              <p className="text-sm text-destructive text-center" data-testid="text-livechat-login-error">{loginError}</p>
+              <p className="text-sm text-coral-500 text-center font-bold tracking-tight">{loginError}</p>
             )}
-            <Button type="submit" className="w-full" disabled={!loginPassword.trim() || loginLoading} data-testid="button-livechat-admin-login">
+            <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl" disabled={!loginPassword.trim() || loginLoading}>
               {loginLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Entrar
+              {t("admin.login_button")}
             </Button>
           </form>
         </Card>
@@ -2103,80 +1428,175 @@ export default function AdminLiveChat() {
     );
   }
 
-  const chatTabContent = (
-    <>
-      {!selectedConvId ? (
-        <div className="flex-1 flex flex-col min-h-0">
-          {conversationList}
-        </div>
-      ) : (
-        <div className="flex-1 flex flex-col min-h-0">
-          {chatView}
-        </div>
-      )}
-    </>
-  );
-
   return (
-    <div className="h-full flex flex-col" data-testid="admin-live-chat">
-      <div className="flex flex-col border-b">
-        <div className="flex items-center gap-3 p-4">
+    <div className="h-screen flex flex-col bg-slate-950 text-white overflow-hidden p-4 gap-4">
+      <div className="glass border-white/10 rounded-3xl p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
           <Button
             size="icon"
             variant="ghost"
             onClick={() => setLocation("/admin")}
-            data-testid="button-back-admin"
+            className="hover:bg-white/10"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-lg font-bold text-foreground">Atendimento ao Vivo</h1>
-            <p className="text-xs text-muted-foreground">
-              Gerencie conversas e sessões de vendas
+          <div className="min-w-0">
+            <h1 className="text-lg font-bold font-display uppercase tracking-widest leading-none mb-1">{t("admin.live_chat.title")}</h1>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
+              {t("admin.live_chat.subtitle")}
             </p>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {escalatedConvs.length > 0 && (
-              <Badge variant="destructive" data-testid="badge-escalated-count">
-                {escalatedConvs.length} pendente{escalatedConvs.length !== 1 ? "s" : ""}
-              </Badge>
-            )}
           </div>
         </div>
 
-        <div className="flex px-4 pb-2 gap-1">
+        <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-2xl border border-white/10">
           <button
             onClick={() => { setActiveTab("chat"); setSelectedConvId(null); }}
-            className={`flex-1 text-xs font-medium py-2 rounded-md transition-colors flex items-center justify-center gap-1.5 ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all uppercase tracking-widest flex items-center gap-2 ${
               activeTab === "chat"
-                ? "bg-[#0074DE] text-white"
-                : "bg-muted text-muted-foreground hover-elevate"
+                ? "bg-primary text-white shadow-lg shadow-primary/20"
+                : "text-slate-500 hover:text-white hover:bg-white/5"
             }`}
-            data-testid="tab-chat"
           >
             <MessageSquare className="h-3.5 w-3.5" />
             Chat
           </button>
           <button
             onClick={() => { setActiveTab("vendas"); setSelectedConvId(null); }}
-            className={`flex-1 text-xs font-medium py-2 rounded-md transition-colors flex items-center justify-center gap-1.5 ${
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all uppercase tracking-widest flex items-center gap-2 ${
               activeTab === "vendas"
-                ? "bg-[#0074DE] text-white"
-                : "bg-muted text-muted-foreground hover-elevate"
+                ? "bg-primary text-white shadow-lg shadow-primary/20"
+                : "text-slate-500 hover:text-white hover:bg-white/5"
             }`}
-            data-testid="tab-vendas"
           >
             <Plane className="h-3.5 w-3.5" />
-            Vendas ao Vivo
+            Vendas
           </button>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 min-h-0">
         {activeTab === "vendas" ? (
           <LiveSalesPanel />
         ) : (
-          chatTabContent
+          <div className="h-full flex gap-4">
+            <div className={`glass border-white/10 rounded-3xl overflow-hidden flex flex-col ${selectedConvId ? "w-80" : "flex-1"}`}>
+              <div className="p-4 border-b border-white/10 bg-white/5 flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Conversas Ativas</span>
+                {escalatedConvs.length > 0 && (
+                  <Badge className="bg-coral-500 text-white border-0 font-black animate-pulse">
+                    {escalatedConvs.length} ALERTA(S)
+                  </Badge>
+                )}
+              </div>
+              <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
+                {isLoading ? (
+                   <div className="py-20 flex flex-col items-center justify-center opacity-30">
+                     <Loader2 className="h-8 w-8 animate-spin" />
+                   </div>
+                ) : conversations.length === 0 ? (
+                  <div className="py-20 flex flex-col items-center justify-center opacity-30">
+                    <MessageSquare className="h-10 w-10 mb-4" />
+                    <p className="text-xs font-bold uppercase tracking-widest">Nenhuma conversa encontrada</p>
+                  </div>
+                ) : (
+                  conversations.map((conv) => (
+                    <button
+                      key={conv.id}
+                      onClick={() => setSelectedConvId(conv.id)}
+                      className={`w-full text-left p-4 rounded-2xl transition-all border ${
+                        selectedConvId === conv.id
+                          ? "bg-primary/20 border-primary/40"
+                          : "hover:bg-white/5 border-transparent"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <span className="text-xs font-bold text-white truncate">#{conv.id} - {conv.visitorId || "Visitante"}</span>
+                        {conv.escalated && !conv.resolved && (
+                          <div className="h-1.5 w-1.5 rounded-full bg-coral-500 shadow-[0_0_8px_rgba(255,107,107,0.8)]" />
+                        )}
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-medium truncate mb-1">
+                        {conv.messages[conv.messages.length - 1]?.content || "Iniciando..."}
+                      </p>
+                      <div className="text-[9px] font-bold text-slate-600 uppercase tracking-tighter">
+                        {formatDate(conv.createdAt)}
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {selectedConvId && (
+              <div className="flex-1 glass border-white/10 rounded-3xl flex flex-col overflow-hidden">
+                <div className="p-4 border-b border-white/10 bg-white/5 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-white tracking-tight">#{selectedConvId} - Chat em Tempo Real</h3>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Seguro e Criptografado</p>
+                  </div>
+                  {selectedConv?.escalated && !selectedConv?.resolved && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => resolveConv.mutate(selectedConvId)}
+                      disabled={resolveConv.isPending}
+                      className="rounded-xl border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 h-8"
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5 mr-2" />
+                      Marcar Resolvido
+                    </Button>
+                  )}
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar" ref={messagesContainerRef}>
+                  {selectedMessages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${msg.role === "user" ? "justify-start" : "justify-end"}`}
+                    >
+                      <div className={`max-w-[70%] p-4 rounded-2xl text-xs leading-relaxed ${
+                        msg.role === "user"
+                          ? "glass bg-white/5 text-slate-200 rounded-bl-sm border-white/10"
+                          : "bg-primary text-white rounded-br-sm shadow-xl shadow-primary/10"
+                      }`}>
+                        {msg.content}
+                        <div className={`text-[9px] mt-2 font-bold opacity-40 uppercase tracking-tighter`}>
+                          {formatDate(msg.createdAt)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                <div className="p-4 border-t border-white/10 bg-white/5">
+                  <div className="flex items-center gap-3">
+                    <Input
+                      value={reply}
+                      onChange={(e) => setReply(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          sendReply.mutate(reply.trim());
+                        }
+                      }}
+                      placeholder={t("admin.live_chat.reply_placeholder")}
+                      className="glass bg-white/5 border-white/10 h-11 rounded-2xl text-white px-4"
+                      disabled={sendReply.isPending}
+                    />
+                    <Button
+                      size="icon"
+                      onClick={() => sendReply.mutate(reply.trim())}
+                      disabled={!reply.trim() || sendReply.isPending}
+                      className="h-11 w-11 rounded-2xl bg-primary shadow-lg shadow-primary/20"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

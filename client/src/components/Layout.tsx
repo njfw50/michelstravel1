@@ -45,7 +45,7 @@ const LANG_OPTIONS = [
 ];
 
 function LanguageSwitcher({ variant = "navbar" }: { variant?: "navbar" | "footer" }) {
-  const { language, setLanguage } = useI18n();
+  const { language, setLanguage, isLoading } = useI18n();
   const current = LANG_OPTIONS.find((l) => l.code === language) || LANG_OPTIONS[0];
 
   return (
@@ -54,24 +54,33 @@ function LanguageSwitcher({ variant = "navbar" }: { variant?: "navbar" | "footer
         <Button
           variant="ghost"
           size="sm"
+          disabled={isLoading}
           className={cn(
-            "gap-1.5 rounded-full px-3 text-xs font-semibold",
+            "gap-1.5 rounded-full px-3 text-xs font-semibold transition-all duration-300",
             variant === "navbar"
               ? "text-white/80 hover:bg-white/10 hover:text-white"
               : "border border-white/[0.15] bg-white/5 text-white/80 hover:bg-white/10 hover:text-white",
+            isLoading && "opacity-50 grayscale",
           )}
           data-testid="button-language-switcher"
         >
-          <Globe className="h-3.5 w-3.5" />
-          <span>{current.flag}</span>
+          <Globe className={cn("h-3.5 w-3.5", isLoading && "animate-spin")} />
+          <span>{isLoading ? "..." : current.flag}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align={variant === "footer" ? "start" : "end"} className="min-w-[150px] rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+      <DropdownMenuContent
+        align={variant === "footer" ? "start" : "end"}
+        className="min-w-[150px] rounded-2xl border border-slate-200 bg-white p-2 shadow-xl"
+      >
         {LANG_OPTIONS.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
+            disabled={isLoading}
             onClick={() => setLanguage(lang.code)}
-            className={cn("cursor-pointer gap-2 rounded-xl text-slate-700 hover:text-slate-900 focus:text-slate-900", language === lang.code && "font-bold text-slate-900")}
+            className={cn(
+              "cursor-pointer gap-2 rounded-xl text-slate-700 hover:text-slate-900 focus:text-slate-900",
+              language === lang.code && "font-bold text-slate-900",
+            )}
             data-testid={`button-switch-lang-${lang.code}`}
           >
             <span className="w-5 text-xs font-bold text-slate-500">{lang.flag}</span>
