@@ -113,7 +113,7 @@ export function MarketInsights() {
                 
                 <div className="mt-8 flex flex-wrap gap-2.5">
                   {(airlines?.slice(0, 12) || []).map((airline: any, i: number) => (
-                    <div key={i} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold hover:bg-white/10 hover:border-white/20 transition-all cursor-default text-blue-100 leading-none">
+                    <div key={i} className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-bold hover:bg-white/10 hover:border-white/20 transition-all cursor-default text-blue-100 leading-none max-w-[180px] truncate" title={airline.name}>
                       {airline.name}
                     </div>
                   ))}

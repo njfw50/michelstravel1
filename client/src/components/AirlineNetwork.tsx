@@ -29,11 +29,11 @@ export function AirlineNetwork() {
               {airline.logoSymbolUrl ? (
                 <img src={airline.logoSymbolUrl} alt={airline.name} className="h-10 w-auto object-contain grayscale group-hover:grayscale-0 transition-all duration-500" />
               ) : (
-                <div className="h-10 w-10 bg-slate-100 rounded-xl flex items-center justify-center font-black text-slate-400 text-xs">
+                <div className="h-10 w-10 bg-slate-100 rounded-xl flex items-center justify-center font-black text-slate-400 text-xs shrink-0">
                   {airline.iataCode}
                 </div>
               )}
-              <span className="text-sm font-black text-slate-900 tracking-tight">{airline.name}</span>
+              <span className="text-sm font-black text-slate-900 tracking-tight truncate max-w-[140px]">{airline.name}</span>
             </div>
           ))}
           {/* Second set of logos (duplicated for seamless loop) */}
@@ -42,11 +42,11 @@ export function AirlineNetwork() {
               {airline.logoSymbolUrl ? (
                 <img src={airline.logoSymbolUrl} alt={airline.name} className="h-10 w-auto object-contain grayscale group-hover:grayscale-0 transition-all duration-500" />
               ) : (
-                <div className="h-10 w-10 bg-slate-100 rounded-xl flex items-center justify-center font-black text-slate-400 text-xs">
+                <div className="h-10 w-10 bg-slate-100 rounded-xl flex items-center justify-center font-black text-slate-400 text-xs shrink-0">
                   {airline.iataCode}
                 </div>
               )}
-              <span className="text-sm font-black text-slate-900 tracking-tight">{airline.name}</span>
+              <span className="text-sm font-black text-slate-900 tracking-tight truncate max-w-[140px]">{airline.name}</span>
             </div>
           ))}
         </div>
