@@ -467,10 +467,23 @@ export class DatabaseStorage implements IStorage {
 
   // --- Featured Deals (Zapier) ---
   async getFeaturedDeals(activeOnly = false): Promise<FeaturedDeal[]> {
-    if (activeOnly) {
-      return await db.select().from(featuredDeals).where(eq(featuredDeals.isActive, true)).orderBy(desc(featuredDeals.createdAt));
+    try {
+      if (activeOnly) {
+        return await db.select().from(featuredDeals).where(eq(featuredDeals.isActive, true)).orderBy(desc(featuredDeals.createdAt));
+      }
+      return await db.select().from(featuredDeals).orderBy(desc(featuredDeals.createdAt));
+    } catch (error) {
+      console.error("Failed to fetch featured deals with full schema, falling back to basic selection:", error);
+      // Fallback to basic columns that are guaranteed to exist to prevent dashboard crash
+      const result = await db.execute(sql`
+        SELECT id, origin, origin_city, destination, destination_city, price, currency, 
+               airline, cabin_class, headline, description, is_active, created_at 
+        FROM featured_deals 
+        ${activeOnly ? sql`WHERE is_active = true` : sql``}
+        ORDER BY created_at DESC
+      `);
+      return result.rows as any;
     }
-    return await db.select().from(featuredDeals).orderBy(desc(featuredDeals.createdAt));
   }
 
   async getFeaturedDeal(id: number): Promise<FeaturedDeal | undefined> {
