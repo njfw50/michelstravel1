@@ -10,7 +10,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import SeniorCardImage from "@/components/SeniorCardImage";
 import { useI18n } from "@/lib/i18n";
 
-type FlowStep = "greeting" | "ask_class" | "ask_origin" | "destination" | "dates" | "ask_return_intention" | "return_date" | "ask_multi_intention" | "searching" | "offer" | "collect_details" | "checkout";
+type FlowStep = "greeting" | "ask_class" | "ask_passengers" | "ask_origin" | "destination" | "dates" | "ask_return_intention" | "return_date" | "ask_multi_intention" | "searching" | "offer" | "collect_details" | "checkout";
 
 type Leg = { originQuery: string; originIata: string; destQuery: string; destIata: string; travelDate: string };
 
@@ -59,6 +59,13 @@ const T: Record<Lang, Record<string, any>> = {
     selectGo: "Selecionar Ida", buyFlight: "🛒 Comprar este Voo",
     moreFlights: (n: number) => `Ver mais opções (Mais ${n} voos disponíveis)`,
     backOptions: "Voltar para opções anteriores",
+    howMany: "Com quantas pessoas você vai viajar?",
+    adults: "Viajantes Adultos",
+    adultsDesc: "(Acima de 12 anos)",
+    children: "Crianças",
+    childrenDesc: "(De 2 a 11 anos)",
+    infants: "Bebês",
+    infantsDesc: "(Até 2 anos no colo)",
     cardData: "Pagamento Seguro",
     speak: "Falar em Áudio com Agente",
     exit: "Sair",
@@ -70,6 +77,7 @@ const T: Record<Lang, Record<string, any>> = {
     // voice
     v_welcome: "Bem-vindo. Vamos encontrar os melhores voos para você sem burocracia.",
     v_askClass: "Em qual classe você prefere voar?",
+    v_askPassengers: "Com quantas pessoas você vai viajar?",
     v_fromCity: "De qual cidade você vai sair?",
     v_toCity: "E para qual cidade você quer viajar?",
     v_toLegCity: (city: string) => `Trecho ${city}: Para qual cidade você quer ir?`,
@@ -136,6 +144,13 @@ const T: Record<Lang, Record<string, any>> = {
     moreFlights: (n: number) => `More options (${n} available)`,
     backOptions: "Back",
     cardData: "Secure Payment",
+    howMany: "How many people are traveling?",
+    adults: "Adult Travelers",
+    adultsDesc: "(12+ years)",
+    children: "Children",
+    childrenDesc: "(2 to 11 years)",
+    infants: "Infants",
+    infantsDesc: "(Under 2 years, on lap)",
     speak: "Voice Agent",
     exit: "Exit",
     airline: "Airline", price: "Final Price", roundPriceNote: "*Total package price",
@@ -145,6 +160,7 @@ const T: Record<Lang, Record<string, any>> = {
     speakLabel: "Speak", speakAgent: "Agent",
     v_welcome: "Welcome. Let's find your flights without bureaucracy.",
     v_askClass: "Which cabin class?",
+    v_askPassengers: "How many people are traveling with you?",
     v_fromCity: "Departure city?",
     v_toCity: "Destination city?",
     v_toLegCity: (city: string) => `Leg to ${city}: Destination?`,
@@ -211,6 +227,13 @@ const T: Record<Lang, Record<string, any>> = {
     moreFlights: (n: number) => `Ver más (${n} disponibles)`,
     backOptions: "Volver",
     cardData: "Pago Seguro",
+    howMany: "¿Con cuántas personas viajará?",
+    adults: "Viajeros Adultos",
+    adultsDesc: "(Más de 12 años)",
+    children: "Niños",
+    childrenDesc: "(De 2 a 11 años)",
+    infants: "Bebés",
+    infantsDesc: "(Hasta 2 años, en el regazo)",
     speak: "Voz",
     exit: "Salir",
     airline: "Aerolínea", price: "Precio Final", roundPriceNote: "*Precio total paquete",
@@ -220,6 +243,7 @@ const T: Record<Lang, Record<string, any>> = {
     speakLabel: "Hablar", speakAgent: "Agente",
     v_welcome: "Bienvenido. Encontraremos sus vuelos sin burocracia.",
     v_askClass: "¿En qué clase prefiere volar?",
+    v_askPassengers: "¿Con cuántas personas viajará?",
     v_fromCity: "¿De qué ciudad parte?",
     v_toCity: "¿A qué ciudad viaja?",
     v_toLegCity: (city: string) => `Tramo ${city}: ¿A dónde quiere ir?`,
@@ -262,6 +286,10 @@ export default function SeniorTerminal() {
   const [returnDate, setReturnDate] = useState("");
   const [legs, setLegs] = useState<Leg[]>([]);
   const [currentLeg, setCurrentLeg] = useState(1);
+  
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
+  const [infants, setInfants] = useState(0);
   
   const [originQuery, setOriginQuery] = useState("");
   const [originIata, setOriginIata] = useState("");
@@ -507,7 +535,7 @@ export default function SeniorTerminal() {
     setIsSearching(true);
     speak(t.v_searching as string);
     try {
-      let url = `/api/flights/search?passengers=1&adults=1&children=0&infants=0&cabinClass=${cabinClass}&tripType=${tripType}`;
+      let url = `/api/flights/search?passengers=${adults + children + infants}&adults=${adults}&children=${children}&infants=${infants}&cabinClass=${cabinClass}&tripType=${tripType}`;
       if (tripType === "multi-city") {
         const flightsArray = [...legs].map(leg => ({ origin: leg.originIata, destination: leg.destIata, date: leg.travelDate }));
         if (flightsArray.length < currentLeg) { flightsArray.push({ origin: originIata, destination: destIata, date: travelDate }); }
@@ -592,8 +620,19 @@ export default function SeniorTerminal() {
 
   const displaySliceTimes = (slice: any, segment1: any, segmentLast: any, isCompact?: boolean) => {
     if (!slice || !segment1 || !segmentLast) return null;
-    const formatTime = (isoString: string) => new Date(isoString).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
-    const formatDate = (isoString: string) => new Date(isoString).toLocaleDateString('pt-BR', {day: '2-digit', month: 'long', year: 'numeric'});
+    
+    const safeDate = (isoString: string) => {
+      if (!isoString) return new Date();
+      const d = new Date(isoString);
+      return isNaN(d.getTime()) ? new Date() : d;
+    };
+
+    const formatTime = (isoString: string) => 
+      safeDate(isoString).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+
+    const formatDate = (isoString: string) => 
+      safeDate(isoString).toLocaleDateString(lang === 'pt' ? 'pt-BR' : lang === 'es' ? 'es-ES' : 'en-US', { day: '2-digit', month: 'long', year: 'numeric' });
+    
     const durationStr = slice.duration ? slice.duration.replace('PT', '').toLowerCase().replace('h', 'h ').replace('m', 'm') : "N/A";
     const getCityName = (segNode: any) => segNode?.cityName || segNode?.name || segNode?.iataCode || "";
     const origCity = getCityName(segment1.origin) || segment1.originCity || "Origem";
@@ -611,19 +650,19 @@ export default function SeniorTerminal() {
         </p>
         <div className="flex items-center justify-between gap-2 w-full">
           <div className="text-center sm:text-left">
-             <p className="text-3xl sm:text-4xl font-black text-white">{formatTime(segment1.departingAt)}</p>
-             <p className="text-base sm:text-lg text-slate-300 font-bold mt-1 truncate max-w-[120px]" title={origCity}>{origCity}</p>
+             <p className="text-2xl sm:text-3xl font-black text-white">{formatTime(segment1.departingAt)}</p>
+             <p className="text-sm sm:text-base text-slate-300 font-bold mt-1 truncate max-w-[100px]" title={origCity}>{origCity}</p>
           </div>
           <div className="flex-1 flex flex-col items-center px-4">
-             <p className="text-sm sm:text-base text-slate-400 font-bold mb-2">{durationStr}</p>
-             <div className="w-full h-[3px] bg-slate-600 relative rounded-full">
-               <Plane className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-slate-400 bg-slate-800 px-1 rounded-full border border-slate-700" />
+             <p className="text-[10px] sm:text-xs text-slate-400 font-bold mb-1 uppercase tracking-wider">{durationStr}</p>
+             <div className="w-full h-[2px] bg-slate-600 relative rounded-full">
+               <Plane className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 bg-slate-800 px-1 rounded-full border border-slate-700" />
              </div>
-             <p className={`text-xs sm:text-sm font-bold mt-2 px-3 py-1 rounded-md border text-center ${stopsCount > 0 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>{stopsLabel}</p>
+             <p className={`text-[10px] sm:text-xs font-bold mt-2 px-2 py-0.5 rounded-md border text-center ${stopsCount > 0 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>{stopsLabel}</p>
           </div>
           <div className="text-center sm:text-right">
-             <p className="text-3xl sm:text-4xl font-black text-white">{formatTime(segmentLast.arrivingAt)}</p>
-             <p className="text-base sm:text-lg text-slate-300 font-bold mt-1 truncate max-w-[120px]" title={destCity}>{destCity}</p>
+             <p className="text-2xl sm:text-3xl font-black text-white">{formatTime(segmentLast.arrivingAt)}</p>
+             <p className="text-sm sm:text-base text-slate-300 font-bold mt-1 truncate max-w-[100px]" title={destCity}>{destCity}</p>
           </div>
         </div>
       </div>
@@ -651,7 +690,7 @@ export default function SeniorTerminal() {
         )}
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 overflow-hidden relative">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 overflow-hidden relative pb-32">
         
          {step === "greeting" && (
            <div className="w-full max-w-2xl text-center space-y-8 animate-in slide-in-from-right duration-500">
@@ -670,10 +709,59 @@ export default function SeniorTerminal() {
            <div className="w-full max-w-5xl text-center space-y-6 animate-in slide-in-from-right duration-500">
              <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">{t.chooseClass as string}</h2>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               {["economy", "premium_economy", "business", "first"].map(c => (
-                 <Button key={c} onClick={() => { setCabinClass(c); setStep("ask_origin"); speak(t.v_fromCity as string); }} className="h-24 text-2xl font-bold rounded-2xl bg-slate-800 hover:bg-blue-600 text-white border border-slate-700 shadow-md capitalize">{t[c as any] as string}</Button>
-               ))}
+               <Button onClick={() => { setCabinClass("economy"); setStep("ask_passengers"); speak(t.v_askPassengers as string); }} className="h-24 text-2xl font-bold rounded-2xl bg-slate-800 hover:bg-blue-600 text-white border border-slate-700 shadow-md">{t.economy as string}</Button>
+               <Button onClick={() => { setCabinClass("premium_economy"); setStep("ask_passengers"); speak(t.v_askPassengers as string); }} className="h-24 text-2xl font-bold rounded-2xl bg-slate-800 hover:bg-emerald-600 text-white border border-slate-700 shadow-md">{t.premiumEconomy as string}</Button>
+               <Button onClick={() => { setCabinClass("business"); setStep("ask_passengers"); speak(t.v_askPassengers as string); }} className="h-24 text-2xl font-bold rounded-2xl bg-slate-800 hover:bg-purple-600 text-white border border-slate-700 shadow-md">{t.business as string}</Button>
+               <Button onClick={() => { setCabinClass("first"); setStep("ask_passengers"); speak(t.v_askPassengers as string); }} className="h-24 text-2xl font-bold rounded-2xl bg-slate-800 hover:bg-amber-600 text-white border border-slate-700 shadow-md">{t.first as string}</Button>
              </div>
+           </div>
+         )}
+
+         {step === "ask_passengers" && (
+           <div className="w-full max-w-5xl text-center space-y-8 animate-in slide-in-from-right duration-500">
+              <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">{t.howMany as string}</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                 {[
+                   { label: t.adults, desc: t.adultsDesc, val: adults, setter: setAdults, min: 1, icon: <User className="h-8 w-8 text-blue-400" /> },
+                   { label: t.children, desc: t.childrenDesc, val: children, setter: setChildren, min: 0, icon: <User className="h-6 w-6 text-emerald-400" /> },
+                   { label: t.infants, desc: t.infantsDesc, val: infants, setter: setInfants, min: 0, icon: <User className="h-4 w-4 text-purple-400" /> }
+                 ].map((p, i) => (
+                   <div key={i} className="bg-slate-800 p-8 rounded-[40px] border border-slate-700 flex flex-col items-center gap-4">
+                      <div className="bg-slate-900 w-16 h-16 rounded-full flex items-center justify-center mb-2">
+                        {p.icon}
+                      </div>
+                      <p className="text-2xl font-bold text-white leading-none">{p.label as string}</p>
+                      <p className="text-slate-400 text-sm font-medium">{p.desc as string}</p>
+                      
+                      <div className="flex items-center gap-6 mt-4">
+                        <Button 
+                          onClick={() => p.setter(Math.max(p.min, p.val - 1))}
+                          variant="ghost" 
+                          className="w-14 h-14 rounded-full border-2 border-slate-600 text-white hover:bg-slate-700 text-3xl font-bold"
+                        >-</Button>
+                        <span className="text-5xl font-black text-white w-12">{p.val}</span>
+                        <Button 
+                          onClick={() => p.setter(p.val + 1)}
+                          variant="ghost" 
+                          className="w-14 h-14 rounded-full border-2 border-slate-600 text-white hover:bg-slate-700 text-3xl font-bold"
+                        >+</Button>
+                      </div>
+                   </div>
+                 ))}
+              </div>
+
+              <div className="flex justify-center mt-8">
+                 <Button 
+                   onClick={() => {
+                     setStep("ask_origin");
+                     speak(t.v_fromCity as string);
+                   }}
+                   className="h-16 sm:h-20 px-12 sm:px-16 text-xl sm:text-2xl font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-xl"
+                 >
+                   {t.continue as string} <ArrowRight className="ml-2 h-6 w-6 inline" />
+                 </Button>
+              </div>
            </div>
          )}
 
@@ -885,12 +973,34 @@ export default function SeniorTerminal() {
          )}
       </main>
 
-      <footer className="p-8 bg-slate-950 flex justify-center sticky bottom-0 z-50 border-t border-slate-800">
-        <Button onClick={startVoiceRecognition} variant="ghost" className={`h-16 sm:h-20 px-8 rounded-full text-xl font-bold bg-white/5 text-white hover:bg-white/10 gap-4 border border-white/10 transition-all ${isListening ? 'animate-pulse shadow-[0_0_30px_rgba(59,130,246,0.5)] border-blue-500 bg-blue-500/10' : ''}`}>
-          <Mic className={`h-8 w-8 ${isListening ? 'text-blue-400' : 'text-slate-400'}`} />
-          {t.speakLabel as string} <span className="hidden sm:inline">{t.speakAgent as string}</span>
-        </Button>
+      <footer className="w-full py-8 sm:py-12 bg-slate-950 border-t border-slate-800/50 relative z-10">
+        <div className="max-w-[1400px] mx-auto px-8 flex flex-col sm:flex-row justify-between items-center gap-6">
+          <div className="text-center sm:text-left">
+            <p className="text-xl font-black text-white">Michels Travel</p>
+            <p className="text-slate-500 font-medium">© 2026 {t.routeReady as string}</p>
+          </div>
+          <div className="flex gap-8">
+            <button className="text-slate-400 hover:text-white transition-colors font-bold uppercase tracking-wider text-xs">Suporte</button>
+            <button className="text-slate-400 hover:text-white transition-colors font-bold uppercase tracking-wider text-xs">Privacidade</button>
+            <button className="text-slate-400 hover:text-white transition-colors font-bold uppercase tracking-wider text-xs">Termos</button>
+          </div>
+        </div>
       </footer>
+
+      {/* Floating Mic Button */}
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-full max-w-sm px-4">
+        <Button 
+          onClick={startVoiceRecognition} 
+          className={`w-full h-16 sm:h-20 rounded-full text-lg sm:text-xl font-bold gap-4 border shadow-2xl transition-all ${
+            isListening 
+              ? 'bg-blue-600 border-blue-400 text-white animate-pulse' 
+              : 'bg-white text-slate-900 border-white hover:bg-slate-100'
+          }`}
+        >
+          <Mic className={`h-8 w-8 ${isListening ? 'text-white' : 'text-blue-600'}`} />
+          <span>{t.speakLabel as string} {t.speakAgent as string}</span>
+        </Button>
+      </div>
     </div>
   );
 }
