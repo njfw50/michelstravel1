@@ -166,34 +166,39 @@ function AdminLocationInput({
           }}
           onFocus={() => { if (results.length > 0) setOpen(true); }}
           placeholder={placeholder}
-          className="pl-7 text-sm h-9"
+          className="pl-7 text-sm h-9 glass bg-white/5 border-white/10 text-white focus:border-primary/50"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck="false"
           data-testid={testId}
         />
         {loading && <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-muted-foreground" />}
       </div>
       {open && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-[999] max-h-64 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
           {results.map((place) => (
             <button
               type="button"
               key={place.id}
               onClick={() => handleSelect(place)}
               data-testid={`place-option-${place.iataCode}`}
-              className="w-full text-left px-3 py-2 hover-elevate flex items-center gap-2 text-sm"
+              className="w-full text-left px-4 py-3 hover:bg-white/10 flex items-center gap-3 transition-colors border-b border-white/5 last:border-0"
             >
-              <div className="flex-shrink-0">
+              <div className="h-8 w-8 rounded-lg bg-blue-500/20 flex items-center justify-center shrink-0 border border-blue-500/30">
                 {place.type === "airport" ? (
-                  <Plane className="h-3.5 w-3.5 text-[#0074DE]" />
+                  <Plane className="h-4 w-4 text-blue-400" />
                 ) : (
-                  <MapPin className="h-3.5 w-3.5 text-[#0074DE]" />
+                  <MapPin className="h-4 w-4 text-blue-400" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <span className="font-medium text-foreground">{place.name}</span>
-                <span className="text-[#0074DE] font-bold ml-1">({place.iataCode})</span>
-                <span className="text-xs text-muted-foreground ml-1">
-                  {place.cityName ? `${place.cityName}, ` : ""}{place.countryName}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-white truncate">{place.cityName || place.name}</span>
+                  <span className="text-blue-400 font-black text-xs">({place.iataCode})</span>
+                </div>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5 truncate">
+                  {place.name} • {place.countryName}
+                </p>
               </div>
             </button>
           ))}
