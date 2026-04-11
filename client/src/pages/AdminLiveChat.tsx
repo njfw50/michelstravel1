@@ -44,8 +44,10 @@ import {
   Trash2,
   Users,
   Mic,
-  PanelLeftOpen,
+  PanelLeft,
   PanelLeftClose,
+  Square,
+  Circle,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -91,11 +93,13 @@ function AdminLocationInput({
   onChange,
   placeholder,
   testId,
+  label,
 }: {
   value: string;
   onChange: (iata: string) => void;
   placeholder: string;
   testId: string;
+  label?: string;
 }) {
   const [query, setQuery] = useState("");
   const [displayText, setDisplayText] = useState(value);
@@ -146,7 +150,8 @@ function AdminLocationInput({
   };
 
   return (
-    <div className="relative" ref={wrapperRef}>
+    <div className="relative space-y-1.5" ref={wrapperRef}>
+      {label && <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{label}</label>}
       <div className="relative">
         <MapPin className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
@@ -910,7 +915,7 @@ function LiveSalesPanel() {
           <div className="w-64 flex-shrink-0 flex flex-col glass rounded-3xl overflow-hidden border-white/5 shadow-2xl">
             <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-white/10 bg-white/5">
               <span className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 font-display">
-                <Users className="h-3.5 w-3.5" /> Sessões
+                <Users className="h-3.5 w-3.5" /> {t("admin.live_chat.sessions")}
               </span>
               <Button
                 size="icon"
@@ -934,7 +939,7 @@ function LiveSalesPanel() {
                   {requests.length > 0 && (
                     <div className="mb-4">
                       <p className="text-[10px] font-black uppercase text-coral-500/80 px-2 py-1 tracking-tighter mb-1">
-                        Solicitações ({requests.length})
+                        {t("admin.live_chat.requests")} ({requests.length})
                       </p>
                       {requests.map((s) => (
                         <button
@@ -943,7 +948,7 @@ function LiveSalesPanel() {
                           className="w-full text-left p-3 rounded-2xl mb-1 transition-all bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 group"
                         >
                           <div className="flex items-center justify-between gap-2 mb-1">
-                            <span className="text-xs font-bold text-emerald-400">Novo Atendimento</span>
+                            <span className="text-xs font-bold text-emerald-400">{t("admin.live_chat.new_service")}</span>
                             <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                           </div>
                           <p className="text-[10px] text-emerald-200/70 font-medium">#{s.id} - {s.serviceMode === 'senior' ? 'SÊNIOR' : 'STANDARD'}</p>
@@ -955,7 +960,7 @@ function LiveSalesPanel() {
                   {activeSessions.length > 0 && (
                     <div>
                       <p className="text-[10px] font-black uppercase text-slate-500 px-2 py-1 tracking-widest mb-1">
-                        Em Andamento ({activeSessions.length})
+                        {t("admin.live_chat.active_sessions")} ({activeSessions.length})
                       </p>
                       {activeSessions.map((s) => (
                         <button
@@ -1015,7 +1020,7 @@ function LiveSalesPanel() {
                     onClick={startVideoCall}
                   >
                     <Video className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline text-xs font-bold">Videochamada</span>
+                    <span className="hidden sm:inline text-xs font-bold">{t("admin.live_chat.video_call")}</span>
                   </Button>
                   
                   <div className="w-px h-4 bg-white/10 mx-1" />
@@ -1023,7 +1028,7 @@ function LiveSalesPanel() {
                   {isRecording ? (
                     <div className="flex items-center gap-2 px-2">
                       <span className="flex h-2 w-2 rounded-full bg-red-500 animate-ping" />
-                      <span className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">Gravando</span>
+                      <span className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">{t("admin.live_chat.recording_label")}</span>
                       <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full bg-red-500/20 text-red-500" onClick={stopRecording}>
                         <Square className="h-3 w-3 fill-current" />
                       </Button>
@@ -1039,7 +1044,7 @@ function LiveSalesPanel() {
                       onClick={startRecording}
                     >
                       <Mic className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline text-xs font-bold">Áudio</span>
+                      <span className="hidden sm:inline text-xs font-bold">{t("admin.live_chat.audio")}</span>
                     </Button>
                   )}
                 </div>
@@ -1061,25 +1066,25 @@ function LiveSalesPanel() {
               <div className="glass-dark p-6 rounded-3xl border-white/5 space-y-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Search className="h-4 w-4 text-primary" />
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">Pesquisa de Tarifas</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">{t("admin.live_chat.fare_search")}</h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <AdminLocationInput
-                    label="Origem"
+                    label={t("admin.live_chat.origin")}
                     value={searchOrigin}
                     onChange={setSearchOrigin}
-                    placeholder="Cidade ou aeroporto"
-                    isSenior={isSeniorLead}
+                    placeholder={t("admin.field_placeholder_airport")}
+                    testId="admin-search-origin"
                   />
                   <AdminLocationInput
-                    label="Destino"
+                    label={t("admin.live_chat.destination")}
                     value={searchDestination}
                     onChange={setSearchDestination}
-                    placeholder="Cidade ou aeroporto"
-                    isSenior={isSeniorLead}
+                    placeholder={t("admin.field_placeholder_airport")}
+                    testId="admin-search-destination"
                   />
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Data de Ida</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t("admin.live_chat.departure_date")}</label>
                     <Input
                       type="date"
                       value={searchDate}
@@ -1094,7 +1099,7 @@ function LiveSalesPanel() {
                       disabled={searchingFlights || !canSearchStandard}
                     >
                       {searchingFlights ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
-                      Pesquisar agora
+                      {t("admin.live_chat.search_now")}
                     </Button>
                   </div>
                 </div>
@@ -1138,7 +1143,7 @@ function LiveSalesPanel() {
                                   onClick={() => handleToggleShare(flight)}
                                   disabled={togglingFlight === flight.id}
                                 >
-                                  {togglingFlight === flight.id ? <Loader2 className="h-3 w-3 animate-spin" /> : isShared ? 'compartilhado' : 'compartilhar'}
+                                  {togglingFlight === flight.id ? <Loader2 className="h-3 w-3 animate-spin" /> : isShared ? t("admin.live_chat.shared") : t("admin.live_chat.share")}
                                 </Button>
                               </div>
                             </div>
@@ -1176,7 +1181,7 @@ function LiveSalesPanel() {
                 ) : (
                   <div className="flex flex-col items-center justify-center py-20 glass rounded-3xl border-dashed border-white/10">
                     <Search className="h-10 w-10 text-slate-700 mb-4 opacity-30" />
-                    <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">Nenhum voo pesquisado</p>
+                    <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">{t("admin.live_chat.no_flights_searched")}</p>
                   </div>
                 )}
               </div>
@@ -1192,7 +1197,7 @@ function LiveSalesPanel() {
                      <Input
                         value={noteText}
                         onChange={(e) => setNoteText(e.target.value)}
-                        placeholder="Adicionar nota para o viajante..."
+                        placeholder={t("admin.live_chat.add_note_placeholder")}
                         className="glass bg-white/5 border-white/10 pl-10 h-10 rounded-xl text-xs font-medium"
                      />
                    </div>
@@ -1212,7 +1217,7 @@ function LiveSalesPanel() {
                  >
                    <div className="flex items-center gap-2">
                      <MessageSquare className="h-4 w-4 text-slate-400" />
-                     <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Canal de Chat</span>
+                     <span className="text-xs font-bold uppercase tracking-widest text-slate-400">{t("admin.live_chat.chat_channel")}</span>
                      {chatOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                    </div>
                  </Button>
@@ -1234,7 +1239,7 @@ function LiveSalesPanel() {
                             value={liveMessage}
                             onChange={(e) => setLiveMessage(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleSendLiveMessage()}
-                            placeholder="Sua mensagem..."
+                            placeholder={t("admin.live_chat.your_message_placeholder")}
                             className="glass bg-white/10 border-white/10 h-9 rounded-xl text-xs"
                           />
                           <Button size="icon" className="h-9 w-9 rounded-xl bg-primary" onClick={handleSendLiveMessage}>
@@ -1254,7 +1259,7 @@ function LiveSalesPanel() {
           <DialogHeader className="p-4 border-b border-white/10 bg-black/40">
             <DialogTitle className="text-white font-display uppercase tracking-widest flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              Sala de Consulta Segura
+              {t("admin.live_chat.secure_consultation_room")}
             </DialogTitle>
           </DialogHeader>
           <div className="flex-1 w-full h-full min-h-0 bg-black">
@@ -1283,6 +1288,7 @@ export default function AdminLiveChat() {
   const [loginLoading, setLoginLoading] = useState(false);
   const qc = useQueryClient();
 
+  const { t } = useI18n();
   const { data: adminCheck, isLoading: adminCheckLoading } = useQuery<{ isAdmin: boolean }>({
     queryKey: ["/api/admin/check"],
   });

@@ -7,10 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAirlines, useFeaturedAirports, useFeaturedDeals, type PublicFeaturedDeal } from "@/hooks/use-flights";
-import { ArrowRight, CheckCircle2, CreditCard, Globe, MessageCircle, Plane, Search, Sparkles, Ticket, TrendingUp } from "lucide-react";
+import { ArrowRight, CheckCircle2, CreditCard, Globe, MapPin, MessageCircle, Plane, Search, Sparkles, Ticket, TrendingUp } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { SEO } from "@/components/SEO";
 import { AGENCY_WHATSAPP_DISPLAY, buildWhatsAppHref, buildWhatsAppMessage } from "@/lib/contact";
+import { MarketInsights } from "@/components/MarketInsights";
+import { ConciergePromo } from "@/components/ConciergePromo";
+import { AirlineNetwork } from "@/components/AirlineNetwork";
 import { openChatbotAssistant } from "@/lib/chatbot";
 import { useI18n } from "@/lib/i18n";
 import airplaneDestination from "@/assets/images/airplane-destination.jpg";
@@ -49,7 +52,7 @@ export default function Home() {
   
   const newarkWhatsAppHref = buildWhatsAppHref(
     buildWhatsAppMessage({
-      language,
+      language: language as any,
       topic: "Ajuda de viagem em Newark",
       details: ["Quero ajuda com voos saindo de Newark."],
     }),
@@ -374,6 +377,8 @@ export default function Home() {
         </div>
       </section>
 
+      <MarketInsights />
+
       <section className="bg-[#f8fbff] py-16 md:py-24">
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -411,33 +416,61 @@ export default function Home() {
               const formattedPrice = formatDealPrice(deal.price_value, deal.currency);
 
               return (
-                <Card key={deal.id} className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
-                  <div className="relative h-64 overflow-hidden">
+                <Card key={deal.id} className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(37,99,235,0.12)] group">
+                  <div className="relative h-72 overflow-hidden">
                     {coverImage ? (
-                      <img src={coverImage} alt={deal.destination_city} className="h-full w-full object-cover transition-transform duration-700 hover:scale-105" loading="lazy" />
+                      <img src={coverImage} alt={deal.destination_city} className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110" loading="lazy" />
                     ) : (
-                      <div className="h-full w-full bg-gradient-to-br from-blue-300 via-sky-100 to-white" />
+                      <div className="h-full w-full bg-gradient-to-br from-blue-400 via-sky-200 to-white" />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/20 to-transparent" />
-                    <div className="absolute left-4 top-4 flex flex-wrap gap-2">
-                      <Badge className="border-0 bg-white/[0.92] text-slate-900">{deal.airline || "Michels Travel"}</Badge>
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent opacity-80" />
+                    
+                    <div className="absolute left-6 top-6 flex flex-wrap gap-2">
+                      <Badge className="border-0 bg-white/10 backdrop-blur-md text-white font-bold px-3 py-1 text-[10px] uppercase tracking-wider">
+                        <Sparkles className="h-3 w-3 mr-1 text-amber-400" />
+                        Exclusivo
+                      </Badge>
+                      <Badge className="border-0 bg-emerald-500/90 text-white font-bold px-3 py-1 text-[10px] uppercase tracking-wider">
+                        <TrendingUp className="h-3 w-3 mr-1" />
+                        Melhor Preço
+                      </Badge>
                     </div>
-                    <div className="absolute bottom-5 left-5 right-5">
-                      <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#dce8ff]">{deal.origin} → {deal.destination}</div>
-                      <div className="mt-2 text-3xl font-extrabold text-white sm:text-4xl">{deal.destination_city || deal.destination}</div>
+
+                    <div className="absolute bottom-6 left-6 right-6">
+                      <div className="flex items-center gap-3">
+                        <div className="h-0.5 w-6 bg-blue-500" />
+                        <div className="text-[11px] font-black uppercase tracking-[0.25em] text-blue-200/90">{deal.origin} — {deal.destination}</div>
+                      </div>
+                      <div className="mt-3 text-3xl font-black text-white">{deal.destination_city || deal.destination}</div>
+                      <div className="mt-2 flex items-center gap-2 text-white/70 text-sm font-medium">
+                        <Globe className="h-4 w-4" />
+                        <span>{deal.airline || "Global Network"}</span>
+                        <span className="w-1 h-1 rounded-full bg-white/30" />
+                        <span>{deal.cabin_class || "Economy"}</span>
+                      </div>
                     </div>
                   </div>
-                  <CardContent className="flex h-full flex-col p-6 sm:p-8">
-                    <p className="text-base font-bold text-blue-600">{deal.headline}</p>
-                    <p className="mt-3 text-sm leading-7 text-slate-600">{deal.description}</p>
-                    <div className="mt-8 flex items-end justify-between gap-4 border-t border-slate-100 pt-6">
-                      <div>
-                        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">{t("home.deals.from") || "A partir de"}</div>
-                        <div className="mt-1 text-3xl font-extrabold text-slate-950">{formattedPrice || deal.price}</div>
+                  <CardContent className="flex h-full flex-col p-8">
+                    <div className="flex items-center gap-2 text-blue-600 mb-3">
+                      <MapPin className="h-4 w-4" />
+                      <span className="text-sm font-bold uppercase tracking-widest">{t("home.deals.badge_loc") || "Destino Verificado"}</span>
+                    </div>
+                    <p className="text-xl font-bold text-slate-900 leading-tight">{deal.headline}</p>
+                    <p className="mt-4 text-sm leading-relaxed text-slate-500 line-clamp-2">{deal.description}</p>
+                    
+                    <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <Ticket className="h-3.5 w-3.5 text-slate-400" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Tarifa garantida</span>
+                        </div>
+                        <div className="text-3xl font-black text-slate-950 tracking-tight">
+                          <span className="text-lg font-bold text-slate-400 mr-1">{deal.currency === 'BRL' ? 'R$' : '$'}</span>
+                          {formattedPrice?.replace(/[^\d]/g, '') || deal.price}
+                        </div>
                       </div>
-                      <Button className="rounded-full bg-[#2563eb] px-5 py-6 text-sm font-bold text-white hover:bg-[#1d4ed8]" onClick={() => openDealSearch(deal)}>
-                        {t("home.deals.btn_open") || "Abrir tarifa"}
-                        <ArrowRight className="ml-2 h-4 w-4" />
+                      <Button className="h-14 w-14 rounded-2xl bg-slate-950 text-white hover:bg-blue-600 hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300 flex items-center justify-center p-0" onClick={() => openDealSearch(deal)}>
+                        <ArrowRight className="h-6 w-6" />
                       </Button>
                     </div>
                   </CardContent>
@@ -448,6 +481,8 @@ export default function Home() {
         </div>
       </section>
 
+      <ConciergePromo />
+      <AirlineNetwork />
       <FlightBoard />
 
       <AppLaunchPromo className="section-white" />
