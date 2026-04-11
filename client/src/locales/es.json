@@ -87,8 +87,9 @@
     "signin": "Ingresar",
     "my_trips": "Mis Viajes",
     "profile": "Mi Perfil",
-    "messages": "Mensagens",
-    "help": "Ayuda"
+    "messages": "Mensajes",
+    "help": "Ayuda",
+    "sub_brand": "Opción eficiente"
   },
   "login": {
     "title": "Crear Cuenta o Ingresar",
@@ -149,44 +150,10 @@
     "seal_stripe": "Pago procesado con seguridad",
     "seal_stripe_sub": "Checkout protegido con Stripe",
     "seal_ssl": "Conexión protegida",
-    "seal_ssl_sub": "Cifrado activo durante la navegación"
+    "seal_ssl_sub": "Cifrado activo durante la navegación",
+    "motto": "Atención clara y soporte humano"
   },
   "home": {
-    "badge": "Tarifas globales • Apoyo humano • Pago seguro",
-    "title": {
-      "1": "Pasajes aéreos",
-      "2": "con apoyo humano"
-    },
-    "subtitle": "El arte de combinar las mejores aerolíneas con la más exclusiva asesoría. Reserve con confianza y deje que Michels Travel orqueste su viaje perfecto.",
-    "trust": {
-      "title": "Por qué confiar su viaje a Michels Travel",
-      "subtitle": "Claridad en la búsqueda, seguridad en el pago y acompañamiento humano cuando el viaje necesita más cuidado.",
-      "secure": "Reserva Segura",
-      "secure_desc": "Sus datos están protegidos con encriptación empresarial y pasarelas de pago seguras.",
-      "instant": "Confirmación Imediata",
-      "instant_desc": "Sin esperas. Reciba su boleto electrónico en su correo segundos después del pago.",
-      "support": "Soporte Global 24/7",
-      "support_desc": "Nuestro equipo de expertos en viajes está aquí para ayudarle en cualquier momento."
-    },
-    "popular": {
-      "title": "Destinos Populares",
-      "subtitle": "Vuelos más reservados por nuestra comunidad esta semana",
-      "view_all": "Ver Todos",
-      "from": "Vuelos desde",
-      "check_prices": "Ver Precios",
-      "searches": "búsquedas"
-    },
-    "catalog": {
-      "title": "Ofertas destacadas",
-      "subtitle": "Tarifas y oportunidades para comenzar su búsqueda con más claridad",
-      "price_label": "Tarifa de referencia",
-      "book": "Ver oferta",
-      "empty": "Nuevas ofertas están en camino",
-      "empty_desc": "Nuevas referencias de tarifas deberían aparecer aquí pronto. Mientras tanto, puede iniciar su búsqueda ahora.",
-      "empty_cta": "Buscar vuelos"
-    },
-    "airlines": "Aerolíneas Asociadas",
-    "airlines_sub": "500+ aerolíneas en todo el mundo",
     "trending": "Popular",
     "board": {
       "title": "Panel de Vuelos",
@@ -307,6 +274,25 @@
         "title": "Emisión Inmediata",
         "desc": "Su boleto aprobado se entrega en segundos en su correo y aplicación, con soporte completo."
       }
+    },
+    "airlines": {
+      "badge": "Compañías y aeropuertos ya conectados",
+      "title": "Nuestros socios principales, unidos por su rentabilidad.",
+      "tag": "logos activos",
+      "tag_alt": "Red lista para operar",
+      "f1": {
+        "title": "Fuertes Acuerdos Comerciales",
+        "desc": "Negociamos tarifas de equipaje y horarios preferenciales directamente con las aerolíneas para superar los precios del mercado."
+      },
+      "f2": {
+        "title": "Inventario Global en Vivo",
+        "desc": "Obtenga acceso a asientos de último minuto de todas las aerolíneas disponibles en todo el mundo."
+      },
+      "f3": {
+        "title": "Viaje de Soporte Premium",
+        "desc": "Tenga a Michels Travel a su lado. Soporte por WhatsApp con consultores reales para ayudar a resolver problemas o volver a reservar si es necesario."
+      },
+      "routes": "Rutas de moda"
     },
     "deals": {
       "badge": "Oportunidades destacadas",
@@ -539,15 +525,27 @@
       "start_call": "Iniciar Videollamada",
       "voice_message": "Mensaje de Voz",
       "recording": "Grabando...",
+      "recording_label": "Grabando",
       "stop_recording": "Parar",
       "send_audio": "Enviar Audio",
-      "invite_sent": "Invitación enviada con éxito",
-      "call_ended": "Llamada finalizada",
-      "connecting": "Conectando con el cliente...",
-      "concierge_mode": "Modo Concierge Ativo",
-      "share_screen": "Compartir Pantalla",
-      "push_to_talk": "Haz clic para Grabar",
-      "cancel_recording": "Cancelar"
+      "video_call": "Videollamada",
+      "audio": "Audio",
+      "sessions": "Sesiones",
+      "requests": "Solicitudes",
+      "active_sessions": "En Curso",
+      "new_service": "Nueva Atenci\u00f3n",
+      "search_now": "Buscar ahora",
+      "share": "compartir",
+      "shared": "compartido",
+      "fare_search": "B\u00fasqueda de Tarifas",
+      "origin": "Origen",
+      "destination": "Destino",
+      "departure_date": "Fecha de Ida",
+      "chat_channel": "Canal de Chat",
+      "your_message_placeholder": "Su mensaje...",
+      "add_note_placeholder": "A\u00f1adir nota para el viajero...",
+      "no_flights_searched": "No se han buscado vuelos",
+      "secure_consultation_room": "Sala de Consulta Segura"
     }
   },
   "blog": {

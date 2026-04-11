@@ -79,7 +79,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       if (process.env.NODE_ENV !== "production") {
         console.warn(`[i18n] missing key "${key}" for lang "${lang}"`);
       }
-      return key;
+      return "";
     }
 
     if (params) {

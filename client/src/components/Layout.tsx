@@ -199,7 +199,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </div>
                 <div className="hidden min-w-0 lg:block">
                   <span className="block whitespace-nowrap text-sm font-bold uppercase tracking-[0.2em] text-white/90">Michels Travel</span>
-                  <span className="block whitespace-nowrap text-[11px] uppercase tracking-[0.22em] text-[#b9d0ff]">Opcao eficiente</span>
+                  <span className="block whitespace-nowrap text-[11px] uppercase tracking-[0.22em] text-[#b9d0ff]">{t("nav.sub_brand") || "Opcao eficiente"}</span>
                 </div>
               </Link>
 
@@ -442,7 +442,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <span className="text-xs text-[#97adc9]">&copy; {new Date().getFullYear()} Michels Travel. {t("footer.rights")}</span>
             <div className="flex items-center gap-3 text-sm text-[#d4e2fa]">
               <span className="hidden sm:inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em]">
-                <ArrowRight className="h-3.5 w-3.5" /> Atendimento claro e suporte humano
+                <ArrowRight className="h-3.5 w-3.5" /> {t("footer.motto") || "Atendimento claro e suporte humano"}
               </span>
               <LanguageSwitcher variant="footer" />
             </div>

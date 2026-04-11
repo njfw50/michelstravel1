@@ -88,7 +88,8 @@
     "my_trips": "My Trips",
     "profile": "My Profile",
     "messages": "Messages",
-    "help": "Help"
+    "help": "Help",
+    "sub_brand": "Efficient choice"
   },
   "login": {
     "title": "Create Account or Sign In",
@@ -149,44 +150,10 @@
     "seal_stripe": "Secure payment processing",
     "seal_stripe_sub": "Protected checkout via Stripe",
     "seal_ssl": "Protected connection",
-    "seal_ssl_sub": "Encryption active during your session"
+    "seal_ssl_sub": "Encryption active during your session",
+    "motto": "Clear support and human service"
   },
   "home": {
-    "badge": "Global fares • Human support • Secure checkout",
-    "title": {
-      "1": "Airfare deals",
-      "2": "with human support"
-    },
-    "subtitle": "The art of combining top global airlines with premier advisory. Book with confidence and let Michels Travel orchestrate your perfect journey.",
-    "trust": {
-      "title": "Why entrust your journey to Michels Travel",
-      "subtitle": "Clearer search, safer checkout, and human follow-through when travel needs more care.",
-      "secure": "Secure Booking",
-      "secure_desc": "Your data is protected with enterprise-grade encryption and secure payment gateways.",
-      "instant": "Instant Confirmation",
-      "instant_desc": "No waiting. Receive your e-ticket in your email seconds after payment.",
-      "support": "24/7 Global Support",
-      "support_desc": "Our team of travel experts is here to help you anytime."
-    },
-    "popular": {
-      "title": "Trending Destinations",
-      "subtitle": "Most booked flights by our community this week",
-      "view_all": "View All",
-      "from": "Flights from",
-      "check_prices": "Check Prices",
-      "searches": "searches"
-    },
-    "catalog": {
-      "title": "Featured fares",
-      "subtitle": "Fare highlights to help you start your search with more clarity",
-      "price_label": "Reference fare",
-      "book": "View offer",
-      "empty": "Fresh fare highlights are on the way",
-      "empty_desc": "Fresh fare references should appear here soon. In the meantime, you can start your search now.",
-      "empty_cta": "Search flights"
-    },
-    "airlines": "Partner Airlines",
-    "airlines_sub": "500+ airlines worldwide",
     "trending": "Trending",
     "board": {
       "title": "Flight Board",
@@ -307,6 +274,25 @@
         "title": "Immediate Issuance",
         "desc": "Your approved ticket is delivered in seconds to your private email."
       }
+    },
+    "airlines": {
+      "badge": "Airlines and airports already connected",
+      "title": "Our major partners, united by your value for money.",
+      "tag": "logos active",
+      "tag_alt": "Network ready to operate",
+      "f1": {
+        "title": "Strong Commercial Agreements",
+        "desc": "We negotiate baggage fees and preferred times directly with airlines to beat market prices."
+      },
+      "f2": {
+        "title": "Live Global Inventory",
+        "desc": "Get access to last-minute seats from all available airlines worldwide."
+      },
+      "f3": {
+        "title": "Premium Support Journey",
+        "desc": "Have Michels Travel by your side. WhatsApp support with real consultants to help resolve issues or rebook if needed."
+      },
+      "routes": "Trending routes"
     },
     "deals": {
       "badge": "Featured opportunities",
@@ -539,15 +525,27 @@
       "start_call": "Start Video Call",
       "voice_message": "Voice Message",
       "recording": "Recording...",
+      "recording_label": "Recording",
       "stop_recording": "Stop",
       "send_audio": "Send Audio",
-      "invite_sent": "Invite sent successfully",
-      "call_ended": "Call ended",
-      "connecting": "Connecting to client...",
-      "concierge_mode": "Concierge Mode Active",
-      "share_screen": "Share Screen",
-      "push_to_talk": "Click to Record",
-      "cancel_recording": "Cancel"
+      "video_call": "Video Call",
+      "audio": "Audio",
+      "sessions": "Sessions",
+      "requests": "Requests",
+      "active_sessions": "In Progress",
+      "new_service": "New Service",
+      "search_now": "Search Now",
+      "share": "share",
+      "shared": "shared",
+      "fare_search": "Fare Search",
+      "origin": "Origin",
+      "destination": "Destination",
+      "departure_date": "Departure Date",
+      "chat_channel": "Chat Channel",
+      "your_message_placeholder": "Your message...",
+      "add_note_placeholder": "Add note for traveler...",
+      "no_flights_searched": "No flights searched",
+      "secure_consultation_room": "Secure Consultation Room"
     }
   },
   "blog": {
