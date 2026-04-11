@@ -1433,7 +1433,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
       </div>
 
       <Dialog open={Boolean(dealDraft)} onOpenChange={(open) => { if (!open) setDealDraft(null); }}>
-        <DialogContent className="sm:max-w-xl bg-slate-900/90 backdrop-blur-3xl border border-white/5 shadow-3xl rounded-[32px] ring-0">
+        <DialogContent className="max-w-[95vw] lg:max-w-4xl max-h-[92vh] overflow-hidden flex flex-col bg-slate-900/95 backdrop-blur-3xl border border-white/5 shadow-3xl rounded-[32px] ring-0 p-0">
           <DialogHeader className="p-6 border-b border-white/5">
             <DialogTitle className="text-2xl font-black text-white font-display tracking-tight">Growth Launchpad</DialogTitle>
             <DialogDescription className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
@@ -1442,7 +1442,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
           </DialogHeader>
 
           {dealDraft && (
-            <div className="p-8 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+            <div className="p-6 md:p-8 space-y-5 overflow-y-auto custom-scrollbar flex-1">
               <div className="rounded-[24px] border border-indigo-500/20 bg-indigo-500/10 p-6 flex flex-col md:flex-row items-center justify-between gap-6 transition-all border-glow-indigo">
                 <div className="flex-1">
                   <p className="font-black uppercase text-[10px] tracking-[0.2em] text-indigo-400">Curadoria de Inteligência</p>
@@ -1685,7 +1685,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
             </div>
           )}
 
-          <DialogFooter className="p-8 border-t border-white/5 bg-slate-950/40">
+          <DialogFooter className="p-6 md:p-8 border-t border-white/5 bg-slate-950/60 mt-auto">
             <Button variant="secondary" className="h-12 px-6 rounded-2xl border border-white/10 bg-white/5 text-[10px] font-black uppercase text-slate-400 hover:text-white hover:bg-white/10 transition-all" onClick={() => setDealDraft(null)}>
               Abortar Missão
             </Button>

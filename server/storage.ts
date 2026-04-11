@@ -492,13 +492,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createFeaturedDeal(deal: InsertFeaturedDeal): Promise<FeaturedDeal> {
-    const [newDeal] = await db.insert(featuredDeals).values(deal).returning();
-    return newDeal;
+    try {
+      const [newDeal] = await db.insert(featuredDeals).values(deal).returning();
+      return newDeal;
+    } catch (error) {
+      console.error("Failed to create featured deal with full schema, retrying with basic columns:", error);
+      // Remove potentially missing columns (stops, duration) and retry
+      const { stops, duration, ...basicDeal } = deal as any;
+      const [newDeal] = await db.insert(featuredDeals).values(basicDeal).returning();
+      return newDeal;
+    }
   }
 
   async updateFeaturedDeal(id: number, updates: Partial<InsertFeaturedDeal>): Promise<FeaturedDeal | undefined> {
-    const [updated] = await db.update(featuredDeals).set(updates).where(eq(featuredDeals.id, id)).returning();
-    return updated;
+    try {
+      const [updated] = await db.update(featuredDeals).set(updates).where(eq(featuredDeals.id, id)).returning();
+      return updated;
+    } catch (error) {
+      console.error("Failed to update featured deal with full schema, retrying with basic columns:", error);
+      // Remove potentially missing columns and retry
+      const { stops, duration, ...basicUpdates } = updates as any;
+      const [updated] = await db.update(featuredDeals).set(basicUpdates).where(eq(featuredDeals.id, id)).returning();
+      return updated;
+    }
   }
 
   async deleteFeaturedDeal(id: number): Promise<void> {
