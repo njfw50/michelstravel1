@@ -326,6 +326,8 @@ export interface FlightSearchParams {
   infants?: string;
   cabinClass?: string;
   tripType?: string;
+  nonStop?: boolean;
+  maxConnections?: number;
   legs?: { origin: string; destination: string; date: string }[];
 }
 

@@ -46,6 +46,7 @@ import {
   Mic,
   PanelLeft,
   PanelLeftClose,
+  ArrowRight,
   Square,
   Circle,
 } from "lucide-react";
@@ -358,6 +359,9 @@ function LiveSalesPanel() {
   const [searchDate, setSearchDate] = useState("");
   const [searchReturnDate, setSearchReturnDate] = useState("");
   const [searchPassengers, setSearchPassengers] = useState("1");
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
+  const [infants, setInfants] = useState(0);
   const [searchCabinClass, setSearchCabinClass] = useState("economy");
   const [workspaceModeOverride, setWorkspaceModeOverride] = useState<"standard" | "senior">("standard");
   const [manualSeniorPreferences, setManualSeniorPreferences] = useState<SeniorPreferences>(defaultSeniorPreferences);
@@ -367,6 +371,7 @@ function LiveSalesPanel() {
   ]);
   const [searchingFlights, setSearchingFlights] = useState(false);
   const [flightResults, setFlightResults] = useState<FlightResult[]>([]);
+  const [filterNonStop, setFilterNonStop] = useState(false);
 
   const [sharedBlockMap, setSharedBlockMap] = useState<Record<string, number>>({});
   const [togglingFlight, setTogglingFlight] = useState<string | null>(null);
@@ -629,7 +634,10 @@ function LiveSalesPanel() {
       setFlightResults([]);
       try {
         const params = new URLSearchParams({
-          passengers: searchPassengers,
+          passengers: (adults + children + infants).toString(),
+          adults: adults.toString(),
+          children: children.toString(),
+          infants: infants.toString(),
           cabinClass: searchCabinClass,
           tripType: "multi-city",
           legs: JSON.stringify(validLegs.map((l) => ({
@@ -637,6 +645,7 @@ function LiveSalesPanel() {
             destination: l.destination,
             date: l.date,
           }))),
+          nonStop: filterNonStop.toString(),
         });
         let res = await adminFetch(`/api/live-sessions/admin/search-flights?${params}`);
         if (res.status === 401) {
@@ -660,9 +669,13 @@ function LiveSalesPanel() {
           origin: searchOrigin.trim(),
           destination: searchDestination.trim(),
           date: searchDate,
-          passengers: searchPassengers,
+          passengers: (adults + children + infants).toString(),
+          adults: adults.toString(),
+          children: children.toString(),
+          infants: infants.toString(),
           cabinClass: searchCabinClass,
           tripType: tripType === "round_trip" ? "round-trip" : "one-way",
+          nonStop: filterNonStop.toString(),
         });
         if (tripType === "round_trip" && searchReturnDate) {
           params.set("returnDate", searchReturnDate);
@@ -1073,38 +1086,179 @@ function LiveSalesPanel() {
                   <Search className="h-4 w-4 text-primary" />
                   <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">{t("admin.live_chat.fare_search")}</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <AdminLocationInput
-                    label={t("admin.live_chat.origin")}
-                    value={searchOrigin}
-                    onChange={setSearchOrigin}
-                    placeholder={t("admin.field_placeholder_airport")}
-                    testId="admin-search-origin"
-                  />
-                  <AdminLocationInput
-                    label={t("admin.live_chat.destination")}
-                    value={searchDestination}
-                    onChange={setSearchDestination}
-                    placeholder={t("admin.field_placeholder_airport")}
-                    testId="admin-search-destination"
-                  />
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t("admin.live_chat.departure_date")}</label>
-                    <Input
-                      type="date"
-                      value={searchDate}
-                      onChange={(e) => setSearchDate(e.target.value)}
-                      className="glass bg-white/5 border-white/10 h-10 rounded-xl"
-                    />
-                  </div>
-                  <div className="flex items-end">
+                <div className="flex flex-wrap gap-2 mb-4 bg-white/5 p-1 rounded-2xl border border-white/10 w-fit">
+                  {[
+                    { id: "one_way", label: "Somente Ida" },
+                    { id: "round_trip", label: "Ida e Volta" },
+                    { id: "multi_city", label: "Multi-Cidades" },
+                  ].map((type) => (
                     <Button
-                      className="w-full h-10 rounded-xl font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
+                      key={type.id}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setTripType(type.id as any)}
+                      className={`h-8 rounded-xl px-4 text-[10px] font-black uppercase tracking-widest transition-all ${
+                        tripType === type.id ? "bg-primary text-white shadow-lg" : "text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      {type.label}
+                    </Button>
+                  ))}
+                </div>
+
+                {tripType === "multi_city" ? (
+                  <div className="space-y-4">
+                    {multiCityLegs.map((leg, idx) => (
+                      <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 relative">
+                        <AdminLocationInput
+                          label={`${idx + 1}º Trecho: Origem`}
+                          value={leg.origin}
+                          onChange={(v) => updateMultiLeg(idx, "origin", v)}
+                          placeholder="Origem"
+                          testId={`multi-origin-${idx}`}
+                        />
+                        <AdminLocationInput
+                          label="Destino"
+                          value={leg.destination}
+                          onChange={(v) => updateMultiLeg(idx, "destination", v)}
+                          placeholder="Destino"
+                          testId={`multi-dest-${idx}`}
+                        />
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Data</label>
+                          <Input
+                            type="date"
+                            value={leg.date}
+                            onChange={(e) => updateMultiLeg(idx, "date", e.target.value)}
+                            className="glass bg-white/5 border-white/10 h-10 rounded-xl"
+                          />
+                        </div>
+                        {multiCityLegs.length > 2 && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-red-500/20 text-red-500 hover:bg-red-500 hover:text-white"
+                            onClick={() => removeMultiLeg(idx)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={addMultiLeg}
+                      disabled={multiCityLegs.length >= 5}
+                      className="h-10 rounded-xl border-dashed border-white/20 hover:border-primary/50 text-slate-400 hover:text-white w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-2" /> Adicionar Trecho
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <AdminLocationInput
+                      label={t("admin.live_chat.origin")}
+                      value={searchOrigin}
+                      onChange={setSearchOrigin}
+                      placeholder={t("admin.field_placeholder_airport")}
+                      testId="admin-search-origin"
+                    />
+                    <AdminLocationInput
+                      label={t("admin.live_chat.destination")}
+                      value={searchDestination}
+                      onChange={setSearchDestination}
+                      placeholder={t("admin.field_placeholder_airport")}
+                      testId="admin-search-destination"
+                    />
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+                        {tripType === "round_trip" ? "Data Ida" : t("admin.live_chat.departure_date")}
+                      </label>
+                      <Input
+                        type="date"
+                        value={searchDate}
+                        onChange={(e) => setSearchDate(e.target.value)}
+                        className="glass bg-white/5 border-white/10 h-10 rounded-xl"
+                      />
+                    </div>
+                    {tripType === "round_trip" && (
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Data Volta</label>
+                        <Input
+                          type="date"
+                          value={searchReturnDate}
+                          onChange={(e) => setSearchReturnDate(e.target.value)}
+                          className="glass bg-white/5 border-white/10 h-10 rounded-xl"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-end gap-6 pt-4 border-t border-white/5 mt-4">
+                  <div className="flex gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Adultos</label>
+                      <div className="flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setAdults(Math.max(1, adults - 1))}>-</Button>
+                        <span className="w-4 text-center text-xs font-bold">{adults}</span>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setAdults(adults + 1)}>+</Button>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Crianças</label>
+                      <div className="flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setChildren(Math.max(0, children - 1))}>-</Button>
+                        <span className="w-4 text-center text-xs font-bold">{children}</span>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setChildren(children + 1)}>+</Button>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Bebês</label>
+                      <div className="flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setInfants(Math.max(0, infants - 1))}>-</Button>
+                        <span className="w-4 text-center text-xs font-bold">{infants}</span>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setInfants(infants + 1)}>+</Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 min-w-[140px]">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Classe</label>
+                    <Select value={searchCabinClass} onValueChange={setSearchCabinClass}>
+                      <SelectTrigger className="glass bg-white/5 border-white/10 h-9 rounded-xl text-xs font-bold">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="glass-dark border-white/10 rounded-2xl">
+                        <SelectItem value="economy">ECONÔMICA</SelectItem>
+                        <SelectItem value="premium_economy">PREMIUM ECONOMY</SelectItem>
+                        <SelectItem value="business">EXECUTIVA</SelectItem>
+                        <SelectItem value="first">PRIMEIRA CLASSE</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center gap-2 mb-1">
+                    <button 
+                      onClick={() => setFilterNonStop(!filterNonStop)}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all ${filterNonStop ? 'bg-primary/20 border-primary text-primary' : 'bg-white/5 border-white/10 text-slate-500'}`}
+                    >
+                      <div className={`h-3 w-3 rounded-full border-2 border-current flex items-center justify-center`}>
+                        {filterNonStop && <div className="h-1.5 w-1.5 rounded-full bg-current" />}
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-widest">Apenas Direto</span>
+                    </button>
+                  </div>
+
+                  <div className="flex-1 min-w-[120px]">
+                    <Button
+                      className="w-full h-10 rounded-xl font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                       onClick={handleSearchFlights}
-                      disabled={searchingFlights || !canSearchStandard}
+                      disabled={searchingFlights || (tripType === 'multi_city' ? !canSearchMultiCity : !canSearchStandard)}
                     >
                       {searchingFlights ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
-                      {t("admin.live_chat.search_now")}
+                      Pesquisar Agora
                     </Button>
                   </div>
                 </div>
@@ -1118,14 +1272,22 @@ function LiveSalesPanel() {
                   </div>
                 ) : flightResults.length > 0 ? (
                   <div className="space-y-4">
-                     {flightResults.map((flight) => {
+                     {orderedFlightResults.map((flight) => {
                        const isShared = (sessionDetail?.sharedFlights || []).some(sf => sf.id === flight.id);
+                       const recommendation = recommendationMap.get(flight.id);
+                       const currentPrice = getFlightPrice(flight);
                        
                        return (
                          <div 
                            key={flight.id} 
-                           className={`glass hover:border-primary/50 transition-all p-5 rounded-3xl border-white/10 group ${isShared ? 'ring-2 ring-primary/50 bg-primary/5' : ''}`}
+                           className={`glass hover:border-primary/50 transition-all p-5 rounded-3xl border-white/10 group relative overflow-hidden ${isShared ? 'ring-2 ring-primary/50 bg-primary/5' : ''}`}
                          >
+                            {recommendation && (
+                              <div className="absolute top-0 right-12 px-3 py-1 bg-amber-500 text-black text-[9px] font-black uppercase tracking-tighter rounded-bl-xl shadow-xl z-20">
+                                {getSeniorRecommendationLabel(recommendation.kind)}
+                              </div>
+                            )}
+
                             <div className="flex items-center justify-between mb-4">
                               <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 glass-dark rounded-xl flex items-center justify-center border border-white/10">
@@ -1137,48 +1299,124 @@ function LiveSalesPanel() {
                                 </div>
                                 <div>
                                   <h4 className="text-sm font-bold text-white leading-none mb-1">{flight.airline}</h4>
-                                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{flight.flightNumber}</p>
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{flight.flightNumber}</p>
+                                    <span className="text-[10px] text-primary font-bold">|</span>
+                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{flight.cabinClass || "ECONÔMICA"}</p>
+                                  </div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className={`rounded-xl px-4 h-9 font-bold transition-all ${isShared ? 'bg-primary text-white' : 'glass-dark text-slate-400 hover:text-white'}`}
+                                  className={`rounded-xl px-4 h-9 font-bold transition-all ${isShared ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'glass-dark text-slate-400 hover:text-white'}`}
                                   onClick={() => handleToggleShare(flight)}
                                   disabled={togglingFlight === flight.id}
                                 >
-                                  {togglingFlight === flight.id ? <Loader2 className="h-3 w-3 animate-spin" /> : isShared ? t("admin.live_chat.shared") : t("admin.live_chat.share")}
+                                  {togglingFlight === flight.id ? <Loader2 className="h-3 w-3 animate-spin" /> : isShared ? "COMPARTILHADO" : "COMPARTILHAR"}
                                 </Button>
                               </div>
                             </div>
 
-                            <div className="flex items-center justify-between gap-6 px-2">
-                               <div className="text-center">
-                                 <p className="text-lg font-bold text-white font-display leading-none">{formatTime(flight.departureTime)}</p>
-                                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">SAÍDA</p>
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center mb-4">
+                               <div className="col-span-3 text-center md:text-left">
+                                 <p className="text-xl font-bold text-white font-display leading-none">{formatTime(flight.departureTime)}</p>
+                                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">{flight.originCode}</p>
                                </div>
                                
-                               <div className="flex-1 flex flex-col items-center gap-1">
+                               <div className="col-span-4 flex flex-col items-center gap-1.5">
                                  <div className="w-full h-px bg-white/10 relative">
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-950 px-2">
-                                      <Plane className="h-3 w-3 text-primary rotate-90" />
+                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-950 px-3 flex items-center gap-2">
+                                      <Plane className="h-3.5 w-3.5 text-primary rotate-90" />
+                                      {flight.stops > 0 && (
+                                        <Badge variant="outline" className="text-[9px] bg-amber-500/10 text-amber-500 border-amber-500/30 h-4 px-1.5">
+                                          {flight.stops} {flight.stops === 1 ? 'PARADA' : 'PARADAS'}
+                                        </Badge>
+                                      )}
                                     </div>
                                  </div>
-                                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{flight.duration}</p>
+                                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{flight.duration.replace('PT', '').replace('H', 'h ').replace('M', 'm')}</p>
                                </div>
 
-                               <div className="text-center">
-                                 <p className="text-lg font-bold text-white font-display leading-none">{formatTime(flight.arrivalTime)}</p>
-                                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">CHEGADA</p>
+                               <div className="col-span-3 text-center md:text-right">
+                                 <p className="text-xl font-bold text-white font-display leading-none">{formatTime(flight.arrivalTime)}</p>
+                                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">{flight.destinationCode}</p>
                                </div>
 
-                               <div className="ml-4 pl-4 border-l border-white/10">
-                                  <p className="text-xl font-bold text-emerald-400 font-display">
-                                    {flight.currency} {flight.price.toFixed(2)}
-                                  </p>
+                               <div className="col-span-2 flex flex-col items-end">
+                                  {editingPrice === flight.id ? (
+                                    <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-primary/50 shadow-lg shadow-primary/10">
+                                      <span className="text-[10px] font-bold text-slate-500 px-1">$</span>
+                                      <Input 
+                                        autoFocus
+                                        value={customPrices[flight.id] ?? flight.price}
+                                        onChange={(e) => setCustomPrices(prev => ({ ...prev, [flight.id]: e.target.value }))}
+                                        onBlur={() => { setEditingPrice(null); handleUpdateSharedPrice(flight); }}
+                                        onKeyDown={(e) => e.key === "Enter" && setEditingPrice(null)}
+                                        className="h-7 w-20 border-0 bg-transparent text-xs font-black text-emerald-400 p-0 focus-visible:ring-0"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div 
+                                      className="text-right cursor-pointer group/price hover:bg-white/5 p-1 rounded-lg transition-colors"
+                                      onClick={() => setEditingPrice(flight.id)}
+                                    >
+                                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-wider mb-0.5">PREÇO VENDA</p>
+                                      <p className="text-2xl font-bold text-emerald-400 font-display leading-none group-hover/price:text-white transition-colors">
+                                        {flight.currency} {currentPrice.toFixed(2)}
+                                      </p>
+                                      <p className="text-[9px] text-slate-600 font-bold flex items-center justify-end gap-1 mt-1 opacity-0 group-hover/price:opacity-100 transition-opacity">
+                                        <Pencil className="h-2 w-2" /> EDITAR
+                                      </p>
+                                    </div>
+                                  )}
                                </div>
                             </div>
+
+                            {recommendation && (
+                              <div className="mt-4 p-3 bg-amber-500/5 rounded-2xl border border-amber-500/10">
+                                <p className="text-[10px] font-medium text-amber-200/80 leading-relaxed italic">
+                                  "{recommendation.reasonLine}"
+                                </p>
+                              </div>
+                            )}
+
+                            {flight.slices && flight.slices.length > 0 && (
+                               <details className="mt-4 group/details">
+                                 <summary className="list-none flex items-center gap-2 text-[10px] font-black text-slate-500 cursor-pointer hover:text-white transition-colors uppercase tracking-widest">
+                                   <div className="h-4 w-4 rounded-full border border-white/10 flex items-center justify-center transition-transform group-open/details:rotate-180">
+                                      <ChevronDown className="h-2.5 w-2.5" />
+                                   </div>
+                                   VER DETALHES DO ITINERÁRIO
+                                 </summary>
+                                 <div className="pt-4 space-y-4 animate-in slide-in-from-top-2 duration-300">
+                                   {flight.slices.map((slice, sIdx) => (
+                                     <div key={sIdx} className="space-y-3 pl-4 border-l border-white/10">
+                                       <p className="text-[9px] font-black text-primary uppercase tracking-widest">{sIdx === 0 ? 'TRECHO IDA' : 'TRECHO VOLTA'}</p>
+                                       {slice.segments.map((seg, segIdx) => (
+                                         <div key={segIdx} className="flex gap-4">
+                                            <div className="flex flex-col items-center gap-1">
+                                               <div className="h-2 w-2 rounded-full bg-slate-700" />
+                                               <div className="flex-1 w-px bg-slate-800 border-dashed border-l" />
+                                               <div className="h-2 w-2 rounded-full bg-slate-700" />
+                                            </div>
+                                            <div className="flex-1 space-y-1">
+                                              <div className="flex items-center justify-between">
+                                                <p className="text-xs font-bold text-white">{seg.originCode} <ArrowRight className="h-2 w-2 inline mx-1" /> {seg.destinationCode}</p>
+                                                <p className="text-[10px] font-medium text-slate-500">{formatTime(seg.departureTime)} - {formatTime(seg.arrivalTime)}</p>
+                                              </div>
+                                              <p className="text-[10px] text-slate-500 font-medium">
+                                                {seg.carrierName} • {seg.flightNumber} • {seg.aircraftType || 'Aeronave não info.'}
+                                              </p>
+                                            </div>
+                                         </div>
+                                       ))}
+                                     </div>
+                                   ))}
+                                 </div>
+                               </details>
+                            )}
                          </div>
                        );
                      })}

@@ -231,6 +231,7 @@ export function registerRoutes(app: Express) {
         infants: infants as string,
         cabinClass: cabinClass as string,
         tripType: tripType as string | undefined,
+        nonStop: (req.query.nonStop === 'true') ? true : undefined,
       };
 
       if (tripType === 'multi-city' && legs) {
