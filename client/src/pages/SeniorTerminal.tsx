@@ -10,7 +10,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import SeniorCardImage from "@/components/SeniorCardImage";
 import { useI18n } from "@/lib/i18n";
 
-type FlowStep = "auth" | "greeting" | "ask_class" | "ask_origin" | "destination" | "dates" | "ask_return_intention" | "return_date" | "ask_multi_intention" | "ask_name" | "ask_dob" | "searching" | "offer" | "checkout";
+type FlowStep = "greeting" | "ask_class" | "ask_origin" | "destination" | "dates" | "ask_return_intention" | "return_date" | "ask_multi_intention" | "searching" | "offer" | "collect_details" | "checkout";
 
 type Leg = { originQuery: string; originIata: string; destQuery: string; destIata: string; travelDate: string };
 
@@ -20,13 +20,13 @@ type Lang = "pt" | "en" | "es";
 const T: Record<Lang, Record<string, any>> = {
   pt: {
     langLabel: "Idioma",
-    enterPhone: "Para começar, digite seu telefone no formato internacional:",
+    enterPhone: "Telefone de Contato:",
     phoneHint: "Exemplos: +1 (EUA), +55 (Brasil), +351 (Portugal)",
     phonePlaceholder: "+1 (555) 555-5555",
     enter: "Entrar & Iniciar Processo",
-    routeReady: "Sua rota de atendimento exclusivo está pronta.",
-    routeDesc: "Vamos ajudar você a comprar a sua passagem respondendo algumas perguntas simples passo-a-passo.",
-    startBuy: "Iniciar Compra",
+    routeReady: "O seu terminal de alta performance está pronto.",
+    routeDesc: "Vamos iniciar a sua busca agora mesmo. O seu conforto e agilidade são nossa prioridade.",
+    startBuy: "Iniciar Busca",
     chooseClass: "Qual o tipo de conforto e classe para esta viagem?",
     economy: "Econômica", premiumEconomy: "Premium Economy", business: "Executiva", first: "Primeira Classe",
     fromCity: "De qual cidade você vai sair?",
@@ -46,203 +46,203 @@ const T: Record<Lang, Record<string, any>> = {
     multiQ: (dest: string) => `Você vai aproveitar para visitar alguma outra cidade DEPOIS de ${dest}?`,
     yesMulti: "Sim, vou para outra cidade",
     noMulti: "Não, minha viagem encerra aqui",
-    yourName: "Para a sua passagem, preencha o seu nome:",
+    yourName: "Identificação do Passageiro:",
     firstName: "Primeiro Nome", lastName: "Sobrenome",
-    yourDob: "Sua data de nascimento:",
+    yourDob: "Data de Nascimento:",
     day: "Dia", month: "Mês", year: "Ano",
     search: "Pesquisar Passagens",
-    searching: "Buscando rota ideal...",
-    searchDesc: "Validando a disponibilidade real com seu nome e datas escolhidas. Não saia desta tela.",
+    searching: "Buscando as melhores rotas em tempo real...",
+    searchDesc: "Estamos analisando a disponibilidade global para você. Não saia desta tela.",
     chooseOutbound: "Escolha o seu voo de IDA:",
     chooseReturn: "Ida Garantida! Agora escolha a VOLTA:",
     chooseFlight: "Escolha o voo de sua preferência:",
-    selectGo: "Selecionar Ida", buyFlight: "Comprar Voo",
+    selectGo: "Selecionar Ida", buyFlight: "🛒 Comprar este Voo",
     moreFlights: (n: number) => `Ver mais opções (Mais ${n} voos disponíveis)`,
     backOptions: "Voltar para opções anteriores",
-    cardData: "Inserir Dados do Cartão",
+    cardData: "Pagamento Seguro",
     speak: "Falar em Áudio com Agente",
-    exit: "Sair & Finalizar",
+    exit: "Sair",
     airline: "Companhia Aérea", price: "Preço Final (Taxas inclusas)", roundPriceNote: "*Preço total do pacote (Ida e Volta)",
     outboundDone: "Sua Seleção de Ida (Concluída)", outboundOpts: "Opções de Ida", returnOpts: "Opções de Volta",
     estTotal: "Preço Total Estimado do Pacote", flyingWith: "Voando com",
     direct: "Voo Direto", stop1: (c: string) => `1 Parada em ${c}`, stops: (n: number) => `${n} Paradas`,
-    speakLabel: "Falar", speakAgent: "em Áudio com Agente",
+    speakLabel: "Falar", speakAgent: "em Áudio",
     // voice
-    v_welcome: "Olá. Bem-vindo ao terminal de acesso rápido. Vamos ajudar você a comprar a sua passagem.",
+    v_welcome: "Bem-vindo. Vamos encontrar os melhores voos para você sem burocracia.",
     v_askClass: "Em qual classe você prefere voar?",
     v_fromCity: "De qual cidade você vai sair?",
-    v_toCity: "Muito bem. E para qual cidade você quer viajar?",
+    v_toCity: "E para qual cidade você quer viajar?",
     v_toLegCity: (city: string) => `Trecho ${city}: Para qual cidade você quer ir?`,
-    v_askDate: "Certo. Qual é a data da sua viagem?",
+    v_askDate: "Qual é a data da sua viagem?",
     v_askDateLeg: (city: string) => `E qual é a data deste trecho para ${city}?`,
-    v_askReturn: "Você também deseja adicionar uma passagem de Volta para esta mesma viagem?",
-    v_askMulti: "Você planeja visitar outra cidade além dessa antes de terminar a viagem?",
-    v_yesReturn: "Excelente. Selecione qual será a data exata da sua volta ao calendário.",
-    v_noReturn: "Entendi, será apenas ida. E você tem planos de ir para alguma outra cidade depois desta?",
-    v_askName: "Tudo certo. Agora, para emitir a passagem, por favor digite o seu nome primeiro e depois o sobrenome.",
+    v_askReturn: "Deseja adicionar uma passagem de Volta?",
+    v_askMulti: "Planeja visitar outra cidade antes de terminar a viagem?",
+    v_yesReturn: "Excelente. Selecione a data da sua volta no calendário.",
+    v_noReturn: "Entendido, apenas ida.",
+    v_askName: "Voo selecionado! Agora, informe seu nome e telefone para finalizarmos a reserva.",
     v_askDob: "Maravilha. E me diga também a sua data de nascimento.",
-    v_searching: "Tudo certo. Nossa inteligência está procurando os melhores voos para você agora mesmo. Aguarde um momento.",
-    v_foundFlights: "Encontramos excelentes opções de voos para você. Escolha a sua preferida abaixo.",
-    v_foundRT: "Encontramos excelentes opções. Primeiro, escolha o seu voo de ida.",
-    v_noFlights: "Desculpe, não encontrei voos para esta rota exata. Vamos tentar novamente?",
-    v_selectReturn: "Excelente. Agora escolha a data ou voo de volta que melhor se encaixa para você.",
-    v_payment: "Iniciando conexão segura com seu banco. Por favor, aguarde.",
-    v_cardReady: "Pronto. Agora digite os dados do cartão para concluir a aprovação.",
-    v_success: "Compra confirmada com sucesso! O comprovante vai chegar em breve.",
-    v_cardError: "Houve um problema com a validação do cartão. Corrija a informação de pagamento.",
-    v_multiNext: (dest: string) => `Perfeito. Então, partindo de ${dest}, para onde você quer ir depois?`,
-    v_routeReady: "Tudo certo. A sua rota está montada. Por favor, para emitir a passagem, digite seu nome.",
+    v_searching: "Nossa inteligência está procurando os melhores voos para você. Aguarde um momento.",
+    v_foundFlights: "Encontramos excelentes voos. Escolha o seu preferido.",
+    v_foundRT: "Encontramos excelentes opções. Primeiro, escolha o voo de ida.",
+    v_noFlights: "Desculpe, não encontrei voos para esta rota. Vamos tentar novamente?",
+    v_selectReturn: "Excelente. Agora escolha o seu voo de volta.",
+    v_payment: "Conectando ao sistema de pagamento seguro.",
+    v_cardReady: "Pronto. Agora insira os dados do cartão para concluir.",
+    v_success: "Compra confirmada! Boa viagem.",
+    v_cardError: "Erro na validação do pagamento. Por favor, verifique os dados.",
+    v_multiNext: (dest: string) => `Perfeito. Partindo de ${dest}, para onde você quer ir depois?`,
+    v_routeReady: "Ruta pronto. Vamos buscar os voos.",
     v_nameNext: "Maravilha. Por favor, informe sua data de nascimento.",
   },
   en: {
     langLabel: "Language",
-    enterPhone: "To start, enter your phone in international format:",
+    enterPhone: "Contact Phone:",
     phoneHint: "Examples: +1 (USA), +55 (Brazil), +351 (Portugal)",
     phonePlaceholder: "+1 (555) 555-5555",
     enter: "Enter & Start",
-    routeReady: "Your exclusive service route is ready.",
-    routeDesc: "We will help you buy your ticket by answering a few simple questions step-by-step.",
-    startBuy: "Start Booking",
-    chooseClass: "What comfort class would you like for this trip?",
+    routeReady: "Your high-performance terminal is ready.",
+    routeDesc: "Let's start your search now. Your comfort and speed are our priority.",
+    startBuy: "Start Search",
+    chooseClass: "What comfort class would you like?",
     economy: "Economy", premiumEconomy: "Premium Economy", business: "Business", first: "First Class",
-    fromCity: "Which city are you departing from?",
-    fromCityN: (n: number) => `Which city are you departing from for leg ${n}?`,
-    cityHint: "Type the city or airport name below:",
+    fromCity: "Departure City:",
+    fromCityN: (n: number) => `Which city for leg ${n}?`,
+    cityHint: "Type city or airport name:",
     originPH: "Ex: New York, London...",
-    toCity: "Where do you want to travel to?",
-    toCityN: (n: number) => `Leg ${n}: Which city are you flying to?`,
+    toCity: "Where are you traveling to?",
+    toCityN: (n: number) => `Leg ${n}: Which city for your flight?`,
     destPH: "Ex: Lisbon, São Paulo...",
-    dateIda: "What is your departure date?",
+    dateIda: "Departure Date:",
     dateN: (n: number) => `Date for Leg ${n}?`,
     continue: "Continue",
-    wantReturn: "Would you like to add a RETURN ticket as well?",
+    wantReturn: "Add a RETURN ticket?",
     yesReturn: "Yes, add return",
     noReturn: "No, one-way only",
-    returnDate: "What is your RETURN date?",
-    multiQ: (dest: string) => `Will you visit another city AFTER ${dest}?`,
-    yesMulti: "Yes, I'll visit another city",
-    noMulti: "No, my trip ends here",
-    yourName: "For your ticket, please fill in your name:",
+    returnDate: "Return Date:",
+    multiQ: (dest: string) => `Traveling elsewhere AFTER ${dest}?`,
+    yesMulti: "Yes, visit another city",
+    noMulti: "No, ends here",
+    yourName: "Passenger ID:",
     firstName: "First Name", lastName: "Last Name",
-    yourDob: "Your date of birth:",
+    yourDob: "Birth Date:",
     day: "Day", month: "Month", year: "Year",
     search: "Search Flights",
-    searching: "Searching for the best route...",
-    searchDesc: "Validating real availability with your name and selected dates. Please stay on this screen.",
-    chooseOutbound: "Choose your OUTBOUND flight:",
-    chooseReturn: "Outbound confirmed! Now choose your RETURN:",
-    chooseFlight: "Choose your preferred flight:",
-    selectGo: "Select Outbound", buyFlight: "Buy Flight",
-    moreFlights: (n: number) => `Show more options (${n} more flights available)`,
-    backOptions: "Back to previous options",
-    cardData: "Enter Card Details",
-    speak: "Talk to Agent by Audio",
-    exit: "Exit & Finish",
-    airline: "Airline", price: "Final Price (taxes included)", roundPriceNote: "*Total package price (Round Trip)",
-    outboundDone: "Your Outbound Selection (Done)", outboundOpts: "Outbound Options", returnOpts: "Return Options",
-    estTotal: "Estimated Total Package Price", flyingWith: "Flying with",
-    direct: "Direct Flight", stop1: (c: string) => `1 Stop in ${c}`, stops: (n: number) => `${n} Stops`,
-    speakLabel: "Speak", speakAgent: "to Agent by Audio",
-    v_welcome: "Hello. Welcome to the express senior terminal. We will help you purchase your ticket.",
-    v_askClass: "Which cabin class would you prefer?",
-    v_fromCity: "Which city are you departing from?",
-    v_toCity: "Great. And which city would you like to travel to?",
-    v_toLegCity: (city: string) => `Leg ${city}: Which city do you want to go to?`,
-    v_askDate: "Got it. What is your travel date?",
-    v_askDateLeg: (city: string) => `And what is the date for this leg to ${city}?`,
-    v_askReturn: "Would you also like to add a return ticket for this trip?",
-    v_askMulti: "Do you plan to visit another city before ending your trip?",
-    v_yesReturn: "Excellent. Please select the exact date of your return.",
-    v_noReturn: "Understood, one-way only. Will you be visiting another city after this one?",
-    v_askName: "Perfect. Now, to issue your ticket, please type your first and last name.",
-    v_askDob: "Wonderful. Please also tell me your date of birth.",
-    v_searching: "All set. Our system is searching for the best flights for you right now. Please wait a moment.",
-    v_foundFlights: "We found excellent flight options for you. Please choose your preferred one below.",
-    v_foundRT: "We found excellent options. First, choose your outbound flight.",
-    v_noFlights: "Sorry, no flights found for this exact route. Shall we try again?",
-    v_selectReturn: "Excellent. Now choose the return date or flight that works best for you.",
-    v_payment: "Starting a secure connection with your bank. Please wait.",
-    v_cardReady: "All done. Now enter your card details to complete the approval.",
-    v_success: "Purchase confirmed successfully! Your receipt will arrive shortly.",
-    v_cardError: "There was a problem validating your card. Please correct your payment information.",
-    v_multiNext: (dest: string) => `Perfect. So, departing from ${dest}, where do you want to go next?`,
-    v_routeReady: "All set. Your route is planned. Please type your name to issue the ticket.",
-    v_nameNext: "Wonderful. Please provide your date of birth.",
+    searching: "Searching global routes...",
+    searchDesc: "Validating global availability. Please stay on this screen.",
+    chooseOutbound: "Choose OUTBOUND flight:",
+    chooseReturn: "Outbound confirmed! Choose RETURN:",
+    chooseFlight: "Choose preferred flight:",
+    selectGo: "Select Outbound", buyFlight: "🛒 Purchase this Flight",
+    moreFlights: (n: number) => `More options (${n} available)`,
+    backOptions: "Back",
+    cardData: "Secure Payment",
+    speak: "Voice Agent",
+    exit: "Exit",
+    airline: "Airline", price: "Final Price", roundPriceNote: "*Total package price",
+    outboundDone: "Outbound Selected", outboundOpts: "Outbound Options", returnOpts: "Return Options",
+    estTotal: "Estimated Total", flyingWith: "Flying with",
+    direct: "Direct", stop1: (c: string) => `1 Stop in ${c}`, stops: (n: number) => `${n} Stops`,
+    speakLabel: "Speak", speakAgent: "Agent",
+    v_welcome: "Welcome. Let's find your flights without bureaucracy.",
+    v_askClass: "Which cabin class?",
+    v_fromCity: "Departure city?",
+    v_toCity: "Destination city?",
+    v_toLegCity: (city: string) => `Leg to ${city}: Destination?`,
+    v_askDate: "Travel date?",
+    v_askDateLeg: (city: string) => `Date for leg to ${city}?`,
+    v_askReturn: "Add a return ticket?",
+    v_askMulti: "Visit another city?",
+    v_yesReturn: "Select return date on calendar.",
+    v_noReturn: "One-way only.",
+    v_askName: "Flight selected! Please enter your name and phone to finish.",
+    v_askDob: "Please provide your birth date.",
+    v_searching: "Searching the best flights for you now. Please wait.",
+    v_foundFlights: "Found great options. Choose your favorite.",
+    v_foundRT: "Great options. Choose your outbound flight first.",
+    v_noFlights: "No flights found. Try again?",
+    v_selectReturn: "Excellent. Choose your return flight.",
+    v_payment: "Connecting to secure payment.",
+    v_cardReady: "Enter card details to finish.",
+    v_success: "Purchase confirmed! Safe travels.",
+    v_cardError: "Payment error. Check details.",
+    v_multiNext: (dest: string) => `From ${dest}, where next?`,
+    v_routeReady: "Ready. Searching flights.",
+    v_nameNext: "Please enter your birth date.",
   },
   es: {
     langLabel: "Idioma",
-    enterPhone: "Para comenzar, ingrese su teléfono en formato internacional:",
-    phoneHint: "Ejemplos: +1 (EE.UU.), +55 (Brasil), +34 (España)",
+    enterPhone: "Teléfono de Contacto:",
+    phoneHint: "Ej: +1 (EE.UU.), +55 (Brasil)",
     phonePlaceholder: "+1 (555) 555-5555",
-    enter: "Entrar e Iniciar",
-    routeReady: "Su ruta de atención exclusiva está lista.",
-    routeDesc: "Lo ayudaremos a comprar su pasaje respondiendo algunas preguntas simples paso a paso.",
-    startBuy: "Iniciar Compra",
-    chooseClass: "¿Qué clase de confort prefiere para este viaje?",
+    enter: "Entrar",
+    routeReady: "Su terminal de alta performance está listo.",
+    routeDesc: "Buscaremos sus vuelos ahora mismo. Su confort es prioridad.",
+    startBuy: "Iniciar Búsqueda",
+    chooseClass: "¿Qué tipo de confort prefiere?",
     economy: "Económica", premiumEconomy: "Premium Economy", business: "Ejecutiva", first: "Primera Clase",
-    fromCity: "¿De qué ciudad parte usted?",
-    fromCityN: (n: number) => `¿De qué ciudad parte en el tramo ${n}?`,
-    cityHint: "Escriba el nombre de la ciudad o aeropuerto:",
-    originPH: "Ej: Nueva York, Madrid...",
+    fromCity: "¿De qué ciudad parte?",
+    fromCityN: (n: number) => `¿De qué ciudad en tramo ${n}?`,
+    cityHint: "Escriba la ciudad o aeropuerto:",
+    originPH: "Ej: Madrid, Miami...",
     toCity: "¿A dónde desea viajar?",
     toCityN: (n: number) => `Tramo ${n}: ¿A qué ciudad vuela?`,
-    destPH: "Ej: Lisboa, São Paulo...",
-    dateIda: "¿Cuál es la fecha de su viaje (Ida)?",
-    dateN: (n: number) => `¿Fecha del Tramo ${n}?`,
+    destPH: "Ej: Lisboa, S. Paulo...",
+    dateIda: "Fecha de Ida:",
+    dateN: (n: number) => `Fecha Tramo ${n}?`,
     continue: "Continuar",
-    wantReturn: "¿Desea incluir un pasaje de VUELTA (Regreso) también?",
-    yesReturn: "Sí, agregar vuelta",
+    wantReturn: "¿Añadir VUELTA?",
+    yesReturn: "Sí, añadir vuelta",
     noReturn: "No, solo ida",
-    returnDate: "¿Cuál será la fecha de su VUELTA?",
-    multiQ: (dest: string) => `¿Visitará otra ciudad DESPUÉS de ${dest}?`,
-    yesMulti: "Sí, iré a otra ciudad",
-    noMulti: "No, mi viaje termina aquí",
-    yourName: "Para su pasaje, complete su nombre:",
+    returnDate: "Fecha de Regreso:",
+    multiQ: (dest: string) => `¿Visita otra ciudad DESPUÉS de ${dest}?`,
+    yesMulti: "Sí, otra ciudad",
+    noMulti: "No, termina aquí",
+    yourName: "Identificación:",
     firstName: "Nombre", lastName: "Apellido",
-    yourDob: "Su fecha de nacimiento:",
+    yourDob: "Fecha de Nacimiento:",
     day: "Día", month: "Mes", year: "Año",
     search: "Buscar Vuelos",
-    searching: "Buscando la mejor ruta...",
-    searchDesc: "Validando disponibilidad real con su nombre y fechas seleccionadas. No salga de esta pantalla.",
-    chooseOutbound: "Elija su vuelo de IDA:",
-    chooseReturn: "¡Ida confirmada! Ahora elija el REGRESO:",
-    chooseFlight: "Elija el vuelo de su preferencia:",
-    selectGo: "Seleccionar Ida", buyFlight: "Comprar Vuelo",
-    moreFlights: (n: number) => `Ver más opciones (${n} vuelos disponibles)`,
-    backOptions: "Volver a opciones anteriores",
-    cardData: "Ingresar Datos de la Tarjeta",
-    speak: "Hablar con Agente por Audio",
-    exit: "Salir y Finalizar",
-    airline: "Aerolínea", price: "Precio Final (impuestos incluidos)", roundPriceNote: "*Precio total del paquete (Ida y Vuelta)",
-    outboundDone: "Su Selección de Ida (Completada)", outboundOpts: "Opciones de Ida", returnOpts: "Opciones de Vuelta",
-    estTotal: "Precio Total Estimado del Paquete", flyingWith: "Volando con",
-    direct: "Vuelo Directo", stop1: (c: string) => `1 Escala en ${c}`, stops: (n: number) => `${n} Escalas`,
-    speakLabel: "Hablar", speakAgent: "con Agente por Audio",
-    v_welcome: "Hola. Bienvenido al terminal de atención rápida senior. Lo ayudaremos a comprar su pasaje.",
+    searching: "Buscando rutas globales...",
+    searchDesc: "Validando disponibilidad. No salga de esta pantalla.",
+    chooseOutbound: "Elija vuelo de IDA:",
+    chooseReturn: "¡Ida confirmada! Elija REGRESO:",
+    chooseFlight: "Elija su preferencia:",
+    selectGo: "Seleccionar Ida", buyFlight: "🛒 Comprar este Vuelo",
+    moreFlights: (n: number) => `Ver más (${n} disponibles)`,
+    backOptions: "Volver",
+    cardData: "Pago Seguro",
+    speak: "Voz",
+    exit: "Salir",
+    airline: "Aerolínea", price: "Precio Final", roundPriceNote: "*Precio total paquete",
+    outboundDone: "Ida Seleccionada", outboundOpts: "Opciones Ida", returnOpts: "Opciones Vuelta",
+    estTotal: "Total Estimado", flyingWith: "Volando con",
+    direct: "Directo", stop1: (c: string) => `1 Escala en ${c}`, stops: (n: number) => `${n} Escalas`,
+    speakLabel: "Hablar", speakAgent: "Agente",
+    v_welcome: "Bienvenido. Encontraremos sus vuelos sin burocracia.",
     v_askClass: "¿En qué clase prefiere volar?",
-    v_fromCity: "¿De qué ciudad parte usted?",
-    v_toCity: "Muy bien. ¿Y a qué ciudad desea viajar?",
-    v_toLegCity: (city: string) => `Tramo ${city}: ¿A qué ciudad quiere ir?`,
-    v_askDate: "Perfecto. ¿Cuál es la fecha de su viaje?",
-    v_askDateLeg: (city: string) => `¿Y cuál es la fecha de este tramo hacia ${city}?`,
-    v_askReturn: "¿También desea agregar un pasaje de regreso para este viaje?",
-    v_askMulti: "¿Planea visitar otra ciudad antes de terminar el viaje?",
-    v_yesReturn: "Excelente. Por favor seleccione la fecha exacta de su regreso.",
-    v_noReturn: "Entendido, solo ida. ¿Tiene planes de ir a otra ciudad después de esta?",
-    v_askName: "Perfecto. Ahora, para emitir el pasaje, ingrese su nombre y apellido.",
-    v_askDob: "Maravilloso. Dígame también su fecha de nacimiento.",
-    v_searching: "Todo listo. Nuestro sistema está buscando los mejores vuelos ahora mismo. Espere un momento.",
-    v_foundFlights: "Encontramos excelentes opciones de vuelos para usted. Elija su preferida a continuación.",
-    v_foundRT: "Encontramos excelentes opciones. Primero, elija su vuelo de ida.",
-    v_noFlights: "Lo sentimos, no encontramos vuelos para esta ruta. ¿Intentamos de nuevo?",
-    v_selectReturn: "Excelente. Ahora elija la fecha o vuelo de regreso que mejor le convenga.",
-    v_payment: "Iniciando conexión segura con su banco. Por favor espere.",
-    v_cardReady: "Listo. Ahora ingrese los datos de su tarjeta para completar la aprobación.",
-    v_success: "¡Compra confirmada con éxito! El comprobante llegará en breve.",
-    v_cardError: "Hubo un problema al validar su tarjeta. Por favor corrija la información de pago.",
-    v_multiNext: (dest: string) => `Perfecto. Entonces, saliendo de ${dest}, ¿a dónde quiere ir después?`,
-    v_routeReady: "Todo listo. Su ruta está armada. Por favor ingrese su nombre para emitir el pasaje.",
-    v_nameNext: "Maravilloso. Por favor ingrese su fecha de nacimiento.",
+    v_fromCity: "¿De qué ciudad parte?",
+    v_toCity: "¿A qué ciudad viaja?",
+    v_toLegCity: (city: string) => `Tramo ${city}: ¿A dónde quiere ir?`,
+    v_askDate: "¿Fecha de viaje?",
+    v_askDateLeg: (city: string) => `¿Fecha tramo ${city}?`,
+    v_askReturn: "¿Añadir vuelta?",
+    v_askMulti: "¿Visita otra ciudad?",
+    v_yesReturn: "Elija la fecha de vuelta.",
+    v_noReturn: "Solo ida.",
+    v_askName: "¡Vuelo elegido! Ingrese su nombre y teléfono para finalizar.",
+    v_askDob: "Ingrese su fecha de nacimiento.",
+    v_searching: "Buscando los mejores vuelos. Espere.",
+    v_foundFlights: "Encontramos vuelos excelentes.",
+    v_foundRT: "Elija primero su vuelo de ida.",
+    v_noFlights: "No hay vuelos. ¿Intentar de nuevo?",
+    v_selectReturn: "Elija su vuelo de regreso.",
+    v_payment: "Conectando al sistema seguro.",
+    v_cardReady: "Ingrese datos de tarjeta.",
+    v_success: "¡Confirmado! Buen viaje.",
+    v_cardError: "Error de pago. Verifique datos.",
+    v_multiNext: (dest: string) => `Desde ${dest}, ¿a dónde va después?`,
+    v_routeReady: "Ruta lista. Buscando.",
+    v_nameNext: "Ingrese su fecha de nacimiento.",
   },
 };
 
@@ -254,7 +254,7 @@ export default function SeniorTerminal() {
   const t = T[lang];
   const [isListening, setIsListening] = useState(false);
 
-  const [step, setStep] = useState<FlowStep>("auth");
+  const [step, setStep] = useState<FlowStep>("greeting");
   const [phoneNumber, setPhoneNumber] = useState("");
   
   const [tripType, setTripType] = useState<"one-way" | "round-trip" | "multi-city">("one-way");
@@ -309,9 +309,9 @@ export default function SeniorTerminal() {
 
   const [confusionCounter, setConfusionCounter] = useState(0);
 
-  // Monitorar blocos para comandos de voz do admin (TTS Remoto)
+  // Monitorar blocos para comandos de voz do admin
   useEffect(() => {
-    if (step === "auth") return;
+    if (step === "greeting") return;
 
     const interval = setInterval(async () => {
       try {
@@ -343,7 +343,7 @@ export default function SeniorTerminal() {
     if (!SpeechRecognition) {
       toast({
         title: "Erro",
-        description: "Reconhecimento de voz não suportado neste navegador.",
+        description: "Reconhecimento de voz não suportado.",
         variant: "destructive"
       });
       return;
@@ -365,11 +365,7 @@ export default function SeniorTerminal() {
       
       let matched = false;
 
-      // Fase 1: Correspondência por palavras-chave (Rápido e Estático)
-      if (step === "auth") {
-        const numbers = transcript.replace(/\D/g, "");
-        if (numbers) { setPhoneNumber(prev => prev + numbers); matched = true; }
-      } else if (step === "ask_class") {
+      if (step === "ask_class") {
         const text = transcript.toLowerCase();
         if (text.includes("econom") || text.includes("eco")) { setCabinClass("economy"); setStep("ask_origin"); speak(t.v_fromCity as string); matched = true; }
         else if (text.includes("premi")) { setCabinClass("premium_economy"); setStep("ask_origin"); speak(t.v_fromCity as string); matched = true; }
@@ -395,13 +391,7 @@ export default function SeniorTerminal() {
           const newLeg = { originQuery, originIata, destQuery, destIata, travelDate };
           setLegs(prev => [...prev, newLeg]);
           setCurrentLeg(c => c + 1);
-          setStep("destination"); 
-          setOriginIata(destIata);
-          setOriginQuery(destQuery);
-          setDestIata("");
-          setDestQuery("");
-          setDestResults([]);
-          setTravelDate("");
+          setStep("destination"); setOriginIata(destIata); setOriginQuery(destQuery); setDestIata(""); setDestQuery(""); setTravelDate("");
           speak((t.v_multiNext as any)(destIata));
           matched = true;
         } else if (text.includes("no") || text.includes("não")) {
@@ -409,23 +399,18 @@ export default function SeniorTerminal() {
             const newLeg = { originQuery, originIata, destQuery, destIata, travelDate };
             setLegs(prev => [...prev, newLeg]);
           }
-          setStep("ask_name");
-          speak(t.v_routeReady as string);
+          handleSearchFlights();
           matched = true;
         }
       }
 
-      // Fase 2: IA Complementar (Smart)
       if (!matched) {
         try {
           const res = await fetch("/api/senior/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              transcript,
-              currentStep: step,
-              language: lang,
-              visitorId,
+              transcript, currentStep: step, language: lang, visitorId,
               state: { originQuery, destQuery, travelDate, tripType, cabinClass }
             })
           });
@@ -433,9 +418,7 @@ export default function SeniorTerminal() {
           if (data.understood) {
             setConfusionCounter(0);
             if (step === "ask_class" && data.value) {
-              setCabinClass(data.value);
-              setStep("ask_origin");
-              speak(data.response || t.v_fromCity as string);
+              setCabinClass(data.value); setStep("ask_origin"); speak(data.response || t.v_fromCity as string);
             } else if (step === "ask_return_intention" && typeof data.value === "boolean") {
               if (data.value) { setTripType("round-trip"); setStep("return_date"); speak(data.response || t.v_yesReturn as string); }
               else { setTripType("one-way"); setStep("ask_multi_intention"); speak(data.response || t.v_noReturn as string); }
@@ -449,21 +432,18 @@ export default function SeniorTerminal() {
                 speak(data.response || (t.v_multiNext as any)(destIata));
               } else {
                 if (currentLeg > 1) { const newLeg = { originQuery, originIata, destQuery, destIata, travelDate }; setLegs(prev => [...prev, newLeg]); }
-                setStep("ask_name"); speak(data.response || t.v_routeReady as string);
+                handleSearchFlights();
               }
             } else {
-              // Outros passos ou apenas resposta por áudio
               if (data.response) speak(data.response);
               if (step === "ask_origin") setOriginQuery(transcript);
               if (step === "destination") setDestQuery(transcript);
-              if (step === "ask_name") setFirstName(transcript);
+              if (step === "collect_details") setFirstName(transcript);
             }
           } else {
             setConfusionCounter(prev => prev + 1);
           }
-        } catch (e) {
-          console.error("Erro na Mia Smart Support:", e);
-        }
+        } catch (e) { console.error(e); }
       }
     };
 
@@ -474,43 +454,27 @@ export default function SeniorTerminal() {
 
   useEffect(() => {
     const fetchPlaces = async (query: string, setter: any) => {
-      if (query.length < 2) {
-        setter([]);
-        return;
-      }
+      if (query.length < 2) { setter([]); return; }
       try {
         const res = await fetch(`/api/places/search?query=${encodeURIComponent(query)}`);
         const data = await res.json();
         setter(data || []);
-      } catch (e) {
-        setter([]);
-      }
+      } catch (e) { setter([]); }
     };
     if (debouncedOrigin && !originIata) fetchPlaces(debouncedOrigin, setOriginResults);
   }, [debouncedOrigin, originIata]);
 
   useEffect(() => {
     const fetchPlaces = async (query: string, setter: any) => {
-      if (query.length < 2) {
-        setter([]);
-        return;
-      }
+      if (query.length < 2) { setter([]); return; }
       try {
         const res = await fetch(`/api/places/search?query=${encodeURIComponent(query)}`);
         const data = await res.json();
         setter(data || []);
-      } catch (e) {
-        setter([]);
-      }
+      } catch (e) { setter([]); }
     };
     if (debouncedDest && !destIata) fetchPlaces(debouncedDest, setDestResults);
   }, [debouncedDest, destIata]);
-
-  const handleLogin = () => {
-    if (phoneNumber.length < 5) return;
-    setStep("greeting");
-    speak(t.v_welcome as string);
-  };
 
   const handleOriginSelect = (place: any) => {
     setOriginIata(place.iataCode);
@@ -534,65 +498,37 @@ export default function SeniorTerminal() {
 
   const handleDateNext = () => {
     if (!travelDate) return;
-    
-    if (currentLeg === 1) {
-      setStep("ask_return_intention");
-      speak(t.v_askReturn as string);
-    } else {
-      setStep("ask_multi_intention");
-      speak(t.v_askMulti as string);
-    }
+    if (currentLeg === 1) { setStep("ask_return_intention"); speak(t.v_askReturn as string); }
+    else { setStep("ask_multi_intention"); speak(t.v_askMulti as string); }
   };
 
-  const handleNameNext = () => {
-    if (!firstName || !lastName) return;
-    setStep("ask_dob");
-    speak(t.v_askDob as string);
-  };
-
-  const handleDobNext = async () => {
-    if (!dobDay || !dobMonth || !dobYear) return;
+  const handleSearchFlights = async () => {
     setStep("searching");
     setIsSearching(true);
     speak(t.v_searching as string);
-    
     try {
       let url = `/api/flights/search?passengers=1&adults=1&children=0&infants=0&cabinClass=${cabinClass}&tripType=${tripType}`;
-      
       if (tripType === "multi-city") {
         const flightsArray = [...legs].map(leg => ({ origin: leg.originIata, destination: leg.destIata, date: leg.travelDate }));
-        if (flightsArray.length < currentLeg) {
-           flightsArray.push({ origin: originIata, destination: destIata, date: travelDate });
-        }
+        if (flightsArray.length < currentLeg) { flightsArray.push({ origin: originIata, destination: destIata, date: travelDate }); }
         url += `&flights=${encodeURIComponent(JSON.stringify(flightsArray))}`;
       } else {
         url += `&origin=${originIata}&destination=${destIata}&date=${travelDate}`;
-        if (tripType === "round-trip" && returnDate) {
-          url += `&returnDate=${returnDate}`;
-        }
+        if (tripType === "round-trip" && returnDate) { url += `&returnDate=${returnDate}`; }
       }
-      
       const res = await fetch(url);
       const flights = await res.json();
-      
       if (flights && flights.length > 0) {
-        const sorted = flights.sort((a: any, b: any) => parseFloat(a.price) - parseFloat(b.price));
-        setFetchedFlights(sorted);
+        setFetchedFlights(flights.sort((a: any, b: any) => parseFloat(a.price) - parseFloat(b.price)));
         setOfferPage(0);
         setSelectedOutboundSlice(null);
         setStep("offer");
         speak(tripType === "round-trip" ? t.v_foundRT as string : t.v_foundFlights as string);
       } else {
         toast({ title: "Ops!", description: t.v_noFlights as string, variant: "destructive" });
-        setStep("greeting");
-        speak(t.v_noFlights as string);
+        setStep("greeting"); speak(t.v_noFlights as string);
       }
-    } catch (e) {
-      toast({ title: "Erro", variant: "destructive" });
-      setStep("greeting");
-    } finally {
-      setIsSearching(false);
-    }
+    } catch (e) { setStep("greeting"); } finally { setIsSearching(false); }
   };
 
   const createBooking = async (flight: any) => {
@@ -600,49 +536,30 @@ export default function SeniorTerminal() {
     speak(t.v_payment as string);
     try {
       const p = {
-        type: "adult",
-        givenName: firstName,
-        familyName: lastName,
-        bornOn: `${dobYear}-${dobMonth.padStart(2, '0')}-${dobDay.padStart(2, '0')}`,
-        gender: "m" // Simplified for ATM flow
+        type: "adult", givenName: firstName, familyName: lastName,
+        bornOn: `${dobYear}-${dobMonth.padStart(2, '0')}-${dobDay.padStart(2, '0')}`, gender: "m"
       };
-      
       const res = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          flightData: flight,
-          passengers: [p],
-          contactEmail: "senior-terminal@michelstravel.agency",
-          contactPhone: phoneNumber,
-          totalPrice: flight.price,
-          currency: flight.currency
+          flightData: flight, passengers: [p], contactEmail: "senior-terminal@michelstravel.agency",
+          contactPhone: phoneNumber, totalPrice: flight.price, currency: flight.currency
         })
       });
       const data = await res.json();
-      
       if (res.ok && data.clientSecret) {
         setBookingData({
-          clientSecret: data.clientSecret,
-          bookingId: data.booking.id,
-          referenceCode: data.booking.referenceCode,
-          amount: parseFloat(flight.price),
-          currency: flight.currency
+          clientSecret: data.clientSecret, bookingId: data.booking.id,
+          referenceCode: data.booking.referenceCode, amount: parseFloat(flight.price), currency: flight.currency
         });
-        setStep("checkout");
-        speak(t.v_cardReady as string);
+        setStep("checkout"); speak(t.v_cardReady as string);
       } else {
-         toast({ title: t.v_cardError as string, description: data.error || "Tente novamente.", variant: "destructive" });
-         speak(t.v_cardError as string);
+         toast({ title: t.v_cardError as string, variant: "destructive" }); speak(t.v_cardError as string);
       }
-    } catch (e) {
-      toast({ title: "Erro na reserva", description: "Problema ao conectar com o banco de dados.", variant: "destructive" });
-    }
+    } catch (e) { toast({ title: "Erro na reserva", variant: "destructive" }); }
   };
 
-  const handleExit = () => {
-    setLocation("/");
-  };
+  const handleExit = () => setLocation("/");
 
   const displayedFlights = React.useMemo(() => {
     if ((tripType === "round-trip" || tripType === "multi-city") && !selectedOutboundSlice) {
@@ -651,9 +568,7 @@ export default function SeniorTerminal() {
         if (!flight.slices || flight.slices.length === 0) return;
         const slice0 = flight.slices[0];
         const key = slice0.segments.map((s:any)=>s.flightNumber).join('-') + slice0.departureTime;
-        if (!uniqueOutbounds.has(key)) {
-          uniqueOutbounds.set(key, flight);
-        }
+        if (!uniqueOutbounds.has(key)) uniqueOutbounds.set(key, flight);
       });
       return Array.from(uniqueOutbounds.values());
     } else if ((tripType === "round-trip" || tripType === "multi-city") && selectedOutboundSlice) {
@@ -669,46 +584,25 @@ export default function SeniorTerminal() {
 
   const handleSelectFlightOption = (flight: any) => {
     if ((tripType === "round-trip" || tripType === "multi-city") && flight.slices && flight.slices.length > 1 && !selectedOutboundSlice) {
-       setSelectedOutboundSlice(flight);
-       setOfferPage(0);
-       speak(t.v_selectReturn as string);
+       setSelectedOutboundSlice(flight); setOfferPage(0); speak(t.v_selectReturn as string);
     } else {
-       createBooking(flight);
+       setSelectedFlight(flight); setStep("collect_details"); speak(t.v_askName as string);
     }
   };
 
   const displaySliceTimes = (slice: any, segment1: any, segmentLast: any, isCompact?: boolean) => {
     if (!slice || !segment1 || !segmentLast) return null;
-    const formatTime = (isoString: string) => {
-       const date = new Date(isoString);
-       return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
-    };
-    const formatDate = (isoString: string) => {
-       const date = new Date(isoString);
-       return date.toLocaleDateString('pt-BR', {day: '2-digit', month: 'long', year: 'numeric'});
-    }
-    
-    let durationStr = "N/A";
-    if (slice.duration) {
-      durationStr = slice.duration.replace('PT', '').toLowerCase().replace('h', 'h ').replace('m', 'm');
-    }
-    
+    const formatTime = (isoString: string) => new Date(isoString).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+    const formatDate = (isoString: string) => new Date(isoString).toLocaleDateString('pt-BR', {day: '2-digit', month: 'long', year: 'numeric'});
+    const durationStr = slice.duration ? slice.duration.replace('PT', '').toLowerCase().replace('h', 'h ').replace('m', 'm') : "N/A";
     const getCityName = (segNode: any) => segNode?.cityName || segNode?.name || segNode?.iataCode || "";
     const origCity = getCityName(segment1.origin) || segment1.originCity || "Origem";
     const destCity = getCityName(segmentLast.destination) || segmentLast.destinationCity || "Destino";
-    const origCode = segment1.origin?.iataCode || segment1.originCode || "";
-    const destCode = segmentLast.destination?.iataCode || segmentLast.destinationCode || "";
-
     const stopsCount = slice.segments.length > 1 ? slice.segments.length - 1 : 0;
     
     let stopsLabel = 'Voo Direto';
-    if (stopsCount === 1) {
-       const middleSeg = slice.segments[0]; 
-       const connCity = getCityName(middleSeg.destination) || middleSeg.destinationCity || middleSeg.destinationCode;
-       stopsLabel = `1 Parada em ${connCity}`;
-    } else if (stopsCount > 1) {
-       stopsLabel = `${stopsCount} Paradas`;
-    }
+    if (stopsCount === 1) stopsLabel = `1 Parada em ${getCityName(slice.segments[0].destination) || slice.segments[0].destinationCity}`;
+    else if (stopsCount > 1) stopsLabel = `${stopsCount} Paradas`;
 
     return (
       <div className={`flex flex-col w-full ${isCompact ? 'mt-0' : 'mt-4'}`}>
@@ -716,24 +610,20 @@ export default function SeniorTerminal() {
            📅 {formatDate(segment1.departingAt)}
         </p>
         <div className="flex items-center justify-between gap-2 w-full">
-          <div className="text-center sm:text-left flex flex-col sm:block">
+          <div className="text-center sm:text-left">
              <p className="text-3xl sm:text-4xl font-black text-white">{formatTime(segment1.departingAt)}</p>
-             <p className="text-base sm:text-lg text-slate-300 font-bold mt-1 truncate max-w-[120px] sm:max-w-[150px]" title={origCity}>{origCity}</p>
-             <p className="text-sm text-slate-500 font-medium px-2 py-1 bg-slate-800 rounded-md inline-block mt-1 border border-slate-700">{origCode}</p>
+             <p className="text-base sm:text-lg text-slate-300 font-bold mt-1 truncate max-w-[120px]" title={origCity}>{origCity}</p>
           </div>
-          <div className="flex-1 flex flex-col items-center relative px-2 sm:px-4">
-             <p className="text-sm sm:text-base text-slate-400 font-bold whitespace-nowrap mb-2">{durationStr}</p>
+          <div className="flex-1 flex flex-col items-center px-4">
+             <p className="text-sm sm:text-base text-slate-400 font-bold mb-2">{durationStr}</p>
              <div className="w-full h-[3px] bg-slate-600 relative rounded-full">
-               <Plane className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 sm:h-8 sm:w-8 text-slate-400 bg-slate-800 px-1 rounded-full border border-slate-700" />
+               <Plane className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-slate-400 bg-slate-800 px-1 rounded-full border border-slate-700" />
              </div>
-             <p className={`text-xs sm:text-sm font-bold mt-2 px-3 py-1 rounded-md border text-center leading-tight ${stopsCount > 0 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
-               {stopsLabel}
-             </p>
+             <p className={`text-xs sm:text-sm font-bold mt-2 px-3 py-1 rounded-md border text-center ${stopsCount > 0 ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>{stopsLabel}</p>
           </div>
-          <div className="text-center sm:text-right flex flex-col sm:block items-center sm:items-end">
+          <div className="text-center sm:text-right">
              <p className="text-3xl sm:text-4xl font-black text-white">{formatTime(segmentLast.arrivingAt)}</p>
-             <p className="text-base sm:text-lg text-slate-300 font-bold mt-1 truncate max-w-[120px] sm:max-w-[150px]" title={destCity}>{destCity}</p>
-             <p className="text-sm text-slate-500 font-medium px-2 py-1 bg-slate-800 rounded-md inline-block mt-1 border border-slate-700">{destCode}</p>
+             <p className="text-base sm:text-lg text-slate-300 font-bold mt-1 truncate max-w-[120px]" title={destCity}>{destCity}</p>
           </div>
         </div>
       </div>
@@ -754,441 +644,179 @@ export default function SeniorTerminal() {
             }`}>{l.toUpperCase()}</button>
           ))}
         </div>
-        {(step !== "auth" && step !== "greeting") && (
-          <Button 
-            onClick={handleExit} 
-            className="h-12 sm:h-16 px-4 sm:px-8 text-sm sm:text-xl bg-slate-800 hover:bg-slate-700 text-white rounded-xl sm:rounded-2xl border border-slate-700 shadow-md"
-          >
+        {(step !== "greeting") && (
+          <Button onClick={handleExit} className="h-12 sm:h-16 px-4 sm:px-8 text-sm sm:text-xl bg-slate-800 hover:bg-slate-700 text-white rounded-xl border border-slate-700 shadow-md">
             {t.exit as string}
           </Button>
         )}
       </header>
 
-      <div className="mx-auto mt-6 w-full max-w-sm px-4 md:hidden">
-        <SeniorCardImage />
-      </div>
-
       <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 overflow-hidden relative">
         
-        {step === "auth" && (
-           <div className="w-full max-w-2xl animate-in fade-in zoom-in duration-500">
-             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-4 sm:mb-6 text-center leading-tight text-balance">
-               {t.enterPhone as string}
-             </h2>
-             <p className="text-base sm:text-xl text-blue-400 font-medium mb-6 sm:mb-10 text-center text-balance">
-               {t.phoneHint as string}
-             </p>
-             <div className="flex flex-col gap-4 sm:gap-6">
-               <Input 
-                 type="tel"
-                 placeholder="+1 (555) 555-5555"
-                 value={phoneNumber}
-                 onChange={(e) => setPhoneNumber(e.target.value)}
-                 className="h-20 sm:h-32 text-2xl sm:text-6xl text-center rounded-2xl sm:rounded-[32px] border-4 border-blue-500 bg-slate-800 text-white placeholder:text-slate-500 transition-all focus:border-blue-400 px-4 shadow-inner"
-                 autoFocus
-               />
-               <Button 
-                 onClick={handleLogin}
-                 disabled={phoneNumber.length < 7}
-                 className="h-16 sm:h-24 text-xl sm:text-3xl font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-full mt-4 sm:mt-8 shadow-[0_0_40px_rgba(37,99,235,0.3)] transition-all"
-               >
-                                   {t.enter as string} <ArrowRight className="ml-2 sm:ml-4 h-6 w-6 sm:h-8 sm:w-8" />
-               </Button>
-             </div>
-           </div>
-         )}
- 
          {step === "greeting" && (
-           <div className="w-full max-w-2xl text-center space-y-8 sm:space-y-12 animate-in slide-in-from-right duration-500">
-             <div className="h-24 w-24 sm:h-40 sm:w-40 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-6 sm:mb-8 border-4 border-blue-500/30 shadow-lg">
-               <Phone className="h-12 w-12 sm:h-20 sm:w-20" />
+           <div className="w-full max-w-2xl text-center space-y-8 animate-in slide-in-from-right duration-500">
+             <div className="h-24 w-24 sm:h-40 sm:w-40 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-blue-500/30 shadow-lg">
+               <Plane className="h-12 w-12 sm:h-20 sm:w-20" />
              </div>
-             <h2 className="text-3xl sm:text-5xl font-bold text-white leading-tight text-balance">
-               {t.routeReady as string}
-             </h2>
-             <p className="text-lg sm:text-2xl text-slate-300 text-balance">
-               {t.routeDesc as string}
-             </p>
-             <Button 
-               onClick={() => {
-                 setStep("ask_class");
-                 speak(t.v_askClass as string);
-               }}
-               className="w-full h-20 sm:h-32 text-2xl sm:text-4xl font-extrabold bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl sm:rounded-[32px] mt-8 sm:mt-12 shadow-[0_0_60px_rgba(16,185,129,0.3)]"
-             >
-                                 {t.startBuy as string} <ArrowRight className="ml-2 sm:ml-4 h-8 w-8 sm:h-10 sm:w-10 inline" />
+             <h2 className="text-3xl sm:text-5xl font-bold text-white leading-tight">{t.routeReady as string}</h2>
+             <p className="text-lg sm:text-2xl text-slate-300">{t.routeDesc as string}</p>
+             <Button onClick={() => { setStep("ask_class"); speak(t.v_askClass as string); }} className="w-full h-20 sm:h-32 text-2xl sm:text-4xl font-extrabold bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl mt-8 shadow-[0_0_60px_rgba(16,185,129,0.3)]">
+               {t.startBuy as string} <ArrowRight className="ml-2 h-8 w-8 inline" />
              </Button>
            </div>
          )}
- 
+  
          {step === "ask_class" && (
-           <div className="w-full max-w-5xl text-center space-y-6 sm:space-y-8 animate-in slide-in-from-right duration-500">
-             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6 leading-tight text-balance">{t.chooseClass as string}</h2>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-               <Button onClick={() => { setCabinClass("economy"); setStep("ask_origin"); speak(t.v_fromCity as string); }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-blue-600 text-white truncate text-balance whitespace-normal leading-tight border border-slate-700 shadow-md">{t.economy as string}</Button>
-               <Button onClick={() => { setCabinClass("premium_economy"); setStep("ask_origin"); speak(t.v_fromCity as string); }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-emerald-600 text-white truncate text-balance whitespace-normal leading-tight border border-slate-700 shadow-md">{t.premiumEconomy as string}</Button>
-               <Button onClick={() => { setCabinClass("business"); setStep("ask_origin"); speak(t.v_fromCity as string); }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-purple-600 text-white truncate text-balance whitespace-normal leading-tight border border-slate-700 shadow-md">{t.business as string}</Button>
-               <Button onClick={() => { setCabinClass("first"); setStep("ask_origin"); speak(t.v_fromCity as string); }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-amber-600 text-white truncate text-balance whitespace-normal leading-tight border border-slate-700 shadow-md">{t.first as string}</Button>
+           <div className="w-full max-w-5xl text-center space-y-6 animate-in slide-in-from-right duration-500">
+             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">{t.chooseClass as string}</h2>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               {["economy", "premium_economy", "business", "first"].map(c => (
+                 <Button key={c} onClick={() => { setCabinClass(c); setStep("ask_origin"); speak(t.v_fromCity as string); }} className="h-24 text-2xl font-bold rounded-2xl bg-slate-800 hover:bg-blue-600 text-white border border-slate-700 shadow-md capitalize">{t[c as any] as string}</Button>
+               ))}
              </div>
            </div>
          )}
- 
+
          {step === "ask_origin" && (
-           <div className="w-full max-w-4xl text-center space-y-6 sm:space-y-8 animate-in slide-in-from-right duration-500">
-             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-2 sm:mb-4 leading-tight text-balance">
-               {currentLeg > 1 ? (t.fromCityN as any)(currentLeg) : t.fromCity as string}
-             </h2>
-             <p className="text-lg sm:text-2xl text-blue-400 mb-6 sm:mb-8 text-balance">{t.cityHint as string}</p>
+           <div className="w-full max-w-4xl text-center space-y-6 animate-in slide-in-from-right duration-500">
+             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-4">{currentLeg > 1 ? (t.fromCityN as any)(currentLeg) : t.fromCity as string}</h2>
              <div className="relative">
-                <Input 
-                  type="text"
-                  value={originQuery}
-                  onChange={(e) => {
-                    setOriginQuery(e.target.value);
-                    setOriginIata("");
-                  }}
-                                     placeholder={t.originPH as string}
-                  className="h-20 sm:h-32 text-2xl sm:text-4xl text-center rounded-2xl sm:rounded-[32px] border-4 border-slate-600 bg-slate-800 text-white focus:border-blue-400 px-4 shadow-inner"
-                />
+                <Input value={originQuery} onChange={(e) => { setOriginQuery(e.target.value); setOriginIata(""); }} placeholder={t.originPH as string} className="h-20 sm:h-32 text-2xl sm:text-4xl text-center rounded-2xl border-4 border-slate-600 bg-slate-800 text-white focus:border-blue-400" />
                 {originResults.length > 0 && !originIata && (
                   <div className="absolute top-full left-0 right-0 mt-4 bg-slate-800 border-4 border-slate-600 rounded-[32px] overflow-hidden z-[100] shadow-2xl max-h-[50vh] overflow-y-auto">
                     {originResults.map((place) => (
-                      <button
-                        key={place.id}
-                        onClick={() => handleOriginSelect(place)}
-                        className="w-full p-4 sm:p-8 text-left hover:bg-slate-700 flex items-center gap-4 sm:gap-6 border-b border-slate-700 last:border-0 transition-colors"
-                      >
-                        <MapPin className="h-8 w-8 sm:h-12 sm:w-12 text-blue-400 shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-2xl sm:text-4xl font-bold text-white truncate text-balance">{place.cityName || place.name}</p>
-                          <p className="text-lg sm:text-2xl text-slate-400 mt-1 sm:mt-2 truncate">{place.countryName} ({place.iataCode})</p>
+                      <button key={place.id} onClick={() => handleOriginSelect(place)} className="w-full p-4 text-left hover:bg-slate-700 flex items-center gap-4 border-b border-slate-700 last:border-0 transition-colors">
+                        <MapPin className="h-8 w-8 text-blue-400 shrink-0" />
+                        <div>
+                          <p className="text-2xl font-bold text-white">{place.cityName || place.name}</p>
+                          <p className="text-lg text-slate-400">{place.countryName} ({place.iataCode})</p>
                         </div>
                       </button>
                     ))}
                   </div>
                 )}
              </div>
-             {originQuery.length < 3 && (
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-8 sm:mt-12">
-                  <Button onClick={() => handleOriginSelect({ iataCode: "EWR", cityName: "Newark", countryName: "United States" })} className="h-20 sm:h-32 text-xl sm:text-3xl font-bold rounded-2xl sm:rounded-[24px] bg-slate-800 hover:bg-blue-600 truncate text-balance whitespace-normal leading-tight border border-slate-700">Nova York / Newark (EWR)</Button>
-                  <Button onClick={() => handleOriginSelect({ iataCode: "MIA", cityName: "Miami", countryName: "United States" })} className="h-20 sm:h-32 text-xl sm:text-3xl font-bold rounded-2xl sm:rounded-[24px] bg-slate-800 hover:bg-blue-600 truncate text-balance whitespace-normal leading-tight border border-slate-700">Miami, Flórida (MIA)</Button>
-               </div>
-             )}
            </div>
          )}
- 
+
          {step === "destination" && (
-           <div className="w-full max-w-4xl text-center space-y-6 sm:space-y-8 animate-in slide-in-from-right duration-500">
-             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-2 sm:mb-4 leading-tight text-balance">
-               {currentLeg > 1 ? (t.toCityN as any)(currentLeg) : t.toCity as string}
-             </h2>
-             <p className="text-lg sm:text-2xl text-blue-400 mb-6 sm:mb-8 text-balance">{t.cityHint as string}</p>
+           <div className="w-full max-w-4xl text-center space-y-6 animate-in slide-in-from-right duration-500">
+             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-4">{currentLeg > 1 ? (t.toCityN as any)(currentLeg) : t.toCity as string}</h2>
              <div className="relative">
-               <Input 
-                 type="text"
-                 value={destQuery}
-                 onChange={(e) => {
-                   setDestQuery(e.target.value);
-                   setDestIata("");
-                 }}
-                                   placeholder={t.destPH as string}
-                 className="h-20 sm:h-32 text-2xl sm:text-4xl text-center rounded-2xl sm:rounded-[32px] border-4 border-slate-600 bg-slate-800 text-white focus:border-emerald-400 px-4 shadow-inner"
-               />
+               <Input value={destQuery} onChange={(e) => { setDestQuery(e.target.value); setDestIata(""); }} placeholder={t.destPH as string} className="h-20 sm:h-32 text-2xl sm:text-4xl text-center rounded-2xl border-4 border-slate-600 bg-slate-800 text-white focus:border-emerald-400" />
                {destResults.length > 0 && !destIata && (
                  <div className="absolute top-full left-0 right-0 mt-4 bg-slate-800 border-4 border-slate-600 rounded-[32px] overflow-hidden z-[100] shadow-2xl max-h-[50vh] overflow-y-auto">
                    {destResults.map((place) => (
-                     <button
-                       key={place.id}
-                       onClick={() => handleDestSelect(place)}
-                       className="w-full p-4 sm:p-8 text-left hover:bg-slate-700 flex items-center gap-4 sm:gap-6 border-b border-slate-700 last:border-0 transition-colors"
-                     >
-                       <MapPin className="h-8 w-8 sm:h-12 sm:w-12 text-emerald-400 shrink-0" />
-                       <div className="min-w-0">
-                         <p className="text-2xl sm:text-4xl font-bold text-white truncate text-balance">{place.cityName || place.name}</p>
-                         <p className="text-lg sm:text-2xl text-slate-400 mt-1 sm:mt-2 truncate">{place.countryName} ({place.iataCode})</p>
+                     <button key={place.id} onClick={() => handleDestSelect(place)} className="w-full p-4 text-left hover:bg-slate-700 flex items-center gap-4 border-b border-slate-700 last:border-0 transition-colors">
+                       <MapPin className="h-8 w-8 text-emerald-400 shrink-0" />
+                       <div>
+                         <p className="text-2xl font-bold text-white">{place.cityName || place.name}</p>
+                         <p className="text-lg text-slate-400">{place.countryName} ({place.iataCode})</p>
                        </div>
                      </button>
                    ))}
                  </div>
                )}
              </div>
-             {destQuery.length < 3 && (
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-8 sm:mt-12">
-                  <Button onClick={() => handleDestSelect({ iataCode: "LIS", cityName: "Lisboa", countryName: "Portugal" })} className="h-20 sm:h-32 text-xl sm:text-3xl font-bold rounded-2xl sm:rounded-[24px] bg-slate-800 hover:bg-emerald-600 truncate text-balance whitespace-normal leading-tight border border-slate-700">Lisboa, Portugal (LIS)</Button>
-                  <Button onClick={() => handleDestSelect({ iataCode: "GRU", cityName: "São Paulo", countryName: "Brasil" })} className="h-20 sm:h-32 text-xl sm:text-3xl font-bold rounded-2xl sm:rounded-[24px] bg-slate-800 hover:bg-emerald-600 truncate text-balance whitespace-normal leading-tight border border-slate-700">S. Paulo, Brasil (GRU)</Button>
-               </div>
-             )}
            </div>
          )}
- 
+
          {step === "dates" && (
-           <div className="w-full max-w-4xl text-center space-y-8 sm:space-y-12 animate-in slide-in-from-right duration-500">
-             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-4 sm:mb-8 leading-tight text-balance">
-               {currentLeg > 1 ? (t.dateN as any)(currentLeg) : t.dateIda as string}
-             </h2>
-             <div className="flex flex-col items-center gap-6 sm:gap-8">
-               <Input 
-                 type="date"
-                 value={travelDate}
-                 onChange={(e) => setTravelDate(e.target.value)}
-                 className="h-20 sm:h-32 w-full max-w-2xl text-2xl sm:text-5xl text-center rounded-2xl sm:rounded-[32px] border-4 border-slate-600 bg-slate-800 text-white focus:border-blue-400 px-4 shadow-inner"
-               />
-               <Button 
-                 onClick={handleDateNext}
-                 disabled={!travelDate}
-                 className="h-16 sm:h-24 px-8 sm:px-12 text-xl sm:text-3xl font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-[0_0_40px_rgba(37,99,235,0.3)] transition-all w-full sm:w-auto"
-               >
-                 {t.continue as string} <ArrowRight className="ml-2 sm:ml-4 h-6 w-6 sm:h-8 sm:w-8 inline" />
-               </Button>
-             </div>
-           </div>
-         )}
- 
-         {step === "ask_return_intention" && (
-           <div className="w-full max-w-4xl text-center space-y-6 sm:space-y-8 animate-in slide-in-from-right duration-500">
-             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6 leading-tight text-balance">
-               {t.wantReturn as string}
-             </h2>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-8">
-               <Button onClick={() => {
-                 setTripType("round-trip");
-                 setStep("return_date");
-                 speak(t.v_yesReturn as string);
-               }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-emerald-600 hover:bg-emerald-500 text-white truncate text-balance whitespace-normal leading-tight shadow-md">{t.yesReturn as string}</Button>
-               <Button onClick={() => {
-                 setTripType("one-way");
-                 setStep("ask_multi_intention");
-                 speak(t.v_noReturn as string);
-               }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-slate-700 text-white truncate text-balance whitespace-normal leading-tight border border-slate-700 shadow-md">{t.noReturn as string}</Button>
-             </div>
-           </div>
-         )}
- 
-         {step === "return_date" && (
-           <div className="w-full max-w-4xl text-center space-y-8 sm:space-y-12 animate-in slide-in-from-right duration-500">
-             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-4 sm:mb-8 leading-tight text-balance">{t.returnDate as string}</h2>
-             <div className="flex flex-col items-center gap-6 sm:gap-8">
-               <Input 
-                 type="date"
-                 value={returnDate}
-                 onChange={(e) => setReturnDate(e.target.value)}
-                 className="h-20 sm:h-32 w-full max-w-2xl text-2xl sm:text-5xl text-center rounded-2xl sm:rounded-[32px] border-4 border-emerald-600 bg-slate-800 text-white focus:border-emerald-400 px-4 shadow-inner"
-               />
-               <Button 
-                 onClick={() => {
-                   if (!returnDate) return;
-                   setStep("ask_name");
-                   speak(t.v_askName as string);
-                 }}
-                 disabled={!returnDate}
-                 className="h-16 sm:h-24 px-8 sm:px-12 text-xl sm:text-3xl font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-full shadow-[0_0_40px_rgba(16,185,129,0.3)] transition-all w-full sm:w-auto"
-               >
-                 {t.continue as string} <ArrowRight className="ml-2 sm:ml-4 h-6 w-6 sm:h-8 sm:w-8 inline" />
-               </Button>
-             </div>
-           </div>
-         )}
- 
-         {step === "ask_multi_intention" && (
-            <div className="w-full max-w-4xl text-center space-y-6 sm:space-y-8 animate-in slide-in-from-right duration-500">
-             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6 leading-tight text-balance">{(t.multiQ as any)(destIata)}</h2>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-8">
-               <Button onClick={() => {
-                 setTripType("multi-city");
-                 const newLeg = { originQuery, originIata, destQuery, destIata, travelDate };
-                 setLegs(prev => [...prev, newLeg]);
-                 setCurrentLeg(c => c + 1);
-                 setStep("destination"); 
-                 setOriginIata(destIata);
-                 setOriginQuery(destQuery);
-                 setDestIata("");
-                 setDestQuery("");
-                 setDestResults([]);
-                 setTravelDate("");
-                 speak((t.v_multiNext as any)(destIata));
-               }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-purple-600 hover:bg-purple-500 text-white truncate text-balance whitespace-normal leading-tight shadow-md">{t.yesMulti as string}</Button>
-               <Button onClick={() => {
-                 if (currentLeg > 1) {
-                   const newLeg = { originQuery, originIata, destQuery, destIata, travelDate };
-                   setLegs(prev => [...prev, newLeg]);
-                 }
-                 setStep("ask_name");
-                 speak(t.v_routeReady as string);
-               }} className="h-24 sm:h-32 text-2xl sm:text-4xl font-bold rounded-2xl sm:rounded-[32px] bg-slate-800 hover:bg-slate-700 text-white truncate text-balance whitespace-normal leading-tight border border-slate-700 shadow-md">{t.noMulti as string}</Button>
-             </div>
-           </div>
-         )}
- 
-         {step === "ask_name" && (
-           <div className="w-full max-w-2xl animate-in slide-in-from-right duration-500">
-             <div className="flex justify-center mb-6">
-               <div className="h-20 w-20 sm:h-24 sm:w-24 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center border-4 border-blue-500/30 shadow-lg">
-                 <User className="h-10 w-10 sm:h-12 sm:w-12" />
-               </div>
-             </div>
-             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6 text-center leading-tight text-balance">
-               {t.yourName as string}
-             </h2>
-             <div className="flex flex-col gap-4 sm:gap-6">
-               <Input 
-                 type="text"
-                                   placeholder={t.firstName as string}
-                 value={firstName}
-                 onChange={(e) => setFirstName(e.target.value)}
-                 className="h-16 sm:h-24 text-xl sm:text-4xl text-center rounded-2xl sm:rounded-[24px] border-4 border-slate-600 bg-slate-800 text-white placeholder:text-slate-500 focus:border-blue-400 px-4 shadow-inner"
-               />
-               <Input 
-                 type="text"
-                                   placeholder={t.lastName as string}
-                 value={lastName}
-                 onChange={(e) => setLastName(e.target.value)}
-                 className="h-16 sm:h-24 text-xl sm:text-4xl text-center rounded-2xl sm:rounded-[24px] border-4 border-slate-600 bg-slate-800 text-white placeholder:text-slate-500 focus:border-blue-400 px-4 shadow-inner"
-               />
-               <Button 
-                 onClick={handleNameNext}
-                 disabled={!firstName || !lastName}
-                 className="h-16 sm:h-24 text-xl sm:text-3xl font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-full mt-2 sm:mt-4 shadow-[0_0_40px_rgba(37,99,235,0.3)] transition-all"
-               >
-                 {t.continue as string} <ArrowRight className="ml-2 sm:ml-4 h-6 w-6 sm:h-8 sm:w-8 inline" />
-               </Button>
-             </div>
-           </div>
-         )}
- 
-         {step === "ask_dob" && (
-           <div className="w-full max-w-3xl animate-in slide-in-from-right duration-500">
-             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6 text-center leading-tight text-balance">
-               {t.yourDob as string}
-             </h2>
-             <div className="flex flex-col sm:flex-row gap-4">
-               <div className="flex gap-4 w-full sm:w-1/2">
-                 <Input 
-                   type="number"
-                                       placeholder={t.day as string}
-                   value={dobDay}
-                   onChange={(e) => setDobDay(e.target.value)}
-                   className="h-16 sm:h-24 w-1/2 text-2xl sm:text-4xl text-center rounded-2xl sm:rounded-[24px] border-4 border-slate-600 bg-slate-800 text-white focus:border-blue-400 px-2 shadow-inner"
-                 />
-                 <Input 
-                   type="number"
-                                       placeholder={t.month as string}
-                   value={dobMonth}
-                   onChange={(e) => setDobMonth(e.target.value)}
-                   className="h-16 sm:h-24 w-1/2 text-2xl sm:text-4xl text-center rounded-2xl sm:rounded-[24px] border-4 border-slate-600 bg-slate-800 text-white focus:border-blue-400 px-2 shadow-inner"
-                 />
-               </div>
-               <Input 
-                 type="number"
-                                   placeholder={t.year as string}
-                 value={dobYear}
-                 onChange={(e) => setDobYear(e.target.value)}
-                 className="h-16 sm:h-24 w-full sm:w-1/2 text-2xl sm:text-4xl text-center rounded-2xl sm:rounded-[24px] border-4 border-slate-600 bg-slate-800 text-white focus:border-blue-400 px-4 shadow-inner"
-               />
-             </div>
-             <Button 
-               onClick={handleDobNext}
-               disabled={!dobDay || !dobMonth || !dobYear || dobYear.length < 4}
-               className="w-full h-16 sm:h-24 text-xl sm:text-3xl font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-full mt-6 sm:mt-8 shadow-[0_0_40px_rgba(37,99,235,0.3)] transition-all"
-             >
-                               {t.search as string} <ArrowRight className="ml-2 sm:ml-4 h-6 w-6 sm:h-8 sm:w-8 inline" />
+           <div className="w-full max-w-4xl text-center space-y-8 animate-in slide-in-from-right duration-500">
+             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-8">{currentLeg > 1 ? (t.dateN as any)(currentLeg) : t.dateIda as string}</h2>
+             <Input type="date" value={travelDate} onChange={(e) => setTravelDate(e.target.value)} className="h-20 sm:h-32 w-full max-w-2xl text-2xl sm:text-5xl text-center rounded-2xl border-4 border-slate-600 bg-slate-800 text-white focus:border-blue-400 mx-auto" />
+             <Button onClick={handleDateNext} disabled={!travelDate} className="h-16 px-12 text-xl font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg">
+               {t.continue as string} <ArrowRight className="ml-2 h-6 w-6 inline" />
              </Button>
            </div>
          )}
- 
-         {step === "searching" && (
-           <div className="w-full max-w-2xl text-center space-y-8 sm:space-y-12 animate-in zoom-in duration-500">
-             <div className="relative h-32 w-32 sm:h-48 sm:w-48 mx-auto flex items-center justify-center">
-               <div className="absolute inset-0 border-4 sm:border-8 border-blue-500/20 rounded-full animate-ping"></div>
-               <div className="absolute inset-2 sm:inset-4 border-4 sm:border-8 border-blue-500/40 rounded-full animate-ping" style={{ animationDelay: '0.2s' }}></div>
-               <div className="absolute inset-4 sm:inset-8 border-4 sm:border-8 border-blue-500/60 rounded-full animate-ping" style={{ animationDelay: '0.4s' }}></div>
-               <Plane className="h-12 w-12 sm:h-20 sm:w-20 text-blue-400 animate-pulse relative z-10" />
+
+         {step === "ask_return_intention" && (
+           <div className="w-full max-w-4xl text-center space-y-8 animate-in slide-in-from-right duration-500">
+             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">{t.wantReturn as string}</h2>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <Button onClick={() => { setTripType("round-trip"); setStep("return_date"); speak(t.v_yesReturn as string); }} className="h-24 text-2xl font-bold rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md">{t.yesReturn as string}</Button>
+               <Button onClick={() => { setTripType("one-way"); setStep("ask_multi_intention"); speak(t.v_noReturn as string); }} className="h-24 text-2xl font-bold rounded-2xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 shadow-md">{t.noReturn as string}</Button>
              </div>
-             <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight text-balance">
-               {t.searching as string}
-             </h2>
-             <p className="text-lg sm:text-2xl text-slate-400 text-balance">
-               {t.searchDesc as string}
-             </p>
            </div>
          )}
- 
+
+         {step === "return_date" && (
+           <div className="w-full max-w-4xl text-center space-y-8 animate-in slide-in-from-right duration-500">
+             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-8">{t.returnDate as string}</h2>
+             <Input type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} className="h-20 sm:h-32 w-full max-w-2xl text-2xl sm:text-5xl text-center rounded-2xl border-4 border-emerald-600 bg-slate-800 text-white mx-auto" />
+             <Button onClick={() => { if (!returnDate) return; handleSearchFlights(); }} disabled={!returnDate} className="h-16 px-12 text-xl font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-full shadow-lg">
+               {t.continue as string} <ArrowRight className="ml-2 h-6 w-6 inline" />
+             </Button>
+           </div>
+         )}
+
+         {step === "ask_multi_intention" && (
+            <div className="w-full max-w-4xl text-center space-y-8 animate-in slide-in-from-right duration-500">
+             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">{(t.multiQ as any)(destIata)}</h2>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <Button onClick={() => { setTripType("multi-city"); setLegs(prev => [...prev, { originQuery, originIata, destQuery, destIata, travelDate }]); setCurrentLeg(c => c + 1); setStep("destination"); setOriginIata(destIata); setOriginQuery(destQuery); setDestIata(""); setDestQuery(""); setTravelDate(""); speak((t.v_multiNext as any)(destIata)); }} className="h-24 text-2xl font-bold rounded-2xl bg-purple-600 hover:bg-purple-500 text-white shadow-md">{t.yesMulti as string}</Button>
+               <Button onClick={() => { if (currentLeg > 1) setLegs(prev => [...prev, { originQuery, originIata, destQuery, destIata, travelDate }]); handleSearchFlights(); }} className="h-24 text-2xl font-bold rounded-2xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 shadow-md">{t.noMulti as string}</Button>
+             </div>
+           </div>
+         )}
+
+         {step === "searching" && (
+           <div className="w-full max-w-2xl text-center space-y-12 animate-in zoom-in duration-500">
+             <div className="relative h-32 w-32 sm:h-48 sm:w-48 mx-auto flex items-center justify-center">
+               <Plane className="h-12 w-12 sm:h-20 sm:w-20 text-blue-400 animate-pulse" />
+             </div>
+             <h2 className="text-3xl sm:text-4xl font-bold text-white">{t.searching as string}</h2>
+             <p className="text-lg sm:text-2xl text-slate-400">{t.searchDesc as string}</p>
+           </div>
+         )}
+
          {step === "offer" && fetchedFlights.length > 0 && (
-           <div className="w-full max-w-[1400px] text-center space-y-6 sm:space-y-8 animate-in slide-in-from-bottom duration-700">
-             <h2 className="text-3xl sm:text-5xl font-bold text-white leading-tight text-balance mb-8">
-               {(tripType === "round-trip" || tripType === "multi-city") && !selectedOutboundSlice 
-                 ? t.chooseOutbound as string 
-                 : (tripType === "round-trip" || tripType === "multi-city") && selectedOutboundSlice
-                 ? t.chooseReturn as string
-                 : t.chooseFlight as string}
+           <div className="w-full max-w-[1400px] text-center space-y-8 animate-in slide-in-from-bottom duration-700 pb-20">
+             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-8">
+               {(tripType === "round-trip" || tripType === "multi-city") && !selectedOutboundSlice ? t.chooseOutbound as string : (tripType === "round-trip" || tripType === "multi-city") && selectedOutboundSlice ? t.chooseReturn as string : t.chooseFlight as string}
              </h2>
 
              {selectedOutboundSlice && (
-                <div className="bg-slate-800/90 border-4 border-blue-500 rounded-[32px] p-6 lg:p-8 mb-12 text-left shadow-2xl relative overflow-hidden animate-in fade-in zoom-in duration-500">
-                   <div className="absolute top-0 right-0 bg-blue-500 text-white rounded-bl-2xl px-6 py-2 font-bold text-xs sm:text-sm uppercase tracking-wider shadow-md">
-                      {t.outboundDone as string}
-                   </div>
-                   <div className="flex flex-col md:flex-row gap-6 sm:gap-10 items-center mt-2">
+                <div className="bg-slate-800/90 border-4 border-blue-500 rounded-[32px] p-6 mb-12 text-left shadow-2xl relative animate-in fade-in duration-500">
+                   <div className="absolute top-0 right-0 bg-blue-500 text-white rounded-bl-2xl px-6 py-2 font-bold text-sm uppercase tracking-wider">{t.outboundDone as string}</div>
+                   <div className="flex flex-col md:flex-row gap-10 items-center mt-2">
                       <div className="flex-1 w-full bg-slate-900/50 p-4 rounded-3xl border border-slate-700/50 shadow-inner">
                          {displaySliceTimes(selectedOutboundSlice.slices[0], selectedOutboundSlice.slices[0].segments[0], selectedOutboundSlice.slices[0].segments[selectedOutboundSlice.slices[0].segments.length - 1], true)}
                       </div>
-                      <div className="text-center md:text-right md:border-l-2 border-slate-700 md:pl-8 w-full md:w-auto">
-                         <p className="text-slate-400 font-medium text-sm sm:text-base">{t.estTotal as string}</p>
-                         <p className="text-blue-400 font-black text-3xl sm:text-5xl capitalize truncate break-all">{selectedOutboundSlice.currency} {selectedOutboundSlice.price}</p>
-                         <p className="text-slate-400 font-medium text-sm sm:text-base mt-2">{t.flyingWith as string} {selectedOutboundSlice.airline}</p>
+                      <div className="text-center md:text-right md:border-l-2 border-slate-700 md:pl-8">
+                         <p className="text-slate-400 font-medium">{t.estTotal as string}</p>
+                         <p className="text-blue-400 font-black text-3xl sm:text-5xl capitalize">{selectedOutboundSlice.currency} {selectedOutboundSlice.price}</p>
                       </div>
                    </div>
                 </div>
              )}
              
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 text-left relative z-10">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
                {displayedFlights.slice(offerPage * 3, (offerPage + 1) * 3).map((flight: any, idx: number) => {
                  const sliceIndex = ((tripType === "round-trip" || tripType === "multi-city") && selectedOutboundSlice) ? 1 : 0;
-                 const activeSlice = flight.slices ? flight.slices[sliceIndex] : null;
-                 const segment1 = activeSlice?.segments?.[0];
-                 const segmentLast = activeSlice?.segments?.[activeSlice.segments.length - 1];
- 
+                 const activeSlice = flight.slices?.[sliceIndex];
+                 if (!activeSlice) return null;
                  return (
-                   <div key={flight.id || idx} className="bg-slate-800 flex flex-col rounded-3xl sm:rounded-[40px] p-6 sm:p-8 border-4 border-emerald-500 shadow-[0_0_60px_rgba(16,185,129,0.2)] gap-4 sm:gap-6 relative overflow-hidden transition-transform hover:-translate-y-2">
-                     
-                     {(!selectedOutboundSlice && (tripType === "round-trip" || tripType === "multi-city")) && (
-                        <div className="absolute top-0 right-0 bg-blue-500 text-white px-4 py-1.5 sm:px-6 sm:py-2 rounded-bl-3xl font-extrabold uppercase tracking-widest text-[10px] sm:text-xs shadow-md">
-                           {t.outboundOpts as string}
-                        </div>
-                     )}
-                     {(selectedOutboundSlice) && (
-                        <div className="absolute top-0 right-0 bg-emerald-600 text-white px-4 py-1.5 sm:px-6 sm:py-2 rounded-bl-3xl font-extrabold uppercase tracking-widest text-[10px] sm:text-xs shadow-md">
-                           {t.returnOpts as string}
-                        </div>
-                     )}
-
-                     <div className="flex justify-between items-start mt-4 sm:mt-2">
+                   <div key={flight.id || idx} className="bg-slate-800 flex flex-col rounded-[40px] p-8 border-4 border-emerald-500 shadow-xl relative overflow-hidden transition-transform hover:-translate-y-2">
+                     <div className="flex justify-between items-start">
                        <div>
-                         <p className="text-base sm:text-lg text-slate-400 font-medium">{t.airline as string}</p>
-                         <p className="text-2xl sm:text-3xl font-extrabold text-white mt-1 capitalize truncate" title={flight.airline}>{flight.airline}</p>
+                         <p className="text-base text-slate-400 font-medium">{t.airline as string}</p>
+                         <p className="text-2xl font-extrabold text-white mt-1 capitalize truncate">{flight.airline}</p>
                        </div>
-                       {flight.logoUrl && <img src={flight.logoUrl} className="h-10 w-10 sm:h-14 sm:w-14 bg-white rounded-xl p-1.5 shadow-sm" alt="Logo" />}
+                       {flight.logoUrl && <img src={flight.logoUrl} className="h-10 w-10 sm:h-14 sm:w-14 bg-white rounded-xl p-1 shadow-sm" alt="Logo" />}
                      </div>
-                     
-                     <div className="bg-slate-900/30 -mx-6 sm:-mx-8 px-6 sm:px-8 py-2 border-y border-slate-700/50 my-2">
-                        {activeSlice && displaySliceTimes(activeSlice, segment1, segmentLast)}
+                     <div className="bg-slate-900/30 -mx-8 px-8 py-2 border-y border-slate-700/50 my-6">
+                        {displaySliceTimes(activeSlice, activeSlice.segments[0], activeSlice.segments[activeSlice.segments.length-1])}
                      </div>
-
-                     <div className="py-2">
-                       <p className="text-base sm:text-lg text-slate-400 font-medium">{t.price as string}</p>
-                       <p className="text-3xl sm:text-4xl font-extrabold text-emerald-400 mt-1 uppercase truncate">{flight.currency} {flight.price}</p>
-                       {(!selectedOutboundSlice && (tripType === "round-trip" || tripType === "multi-city")) && (
-                         <p className="text-xs text-emerald-600 font-bold mt-1 uppercase tracking-wider">{t.roundPriceNote as string}</p>
-                       )}
+                     <div className="mb-6">
+                       <p className="text-base text-slate-400 font-medium">{t.price as string}</p>
+                       <p className="text-3xl font-extrabold text-emerald-400">{flight.currency} {flight.price}</p>
                      </div>
- 
-                     <div className="bg-slate-900 rounded-2xl p-4 overflow-hidden flex-1 border border-slate-700 shadow-inner">
-                       <FlightBaggageHighlights flight={flight} />
+                     <div className="bg-slate-900 rounded-2xl p-4 flex-1 border border-slate-700 shadow-inner mb-6">
+                        <FlightBaggageHighlights flight={flight} />
                      </div>
- 
-                     <Button 
-                       onClick={() => handleSelectFlightOption(flight)}
-                       className="w-full h-16 sm:h-20 text-xl md:text-2xl font-extrabold bg-emerald-500 hover:bg-emerald-400 text-white rounded-[20px] mt-2 shadow-xl transition-all"
-                     >
+                     <Button onClick={() => handleSelectFlightOption(flight)} className="w-full h-16 sm:h-20 text-xl font-extrabold bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl shadow-xl">
                        {(!selectedOutboundSlice && (tripType === "round-trip" || tripType === "multi-city")) ? t.selectGo as string : t.buyFlight as string} <ArrowRight className="ml-2 h-6 w-6 inline" />
                      </Button>
                    </div>
@@ -1196,45 +824,55 @@ export default function SeniorTerminal() {
                })}
              </div>
              
-             <div className="flex flex-col items-center justify-center gap-4 mt-12 relative z-10">
-                {displayedFlights.length > (offerPage + 1) * 3 && (
-                 <Button
-                   onClick={() => { setOfferPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                   className="h-16 sm:h-20 px-8 sm:px-12 text-lg sm:text-xl font-bold rounded-full bg-slate-700 text-white hover:bg-slate-600 shadow-xl border border-slate-600"
-                 >
-                   {t.moreFlights(displayedFlights.length - (offerPage + 1) * 3)} <ArrowRight className="ml-2 h-6 w-6 inline" />
-                 </Button>
-               )}
-               
-               {offerPage > 0 && (
-                 <Button
-                   onClick={() => { setOfferPage(p => p - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                   variant="ghost"
-                   className="h-12 px-6 text-base sm:text-lg font-bold text-slate-400 hover:text-white"
-                 >
-                                       {t.backOptions as string}
-                 </Button>
-               )}
+             {displayedFlights.length > (offerPage + 1) * 3 && (
+               <Button onClick={() => { setOfferPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="h-16 px-12 text-xl font-bold rounded-full bg-slate-700 text-white hover:bg-slate-600 shadow-xl">
+                 {t.moreFlights(displayedFlights.length - (offerPage + 1) * 3)} <ArrowRight className="ml-2 h-6 w-6 inline" />
+               </Button>
+             )}
+           </div>
+         )}
+
+         {step === "collect_details" && (
+           <div className="w-full max-w-3xl animate-in slide-in-from-right duration-500 pb-20">
+             <div className="flex justify-center mb-6">
+               <div className="h-20 w-20 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center border-4 border-blue-500/30 shadow-lg">
+                 <User className="h-10 w-10" />
+               </div>
+             </div>
+             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6 text-center leading-tight">{t.yourName as string}</h2>
+             <div className="flex flex-col gap-6 bg-slate-800/50 p-6 sm:p-10 rounded-[32px] border border-slate-700 shadow-xl">
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 <Input placeholder={t.firstName as string} value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-16 text-xl rounded-2xl border-2 border-slate-600 bg-slate-900 text-white focus:border-blue-400 font-bold" />
+                 <Input placeholder={t.lastName as string} value={lastName} onChange={(e) => setLastName(e.target.value)} className="h-16 text-xl rounded-2xl border-2 border-slate-600 bg-slate-900 text-white focus:border-blue-400 font-bold" />
+               </div>
+               <div className="space-y-2">
+                 <p className="text-slate-400 font-bold ml-1">{t.yourDob as string}</p>
+                 <div className="flex gap-4">
+                   <Input placeholder={t.day as string} value={dobDay} onChange={(e) => setDobDay(e.target.value)} className="h-16 text-xl text-center rounded-2xl border-2 border-slate-600 bg-slate-900 text-white w-1/4 font-bold" />
+                   <Input placeholder={t.month as string} value={dobMonth} onChange={(e) => setDobMonth(e.target.value)} className="h-16 text-xl text-center rounded-2xl border-2 border-slate-600 bg-slate-900 text-white w-1/4 font-bold" />
+                   <Input placeholder={t.year as string} value={dobYear} onChange={(e) => setDobYear(e.target.value)} className="h-16 text-xl text-center rounded-2xl border-2 border-slate-600 bg-slate-900 text-white flex-1 font-bold" />
+                 </div>
+               </div>
+               <div className="space-y-2">
+                 <p className="text-slate-400 font-bold ml-1">{t.enterPhone as string}</p>
+                 <Input placeholder={t.phonePlaceholder as string} value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="h-16 text-xl rounded-2xl border-2 border-slate-600 bg-slate-900 text-white focus:border-blue-400 font-bold" />
+               </div>
+               <Button onClick={() => createBooking(selectedFlight)} disabled={!firstName || !lastName || !dobDay || !dobMonth || !dobYear || dobYear.length < 4 || phoneNumber.length < 7} className="h-16 sm:h-20 text-xl font-bold bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl mt-4 shadow-lg shadow-emerald-500/20">
+                 {t.continue as string} <ArrowRight className="ml-2 h-6 w-6 inline" />
+               </Button>
              </div>
            </div>
          )}
- 
+
          {step === "checkout" && bookingData && (
-           <div className="w-full max-w-3xl text-center space-y-8 sm:space-y-12 animate-in slide-in-from-bottom duration-500">
-             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-4 sm:mb-8 leading-tight text-balance">{t.cardData as string}</h2>
-             <div className="bg-white rounded-3xl sm:rounded-[40px] p-4 sm:p-8 border-4 border-emerald-500 text-left relative overflow-hidden shadow-2xl">
+           <div className="w-full max-w-3xl text-center space-y-12 animate-in slide-in-from-bottom duration-500">
+             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-8">{t.cardData as string}</h2>
+             <div className="bg-white rounded-[40px] p-8 border-4 border-emerald-500 text-left shadow-2xl">
                <PaymentForm 
-                 clientSecret={bookingData.clientSecret}
-                 bookingId={bookingData.bookingId}
-                 referenceCode={bookingData.referenceCode}
-                 amount={bookingData.amount}
-                 currency={bookingData.currency}
+                 clientSecret={bookingData.clientSecret} bookingId={bookingData.bookingId} referenceCode={bookingData.referenceCode} amount={bookingData.amount} currency={bookingData.currency}
                  onSuccess={() => {
                    speak(t.v_success as string);
-                   toast({
-                     title: "Compra Confirmada!",
-                     description: "Reserva aprovada. Seu voo está garantido."
-                   });
+                   toast({ title: "Compra Confirmada!", description: "Reserva aprovada." });
                    setTimeout(() => setLocation("/checkout/success?bookingId=" + bookingData.bookingId), 3000);
                  }}
                  onError={(msg) => {
@@ -1245,19 +883,14 @@ export default function SeniorTerminal() {
              </div>
            </div>
          )}
- 
-       </main>
- 
-       <footer className="p-4 sm:p-8 bg-slate-950 flex justify-center items-center sticky bottom-0 z-50 border-t border-slate-800">
-         <Button 
-            onClick={startVoiceRecognition}
-            variant="ghost" 
-            className={`h-16 sm:h-20 px-4 sm:px-8 rounded-full text-base sm:text-xl font-bold bg-white/5 text-white hover:bg-white/10 gap-2 sm:gap-4 border border-white/10 transition-all ${isListening ? 'animate-pulse shadow-[0_0_30px_rgba(59,130,246,0.5)] border-blue-500 bg-blue-500/10' : ''}`}
-          >
-           <Mic className={`h-6 w-6 sm:h-8 sm:w-8 ${isListening ? 'text-blue-400' : 'text-slate-400'}`} />
-           {t.speakLabel as string} <span className="hidden sm:inline">{t.speakAgent as string}</span>
-         </Button>
-       </footer>
-     </div>
-   );
- }
+      </main>
+
+      <footer className="p-8 bg-slate-950 flex justify-center sticky bottom-0 z-50 border-t border-slate-800">
+        <Button onClick={startVoiceRecognition} variant="ghost" className={`h-16 sm:h-20 px-8 rounded-full text-xl font-bold bg-white/5 text-white hover:bg-white/10 gap-4 border border-white/10 transition-all ${isListening ? 'animate-pulse shadow-[0_0_30px_rgba(59,130,246,0.5)] border-blue-500 bg-blue-500/10' : ''}`}>
+          <Mic className={`h-8 w-8 ${isListening ? 'text-blue-400' : 'text-slate-400'}`} />
+          {t.speakLabel as string} <span className="hidden sm:inline">{t.speakAgent as string}</span>
+        </Button>
+      </footer>
+    </div>
+  );
+}
