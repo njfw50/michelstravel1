@@ -60,6 +60,8 @@ interface QuickDealDraft {
   cabinClass: string;
   headline: string;
   description: string;
+  stops: number;
+  duration: string;
 }
 
 type SystemHealth = {
@@ -229,6 +231,8 @@ function buildQuickDealDraft(route: { route: string; routeKey: string }): QuickD
     cabinClass: "economy",
     headline: `Special fares for ${route.route}`,
     description: `Demand is strong for ${route.route}. Publish this featured fare and direct travelers to Michels Travel for human support.`,
+    stops: 0,
+    duration: "Varia",
   };
 }
 
@@ -1506,6 +1510,8 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                                 price: best.price ? String(best.price) : current.price,
                                 currency: best.currency || current.currency,
                                 headline: `${best.airline || "Oferta"} ${best.origin} → ${best.destination} desde ${best.currency || "USD"} ${best.price ?? ""}`,
+                                stops: 0,
+                                duration: "Varia",
                               }
                             : current,
                         );
@@ -1612,6 +1618,8 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                                   currency: offer.currency || current.currency,
                                   headline: `${offer.airline || "Tarifa Especial"} ${offer.origin} → ${offer.destination}`,
                                   description: `Voo operado por ${offer.airline || "Parceiro"} a partir de ${offer.currency || "USD"} ${offer.price ?? ""}. Curadoria premium.`,
+                                  stops: 0,
+                                  duration: "Varia",
                                 }
                               : current,
                           );
@@ -1661,6 +1669,25 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Moeda ISO</Label>
                   <Input value={dealDraft.currency} className="h-11 bg-slate-950/60 border-white/10 text-white font-black uppercase rounded-xl" onChange={(event) => setDealDraft((current) => current ? { ...current, currency: event.target.value.toUpperCase() } : current)} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Escalas</Label>
+                  <Input 
+                    type="number"
+                    min={0}
+                    value={dealDraft.stops} 
+                    className="h-11 bg-slate-950/60 border-white/10 text-white font-bold rounded-xl" 
+                    onChange={(event) => setDealDraft((current) => current ? { ...current, stops: parseInt(event.target.value, 10) || 0 } : current)} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Duração</Label>
+                  <Input 
+                    value={dealDraft.duration} 
+                    placeholder="10h 30m"
+                    className="h-11 bg-slate-950/60 border-white/10 text-white font-bold rounded-xl" 
+                    onChange={(event) => setDealDraft((current) => current ? { ...current, duration: event.target.value } : current)} 
+                  />
                 </div>
               </div>
 
