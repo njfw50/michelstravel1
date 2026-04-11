@@ -175,7 +175,7 @@ function AdminLocationInput({
         {loading && <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 animate-spin text-muted-foreground" />}
       </div>
       {open && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-[999] max-h-64 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-[999] max-h-64 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
           {results.map((place) => (
             <button
               type="button"
