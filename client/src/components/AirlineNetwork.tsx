@@ -21,34 +21,32 @@ export function AirlineNetwork() {
         </p>
       </div>
 
-      <div className="relative flex overflow-x-hidden group">
-        <div className="animate-marquee flex gap-12 items-center whitespace-nowrap py-4">
+      <div className="relative flex overflow-x-hidden border-y border-slate-100 bg-slate-50/30">
+        <div className="flex animate-marquee gap-12 py-10 whitespace-nowrap">
+          {/* First set of logos */}
           {logoAirlines.map((airline, i) => (
-            <div key={i} className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-white border border-slate-50 shadow-sm transition-all hover:border-blue-100 hover:shadow-md grayscale hover:grayscale-0 opacity-60 hover:opacity-100">
+            <div key={`set1-${i}`} className="flex items-center gap-4 px-8 py-5 rounded-[24px] bg-white border border-slate-200 shadow-[0_8px_20px_-10px_rgba(15,23,42,0.1)] transition-all hover:border-blue-200 hover:shadow-lg group">
               {airline.logoSymbolUrl ? (
-                <img src={airline.logoSymbolUrl} alt={airline.name} className="h-8 w-auto object-contain" />
+                <img src={airline.logoSymbolUrl} alt={airline.name} className="h-10 w-auto object-contain grayscale group-hover:grayscale-0 transition-all duration-500" />
               ) : (
-                <div className="h-8 w-8 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-400 text-[10px]">
+                <div className="h-10 w-10 bg-slate-100 rounded-xl flex items-center justify-center font-black text-slate-400 text-xs">
                   {airline.iataCode}
                 </div>
               )}
-              <span className="text-sm font-bold text-slate-700">{airline.name}</span>
+              <span className="text-sm font-black text-slate-900 tracking-tight">{airline.name}</span>
             </div>
           ))}
-        </div>
-
-        {/* Duplicate for seamless loop */}
-        <div className="absolute top-0 animate-marquee2 flex gap-12 items-center whitespace-nowrap py-4" aria-hidden="true">
+          {/* Second set of logos (duplicated for seamless loop) */}
           {logoAirlines.map((airline, i) => (
-            <div key={i} className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-white border border-slate-50 shadow-sm transition-all hover:border-blue-100 hover:shadow-md grayscale hover:grayscale-0 opacity-60 hover:opacity-100">
+            <div key={`set2-${i}`} className="flex items-center gap-4 px-8 py-5 rounded-[24px] bg-white border border-slate-200 shadow-[0_8px_20px_-10px_rgba(15,23,42,0.1)] transition-all hover:border-blue-200 hover:shadow-lg group">
               {airline.logoSymbolUrl ? (
-                <img src={airline.logoSymbolUrl} alt={airline.name} className="h-8 w-auto object-contain" />
+                <img src={airline.logoSymbolUrl} alt={airline.name} className="h-10 w-auto object-contain grayscale group-hover:grayscale-0 transition-all duration-500" />
               ) : (
-                <div className="h-8 w-8 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-400 text-[10px]">
+                <div className="h-10 w-10 bg-slate-100 rounded-xl flex items-center justify-center font-black text-slate-400 text-xs">
                   {airline.iataCode}
                 </div>
               )}
-              <span className="text-sm font-bold text-slate-700">{airline.name}</span>
+              <span className="text-sm font-black text-slate-900 tracking-tight">{airline.name}</span>
             </div>
           ))}
         </div>
