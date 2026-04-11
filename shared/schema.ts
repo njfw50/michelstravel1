@@ -185,6 +185,8 @@ export const featuredDeals = pgTable("featured_deals", {
   currency: text("currency").default("USD"),
   airline: text("airline"),
   cabinClass: text("cabin_class").default("economy"),
+  stops: integer("stops").default(0),
+  duration: text("duration"),
   headline: text("headline"),
   description: text("description"),
   isActive: boolean("is_active").default(true),

@@ -4188,6 +4188,8 @@ OUTPUT FORMAT (JSON only):
         currency: deal.currency || 'USD',
         airline: deal.airline || '',
         cabin_class: deal.cabinClass || 'economy',
+        stops: deal.stops || 0,
+        duration: deal.duration || 'Varia',
         headline: deal.headline || `${deal.originCity || deal.origin} → ${deal.destinationCity || deal.destination}`,
         description: deal.description || `Voos a partir de ${deal.currency || 'USD'} ${deal.price}. Reserve agora!`,
         booking_url: `${siteUrl}/?origin=${deal.origin}&destination=${deal.destination}`,

@@ -473,7 +473,7 @@ export default function Home() {
                         </div>
                         <div>
                           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Escalas</div>
-                          <div className="text-xs font-bold text-slate-900">{deal.stops === 0 ? "Direto" : `${deal.stops} escala`}</div>
+                          <div className="text-xs font-bold text-slate-900">{!deal.stops || deal.stops === 0 ? "Direto" : `${deal.stops} ${deal.stops === 1 ? 'escala' : 'escalas'}`}</div>
                         </div>
                       </div>
                     </div>
@@ -497,7 +497,10 @@ export default function Home() {
                         </div>
                         <div className="text-3xl font-black text-slate-950 tracking-tight">
                           <span className="text-lg font-bold text-slate-400 mr-1">{deal.currency === 'BRL' ? 'R$' : '$'}</span>
-                          {formattedPrice?.replace(/[^\d]/g, '') || deal.price}
+                          {new Intl.NumberFormat(language === "pt" ? "pt-BR" : "en-US", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }).format(deal.price_value || 0)}
                         </div>
                       </div>
                       <Button className="h-14 w-14 rounded-2xl bg-slate-950 text-white hover:bg-blue-600 hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300 flex items-center justify-center p-0" onClick={() => openDealSearch(deal)}>

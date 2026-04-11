@@ -42,6 +42,8 @@ export interface PublicFeaturedDeal {
   currency: string;
   airline: string;
   cabin_class: string;
+  stops: number;
+  duration: string;
   headline: string;
   description: string;
   booking_url: string;
