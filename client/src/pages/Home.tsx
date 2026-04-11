@@ -113,10 +113,10 @@ export default function Home() {
                 {t("home.hero.badge") || "Curadoria de Viagens & Concierge Exclusivo"}
               </Badge>
               <h1 className="mt-6 text-4xl sm:text-5xl md:text-6xl lg:text-[4.65rem] font-extrabold leading-[1] sm:leading-[0.94] tracking-tight text-slate-950 text-balance break-words">
-                {t("home.hero.title") || "A Arte de Viajar Bem: Excelência, Conforto e Suporte Exclusivo."}
+                {t("home.hero.title") || "Conectando Brasileiros ao Mundo com Inteligência."}
               </h1>
-              <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
-                {t("home.hero.desc") || "Descubra o novo padrão em viagens. Mais do que reservas, oferecemos uma curadoria inteligente e um serviço de concierge focado em quem exige o melhor. Cuidamos de cada detalhe para que sua única preocupação seja aproveitar o destino."}
+              <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
+                {t("home.hero.desc") || "Tarifas curadas por IA e suporte humano especializado via WhatsApp 24h. Mais que passagens, uma agência de elite disponível a qualquer momento para garantir sua total segurança nos EUA e no mundo."}
               </p>
 
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -223,10 +223,10 @@ export default function Home() {
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-700">{t("home.senior.badge") || "Design de Jornada"}</p>
                 <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold leading-tight text-slate-950">
-                  {t("home.senior.title") || "Tranquilidade absoluta: ritmamos sua viagem ao seu tempo."}
+                  {t("home.senior.title") || "O Respeito e o Tempo que sua família merece."}
                 </h2>
-                <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
-                  {t("home.senior.desc") || "Desenvolvemos uma curadoria especial para nossos viajantes mais exigentes. Nossa tecnologia se funde ao cuidado humano para guiar de perto cada aspecto da reserva, sem sobressaltos e com absoluta clareza passo a passo."}
+                <p className="mt-4 text-sm leading-relaxed text-slate-600 sm:text-base">
+                  {t("home.senior.desc") || "Somos especialistas em brasileiros que vivem nos EUA e trazem seus pais para visitar. Monitoramos check-in, portões de embarque e oferecemos suporte direto no WhatsApp para garantir que cada etapa seja feita com calma, segurança e cuidado total."}
                 </p>
                 <Button onClick={() => setLocation("/senior")} className="mt-6 rounded-full bg-slate-950 px-6 text-sm font-bold text-white shadow-md hover:bg-slate-800">
                   {t("home.senior.btn") || "Explorar Experiência"}
@@ -241,10 +241,10 @@ export default function Home() {
             <CardContent className="p-6 md:p-8">
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-700">{t("home.office.badge") || "Newark / Ironbound"}</p>
               <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold leading-tight text-slate-950">
-                {t("home.office.title") || "Liderança no mercado de viagens para o Brasil."}
+                {t("home.office.title") || "A agência preferida dos brasileiros em New Jersey."}
               </h2>
-              <p className="mt-4 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
-                {t("home.office.desc") || "Estamos no coração de Ironbound (Newark, NJ) garantindo tarifas exclusivas para sua família voar para o Brasil, Europa, e por todos os Estados Unidos. Nosso atendimento humanizado pelo WhatsApp garante o conforto que você precisa antes de voar."}
+              <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base">
+                {t("home.office.desc") || "No coração do Ironbound, Newark, operamos como um HUB de inteligência de viagens. Nossa tecnologia de cotação garante o menor preço real em voos para o Brasil e Europa, com a segurança de um atendimento físico e digital 24h."}
               </p>
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -455,8 +455,39 @@ export default function Home() {
                       <MapPin className="h-4 w-4" />
                       <span className="text-sm font-bold uppercase tracking-widest">{t("home.deals.badge_loc") || "Destino Verificado"}</span>
                     </div>
-                    <p className="text-xl font-bold text-slate-900 leading-tight">{deal.headline}</p>
-                    <p className="mt-4 text-sm leading-relaxed text-slate-500 line-clamp-2">{deal.description}</p>
+                    <p className="text-xl font-bold text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">{deal.headline}</p>
+                    
+                    <div className="mt-5 grid grid-cols-2 gap-4">
+                      <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100/50">
+                        <div className="p-2 bg-white rounded-xl shadow-sm">
+                          <Plane className="h-3.5 w-3.5 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Duração</div>
+                          <div className="text-xs font-bold text-slate-900">{deal.duration || "Varia"}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100/50">
+                        <div className="p-2 bg-white rounded-xl shadow-sm">
+                          <Globe className="h-3.5 w-3.5 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Escalas</div>
+                          <div className="text-xs font-bold text-slate-900">{deal.stops === 0 ? "Direto" : `${deal.stops} escala`}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex flex-wrap gap-2">
+                       {['WiFi', 'Meals', 'Baggage'].map(feat => (
+                         <div key={feat} className="px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-bold border border-emerald-100/50 flex items-center gap-1.5">
+                           <CheckCircle2 className="h-2.5 w-2.5" />
+                           {feat}
+                         </div>
+                       ))}
+                    </div>
+
+                    <p className="mt-5 text-sm leading-relaxed text-slate-500 line-clamp-2">{deal.description}</p>
                     
                     <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
                       <div className="space-y-1">
@@ -477,6 +508,16 @@ export default function Home() {
                 </Card>
               );
             })}
+          </div>
+
+          <div className="mt-16 flex flex-col items-center justify-center rounded-[32px] border border-blue-100 bg-blue-50/50 p-8 text-center backdrop-blur-sm">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm mb-4">
+              <Sparkles className="h-6 w-6 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-950">Inteligência de Cotação Michels</h3>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+              Nossos algoritmos processam milhares de combinações de bagagem, conexões e taxas de emissão para garantir que o preço que você vê é o menor custo real. Sem taxas ocultas no checkout.
+            </p>
           </div>
         </div>
       </section>
