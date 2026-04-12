@@ -1333,7 +1333,7 @@ export default function SearchResults() {
                                         <Plane className="h-3 w-3 text-blue-500 rotate-90 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
                                       </div>
                                       <div className={`text-[10px] font-medium mt-1 ${stopsCount === 0 ? "text-emerald-600" : "text-amber-600"}`}>
-                                        {stopsCount === 0 ? (t("flight.direct") || "Direto") : `${stopsCount} ${stopsCount > 1 ? (t("flight.stops") || "paradas") : (t("flight.stop") || "parada")}`}
+                                        {stopsCount === 0 ? (t("flight.direct") || "Direto") : (t(stopsCount === 1 ? "flight.stop" : "flight.stops", { count: stopsCount }))}
                                       </div>
                                     </div>
                                     <div className="text-center min-w-[60px]">
@@ -1374,7 +1374,7 @@ export default function SearchResults() {
                         {allOutbound.length > visibleOutboundCount && (
                           <div className="flex flex-col items-center gap-2 pt-2" data-testid="outbound-pagination">
                             <p className="text-xs text-gray-500">
-                              {t("results.showing") || "Mostrando"} {Math.min(visibleOutboundCount, allOutbound.length)} {t("results.of") || "de"} {allOutbound.length} {t("results.outbound_flights") || "voos de ida"}
+                              {t("results.showing") || "Mostrando"} {Math.min(visibleOutboundCount, allOutbound.length)} {t("results.of") || "de"} {t("results.outbound_flights", { count: allOutbound.length })}
                             </p>
                             <Button
                               variant="outline"
@@ -1457,7 +1457,7 @@ export default function SearchResults() {
                                     <span className="text-xs text-gray-500 ml-1">{s.destinationCity || s.destinationCode}</span>
                                   </div>
                                   <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${stopsCount === 0 ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
-                                    {stopsCount === 0 ? (t("flight.direct") || "Direto") : `${stopsCount} ${t("flight.stop") || "parada"}`}
+                                    {stopsCount === 0 ? (t("flight.direct") || "Direto") : (t(stopsCount === 1 ? "flight.stop" : "flight.stops", { count: stopsCount }))}
                                   </span>
                                 </div>
                               </div>
@@ -1531,7 +1531,7 @@ export default function SearchResults() {
                                         <Plane className="h-3 w-3 text-blue-500 rotate-90 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
                                       </div>
                                       <div className={`text-[10px] font-medium mt-1 ${stopsCount === 0 ? "text-emerald-600" : "text-amber-600"}`}>
-                                        {stopsCount === 0 ? (t("flight.direct") || "Direto") : `${stopsCount} ${stopsCount > 1 ? (t("flight.stops") || "paradas") : (t("flight.stop") || "parada")}`}
+                                        {stopsCount === 0 ? (t("flight.direct") || "Direto") : (t(stopsCount === 1 ? "flight.stop" : "flight.stops", { count: stopsCount }))}
                                       </div>
                                     </div>
                                     <div className="text-center min-w-[60px]">
@@ -1575,7 +1575,7 @@ export default function SearchResults() {
                       {returnOptionsForSelected.length > visibleReturnCount && (
                         <div className="flex flex-col items-center gap-2 pt-2" data-testid="return-pagination">
                           <p className="text-xs text-gray-500">
-                            {t("results.showing") || "Mostrando"} {Math.min(visibleReturnCount, returnOptionsForSelected.length)} {t("results.of") || "de"} {returnOptionsForSelected.length} {t("results.return_flights") || "voos de volta"}
+                            {t("results.showing") || "Mostrando"} {Math.min(visibleReturnCount, returnOptionsForSelected.length)} {t("results.of") || "de"} {t("results.return_flights", { count: returnOptionsForSelected.length })}
                           </p>
                           <Button
                             variant="outline"

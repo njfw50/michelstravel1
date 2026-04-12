@@ -44,6 +44,7 @@ import {
 import { useVoiceGuide } from "@/hooks/use-voice-guide";
 import { Switch } from "@/components/ui/switch";
 import { Headphones } from "lucide-react";
+import { SeniorIntegrityManager } from "@/lib/senior-integrity";
 
 const passengerSchema = z.object({
   title: z.enum(["mr", "mrs", "ms", "miss", "dr"]).default("mr"),
@@ -924,7 +925,7 @@ export default function Booking() {
   const { user } = useAuth();
   const { t, language } = useI18n();
   const {
-    speak: speakPage,
+    speak,
     stop: stopPage,
     speaking: speakingPage,
     supported: isVoiceSupported,
@@ -1032,8 +1033,40 @@ export default function Booking() {
           ? `Mia, ayúdeme a revisar esta reserva con calma antes del pago: ${tripSummary}.`
           : `Mia, me ajude a revisar esta reserva com calma antes do pagamento: ${tripSummary}.`;
 
+    // Integrity NUANCE: Open assistant records as voice-confirmed start
+    if (integrityManager) {
+      integrityManager.setVoiceConfirmed(true);
+    }
     openChatbotAssistant({ message: starter, autoSend: true });
-  }, [flight?.departureTime, flight?.destinationCode, flight?.originCode, language]);
+  }, [flight?.departureTime, flight?.destinationCode, flight?.originCode, language, integrityManager]);
+
+  const integrityManager = useMemo(() => {
+    if (!isEasyMode) return null;
+    return new SeniorIntegrityManager({
+      onWarning: (msg) => {
+        toast({
+          title: language === "en" ? "Helpful Note" : language === "es" ? "Nota de ayuda" : "Nota de ajuda",
+          description: msg,
+          variant: "default",
+        });
+      },
+      onStuck: () => {
+        const text = language === "en" 
+          ? "I noticed you stopped for a moment. Need help finishing this part?" 
+          : language === "es" 
+          ? "He notado que se detuvo un momento. ¿Necesita ayuda con esta parte?" 
+          : "Notei que você parou por um momento. Precisa de ajuda para concluir esta parte?";
+        speak(text);
+        openAssistant();
+      }
+    });
+  }, [isEasyMode, toast, speak, language, openAssistant]);
+
+  useEffect(() => {
+    return () => {
+      integrityManager?.destroy();
+    };
+  }, [integrityManager]);
 
   const buildDefaultPassengers = () => {
     const pax: any[] = [];
@@ -1265,16 +1298,9 @@ export default function Booking() {
     }
   }, [t, searchParamsString, params?.id, setLocation, validateFlightPrice]);
 
-  useEffect(() => {
-    if (params?.id) {
-      fetchFlight(params.id);
-    } else {
-      setFlightLoading(false);
-    }
-  }, [params?.id, fetchFlight]);
-
   const executeBooking = useCallback(async (data: BookingFormValues) => {
     if (!flight) return;
+    integrityManager?.recordInteraction();
     lastSubmitDataRef.current = data;
 
     setProcessingStep("validating");
@@ -1299,6 +1325,20 @@ export default function Booking() {
           variant: "default" 
         });
         return;
+      }
+      
+      // INTEGRITY GUARD: Ensure voice confirmation in Senior Flow
+      if (isEasyMode && integrityManager) {
+        if (!integrityManager.validateTransition('details', 'review')) {
+          setProcessingStep(null);
+          speak(language === "en" 
+            ? "Let's review everything with Mia before paying, just to be safe." 
+            : language === "es" 
+            ? "Revisemos todo con Mia antes de pagar, para estar seguros." 
+            : "Vamos revisar tudo com a Mia antes de pagar, para sua segurança.");
+          openAssistant();
+          return;
+        }
       }
     } catch (err) {
       console.warn("Could not refresh offer, proceeding with current price");
@@ -1360,7 +1400,7 @@ export default function Booking() {
         setProcessingError(serverMessage);
       },
     });
-  }, [flight, grandTotal, baggageSelections, createBooking, t, toast]);
+  }, [flight, grandTotal, baggageSelections, createBooking, t, toast, integrityManager, isEasyMode, language, openAssistant, speak]);
 
   const onSubmit = async (data: BookingFormValues) => {
     await executeBooking(data);
@@ -1380,13 +1420,12 @@ export default function Booking() {
   const stopsLabel = flight
     ? (flight.stops === 0
       ? t("flight.direct")
-      : `${flight.stops} ${flight.stops > 1 ? t("flight.stops") : t("flight.stop")}`)
+      : t(flight.stops === 1 ? "flight.stop" : "flight.stops", { count: flight.stops }))
     : "";
 
   if (flightLoading) {
     return <FlightLoadingSkeleton t={t} />;
   }
-
   if (flightError) {
     return (
       <FlightLoadError

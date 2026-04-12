@@ -222,7 +222,7 @@ export function FlightBoard() {
 
                   <div className="flex items-center justify-center">
                     <Badge variant="secondary" className={`text-[10px] px-2.5 py-0.5 ${flight.stops === 0 ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-amber-50 text-amber-600 border-amber-200"}`}>
-                      {flight.stops === 0 ? t("flight.direct") : `${flight.stops} ${flight.stops === 1 ? t("flight.stop") : t("flight.stops")}`}
+                      {flight.stops === 0 ? t("flight.direct") : t(flight.stops === 1 ? "flight.stop" : "flight.stops", { count: flight.stops })}
                     </Badge>
                   </div>
 
