@@ -76,7 +76,7 @@ export function DealCard({ deal }: DealCardProps) {
                <div className="flex flex-col">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t("home.board.col_price")}</span>
                   <div className="flex items-baseline gap-1.5">
-                     <span className="text-3xl font-black text-blue-600 tracking-tighter">USD {deal.price}</span>
+                     <span className="text-3xl font-black text-blue-600 tracking-tighter">{deal.price}</span>
                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t("home.board.per_person")}</span>
                   </div>
                </div>
