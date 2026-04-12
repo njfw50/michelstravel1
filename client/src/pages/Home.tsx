@@ -135,11 +135,11 @@ export default function Home() {
               <Sparkles className="mr-2 h-3.5 w-3.5" />
               The Intelligence of Travel
             </Badge>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-black leading-[0.95] tracking-tighter text-slate-950 mb-8">
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-display font-bold leading-tight tracking-tight text-slate-950 mb-6 mt-2">
               Sua Agência <br />
               <span className="text-blue-600">em Newark & Ironbound.</span>
             </h1>
-            <p className="text-lg md:text-2xl text-slate-500 max-w-2xl leading-relaxed font-medium mb-12">
+            <p className="text-base md:text-lg text-slate-500 max-w-lg leading-relaxed font-medium mb-8">
               Tarifas exclusivas curadas por tecnologia e suporte humano especializado 24h. Segurança absoluta para brasileiros nos EUA e no mundo.
             </p>
             
@@ -167,8 +167,8 @@ export default function Home() {
                   initial={{ opacity: 0, x: 100, scale: 1.1 }}
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   transition={{ duration: 1.2, ease: "easeOut" }}
-                  src="/premium_travel_hero_vibe_newark_1776004648777.png" 
-                  alt="Premium Travel Flight"
+                  src="https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&q=80&w=1000" 
+                  alt=""
                   className="w-full h-full object-cover rounded-[60px] shadow-[0_50px_100px_-20px_rgba(37,99,235,0.2)]"
                 />
                 <div className="absolute -bottom-10 -left-10 bg-white p-6 rounded-[32px] shadow-2xl border border-blue-50 z-20 max-w-[200px] animate-bounce-slow">
@@ -183,7 +183,7 @@ export default function Home() {
              </div>
           </div>
 
-          <div id="search-anchor" className="mt-12 rounded-[32px] border border-slate-100/50 bg-white/70 backdrop-blur-2xl p-5 shadow-[0_48px_100px_-24px_rgba(15,23,42,0.12)] md:p-8 relative z-20 border-t-white/80 overflow-hidden">
+          <div id="search-anchor" className="mt-8 rounded-[32px] border border-slate-100/50 bg-white/70 backdrop-blur-2xl p-5 shadow-[0_48px_100px_-24px_rgba(15,23,42,0.12)] md:p-8 relative z-20 border-t-white/80 overflow-hidden">
              <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-50/20 to-transparent pointer-events-none" />
              <div className="absolute -top-12 right-12 hidden lg:flex items-center gap-4 bg-white/90 backdrop-blur-md border border-slate-100 p-4 rounded-3xl shadow-xl z-30">
                 <div className="flex -space-x-3">
