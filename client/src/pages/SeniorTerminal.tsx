@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Phone, Plane, Calendar, CheckCircle2, Mic, ArrowRight, User, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import PaymentForm from "@/components/PaymentForm";
 import FlightBaggageHighlights from "@/components/FlightBaggageHighlights";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -101,6 +101,7 @@ const T: Record<Lang, Record<string, any>> = {
     v_multiNext: (dest: string) => `Perfeito. Partindo de ${dest}, para onde você quer ir depois?`,
     v_routeReady: "Ruta pronto. Vamos buscar os voos.",
     v_nameNext: "Maravilha. Por favor, informe sua data de nascimento.",
+    support: "Suporte", privacy: "Privacidade", terms: "Termos"
   },
   en: {
     langLabel: "Language",
@@ -184,6 +185,7 @@ const T: Record<Lang, Record<string, any>> = {
     v_multiNext: (dest: string) => `From ${dest}, where next?`,
     v_routeReady: "Ready. Searching flights.",
     v_nameNext: "Please enter your birth date.",
+    support: "Support", privacy: "Privacy", terms: "Terms"
   },
   es: {
     langLabel: "Idioma",
@@ -267,6 +269,7 @@ const T: Record<Lang, Record<string, any>> = {
     v_multiNext: (dest: string) => `Desde ${dest}, ¿a dónde va después?`,
     v_routeReady: "Ruta lista. Buscando.",
     v_nameNext: "Ingrese su fecha de nacimiento.",
+    support: "Soporte", privacy: "Privacidad", terms: "Términos"
   },
 };
 
@@ -980,9 +983,15 @@ export default function SeniorTerminal() {
             <p className="text-slate-500 font-medium">© 2026 {t.routeReady as string}</p>
           </div>
           <div className="flex gap-8">
-            <button className="text-slate-400 hover:text-white transition-colors font-bold uppercase tracking-wider text-xs">Suporte</button>
-            <button className="text-slate-400 hover:text-white transition-colors font-bold uppercase tracking-wider text-xs">Privacidade</button>
-            <button className="text-slate-400 hover:text-white transition-colors font-bold uppercase tracking-wider text-xs">Termos</button>
+            <Link href="/help">
+              <span className="text-slate-400 hover:text-white transition-colors font-bold uppercase tracking-wider text-xs cursor-pointer">{t.support as string}</span>
+            </Link>
+            <Link href="/privacy">
+              <span className="text-slate-400 hover:text-white transition-colors font-bold uppercase tracking-wider text-xs cursor-pointer">{t.privacy as string}</span>
+            </Link>
+            <Link href="/terms">
+              <span className="text-slate-400 hover:text-white transition-colors font-bold uppercase tracking-wider text-xs cursor-pointer">{t.terms as string}</span>
+            </Link>
           </div>
         </div>
       </footer>
