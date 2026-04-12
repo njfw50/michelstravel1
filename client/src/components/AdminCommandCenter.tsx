@@ -278,7 +278,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
   const [dealDraft, setDealDraft] = useState<QuickDealDraft | null>(null);
   const [dealOffers, setDealOffers] = useState<DealSearchOffer[]>([]);
   const [dealSearchLoading, setDealSearchLoading] = useState(false);
-  const [offerError, setOfferError] = useState<string | null>(null);
+  const [dealSearchError, setDealSearchError] = useState<string | null>(null);
   const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
   const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
   const [systemHealthLoading, setSystemHealthLoading] = useState(false);
