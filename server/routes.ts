@@ -4226,9 +4226,9 @@ OUTPUT FORMAT (JSON only):
       }
       const deal = await storage.createFeaturedDeal(parsed.data);
       res.json(deal);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Create deal error:', error);
-      res.status(500).json({ error: 'Failed to create deal' });
+      res.status(500).json({ error: 'Failed to create deal', message: error.message });
     }
   });
 

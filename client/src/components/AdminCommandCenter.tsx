@@ -278,7 +278,8 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
   const [dealDraft, setDealDraft] = useState<QuickDealDraft | null>(null);
   const [dealOffers, setDealOffers] = useState<DealSearchOffer[]>([]);
   const [dealSearchLoading, setDealSearchLoading] = useState(false);
-  const [dealSearchError, setDealSearchError] = useState<string | null>(null);
+  const [offerError, setOfferError] = useState<string | null>(null);
+  const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
   const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
   const [systemHealthLoading, setSystemHealthLoading] = useState(false);
   const [dealSearchParams, setDealSearchParams] = useState({
@@ -1501,14 +1502,17 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                         destination: f.destinationCode || f.destination,
                       }));
                       setDealOffers(offers);
+                      setSelectedOfferId(null);
                       if (offers.length > 0) {
                         const best = offers[0];
+                        setSelectedOfferId(best.id);
                         setDealDraft((current) =>
                           current
                             ? {
                                 ...current,
                                 price: best.price ? String(best.price) : current.price,
                                 currency: best.currency || current.currency,
+                                airline: best.airline || current.airline,
                                 headline: `${best.airline || "Oferta"} ${best.origin} → ${best.destination} desde ${best.currency || "USD"} ${best.price ?? ""}`,
                                 stops: 0,
                                 duration: "Varia",
@@ -1605,8 +1609,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Inteligência de Mercado:</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {dealOffers.map((offer) => {
-                      const isSelected = dealDraft?.price === String(offer.price) && 
-                                        dealDraft?.airline === offer.airline;
+                      const isSelected = selectedOfferId === offer.id;
                       return (
                         <button
                           key={offer.id}
@@ -1617,6 +1620,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                               : "border-white/5 bg-slate-950/60 hover:bg-indigo-500/10 hover:border-indigo-500/30"
                           }`}
                           onClick={() => {
+                            setSelectedOfferId(offer.id);
                             setDealDraft((current) =>
                               current
                                 ? {

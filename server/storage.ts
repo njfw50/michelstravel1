@@ -495,12 +495,39 @@ export class DatabaseStorage implements IStorage {
     try {
       const [newDeal] = await db.insert(featuredDeals).values(deal).returning();
       return newDeal;
-    } catch (error) {
-      console.error("Failed to create featured deal with full schema, retrying with basic columns:", error);
-      // Remove potentially missing columns (stops, duration, departureDate, returnDate) and retry
-      const { stops, duration, departureDate, returnDate, ...basicDeal } = deal as any;
-      const [newDeal] = await db.insert(featuredDeals).values(basicDeal).returning();
-      return newDeal;
+    } catch (error: any) {
+      console.error("Failed to create deal with full schema:", error.message);
+      
+      try {
+        // Stage 2: Remove stops, duration, departureDate, returnDate
+        const { stops, duration, departureDate, returnDate, ...stage2 } = deal as any;
+        const [newDeal] = await db.insert(featuredDeals).values(stage2).returning();
+        return newDeal;
+      } catch (err2: any) {
+        console.error("Stage 2 fallback failed:", err2.message);
+        
+        try {
+          // Stage 3: Remove originCity, destinationCity, cabinClass
+          const { stops, duration, departureDate, returnDate, originCity, destinationCity, cabinClass, ...stage3 } = deal as any;
+          const [newDeal] = await db.insert(featuredDeals).values(stage3).returning();
+          return newDeal;
+        } catch (err3: any) {
+          console.error("Stage 3 fallback failed:", err3.message);
+          // Final attempt with absolute minimums
+          const minDeal = {
+            origin: deal.origin,
+            destination: deal.destination,
+            price: deal.price,
+            currency: deal.currency || 'USD',
+            headline: deal.headline,
+            description: deal.description,
+            airline: deal.airline,
+            isActive: true
+          };
+          const [finalDeal] = await db.insert(featuredDeals).values(minDeal).returning();
+          return finalDeal;
+        }
+      }
     }
   }
 
