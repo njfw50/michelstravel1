@@ -236,7 +236,9 @@
         "badge": "Concierge 24h",
         "sub": "Experiência Sob Medida",
         "title": "Assessoramos cada passo da sua jornada com uma presença invisível e contínua.",
-        "desc": "Tranquilidade em todo o processo: desde a curadoria impecável da rota até nosso suporte proativo, antecipando imprevistos e ajustando planos antes que eles o afetem."
+        "desc": "Tranquilidade em todo o processo: desde a curadoria impecável da rota até nosso suporte proativo, antecipando imprevistos e ajustando planos antes que eles o afetem.",
+        "whatsapp_topic": "Consulta de Passagem Premium",
+        "whatsapp_details": "Cheguei pelo novo Hero VIP"
       }
     },
     "search": {

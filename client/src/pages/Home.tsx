@@ -6,160 +6,139 @@ import { useAirlines, useFeaturedAirports } from "@/hooks/use-flights";
 import { FlightSearchForm } from "@/components/FlightSearchForm";
 import { DealCard } from "@/components/DealCard";
 import { SEO } from "@/components/SEO";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button"; // Missing import added
 import { 
   Plane, 
   ArrowRight, 
   ShieldCheck, 
-  Navigation, 
   Sparkles, 
   Globe2, 
   Phone, 
-  Clock, 
   CheckCircle2,
-  Calendar,
   MessageCircle,
-  HelpCircle,
+  Clock,
   TrendingUp,
   MapPin
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { buildWhatsAppHref, buildWhatsAppMessage, AGENCY_WHATSAPP_DISPLAY } from "@/lib/contact";
 import { openChatbotAssistant } from "@/lib/chatbot";
+import type { ContactLanguage } from "@/lib/contact";
+
+const getDestinationImage = (city?: string) => {
+  if (!city) return "https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&q=80&w=800";
+  const c = city.toLowerCase();
+  if (c.includes("brasil") || c.includes("rio") || c.includes("são paulo") || c.includes("sao paulo") || c.includes("recife")) {
+    return "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&q=80&w=800";
+  }
+  if (c.includes("portugal") || c.includes("lisboa") || c.includes("porto")) {
+    return "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?auto=format&fit=crop&q=80&w=800";
+  }
+  if (c.includes("parís") || c.includes("paris") || c.includes("frança") || c.includes("france")) {
+    return "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=800";
+  }
+  if (c.includes("new york") || c.includes("newark") || c.includes("usa") || c.includes("estados unidos")) {
+    return "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&q=80&w=800";
+  }
+  return "https://images.unsplash.com/photo-1530521954074-e64f6810b32d?auto=format&fit=crop&q=80&w=800";
+};
 
 export default function Home() {
   const { data: airlines } = useAirlines(20);
-  const { data: airports } = useFeaturedAirports();
   const { t, language } = useI18n();
   const { data: catalogDeals = [], isLoading: dealsLoading } = useFeaturedDeals(language);
   const [, setLocation] = useLocation();
 
-  const airlineCount = airlines?.length || 0;
-  
   const contactWhatsAppHref = buildWhatsAppHref(
     buildWhatsAppMessage({
-      language,
-      topic: language === "en" ? "Flight Inquiry" : language === "es" ? "Consulta de Vuelo" : "Consulta de Vôo",
-      details: ["Página: Home / Hero"]
+      language: (language || "pt") as ContactLanguage,
+      topic: t("home.hero.whatsapp_topic"),
+      details: [t("home.hero.whatsapp_details")]
     })
   );
-
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "TravelAgency",
-    "name": "Michels Travel",
-    "image": "https://michelstravel.agency/favicon.png",
-    "description": t("hero.subtitle"),
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Newark",
-      "addressRegion": "NJ",
-      "addressCountry": "US"
-    },
-    "telephone": AGENCY_WHATSAPP_DISPLAY,
-    "url": "https://michelstravel.agency"
-  };
 
   return (
     <div className="bg-[#fcfdff] text-slate-900 font-sans">
       <SEO
-        title="Agência de Viagens Newark & Ironbound | Michels Travel"
-        description="A maior agência de passagens aéreas para brasileiros em Newark e Ironbound. Suporte humano 24h e integridade linguística garantida."
+        title={t("home.search.title")}
+        description={t("home.search.desc")}
         path="/"
-        structuredData={structuredData}
       />
 
-      {/* --- REFORMED HERO: SEARCH FIRST DESIGN --- */}
-      <section className="relative pt-6 pb-20 overflow-hidden">
-        {/* Decorative Background Elements */}
-        <div className="absolute top-0 right-0 w-[50%] h-[600px] bg-gradient-to-bl from-blue-50/40 to-transparent pointer-events-none rounded-bl-[200px]" />
+      <section className="relative pt-8 pb-20 overflow-hidden">
+        <div className="absolute top-0 right-0 w-[55%] h-[650px] bg-gradient-to-bl from-blue-50/50 via-blue-50/20 to-transparent pointer-events-none rounded-bl-[240px] z-0" />
         
         <div className="container mx-auto px-4 relative z-10">
-          
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-10">
             
-            {/* 1. TOP HEADER INFO (Compact) */}
-            <div className="flex flex-wrap items-center justify-between gap-4">
-               <div className="flex flex-col gap-1">
-                  <Badge variant="outline" className="w-fit bg-blue-50/50 border-blue-100 text-blue-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
-                    <ShieldCheck className="h-3 w-3 mr-1.5" />
-                    Integridade Linguística Ativa ({language?.toUpperCase()})
-                  </Badge>
-                  <h1 className="text-2xl md:text-3xl font-display font-black tracking-tight text-slate-950">
-                    Sua Agência em <span className="text-blue-600">Newark & Ironbound</span>
+            <div className="flex flex-wrap items-end justify-between gap-6">
+               <div className="flex flex-col gap-3 max-w-2xl">
+                  <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+                    <Badge variant="outline" className="w-fit bg-blue-600/5 border-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
+                      <ShieldCheck className="h-3.5 w-3.5 mr-2" />
+                      {t("home.bot.badge")}
+                    </Badge>
+                  </motion.div>
+                  <h1 className="text-3xl md:text-5xl font-display font-black tracking-tighter text-slate-950 leading-[0.95] uppercase">
+                    {t("home.hero.title").split(":")[0]} <br />
+                    <span className="text-blue-600">{t("home.office.badge")}</span>
                   </h1>
+                  <p className="text-slate-500 font-medium text-base md:text-lg max-w-lg leading-relaxed">
+                    {t("home.hero.desc")}
+                  </p>
                </div>
                
-               <div className="hidden md:flex items-center gap-6">
-                  <div className="flex items-center gap-2">
-                    <div className="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center">
-                      <Phone className="h-4 w-4 text-slate-600" />
+               <div className="hidden lg:flex items-center gap-8 pb-2">
+                  <div className="flex flex-col items-end">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t("home.bot.whatsapp_badge")} 24h</span>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Suporte 24h</p>
-                      <p className="text-sm font-bold text-slate-950">{AGENCY_WHATSAPP_DISPLAY}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center">
-                      <Globe2 className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">Sessão Segura</p>
-                      <p className="text-sm font-bold text-blue-600">Encriptado SSL</p>
-                    </div>
+                    <a href={contactWhatsAppHref} target="_blank" rel="noreferrer" className="text-xl font-black text-slate-950 hover:text-blue-600 transition-colors">
+                      {AGENCY_WHATSAPP_DISPLAY}
+                    </a>
                   </div>
                </div>
             </div>
 
-            {/* 2. MAIN SEARCHER (The Centerpiece) */}
-            <motion.div 
-               initial={{ opacity: 0, y: 30 }}
-               animate={{ opacity: 1, y: 0 }}
-               transition={{ duration: 0.6, ease: "easeOut" }}
-               className="relative"
-            >
-              {/* Floating Badge for Search */}
-              <div className="absolute -top-4 left-8 z-20">
-                <div className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-full shadow-lg shadow-blue-600/30">
-                  <Plane className="h-4 w-4" />
-                  <span className="text-xs font-black uppercase tracking-widest">Encontre seu próximo voo</span>
+            <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="relative">
+              <div className="rounded-[40px] md:rounded-[56px] border border-white bg-white/80 shadow-[0_40px_100px_-20px_rgba(15,23,42,0.12)] backdrop-blur-2xl p-6 md:p-12">
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="h-10 w-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center">
+                      <Plane className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">{t("home.search.title")}</h2>
+                      <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">{t("home.search.tag")}</p>
+                    </div>
+                  </div>
+
+                  <FlightSearchForm />
                 </div>
-              </div>
 
-              {/* Search Form Container */}
-              <div className="rounded-[32px] md:rounded-[40px] border border-slate-100 bg-white shadow-[0_50px_100px_-20px_rgba(15,23,42,0.1)] p-6 md:p-10 pt-12 relative overflow-hidden">
-                {/* Background Accent */}
-                <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-blue-50/30 to-transparent pointer-events-none" />
-                
-                <FlightSearchForm 
-                  onSearch={(params) => {
-                    const searchParams = new URLSearchParams();
-                    Object.entries(params).forEach(([key, value]) => {
-                      if (value) searchParams.append(key, String(value));
-                    });
-                    setLocation(`/search?${searchParams.toString()}`);
-                  }}
-                />
-
-                <div className="mt-8 flex flex-wrap items-center justify-between gap-6 border-t border-slate-50 pt-8">
-                  <div className="flex items-center gap-8">
+                <div className="mt-10 flex flex-wrap items-center justify-between gap-8 border-t border-slate-100 pt-8">
+                  <div className="flex flex-wrap items-center gap-10">
                      <div className="flex items-center gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                        <span className="text-sm font-bold text-slate-600 italic">Preço Garantido</span>
+                        <div className="h-5 w-5 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        </div>
+                        <span className="text-xs font-black text-slate-600 uppercase tracking-widest opacity-70">{t("footer.seal_stripe")}</span>
                      </div>
                      <div className="flex items-center gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                        <span className="text-sm font-bold text-slate-600 italic">Suporte Humano</span>
+                        <div className="h-5 w-5 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                          <Globe2 className="h-3.5 w-3.5" />
+                        </div>
+                        <span className="text-xs font-black text-slate-600 uppercase tracking-widest opacity-70">{t("footer.seal_ssl")}</span>
                      </div>
                   </div>
                   
-                  <div className="flex items-center gap-4">
-                     <p className="text-xs font-bold text-slate-400 mr-2">MAIS DE {airlineCount}+ CIAS AÉREAS:</p>
-                     <div className="flex -space-x-3 opacity-60 grayscale hover:grayscale-0 transition-all cursor-crosshair">
+                  <div className="flex items-center gap-5">
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{t("home.airlines.tag")}:</p>
+                     <div className="flex -space-x-3 opacity-40 grayscale">
                         {airlines?.slice(0, 5).map((airline) => (
-                          <div key={airline.id} className="h-10 w-10 rounded-full border-4 border-white bg-slate-50 flex items-center justify-center p-1 overflow-hidden" title={airline.name}>
+                          <div key={airline.id} className="h-10 w-10 rounded-full border-4 border-white bg-slate-50 flex items-center justify-center p-1.5 overflow-hidden shadow-sm">
                             {airline.logoUrl ? (
                               <img src={airline.logoUrl} alt={airline.name} className="h-full w-full object-contain" />
                             ) : (
@@ -173,125 +152,105 @@ export default function Home() {
               </div>
             </motion.div>
 
-            {/* 3. QUICK LINKS / FEATURES (Bottom of block) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-               <motion.div 
-                 whileHover={{ y: -5 }}
-                 className="group p-6 rounded-[24px] bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:border-blue-100 transition-all cursor-pointer"
-                 onClick={() => setLocation("/senior")}
-               >
-                 <div className="h-12 w-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                   <HelpCircle className="h-6 w-6" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+               <motion.div whileHover={{ y: -8 }} className="group p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm transition-all cursor-pointer" onClick={() => setLocation("/senior")}>
+                 <div className="h-14 w-14 rounded-3xl bg-amber-50 text-amber-600 flex items-center justify-center mb-6 group-hover:bg-amber-600 group-hover:text-white transition-all">
+                   <Clock className="h-7 w-7" />
                  </div>
-                 <h3 className="text-lg font-black text-slate-950 uppercase tracking-tight mb-2">Modo Sênior</h3>
-                 <p className="text-sm text-slate-500 font-medium">Atendimento especializado e interface simplificada para viajantes experientes.</p>
+                 <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">{t("home.senior.badge")}</h3>
+                 <p className="text-sm text-slate-500 font-medium leading-relaxed">{t("home.senior.desc")}</p>
+                 <div className="mt-6 flex items-center gap-2 text-blue-600 text-xs font-black uppercase tracking-widest">
+                   {t("home.senior.btn")} <ArrowRight className="h-4 w-4" />
+                 </div>
                </motion.div>
 
-               <motion.div 
-                 whileHover={{ y: -5 }}
-                 className="group p-6 rounded-[24px] bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:border-blue-100 transition-all cursor-pointer"
-                 onClick={() => openChatbotAssistant({ message: "Quero ajuda para planejar minha viagem.", autoSend: true })}
-               >
-                 <div className="h-12 w-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                   <Sparkles className="h-6 w-6" />
+               <motion.div whileHover={{ y: -8 }} className="group p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm transition-all cursor-pointer" onClick={() => openChatbotAssistant({ message: t("home.bot.msg1"), autoSend: true })}>
+                 <div className="h-14 w-14 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                   <Sparkles className="h-7 w-7" />
                  </div>
-                 <h3 className="text-lg font-black text-slate-950 uppercase tracking-tight mb-2">Consultoria IA</h3>
-                 <p className="text-sm text-slate-500 font-medium">Nossa IA Mia ajuda você a encontrar as melhores rotas e conexões em segundos.</p>
+                 <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">MIA INTELLIGENCE</h3>
+                 <p className="text-sm text-slate-500 font-medium leading-relaxed">{t("home.bot.desc")}</p>
+                 <div className="mt-6 flex items-center gap-2 text-blue-600 text-xs font-black uppercase tracking-widest">
+                   {t("home.bot.btn")} <ArrowRight className="h-4 w-4" />
+                 </div>
                </motion.div>
 
-               <motion.div 
-                 whileHover={{ y: -5 }}
-                 className="group p-6 rounded-[24px] bg-white border border-slate-100 shadow-sm hover:shadow-xl hover:border-blue-100 transition-all cursor-pointer"
-                 onClick={() => setLocation("/messages")}
-               >
-                 <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                   <MessageCircle className="h-6 w-6" />
+               <motion.div whileHover={{ y: -8 }} className="group p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm transition-all cursor-pointer" onClick={() => setLocation("/messages")}>
+                 <div className="h-14 w-14 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                   <MessageCircle className="h-7 w-7" />
                  </div>
-                 <h3 className="text-lg font-black text-slate-950 uppercase tracking-tight mb-2">Chat ao Vivo</h3>
-                 <p className="text-sm text-slate-500 font-medium">Dúvidas sobre sua reserva? Fale com nossos especialistas no Ironbound.</p>
+                 <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">{t("footer.contact_title")}</h3>
+                 <p className="text-sm text-slate-500 font-medium leading-relaxed">{t("footer.contact_desc")}</p>
+                 <div className="mt-6 flex items-center gap-2 text-blue-600 text-xs font-black uppercase tracking-widest">
+                   {t("footer.contact_cta")} <ArrowRight className="h-4 w-4" />
+                 </div>
                </motion.div>
             </div>
-
           </div>
         </div>
       </section>
 
-      {/* --- FEATURED DEALS SECTION (Language Integrant) --- */}
-      <section className="bg-slate-50 py-24">
+      <section className="bg-slate-50/50 py-28 relative">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-            <div className="max-w-xl">
-              <Badge className="bg-blue-600/10 text-blue-700 hover:bg-blue-600/10 rounded-full px-4 py-1 mb-4 text-[10px] uppercase font-black tracking-widest">
-                <TrendingUp className="h-3 w-3 mr-2" />
-                Destaques da Semana
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-16">
+            <div className="max-w-2xl">
+              <Badge className="bg-blue-600 text-white rounded-full px-5 py-1.5 mb-6 text-[10px] uppercase font-black tracking-[0.2em] shadow-lg shadow-blue-600/20">
+                <TrendingUp className="h-3.5 w-3.5 mr-2" />
+                {t("home.deals.badge")}
               </Badge>
-              <h2 className="text-3xl md:text-4xl font-display font-black text-slate-950 tracking-tighter leading-none mb-4 uppercase">
-                Ofertas Exclusivas <br />
-                <span className="text-blue-600">para sua Língua</span>
+              <h2 className="text-4xl md:text-5xl font-display font-black text-slate-950 tracking-tighter leading-[0.9] uppercase mb-6">
+                {t("home.deals.title")} <br />
+                <span className="text-blue-600">{t("results.filter_active")}</span>
               </h2>
-              <p className="text-slate-500 font-medium">Curadoria manual de passagens saindo dos EUA para destinos selecionados com o melhor custo-benefício.</p>
+              <p className="text-slate-500 font-medium text-lg max-w-lg leading-relaxed">{t("home.deals.desc")}</p>
             </div>
-            <Link href="/search" className="group hidden md:flex items-center gap-2 text-blue-600 font-bold hover:underline">
-               Ver todas as ofertas <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            <Link href="/search" className="group flex items-center gap-3 text-blue-600 font-black text-sm uppercase tracking-widest hover:gap-4 transition-all">
+               {t("home.board.show_more")} <ArrowRight className="h-5 w-5" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {dealsLoading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-[400px] rounded-3xl bg-slate-200 animate-pulse" />
-              ))
+              Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-[450px] rounded-[40px] bg-white border border-slate-100 animate-pulse" />)
             ) : catalogDeals.length > 0 ? (
               catalogDeals.map((deal) => (
                 <DealCard 
                   key={deal.id} 
                   deal={{
                     ...deal,
-                    title: `${deal.origin_city} para ${deal.destination_city}`,
+                    title: `${deal.origin_city} → ${deal.destination_city}`,
                     description: deal.headline || deal.description,
-                    imageUrl: `https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=800` // Placeholder for localized feel
+                    imageUrl: getDestinationImage(deal.destination_city)
                   }} 
                 />
               ))
             ) : (
-              <div className="col-span-full py-12 text-center bg-white rounded-3xl border border-dashed border-slate-200">
-                 <MapPin className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-                 <p className="text-slate-400 font-medium">Nenhuma oferta disponível para o idioma selecionado no momento.</p>
+              <div className="col-span-full py-20 text-center bg-white rounded-[40px] border border-dashed border-slate-200">
+                 <p className="text-slate-400 font-black uppercase tracking-widest text-sm">{t("results.no_matching_flights")}</p>
               </div>
             )}
           </div>
         </div>
       </section>
 
-      {/* CTA Footer */}
-      <section className="bg-blue-600 py-16 overflow-hidden relative">
-         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-            <Globe2 className="h-[600px] w-[600px] absolute -bottom-48 -right-48" />
+      <section className="bg-slate-950 py-24 relative overflow-hidden">
+         <div className="absolute inset-0 opacity-10 pointer-events-none">
+            <Globe2 className="h-[800px] w-[800px] absolute -bottom-40 -right-40 text-blue-500" />
          </div>
          <div className="container mx-auto px-4 relative z-10">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-12 text-white">
-               <div className="max-w-2xl text-center md:text-left">
-                  <h2 className="text-4xl font-display font-black tracking-tighter uppercase mb-4 leading-tight">
-                    Pronto para <br />
-                    sua próxima aventura?
+            <div className="flex flex-col md:flex-row items-center justify-between gap-16">
+               <div className="max-w-3xl">
+                  <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter text-white uppercase leading-[0.9] mb-8">
+                    {t("home.cta.title")}
                   </h2>
-                  <p className="text-blue-100 text-lg font-medium opacity-90">Junte-se a milhares de brasileiros que viajam com segurança e suporte total da Michels Travel.</p>
+                  <p className="text-slate-400 text-xl font-medium max-w-xl">{t("home.cta.subtitle")}</p>
                </div>
-               <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-                  <a 
-                    href={contactWhatsAppHref}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex h-16 items-center justify-center gap-3 rounded-full bg-white px-10 text-lg font-black text-blue-600 shadow-2xl hover:bg-blue-50 transition-all outline-none"
-                  >
-                    Falar com Agente <MessageCircle className="h-6 w-6" />
+               <div className="flex flex-col sm:flex-row gap-6">
+                  <a href={contactWhatsAppHref} target="_blank" rel="noreferrer" className="flex h-20 items-center justify-center gap-4 rounded-full bg-blue-600 px-12 text-lg font-black text-white hover:bg-blue-700 transition-all">
+                    {t("footer.contact_cta")} <MessageCircle className="h-6 w-6" />
                   </a>
-                  <Button 
-                    variant="outline"
-                    className="h-16 rounded-full border-white/30 bg-white/10 px-10 text-lg font-bold text-white hover:bg-white/20 outline-none backdrop-blur-md"
-                    onClick={() => setLocation("/senior")}
-                  >
-                    Conhecer Plano Sênior
+                  <Button variant="outline" className="h-20 rounded-full border-white/20 bg-white/5 px-12 text-lg font-bold text-white hover:bg-white/10" onClick={() => setLocation("/senior")}>
+                    {t("home.senior.btn")}
                   </Button>
                </div>
             </div>
