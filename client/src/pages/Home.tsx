@@ -127,15 +127,15 @@ export default function Home() {
       />
 
       {/* --- HERO SECTION --- */}
-      <section className="relative pt-12 pb-24 md:pt-20 md:pb-32 overflow-hidden">
+      <section className="relative pt-10 pb-16 md:pt-16 md:pb-24 overflow-hidden">
         <div className="absolute top-0 right-0 w-[60%] h-full bg-gradient-to-l from-blue-50/50 to-transparent pointer-events-none" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl">
-            <Badge className="rounded-full border-blue-200 bg-white px-5 py-2 text-[10px] font-black uppercase tracking-[0.3em] text-blue-700 shadow-sm mb-8">
-              <Sparkles className="mr-2 h-4 w-4" />
+            <Badge className="rounded-full border-blue-200 bg-white px-4 py-1.5 text-[9px] font-black uppercase tracking-[0.3em] text-blue-700 shadow-sm mb-6">
+              <Sparkles className="mr-2 h-3.5 w-3.5" />
               The Intelligence of Travel
             </Badge>
-            <h1 className="text-6xl md:text-[9rem] font-display font-black leading-[0.85] tracking-tighter text-slate-950 mb-8">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-black leading-[0.95] tracking-tighter text-slate-950 mb-8">
               Sua Agência <br />
               <span className="text-blue-600">em Newark & Ironbound.</span>
             </h1>
@@ -143,24 +143,24 @@ export default function Home() {
               Tarifas exclusivas curadas por tecnologia e suporte humano especializado 24h. Segurança absoluta para brasileiros nos EUA e no mundo.
             </p>
             
-            <div className="flex flex-wrap gap-4 mb-2">
+            <div className="flex flex-wrap gap-4 mb-0">
                <Button 
                 onClick={() => document.getElementById('search-anchor')?.scrollIntoView({ behavior: 'smooth' })}
-                className="rounded-full bg-blue-600 px-10 py-8 text-lg font-bold text-white shadow-2xl shadow-blue-600/30 hover:bg-blue-700 hover:scale-105 transition-all outline-none"
+                className="rounded-full bg-blue-600 px-8 py-6 text-base font-bold text-white shadow-2xl shadow-blue-600/30 hover:bg-blue-700 hover:scale-105 transition-all outline-none"
                >
-                 Explorar Destinos <ArrowRight className="ml-3 h-6 w-6" />
+                 Explorar Destinos <ArrowRight className="ml-2 h-5 w-5" />
                </Button>
                <Button 
                 variant="outline"
-                className="rounded-full border-slate-200 bg-white px-10 py-8 text-lg font-bold text-slate-800 hover:bg-slate-50 outline-none"
+                className="rounded-full border-slate-200 bg-white px-8 py-6 text-base font-bold text-slate-800 hover:bg-slate-50 outline-none"
                 onClick={() => openChatbotAssistant({ message: "Olá, Mia. Preciso de ajuda para planejar minha viagem.", autoSend: true })}
                >
-                 Consultoria IA <MessageCircle className="ml-3 h-6 w-6" />
+                 Consultoria IA <MessageCircle className="ml-2 h-5 w-5" />
                </Button>
             </div>
           </div>
 
-          <div className="absolute top-1/2 -right-20 -translate-y-1/2 w-[45%] h-[80%] hidden lg:block z-0 pointer-events-none">
+          <div className="absolute top-1/2 -right-20 -translate-y-1/2 w-[45%] h-[60%] hidden lg:block z-0 pointer-events-none">
              <div className="relative w-full h-full">
                 <div className="absolute inset-0 bg-gradient-to-r from-[#fcfdff] via-transparent to-transparent z-10" />
                 <motion.img 
@@ -183,7 +183,7 @@ export default function Home() {
              </div>
           </div>
 
-          <div id="search-anchor" className="mt-20 rounded-[40px] border border-slate-100/50 bg-white/70 backdrop-blur-2xl p-6 shadow-[0_48px_100px_-24px_rgba(15,23,42,0.12)] md:p-10 relative z-20 border-t-white/80 overflow-hidden">
+          <div id="search-anchor" className="mt-12 rounded-[32px] border border-slate-100/50 bg-white/70 backdrop-blur-2xl p-5 shadow-[0_48px_100px_-24px_rgba(15,23,42,0.12)] md:p-8 relative z-20 border-t-white/80 overflow-hidden">
              <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-50/20 to-transparent pointer-events-none" />
              <div className="absolute -top-12 right-12 hidden lg:flex items-center gap-4 bg-white/90 backdrop-blur-md border border-slate-100 p-4 rounded-3xl shadow-xl z-30">
                 <div className="flex -space-x-3">
