@@ -26,16 +26,16 @@ type SectionProps = {
 
 function Section({ icon, title, children }: SectionProps) {
   return (
-    <Card className="p-6 md:p-8">
+    <Card className="p-6 md:p-8 border-white/5 bg-slate-900 shadow-xl transition-all duration-300 hover:border-blue-500/20">
       <div className="flex items-start gap-3 mb-4">
-        <div className="p-2 bg-blue-50 rounded-md text-blue-600 mt-0.5 shrink-0">
+        <div className="p-2 bg-blue-500/10 rounded-md text-blue-400 mt-0.5 shrink-0 shadow-inner">
           {icon}
         </div>
-        <h2 className="text-lg font-bold text-gray-900" data-testid={`text-section-${title.toLowerCase().replace(/\s/g, "-")}`}>
+        <h2 className="text-lg font-bold text-white tracking-tight" data-testid={`text-section-${title.toLowerCase().replace(/\s/g, "-")}`}>
           {title}
         </h2>
       </div>
-      <div className="text-sm text-gray-600 leading-relaxed space-y-3 ml-0 md:ml-12">
+      <div className="text-sm text-slate-400 leading-relaxed space-y-3 ml-0 md:ml-12">
         {children}
       </div>
     </Card>
@@ -43,45 +43,44 @@ function Section({ icon, title, children }: SectionProps) {
 }
 
 export default function TermsOfService() {
-  const { t, language } = useI18n();
-
+  const { language } = useI18n();
   const content = getContent(language);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <SEO
         title={content.pageTitle}
         description={content.pageDescription}
       />
 
-      <div className="bg-white border-b border-gray-200">
+      <div className="border-b border-white/5 bg-slate-950/20 backdrop-blur-sm">
         <div className="container mx-auto max-w-4xl px-4 py-8 md:py-12">
           <Link href="/">
-            <Button variant="ghost" size="sm" className="mb-4 -ml-2" data-testid="button-back-home">
+            <Button variant="ghost" size="sm" className="mb-4 -ml-2 text-slate-400 hover:text-white hover:bg-white/5" data-testid="button-back-home">
               <ArrowLeft className="w-4 h-4 mr-1" />
               {content.backHome}
             </Button>
           </Link>
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2.5 bg-blue-600 rounded-lg text-white">
+            <div className="p-2.5 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-600/20">
               <FileText className="w-6 h-6" />
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900" data-testid="text-terms-title">
+            <h1 className="text-2xl md:text-[2.25rem] font-black text-white leading-[1.1] tracking-tight" data-testid="text-terms-title">
               {content.title}
             </h1>
           </div>
-          <p className="text-gray-500 text-sm" data-testid="text-terms-updated">
+          <p className="text-slate-500 text-sm font-medium" data-testid="text-terms-updated">
             {content.lastUpdated}
           </p>
         </div>
       </div>
 
-      <div className="container mx-auto max-w-4xl px-4 py-8 space-y-5">
+      <div className="container mx-auto max-w-4xl px-4 py-8 space-y-6">
 
-        <Card className="p-6 md:p-8 bg-blue-50 border-blue-200">
+        <Card className="p-6 md:p-8 bg-blue-500/5 border-blue-500/20 shadow-2xl">
           <div className="flex items-start gap-3">
-            <Shield className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
-            <p className="text-sm text-blue-800 leading-relaxed" data-testid="text-terms-intro">
+            <Shield className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
+            <p className="text-sm text-slate-300 leading-relaxed font-medium" data-testid="text-terms-intro">
               {content.intro}
             </p>
           </div>
@@ -130,7 +129,7 @@ export default function TermsOfService() {
 
         <Section icon={<Ban className="w-5 h-5" />} title={content.s7Title}>
           <p>{content.s7p1}</p>
-          <ul className="list-disc pl-5 space-y-1">
+          <ul className="list-disc pl-5 space-y-2">
             <li>{content.s7l1}</li>
             <li>{content.s7l2}</li>
             <li>{content.s7l3}</li>
@@ -151,15 +150,16 @@ export default function TermsOfService() {
           <p>{content.s9p3}</p>
         </Section>
 
-        <Card className="p-6 md:p-8 bg-gray-50 border-gray-200">
-          <p className="text-sm text-gray-600 leading-relaxed" data-testid="text-terms-contact">
+        <Card className="p-6 md:p-8 bg-white/5 border-white/5 shadow-inner">
+          <p className="text-sm text-slate-400 leading-relaxed font-medium" data-testid="text-terms-contact">
             {content.contactIntro}
           </p>
-          <div className="mt-3 text-sm text-gray-700 font-medium space-y-1">
-            <p>Michels Travel</p>
-            <p>contact@michelstravel.agency</p>
-            <p>+1 (862) 350-1161</p>
-            <p>New Jersey, USA</p>
+          <div className="mt-4 font-bold text-slate-200 space-y-1">
+            <p className="text-blue-400 uppercase tracking-widest text-[10px] mb-2 font-black">Escritório Central</p>
+            <p className="text-lg">Michels Travel</p>
+            <p className="text-sm font-medium text-slate-400">contact@michelstravel.agency</p>
+            <p className="text-sm font-medium text-slate-400">+1 (862) 350-1161</p>
+            <p className="text-sm font-medium text-slate-400">New Jersey, USA</p>
           </div>
         </Card>
       </div>
@@ -312,7 +312,7 @@ const esContent = {
   s1Title: "1. Sobre Michels Travel",
   s1p1: "Michels Travel es una agencia de viajes digital registrada en New Jersey, EE.UU., que actúa como intermediaria en la comercialización de boletos aéreos. No somos una aerolínea y no operamos vuelos.",
   s1p2: "Nuestro papel es buscar las mejores opciones de vuelos disponibles en el mercado, facilitar la reserva y el pago, y ofrecer soporte al cliente durante todo el proceso.",
-  s1p3: "Al crear una cuenta o realizar una compra en nuestro sitio, usted declara tener al menos 18 años de edad y capacidad legal para celebrar contratos.",
+  s1p3: "Al realizar una compra o crear una cuenta en nuestro sitio, usted declara tener al menos 18 años de edad y capacidad legal para celebrar contratos.",
 
   s2Title: "2. Reservas y Boletos Aéreos",
   s2p1: "Los boletos aéreos comercializados en nuestra plataforma son emitidos directamente por las aerolíneas asociadas. Precios, horarios, rutas y disponibilidad están sujetos a cambios sin previo aviso por parte de las aerolíneas.",
@@ -347,7 +347,7 @@ const esContent = {
   s7Title: "7. Uso Prohibido",
   s7p1: "Está expresamente prohibido utilizar nuestro sitio para:",
   s7l1: "Realizar reservas con información falsa o fraudulenta",
-  s7l2: "Utilizar tarjetas de crédito o métodos de pago de terceros sin autorización",
+  s7l2: "Utilizar tarjetas de crédito o métodos de pagamento de terceros sin autorización",
   s7l3: "Realizar búsquedas automatizadas (scraping) o utilizar bots en nuestra plataforma",
   s7l4: "Intentar acceder a áreas restringidas del sistema o comprometer la seguridad de la plataforma",
   s7l5: "Revender boletos adquiridos a través de nuestro sitio sin autorización previa",

@@ -88,7 +88,7 @@ export default function Home() {
       searchParams.set("returnDate", deal.return_date);
     }
 
-    setLocation(`/search?${searchParams.toString()}`);
+    setLocation(`/search?dealId=${deal.id}&${searchParams.toString()}`);
   };
 
   return (

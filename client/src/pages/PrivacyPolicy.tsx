@@ -25,16 +25,16 @@ type SectionProps = {
 
 function Section({ icon, title, children }: SectionProps) {
   return (
-    <Card className="p-6 md:p-8">
+    <Card className="p-6 md:p-8 border-white/5 bg-slate-900 shadow-xl transition-all duration-300 hover:border-blue-500/20">
       <div className="flex items-start gap-3 mb-4">
-        <div className="p-2 bg-blue-50 rounded-md text-blue-600 mt-0.5 shrink-0">
+        <div className="p-2 bg-blue-500/10 rounded-md text-blue-400 mt-0.5 shrink-0 shadow-inner">
           {icon}
         </div>
-        <h2 className="text-lg font-bold text-gray-900">
+        <h2 className="text-lg font-bold text-white tracking-tight">
           {title}
         </h2>
       </div>
-      <div className="text-sm text-gray-600 leading-relaxed space-y-3 ml-0 md:ml-12">
+      <div className="text-sm text-slate-400 leading-relaxed space-y-3 ml-0 md:ml-12">
         {children}
       </div>
     </Card>
@@ -46,53 +46,53 @@ export default function PrivacyPolicy() {
   const c = getContent(language);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <SEO title={c.pageTitle} description={c.pageDesc} />
 
-      <div className="bg-white border-b border-gray-200">
+      <div className="border-b border-white/5 bg-slate-950/20 backdrop-blur-sm">
         <div className="container mx-auto max-w-4xl px-4 py-8 md:py-12">
           <Link href="/">
-            <Button variant="ghost" size="sm" className="mb-4 -ml-2" data-testid="button-back-home">
+            <Button variant="ghost" size="sm" className="mb-4 -ml-2 text-slate-400 hover:text-white hover:bg-white/5" data-testid="button-back-home">
               <ArrowLeft className="w-4 h-4 mr-1" />
               {c.back}
             </Button>
           </Link>
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2.5 bg-blue-600 rounded-lg text-white">
+            <div className="p-2.5 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-600/20">
               <Lock className="w-6 h-6" />
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900" data-testid="text-privacy-title">
+            <h1 className="text-2xl md:text-[2.25rem] font-black text-white leading-[1.1] tracking-tight" data-testid="text-privacy-title">
               {c.title}
             </h1>
           </div>
-          <p className="text-gray-500 text-sm" data-testid="text-privacy-updated">{c.updated}</p>
+          <p className="text-slate-500 text-sm font-medium" data-testid="text-privacy-updated">{c.updated}</p>
         </div>
       </div>
 
-      <div className="container mx-auto max-w-4xl px-4 py-8 space-y-5">
+      <div className="container mx-auto max-w-4xl px-4 py-8 space-y-6">
 
-        <Card className="p-6 md:p-8 bg-blue-50 border-blue-200">
+        <Card className="p-6 md:p-8 bg-blue-500/5 border-blue-500/20 shadow-2xl">
           <div className="flex items-start gap-3">
-            <Shield className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
-            <p className="text-sm text-blue-800 leading-relaxed" data-testid="text-privacy-intro">{c.intro}</p>
+            <Shield className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
+            <p className="text-sm text-slate-300 leading-relaxed font-medium" data-testid="text-privacy-intro">{c.intro}</p>
           </div>
         </Card>
 
         <Section icon={<Eye className="w-5 h-5" />} title={c.s1t}>
           <p>{c.s1p1}</p>
-          <ul className="list-disc pl-5 space-y-1">
+          <ul className="list-disc pl-5 space-y-2">
             <li>{c.s1l1}</li>
             <li>{c.s1l2}</li>
             <li>{c.s1l3}</li>
             <li>{c.s1l4}</li>
             <li>{c.s1l5}</li>
           </ul>
-          <p>{c.s1p2}</p>
+          <p className="pt-2">{c.s1p2}</p>
         </Section>
 
         <Section icon={<Database className="w-5 h-5" />} title={c.s2t}>
           <p>{c.s2p1}</p>
-          <ul className="list-disc pl-5 space-y-1">
+          <ul className="list-disc pl-5 space-y-2">
             <li>{c.s2l1}</li>
             <li>{c.s2l2}</li>
             <li>{c.s2l3}</li>
@@ -109,34 +109,34 @@ export default function PrivacyPolicy() {
 
         <Section icon={<Share2 className="w-5 h-5" />} title={c.s4t}>
           <p>{c.s4p1}</p>
-          <ul className="list-disc pl-5 space-y-1">
+          <ul className="list-disc pl-5 space-y-2">
             <li>{c.s4l1}</li>
             <li>{c.s4l2}</li>
             <li>{c.s4l3}</li>
           </ul>
-          <p>{c.s4p2}</p>
+          <p className="pt-2">{c.s4p2}</p>
         </Section>
 
         <Section icon={<Cookie className="w-5 h-5" />} title={c.s5t}>
           <p>{c.s5p1}</p>
-          <ul className="list-disc pl-5 space-y-1">
+          <ul className="list-disc pl-5 space-y-2">
             <li>{c.s5l1}</li>
             <li>{c.s5l2}</li>
             <li>{c.s5l3}</li>
           </ul>
-          <p>{c.s5p2}</p>
+          <p className="pt-2">{c.s5p2}</p>
         </Section>
 
         <Section icon={<FileText className="w-5 h-5" />} title={c.s6t}>
           <p>{c.s6p1}</p>
-          <ul className="list-disc pl-5 space-y-1">
+          <ul className="list-disc pl-5 space-y-2">
             <li>{c.s6l1}</li>
             <li>{c.s6l2}</li>
             <li>{c.s6l3}</li>
             <li>{c.s6l4}</li>
             <li>{c.s6l5}</li>
           </ul>
-          <p>{c.s6p2}</p>
+          <p className="pt-2">{c.s6p2}</p>
         </Section>
 
         <Section icon={<Database className="w-5 h-5" />} title={c.s7t}>
@@ -157,11 +157,12 @@ export default function PrivacyPolicy() {
 
         <Section icon={<Mail className="w-5 h-5" />} title={c.s10t}>
           <p>{c.s10p1}</p>
-          <div className="mt-2 font-medium text-gray-700 space-y-1">
-            <p>Michels Travel</p>
-            <p>contact@michelstravel.agency</p>
-            <p>+1 (862) 350-1161</p>
-            <p>New Jersey, USA</p>
+          <div className="mt-4 font-bold text-slate-200 bg-white/5 p-5 rounded-2xl border border-white/5 space-y-1 shadow-inner">
+            <p className="text-blue-400 uppercase tracking-widest text-[10px] mb-2 font-black">Contacto Oficial</p>
+            <p className="text-lg">Michels Travel</p>
+            <p className="text-sm font-medium text-slate-400">contact@michelstravel.agency</p>
+            <p className="text-sm font-medium text-slate-400">+1 (862) 350-1161</p>
+            <p className="text-sm font-medium text-slate-400">New Jersey, USA</p>
           </div>
         </Section>
       </div>
