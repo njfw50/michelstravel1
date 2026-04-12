@@ -9,6 +9,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { CookieConsent } from "@/components/CookieConsent";
 import { useI18n } from "@/lib/i18n";
+import { useLanguageIntegrity } from "./lib/language-integrity";
 import { ShieldCheck } from "lucide-react";
 import { HelmetProvider } from "react-helmet-async";
 import NotFound from "@/pages/not-found";
@@ -134,6 +135,7 @@ function App() {
 }
 
 function MainApp() {
+  useLanguageIntegrity(); // Ativa a prevenção linguística global
   return (
     <>
       <Toaster />

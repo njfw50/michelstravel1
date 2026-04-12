@@ -133,11 +133,12 @@ export function useFeaturedAirports() {
   });
 }
 
-export function useFeaturedDeals() {
+export function useFeaturedDeals(language?: string | null) {
   return useQuery<PublicFeaturedDeal[]>({
-    queryKey: ["/api/public/flight-deals"],
+    queryKey: ["/api/public/flight-deals", language],
     queryFn: async () => {
-      const res = await fetch("/api/public/flight-deals", { credentials: "include" });
+      const url = language ? `/api/public/flight-deals?language=${language}` : "/api/public/flight-deals";
+      const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch featured deals");
       const data = (await res.json()) as PublicFeaturedDealsResponse;
       return data.deals || [];

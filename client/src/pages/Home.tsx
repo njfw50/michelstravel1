@@ -49,12 +49,11 @@ const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1436491865332-7a61a109c
 export default function Home() {
   const { data: airlines } = useAirlines(20);
   const { data: airports } = useFeaturedAirports();
-  const { data: featuredDeals, isLoading: dealsLoading } = useFeaturedDeals();
-  const [, setLocation] = useLocation();
   const { t, language } = useI18n();
+  const { data: catalogDeals = [], isLoading: dealsLoading } = useFeaturedDeals(language);
+  const [, setLocation] = useLocation();
 
   const airlineCount = airlines?.length || 0;
-  const catalogDeals = featuredDeals?.slice(0, 4) || [];
   
   const contactWhatsAppHref = buildWhatsAppHref(
     buildWhatsAppMessage({

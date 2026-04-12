@@ -71,14 +71,13 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
     let value = getNestedValue(translations[lang], key);
 
-    if (!value) {
-      value = getNestedValue(translations.en, key);
-    }
-
+    // RESTAURAÇÃO: Exclusividade Linguística (Sem fallback silencioso para Inglês)
+    // Se não existir no idioma alvo, avisamos o desenvolvedor mas não misturamos os idiomas para o usuário final
     if (!value) {
       if (process.env.NODE_ENV !== "production") {
-        console.warn(`[i18n] missing key "${key}" for lang "${lang}"`);
+        console.warn(`[Integrity Violation] Missing key "${key}" for lang "${lang}". No fallback allowed.`);
       }
+      // Opcional: retornar uma string que indique falta de tradução em vez de Inglês
       return "";
     }
 
