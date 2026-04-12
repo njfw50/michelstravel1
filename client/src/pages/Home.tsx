@@ -24,7 +24,8 @@ import {
   Banknote,
   Navigation,
   Info,
-  ShieldAlert
+  ShieldAlert,
+  Headphones
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { buildWhatsAppHref, buildWhatsAppMessage } from "@/lib/contact";
