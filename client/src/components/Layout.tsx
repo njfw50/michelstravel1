@@ -37,6 +37,7 @@ import {
   buildWhatsAppHref,
   buildWhatsAppMessage,
 } from "@/lib/contact";
+import type { ContactLanguage } from "@/lib/contact";
 
 const LANG_OPTIONS = [
   { code: "pt" as const, label: "Português", flag: "PT" },
@@ -125,7 +126,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     language === "en" ? "Senior Support" : language === "es" ? "Atención Senior" : "Atendimento Senior";
   const footerWhatsAppHref = buildWhatsAppHref(
     buildWhatsAppMessage({
-      language,
+      language: (language || "pt") as ContactLanguage,
       topic: language === "en" ? "Website contact" : language === "es" ? "Contacto del sitio" : "Contato pelo site",
       details: [language === "en" ? "Page: Footer" : language === "es" ? "Página: Rodapé" : "Página: Rodapé"],
     }),
@@ -188,7 +189,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto px-4 pb-2 pt-4 md:px-6 md:pb-3 md:pt-5">
           <div
             className={cn(
-              "flex items-center justify-between gap-4 rounded-[30px] border border-white/10 px-4 py-3 shadow-[0_18px_50px_-24px_rgba(2,6,23,0.8)] backdrop-blur-xl transition-all duration-300 md:px-6 md:py-4",
+              "flex items-center justify-between gap-4 rounded-[20px] border border-white/10 px-3 py-2 shadow-[0_18px_50px_-24px_rgba(2,6,23,0.8)] backdrop-blur-xl transition-all duration-300 md:px-5 md:py-3",
               scrolled || !isHome ? "bg-[#07132d]/[0.96]" : "bg-[#07132d]/[0.88]",
             )}
           >
@@ -342,7 +343,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <LoginDialog open={loginDialogOpen} onOpenChange={handleLoginDialogChange} authError={authError} />
 
-      <main className="flex-1 bg-slate-950 pt-28 md:pt-32">
+      <main className="flex-1 bg-slate-950 pt-20 md:pt-24">
         {children}
       </main>
 

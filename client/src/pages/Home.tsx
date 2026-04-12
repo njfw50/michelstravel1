@@ -135,7 +135,7 @@ export default function Home() {
               <Sparkles className="mr-2 h-3.5 w-3.5" />
               The Intelligence of Travel
             </Badge>
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-display font-bold leading-tight tracking-tight text-slate-950 mb-6 mt-2">
+            <h1 className="text-2xl md:text-4xl lg:text-5xl font-display font-bold leading-tight tracking-tight text-slate-950 mb-4 mt-2 max-w-sm">
               Sua Agência <br />
               <span className="text-blue-600">em Newark & Ironbound.</span>
             </h1>
@@ -163,14 +163,13 @@ export default function Home() {
           <div className="absolute top-1/2 -right-20 -translate-y-1/2 w-[45%] h-[60%] hidden lg:block z-0 pointer-events-none">
              <div className="relative w-full h-full">
                 <div className="absolute inset-0 bg-gradient-to-r from-[#fcfdff] via-transparent to-transparent z-10" />
-                <motion.img 
-                  initial={{ opacity: 0, x: 100, scale: 1.1 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  transition={{ duration: 1.2, ease: "easeOut" }}
-                  src="https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&q=80&w=1000" 
-                  alt=""
-                  className="w-full h-full object-cover rounded-[60px] shadow-[0_50px_100px_-20px_rgba(37,99,235,0.2)]"
-                />
+                <div className="w-full h-full bg-gradient-to-br from-blue-100 to-white rounded-[60px] shadow-[0_50px_100px_-20px_rgba(37,99,235,0.1)] flex items-center justify-center relative overflow-hidden">
+                   <Plane className="h-64 w-64 text-blue-500/5 rotate-12 absolute -right-10 -bottom-10" />
+                   <div className="text-center p-8 relative z-10">
+                      <Badge className="bg-blue-600 text-white mb-4">Newark NJ</Badge>
+                      <h3 className="text-xl font-bold text-slate-950">Voe com o Michels</h3>
+                   </div>
+                </div>
                 <div className="absolute -bottom-10 -left-10 bg-white p-6 rounded-[32px] shadow-2xl border border-blue-50 z-20 max-w-[200px] animate-bounce-slow">
                    <div className="flex items-center gap-3 mb-2">
                       <div className="p-2 bg-blue-100 rounded-xl">
