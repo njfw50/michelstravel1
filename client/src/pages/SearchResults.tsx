@@ -672,8 +672,8 @@ export default function SearchResults() {
 
   const stopsOptions = [
     { key: "direct", label: t("flight.direct") || "Direct" },
-    { key: "1stop", label: `1 ${t("flight.stop") || "stop"}` },
-    { key: "2plus", label: `2+ ${t("flight.stops") || "stops"}` },
+    { key: "1stop", label: t("flight.stop", { count: 1 }) || "1 stop" },
+    { key: "2plus", label: t("flight.stops", { count: "2+" }) || "2+ stops" },
   ];
 
   const departureTimeOptions: { key: DepartureTime; label: string; icon: typeof Sun }[] = [
@@ -1131,10 +1131,10 @@ export default function SearchResults() {
                   {isSearching
                     ? t("results.searching") || "Searching..."
                     : showTwoStepFlow && !selectedOutboundKey && offerMatrix
-                      ? `${outboundOptionsForDisplay.length} ${t("results.outbound_flights") || "voos de ida"}`
+                      ? t("results.outbound_flights", { count: outboundOptionsForDisplay.length })
                       : showTwoStepFlow && selectedOutboundKey
-                        ? `${returnOptionsForSelected.length} ${t("results.return_flights") || "opcoes de volta"}`
-                        : `${filteredAndSortedFlights.length} ${t("results.flights_found") || "flights found"}`}
+                        ? t("results.return_flights", { count: returnOptionsForSelected.length })
+                        : t("results.flights_found", { count: filteredAndSortedFlights.length })}
                 </h2>
                 {!hideStandardFilters && activeFilterCount > 0 && (
                   <Badge variant="secondary" data-testid="badge-active-filters">

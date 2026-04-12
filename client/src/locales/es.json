@@ -5,13 +5,13 @@
     "price_per_adult": "Precio por adulto",
     "select": "Seleccionar",
     "direct": "Directo",
-    "stop": "Escala",
-    "stops": "Escalas"
+    "stop": "1 Escala",
+    "stops": "{count} Escalas"
   },
   "results": {
     "return_time": "Horario de Regreso",
     "searching": "Buscando vuelos...",
-    "flights_found": "vuelos encontrados",
+    "flights_found": "{count} vuelos encontrados",
     "filters": "Filtros",
     "stops_filter": "Escalas",
     "airlines_filter": "Aerolíneas",
@@ -43,8 +43,8 @@
     "outbound": "Ida",
     "return": "Vuelta",
     "available": "disponibles",
-    "outbound_flights": "vuelos de ida",
-    "return_flights": "opciones de vuelta",
+    "outbound_flights": "{count} vuelos de ida",
+    "return_flights": "{count} opciones de vuelta",
     "outbound_selected": "Vuelo de ida seleccionado",
     "change_outbound": "Cambiar vuelo de ida",
     "select_outbound": "Seleccione el vuelo de ida",

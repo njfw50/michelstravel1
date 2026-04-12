@@ -5,13 +5,13 @@
     "price_per_adult": "Price per adult",
     "select": "Select",
     "direct": "Direct",
-    "stop": "Stop",
-    "stops": "Stops"
+    "stop": "1 Stop",
+    "stops": "{count} Stops"
   },
   "results": {
     "return_time": "Return Time",
     "searching": "Searching flights...",
-    "flights_found": "flights found",
+    "flights_found": "{count} flights found",
     "filters": "Filters",
     "stops_filter": "Stops",
     "airlines_filter": "Airlines",
@@ -43,8 +43,8 @@
     "outbound": "Outbound",
     "return": "Return",
     "available": "available",
-    "outbound_flights": "outbound flights",
-    "return_flights": "return options",
+    "outbound_flights": "{count} outbound flights",
+    "return_flights": "{count} return options",
     "outbound_selected": "Outbound flight selected",
     "change_outbound": "Change outbound flight",
     "select_outbound": "Select outbound flight",
