@@ -46,7 +46,7 @@ export default function PrivacyPolicy() {
   const c = getContent(language);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-slate-950">
       <SEO title={c.pageTitle} description={c.pageDesc} />
 
       <div className="border-b border-white/5 bg-slate-950/20 backdrop-blur-sm">

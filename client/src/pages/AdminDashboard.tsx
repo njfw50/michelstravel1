@@ -151,7 +151,7 @@ function TestModeControl() {
             </div>
             <div>
               <CardTitle className="text-xl font-bold text-white font-display tracking-tight">{t("admin.test_mode")}</CardTitle>
-              <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500 mt-1">{t("admin.test_mode_desc")}</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400 mt-1">{t("admin.test_mode_desc")}</p>
             </div>
           </div>
           <Badge
@@ -171,7 +171,7 @@ function TestModeControl() {
             <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all group/item">
               <div className="flex items-center gap-3">
                 <div className={`h-2 w-2 rounded-full shadow-[0_0_8px_currentColor] ${tokenActive ? 'bg-amber-400 text-amber-400' : 'bg-emerald-400 text-emerald-400'}`} />
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Duffel (Flights)</span>
+                <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">Duffel (Flights)</span>
               </div>
               <Badge className={`text-[10px] font-black uppercase tracking-tighter ${
                 tokenActive ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
@@ -183,7 +183,7 @@ function TestModeControl() {
             <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all group/item">
               <div className="flex items-center gap-3">
                 <div className={`h-2 w-2 rounded-full shadow-[0_0_8px_currentColor] ${currentTestMode ? 'bg-amber-400 text-amber-400' : 'bg-emerald-400 text-emerald-400'}`} />
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Stripe (Payments)</span>
+                <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">Stripe (Payments)</span>
               </div>
               <Badge className={`text-[10px] font-black uppercase tracking-tighter ${
                 currentTestMode ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
@@ -196,11 +196,11 @@ function TestModeControl() {
           <div className="flex items-center gap-6 p-4 rounded-2xl bg-slate-900/50 border border-white/5">
              <div className="flex items-center gap-2">
                <div className={`h-2 w-2 rounded-full ${testTokenReady ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]'}`} />
-               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Duffel Test: {testTokenReady ? 'Ready' : 'Not Configured'}</span>
+               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Duffel Test: {testTokenReady ? 'Ready' : 'Not Configured'}</span>
              </div>
              <div className="flex items-center gap-2">
                <div className={`h-2 w-2 rounded-full ${liveTokenReady ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]' : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]'}`} />
-               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Duffel Live: {liveTokenReady ? 'Ready' : 'Not Configured'}</span>
+               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Duffel Live: {liveTokenReady ? 'Ready' : 'Not Configured'}</span>
              </div>
           </div>
 
@@ -402,14 +402,14 @@ function CommissionControl() {
           </div>
           <div>
             <CardTitle className="text-xl font-bold text-white font-display tracking-tight">{t("admin.commission_title")}</CardTitle>
-            <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500 mt-1">{t("admin.commission_desc")}</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400 mt-1">{t("admin.commission_desc")}</p>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="p-8 pt-6 space-y-6 relative z-10">
         <div className="flex flex-col gap-4 p-6 rounded-2xl bg-white/5 border border-white/5 group-hover:border-white/10 transition-all duration-500">
-          <Label htmlFor="commission-rate" className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+          <Label htmlFor="commission-rate" className="text-xs font-bold text-slate-300 uppercase tracking-widest">
             {t("admin.commission_label")}
           </Label>
           <div className="flex items-center gap-4">
@@ -449,7 +449,7 @@ function CommissionControl() {
             </Button>
           </div>
           <div className="flex items-center justify-between pt-2 border-t border-white/5">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               {t("admin.commission_example")} 
             </p>
             <span className="text-sm font-black text-teal-400">
@@ -519,7 +519,7 @@ function MobileAppChannelControl() {
           </div>
           <div>
             <CardTitle className="text-xl font-bold text-white font-display tracking-tight">Canais do App Mobile</CardTitle>
-            <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500 mt-1">
+            <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400 mt-1">
               Controle de ambiente compartilhado (Flights & Payments)
             </p>
           </div>
@@ -540,7 +540,7 @@ function MobileAppChannelControl() {
             <div className="flex items-center justify-between gap-4 relative z-10">
               <div>
                 <p className="text-sm font-black text-white uppercase tracking-tight">App em Sandbox</p>
-                <p className="text-[10px] text-slate-500 mt-1 font-bold uppercase tracking-widest leading-relaxed">Permitir acesso quando o backend estiver em modo teste.</p>
+                <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-widest leading-relaxed">Permitir acesso quando o backend estiver em modo teste.</p>
               </div>
               <Button
                 variant="ghost"
@@ -563,7 +563,7 @@ function MobileAppChannelControl() {
             <div className="flex items-center justify-between gap-4 relative z-10">
               <div>
                 <p className="text-sm font-black text-white uppercase tracking-tight">App em Produção</p>
-                <p className="text-[10px] text-slate-500 mt-1 font-bold uppercase tracking-widest leading-relaxed">Permitir acesso quando o backend estiver em modo real.</p>
+                <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-widest leading-relaxed">Permitir acesso quando o backend estiver em modo real.</p>
               </div>
               <Button
                 variant="ghost"
@@ -710,7 +710,7 @@ function MobileAppReleaseControl() {
           </div>
           <div>
             <CardTitle className="text-xl font-bold text-white font-display tracking-tight">Deployment & Releases Mobile</CardTitle>
-            <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500 mt-1">
+            <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400 mt-1">
               Publicação direta de artefatos APK via GitHub Manifest
             </p>
           </div>
@@ -723,7 +723,7 @@ function MobileAppReleaseControl() {
       <CardContent className="p-8 space-y-8 relative z-10">
         <div className="grid gap-6 md:grid-cols-2">
           <div className="rounded-[24px] border border-white/5 bg-white/5 p-6 space-y-4 hover:border-white/10 transition-all">
-            <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500 font-black">Build em Produção</p>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-slate-400 font-black">Build em Produção</p>
             <div>
               <p className="text-xl font-black text-white">
                 v{published?.version || "0.0.0"}
@@ -731,7 +731,7 @@ function MobileAppReleaseControl() {
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 opacity-60 break-all">{published?.packageName || t("common.waiting")}</p>
             </div>
             <div className="flex items-center justify-between pt-2 border-t border-white/5">
-              <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Commit: {published?.commitHash?.slice(0,7) || "---"}</span>
+              <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Commit: {published?.commitHash?.slice(0,7) || "---"}</span>
               <a href={publishedUrl} target="_blank" rel="noreferrer" className="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2 hover:text-indigo-300 transition-colors">
                 Public URL <ExternalLink className="h-3.5 w-3.5" />
               </a>
@@ -739,7 +739,7 @@ function MobileAppReleaseControl() {
           </div>
 
           <div className="rounded-[24px] border border-white/5 bg-white/5 p-6 space-y-4 hover:border-white/10 transition-all">
-            <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500 font-black">Artefato Detectado</p>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-slate-400 font-black">Artefato Detectado</p>
             {statusLoading ? (
               <div className="flex items-center gap-3">
                 <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
@@ -763,7 +763,7 @@ function MobileAppReleaseControl() {
 
         <div className="rounded-[32px] border border-white/5 bg-slate-950/40 p-8 space-y-6">
           <div className="space-y-3">
-            <Label htmlFor="mobile-release-commit" className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-2">Commit Hash de Referência</Label>
+            <Label htmlFor="mobile-release-commit" className="text-[10px] font-black text-slate-300 uppercase tracking-[0.25em] ml-2">Commit Hash de Referência</Label>
             <div className="flex flex-col gap-4 lg:flex-row">
               <Input
                 id="mobile-release-commit"

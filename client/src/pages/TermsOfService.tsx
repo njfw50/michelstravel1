@@ -47,7 +47,7 @@ export default function TermsOfService() {
   const content = getContent(language);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-slate-950">
       <SEO
         title={content.pageTitle}
         description={content.pageDescription}

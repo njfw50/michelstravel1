@@ -104,7 +104,7 @@ function SummaryCard({
     <div className="rounded-[24px] border border-white/5 bg-white/5 p-5 group hover:border-indigo-500/20 transition-all duration-500 shadow-lg">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[9px] uppercase tracking-[0.2em] font-black text-slate-500 mb-3 group-hover:text-indigo-400 transition-colors">{title}</p>
+          <p className="text-[9px] uppercase tracking-[0.2em] font-black text-slate-400 group-hover:text-indigo-300 transition-colors uppercase">{title}</p>
           <p className="text-3xl font-bold text-white font-display tracking-tight">{value}</p>
           <p className="mt-2 text-[10px] font-medium text-slate-400 uppercase tracking-widest leading-relaxed">{hint}</p>
         </div>
@@ -571,7 +571,7 @@ function MetricBlock({ label, value, unit, icon }: { label: string; value: strin
       </div>
       <div className="flex items-baseline gap-1.5">
         <p className="text-lg font-bold text-white">{value}</p>
-        {unit && <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">{unit}</span>}
+        {unit && <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{unit}</span>}
       </div>
     </div>
   );

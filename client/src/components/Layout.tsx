@@ -342,7 +342,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <LoginDialog open={loginDialogOpen} onOpenChange={handleLoginDialogChange} authError={authError} />
 
-      <main className="flex-1 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.02),_transparent_30%),_linear-gradient(180deg,_rgba(13,22,53,0.95)_0%,_rgba(9,18,45,1)_100%)] pt-28 md:pt-32">
+      <main className="flex-1 bg-slate-950 pt-28 md:pt-32">
         {children}
       </main>
 

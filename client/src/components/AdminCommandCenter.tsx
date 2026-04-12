@@ -763,7 +763,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
             <div className="relative z-10 grid w-full gap-4 rounded-[32px] border border-white/10 bg-white/5 p-6 shadow-inner shadow-white/5 backdrop-blur xl:max-w-[31rem] xl:justify-self-end">
               <div className="grid grid-cols-2 gap-4 h-full">
                 <div className="rounded-2xl border border-white/5 bg-slate-950/40 p-6 flex flex-col justify-center">
-                  <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 mb-2">Revenue Today</p>
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-400 mb-2">Revenue Today</p>
                   <p className="text-3xl font-bold text-white font-display tracking-tight">{formatCurrency(data.revenue.today)}</p>
                   <div className="mt-4 flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
                     <TrendingUp className="h-3.5 w-3.5" />
@@ -771,7 +771,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                   </div>
                 </div>
                 <div className="rounded-2xl border border-white/5 bg-slate-950/40 p-6 flex flex-col justify-center">
-                  <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 mb-2">Exposure At Risk</p>
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-400 mb-2">Exposure At Risk</p>
                   <p className="text-3xl font-bold text-rose-400 font-display tracking-tight">{formatCurrency(data.revenue.atRisk)}</p>
                   <div className="mt-4 flex items-center gap-1.5 text-[10px] font-bold text-rose-500/60 uppercase tracking-widest">
                     <AlertTriangle className="h-3.5 w-3.5" />
@@ -779,12 +779,12 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                   </div>
                 </div>
                 <div className="rounded-2xl border border-white/5 bg-slate-950/40 p-6 flex flex-col justify-center">
-                  <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 mb-2">Bookings (24h)</p>
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-400 mb-2">Bookings (24h)</p>
                   <p className="text-3xl font-bold text-white font-display tracking-tight">{data.counters.todayBookings}</p>
                   <p className="mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Atividade de Venda</p>
                 </div>
                 <div className="rounded-2xl border border-white/5 bg-slate-950/40 p-6 flex flex-col justify-center">
-                  <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 mb-2">Searches (24h)</p>
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-400 mb-2">Searches (24h)</p>
                   <p className="text-3xl font-bold text-cyan-400 font-display tracking-tight">{data.counters.todaySearches}</p>
                   <p className="mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Intenção de Compra</p>
                 </div>

@@ -195,7 +195,7 @@ export default function HelpCenter() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-slate-950 container mx-auto px-4 py-8">
       <SEO
         title={t("help.title")}
         description={t("help.subtitle")}
