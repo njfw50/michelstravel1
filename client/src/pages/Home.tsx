@@ -2,49 +2,45 @@ import { useState, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
 import { useFeaturedDeals } from "@/hooks/use-flights";
-import { useAirlines, useFeaturedAirports } from "@/hooks/use-flights";
+import { useAirlines } from "@/hooks/use-flights";
 import { FlightSearchForm } from "@/components/FlightSearchForm";
 import { DealCard } from "@/components/DealCard";
 import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button"; // Missing import added
+import { Button } from "@/components/ui/button";
 import { 
   Plane, 
   ArrowRight, 
   ShieldCheck, 
   Sparkles, 
   Globe2, 
-  Phone, 
-  CheckCircle2,
   MessageCircle,
   Clock,
   TrendingUp,
-  MapPin
+  ChevronRight,
+  Headphones
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { buildWhatsAppHref, buildWhatsAppMessage, AGENCY_WHATSAPP_DISPLAY } from "@/lib/contact";
 import { openChatbotAssistant } from "@/lib/chatbot";
 import type { ContactLanguage } from "@/lib/contact";
 
 const getDestinationImage = (iata?: string) => {
-  if (!iata) return "https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&q=80&w=800";
+  if (!iata) return "https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?q=80&w=800&auto=format&fit=crop";
   const code = iata.toUpperCase();
-  
-  // Mapeamento preciso por IATA para garantir a "regra primária" das fotos
   const mapping: Record<string, string> = {
-    "GIG": "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?q=80&w=800&auto=format&fit=crop", // Rio
-    "SDU": "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?q=80&w=800&auto=format&fit=crop", // Rio
-    "GRU": "https://images.unsplash.com/photo-1543059152-4293e3a84ed2?q=80&w=800&auto=format&fit=crop", // SP
-    "CGH": "https://images.unsplash.com/photo-1543059152-4293e3a84ed2?q=80&w=800&auto=format&fit=crop", // SP
-    "MCO": "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?q=80&w=800&auto=format&fit=crop", // Orlando
-    "LIS": "https://images.unsplash.com/photo-1525207934214-58e69a8f8a3e?q=80&w=800&auto=format&fit=crop", // Lisboa
-    "CDG": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=800&auto=format&fit=crop", // Paris
-    "EWR": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=800&auto=format&fit=crop", // NY/NJ
-    "NYC": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=800&auto=format&fit=crop", // NY/NJ
-    "MIA": "https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?q=80&w=800&auto=format&fit=crop", // Miami
-    "REC": "https://images.unsplash.com/photo-1596162391609-843e498bdbd1?q=80&w=800&auto=format&fit=crop", // Recife
+    "GIG": "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?q=80&w=800&auto=format&fit=crop",
+    "SDU": "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?q=80&w=800&auto=format&fit=crop",
+    "GRU": "https://images.unsplash.com/photo-1543059152-4293e3a84ed2?q=80&w=800&auto=format&fit=crop",
+    "CGH": "https://images.unsplash.com/photo-1543059152-4293e3a84ed2?q=80&w=800&auto=format&fit=crop",
+    "MCO": "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?q=80&w=800&auto=format&fit=crop",
+    "LIS": "https://images.unsplash.com/photo-1525207934214-58e69a8f8a3e?q=80&w=800&auto=format&fit=crop",
+    "CDG": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=800&auto=format&fit=crop",
+    "EWR": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=800&auto=format&fit=crop",
+    "NYC": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=800&auto=format&fit=crop",
+    "MIA": "https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?q=80&w=800&auto=format&fit=crop",
+    "REC": "https://images.unsplash.com/photo-1596162391609-843e498bdbd1?q=80&w=800&auto=format&fit=crop",
   };
-
   return mapping[code] || "https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?q=80&w=800&auto=format&fit=crop";
 };
 
@@ -63,159 +59,112 @@ export default function Home() {
   );
 
   return (
-    <div className="bg-[#fcfdff] text-slate-900 font-sans">
-      <SEO
-        title={t("home.search.title")}
-        description={t("home.search.desc")}
-        path="/"
-      />
+    <div className="min-h-screen bg-[#0a1128] text-white font-sans selection:bg-orange-500/30">
+      <SEO title={t("home.search.title")} description={t("home.search.desc")} path="/" />
 
-      <section className="relative pt-8 pb-20 overflow-hidden">
-        <div className="absolute top-0 right-0 w-[55%] h-[650px] bg-gradient-to-bl from-blue-50/50 via-blue-50/20 to-transparent pointer-events-none rounded-bl-[240px] z-0" />
+      <section className="relative pt-12 pb-24 overflow-hidden border-b border-white/5">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,#1e2a4a,transparent_70%)] opacity-40 pointer-events-none" />
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="flex flex-col gap-10">
+          <div className="flex flex-col gap-8 max-w-6xl mx-auto">
             
-            <div className="flex flex-wrap items-end justify-between gap-6">
-               <div className="flex flex-col gap-3 max-w-2xl">
-                  <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-                    <Badge variant="outline" className="w-fit bg-blue-600/5 border-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
-                      <ShieldCheck className="h-3.5 w-3.5 mr-2" />
-                      {t("home.bot.badge")}
-                    </Badge>
-                  </motion.div>
-                  <h1 className="text-3xl md:text-5xl font-display font-black tracking-tighter text-slate-950 leading-[0.95] uppercase">
-                    {t("home.hero.title").split(":")[0]} <br />
-                    <span className="text-blue-600">{t("home.office.badge")}</span>
-                  </h1>
-                  <p className="text-slate-500 font-medium text-base md:text-lg max-w-lg leading-relaxed">
-                    {t("home.hero.desc")}
-                  </p>
-               </div>
-               
-               <div className="hidden lg:flex items-center gap-8 pb-2">
-                  <div className="flex flex-col items-end">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t("home.bot.whatsapp_badge")} 24h</span>
-                    </div>
-                    <a href={contactWhatsAppHref} target="_blank" rel="noreferrer" className="text-xl font-black text-slate-950 hover:text-blue-600 transition-colors">
-                      {AGENCY_WHATSAPP_DISPLAY}
-                    </a>
-                  </div>
-               </div>
-            </div>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center text-center gap-4">
+              <Badge variant="outline" className="bg-orange-500/10 border-orange-500/20 text-orange-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
+                <ShieldCheck className="h-3.5 w-3.5 mr-2" />
+                {t("home.bot.badge")}
+              </Badge>
+              <h1 className="text-4xl md:text-6xl font-display font-black tracking-tighter leading-[0.9] uppercase max-w-4xl text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60">
+                {t("home.hero.title")}
+              </h1>
+              <p className="text-slate-400 font-medium text-base md:text-lg max-w-2xl leading-relaxed">
+                {t("home.hero.desc")}
+              </p>
+            </motion.div>
 
-            <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="relative">
-              <div className="rounded-[40px] md:rounded-[56px] border border-white bg-white/80 shadow-[0_40px_100px_-20px_rgba(15,23,42,0.12)] backdrop-blur-2xl p-6 md:p-12">
+            <motion.div initial={{ opacity: 0, scale: 0.99 }} animate={{ opacity: 1, scale: 1 }} className="mt-4">
+              <div className="glass-dark rounded-[32px] md:rounded-[48px] p-6 md:p-10 shadow-2xl relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                
                 <div className="relative z-10">
                   <div className="flex items-center gap-3 mb-8">
-                    <div className="h-10 w-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center">
+                    <div className="h-10 w-10 rounded-xl bg-orange-600/20 text-orange-500 flex items-center justify-center">
                       <Plane className="h-5 w-5" />
                     </div>
                     <div>
-                      <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">{t("home.search.title")}</h2>
-                      <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">{t("home.search.tag")}</p>
+                      <h2 className="text-xs font-black text-white/90 uppercase tracking-widest">{t("home.search.title")}</h2>
+                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-tight">{t("home.search.tag")}</p>
                     </div>
                   </div>
 
-                  <FlightSearchForm />
-                </div>
-
-                <div className="mt-10 flex flex-wrap items-center justify-between gap-8 border-t border-slate-100 pt-8">
-                  <div className="flex flex-wrap items-center gap-10">
-                     <div className="flex items-center gap-3">
-                        <div className="h-5 w-5 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                        </div>
-                        <span className="text-xs font-black text-slate-600 uppercase tracking-widest opacity-70">{t("footer.seal_stripe")}</span>
-                     </div>
-                     <div className="flex items-center gap-3">
-                        <div className="h-5 w-5 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
-                          <Globe2 className="h-3.5 w-3.5" />
-                        </div>
-                        <span className="text-xs font-black text-slate-600 uppercase tracking-widest opacity-70">{t("footer.seal_ssl")}</span>
-                     </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-5">
-                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{t("home.airlines.tag")}:</p>
-                     <div className="flex -space-x-3 opacity-40 grayscale">
-                        {airlines?.slice(0, 5).map((airline) => (
-                          <div key={airline.id} className="h-10 w-10 rounded-full border-4 border-white bg-slate-50 flex items-center justify-center p-1.5 overflow-hidden shadow-sm">
-                            {airline.logoUrl ? (
-                              <img src={airline.logoUrl} alt={airline.name} className="h-full w-full object-contain" />
-                            ) : (
-                              <Plane className="h-4 w-4 text-slate-300" />
-                            )}
-                          </div>
-                        ))}
-                     </div>
-                  </div>
+                  <FlightSearchForm className="bg-transparent border-none p-0 shadow-none text-white" />
                 </div>
               </div>
+
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-12 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
+                {airlines?.slice(0, 6).map((airline) => (
+                  airline.logoUrl && <img key={airline.id} src={airline.logoUrl} alt={airline.name} className="h-8 w-auto object-contain brightness-0 invert" />
+                ))}
+              </div>
             </motion.div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-               <motion.div whileHover={{ y: -8 }} className="group p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm transition-all cursor-pointer" onClick={() => setLocation("/senior")}>
-                 <div className="h-14 w-14 rounded-3xl bg-amber-50 text-amber-600 flex items-center justify-center mb-6 group-hover:bg-amber-600 group-hover:text-white transition-all">
-                   <Clock className="h-7 w-7" />
-                 </div>
-                 <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">{t("home.senior.badge")}</h3>
-                 <p className="text-sm text-slate-500 font-medium leading-relaxed">{t("home.senior.desc")}</p>
-                 <div className="mt-6 flex items-center gap-2 text-blue-600 text-xs font-black uppercase tracking-widest">
-                   {t("home.senior.btn")} <ArrowRight className="h-4 w-4" />
-                 </div>
-               </motion.div>
-
-               <motion.div whileHover={{ y: -8 }} className="group p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm transition-all cursor-pointer" onClick={() => openChatbotAssistant({ message: t("home.bot.msg1"), autoSend: true })}>
-                 <div className="h-14 w-14 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                   <Sparkles className="h-7 w-7" />
-                 </div>
-                 <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">MIA INTELLIGENCE</h3>
-                 <p className="text-sm text-slate-500 font-medium leading-relaxed">{t("home.bot.desc")}</p>
-                 <div className="mt-6 flex items-center gap-2 text-blue-600 text-xs font-black uppercase tracking-widest">
-                   {t("home.bot.btn")} <ArrowRight className="h-4 w-4" />
-                 </div>
-               </motion.div>
-
-               <motion.div whileHover={{ y: -8 }} className="group p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm transition-all cursor-pointer" onClick={() => setLocation("/messages")}>
-                 <div className="h-14 w-14 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-all">
-                   <MessageCircle className="h-7 w-7" />
-                 </div>
-                 <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">{t("footer.contact_title")}</h3>
-                 <p className="text-sm text-slate-500 font-medium leading-relaxed">{t("footer.contact_desc")}</p>
-                 <div className="mt-6 flex items-center gap-2 text-blue-600 text-xs font-black uppercase tracking-widest">
-                   {t("footer.contact_cta")} <ArrowRight className="h-4 w-4" />
-                 </div>
-               </motion.div>
-            </div>
           </div>
         </div>
       </section>
 
-      <section className="bg-slate-50/50 py-28 relative">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-16">
-            <div className="max-w-2xl">
-              <Badge className="bg-blue-600 text-white rounded-full px-5 py-1.5 mb-6 text-[10px] uppercase font-black tracking-[0.2em] shadow-lg shadow-blue-600/20">
-                <TrendingUp className="h-3.5 w-3.5 mr-2" />
-                {t("home.deals.badge")}
-              </Badge>
-              <h2 className="text-4xl md:text-5xl font-display font-black text-slate-950 tracking-tighter leading-[0.9] uppercase mb-6">
-                {t("home.deals.title")} <br />
-                <span className="text-blue-600">{t("results.filter_active")}</span>
-              </h2>
-              <p className="text-slate-500 font-medium text-lg max-w-lg leading-relaxed">{t("home.deals.desc")}</p>
-            </div>
-            <Link href="/search" className="group flex items-center gap-3 text-blue-600 font-black text-sm uppercase tracking-widest hover:gap-4 transition-all">
-               {t("home.board.show_more")} <ArrowRight className="h-5 w-5" />
-            </Link>
+      <section className="py-24 relative">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-24">
+             <div className="group p-8 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/[0.08] transition-all cursor-pointer" onClick={() => setLocation("/senior")}>
+               <div className="h-12 w-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-all">
+                 <Clock className="h-6 w-6" />
+               </div>
+               <h3 className="text-lg font-black text-white uppercase tracking-tight mb-2">{t("home.senior.badge")}</h3>
+               <p className="text-sm text-slate-400 font-medium leading-relaxed mb-6">{t("home.senior.desc")}</p>
+               <div className="flex items-center gap-2 text-orange-500 text-[10px] font-black uppercase tracking-widest">
+                 {t("home.senior.btn")} <ChevronRight className="h-4 w-4" />
+               </div>
+             </div>
+
+             <div className="group p-8 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/[0.08] transition-all cursor-pointer" onClick={() => openChatbotAssistant({ message: t("home.bot.msg1"), autoSend: true })}>
+               <div className="h-12 w-12 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-all">
+                 <Sparkles className="h-6 w-6" />
+               </div>
+               <h3 className="text-lg font-black text-white uppercase tracking-tight mb-2">MIA INTELLIGENCE</h3>
+               <p className="text-sm text-slate-400 font-medium leading-relaxed mb-6">{t("home.bot.desc")}</p>
+               <div className="flex items-center gap-2 text-orange-500 text-[10px] font-black uppercase tracking-widest">
+                 {t("home.bot.btn")} <ChevronRight className="h-4 w-4" />
+               </div>
+             </div>
+
+             <div className="group p-8 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/[0.08] transition-all cursor-pointer" onClick={() => setLocation("/messages")}>
+               <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-all">
+                 <Headphones className="h-6 w-6" />
+               </div>
+               <h3 className="text-lg font-black text-white uppercase tracking-tight mb-2">{t("footer.contact_title")}</h3>
+               <p className="text-sm text-slate-400 font-medium leading-relaxed mb-6">{t("footer.contact_desc")}</p>
+               <div className="flex items-center gap-2 text-orange-500 text-[10px] font-black uppercase tracking-widest">
+                 {t("footer.contact_cta")} <ChevronRight className="h-4 w-4" />
+               </div>
+             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-16">
+            <div className="max-w-2xl">
+              <Badge className="bg-orange-600 text-white rounded-full px-5 py-1 mb-6 text-[9px] uppercase font-black tracking-[0.2em] shadow-lg shadow-orange-600/20">
+                <TrendingUp className="h-3. w-3.5 mr-2" />
+                {t("home.deals.badge")}
+              </Badge>
+              <h2 className="text-4xl md:text-5xl font-display font-black text-white tracking-tighter leading-[0.9] uppercase mb-6">
+                {t("home.deals.title")} <br />
+                <span className="text-orange-500">{t("results.filter_active")}</span>
+              </h2>
+              <p className="text-slate-400 font-medium text-lg leading-relaxed">{t("home.deals.desc")}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <AnimatePresence mode="popLayout">
             {dealsLoading ? (
-              Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-[450px] rounded-[40px] bg-white border border-slate-100 animate-pulse" />)
+              Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-[420px] rounded-[32px] bg-white/5 border border-white/5 animate-pulse" />)
             ) : catalogDeals.length > 0 ? (
               catalogDeals.map((deal) => (
                 <DealCard 
@@ -229,37 +178,37 @@ export default function Home() {
                 />
               ))
             ) : (
-              <div className="col-span-full py-20 text-center bg-white rounded-[40px] border border-dashed border-slate-200">
-                 <p className="text-slate-400 font-black uppercase tracking-widest text-sm">{t("results.no_matching_flights")}</p>
+              <div className="col-span-full py-20 text-center bg-white/5 rounded-[32px] border border-dashed border-white/10">
+                 <p className="text-slate-500 font-black uppercase tracking-widest text-xs">{t("results.no_matching_flights")}</p>
               </div>
             )}
+            </AnimatePresence>
           </div>
         </div>
       </section>
 
-      <section className="bg-slate-950 py-24 relative overflow-hidden">
-         <div className="absolute inset-0 opacity-10 pointer-events-none">
-            <Globe2 className="h-[800px] w-[800px] absolute -bottom-40 -right-40 text-blue-500" />
-         </div>
-         <div className="container mx-auto px-4 relative z-10">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-16">
-               <div className="max-w-3xl">
-                  <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter text-white uppercase leading-[0.9] mb-8">
-                    {t("home.cta.title")}
-                  </h2>
-                  <p className="text-slate-400 text-xl font-medium max-w-xl">{t("home.cta.subtitle")}</p>
-               </div>
-               <div className="flex flex-col sm:flex-row gap-6">
-                  <a href={contactWhatsAppHref} target="_blank" rel="noreferrer" className="flex h-20 items-center justify-center gap-4 rounded-full bg-blue-600 px-12 text-lg font-black text-white hover:bg-blue-700 transition-all">
-                    {t("footer.contact_cta")} <MessageCircle className="h-6 w-6" />
-                  </a>
-                  <Button variant="outline" className="h-20 rounded-full border-white/20 bg-white/5 px-12 text-lg font-bold text-white hover:bg-white/10" onClick={() => setLocation("/senior")}>
-                    {t("home.senior.btn")}
-                  </Button>
-               </div>
+      <section className="py-24 relative overflow-hidden bg-white/5 border-t border-white/5">
+         <div className="container mx-auto px-4 max-w-6xl relative z-10 text-center">
+            <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter text-white uppercase leading-[0.9] mb-8">
+              {t("home.cta.title")}
+            </h2>
+            <p className="text-slate-400 text-xl font-medium max-w-2xl mx-auto mb-12">{t("home.cta.subtitle")}</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a href={contactWhatsAppHref} target="_blank" rel="noreferrer" className="flex h-16 items-center justify-center gap-4 rounded-full bg-orange-600 px-12 text-sm font-black text-white hover:bg-orange-700 transition-all shadow-xl shadow-orange-600/20">
+                {t("footer.contact_cta")} <MessageCircle className="h-5 w-5" />
+              </a>
+              <Button variant="outline" className="h-16 rounded-full border-white/10 bg-white/5 px-12 text-sm font-bold text-white hover:bg-white/10" onClick={() => setLocation("/senior")}>
+                {t("home.senior.btn")}
+              </Button>
             </div>
          </div>
       </section>
+
+      <footer className="py-12 border-t border-white/5 text-center">
+         <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.3em]">
+           {t("footer.seal_ssl")} • {t("footer.seal_stripe")}
+         </p>
+      </footer>
     </div>
   );
 }
