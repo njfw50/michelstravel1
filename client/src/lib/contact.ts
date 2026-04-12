@@ -4,7 +4,7 @@ export const AGENCY_EMAIL = "contact@michelstravel.agency";
 export const AGENCY_WHATSAPP_NUMBER = "18623501161";
 export const AGENCY_WHATSAPP_DISPLAY = AGENCY_PHONE_DISPLAY;
 
-type ContactLanguage = "pt" | "en" | "es";
+export type ContactLanguage = "pt" | "en" | "es";
 
 type WhatsAppMessageOptions = {
   language?: ContactLanguage;
