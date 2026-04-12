@@ -67,13 +67,17 @@ const safeFormatMonthDay = (dateString?: string) => {
 
 const getStopsLabel = (
   stopsCount: number,
-  t: (key: string) => string,
+  t: (key: string, params?: any) => string,
 ) => {
   if (stopsCount === 0) {
     return t("flight.direct");
   }
 
-  return `${stopsCount} ${stopsCount > 1 ? t("flight.stops") : t("flight.stop")}`;
+  if (stopsCount === 1) {
+    return t("flight.stop", { count: 1 });
+  }
+
+  return t("flight.stops", { count: stopsCount });
 };
 
 const getConnectionCities = (slice: FlightSliceLike) => {
@@ -143,13 +147,13 @@ function SliceTimeline({
   }
 
   const stopsCount = Math.max((slice.segments?.length ?? 1) - 1, 0);
-  const stopsLabel = getStopsLabel(stopsCount, t);
+  const stopsLabel = getStopsLabel(stopsCount, t as any);
   const connectionCities = getConnectionCities(slice);
 
   return (
     <div className="border-b pb-3 last:border-0 last:pb-0">
       <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-blue-600">
-        <span>{index === 0 ? t("booking.outbound") : t("booking.return_flight")}</span>
+        <span>{index === 0 ? (t("results.outbound") || "Outbound") : (t("results.return") || "Return")}</span>
         <span className="text-[10px] font-normal text-gray-400">
           {safeFormatMonthDay(firstSegment.departureTime)}
         </span>
@@ -239,10 +243,7 @@ function SingleFlightTimeline({
   flight: FlightOffer;
   t: (key: string) => string;
 }) {
-  const stopsLabel =
-    flight.stops === 0
-      ? t("flight.direct")
-      : `${flight.stops} ${flight.stops > 1 ? t("flight.stops") : t("flight.stop")}`;
+  const stopsLabel = getStopsLabel(flight.stops, t as any);
 
   return (
     <div className="mb-2 flex items-end justify-between gap-2">
