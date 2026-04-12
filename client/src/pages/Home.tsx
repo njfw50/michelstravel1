@@ -26,22 +26,26 @@ import { buildWhatsAppHref, buildWhatsAppMessage, AGENCY_WHATSAPP_DISPLAY } from
 import { openChatbotAssistant } from "@/lib/chatbot";
 import type { ContactLanguage } from "@/lib/contact";
 
-const getDestinationImage = (city?: string) => {
-  if (!city) return "https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&q=80&w=800";
-  const c = city.toLowerCase();
-  if (c.includes("brasil") || c.includes("rio") || c.includes("são paulo") || c.includes("sao paulo") || c.includes("recife")) {
-    return "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&q=80&w=800";
-  }
-  if (c.includes("portugal") || c.includes("lisboa") || c.includes("porto")) {
-    return "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?auto=format&fit=crop&q=80&w=800";
-  }
-  if (c.includes("parís") || c.includes("paris") || c.includes("frança") || c.includes("france")) {
-    return "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=800";
-  }
-  if (c.includes("new york") || c.includes("newark") || c.includes("usa") || c.includes("estados unidos")) {
-    return "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&q=80&w=800";
-  }
-  return "https://images.unsplash.com/photo-1530521954074-e64f6810b32d?auto=format&fit=crop&q=80&w=800";
+const getDestinationImage = (iata?: string) => {
+  if (!iata) return "https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&q=80&w=800";
+  const code = iata.toUpperCase();
+  
+  // Mapeamento preciso por IATA para garantir a "regra primária" das fotos
+  const mapping: Record<string, string> = {
+    "GIG": "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&q=80&w=800", // Rio
+    "SDU": "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&q=80&w=800", // Rio
+    "GRU": "https://images.unsplash.com/photo-1512453979798-5ea4e7ed58e3?auto=format&fit=crop&q=80&w=800", // SP
+    "CGH": "https://images.unsplash.com/photo-1512453979798-5ea4e7ed58e3?auto=format&fit=crop&get=80&w=800", // SP
+    "MCO": "https://images.unsplash.com/photo-1567627402534-190977800762?auto=format&fit=crop&q=80&w=800", // Orlando
+    "LIS": "https://images.unsplash.com/photo-1589330273594-fade1ee91647?auto=format&fit=crop&q=80&w=800", // Lisboa
+    "CDG": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=800", // Paris
+    "EWR": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&q=80&w=800", // NY/NJ
+    "JFK": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&q=80&w=800", // NY/NJ
+    "MIA": "https://images.unsplash.com/photo-1533106497176-45ae19e68ba2?auto=format&fit=crop&q=80&w=800", // Miami
+    "REC": "https://images.unsplash.com/photo-1596162391609-843e498bdbd1?auto=format&fit=crop&q=80&w=800", // Recife
+  };
+
+  return mapping[code] || "https://images.unsplash.com/photo-1530521954074-e64f6810b32d?auto=format&fit=crop&q=80&w=800";
 };
 
 export default function Home() {
@@ -218,9 +222,9 @@ export default function Home() {
                   key={deal.id} 
                   deal={{
                     ...deal,
-                    title: `${deal.origin_city} → ${deal.destination_city}`,
+                    title: `${deal.origin} → ${deal.destination}`,
                     description: deal.headline || deal.description,
-                    imageUrl: getDestinationImage(deal.destination_city)
+                    imageUrl: getDestinationImage(deal.destination)
                   }} 
                 />
               ))
