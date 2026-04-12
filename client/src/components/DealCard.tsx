@@ -51,6 +51,7 @@ export function DealCard({ deal }: DealCardProps) {
             src={deal.imageUrl || "https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&q=80&w=800"}
             alt={deal.destination_city}
             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+            referrerPolicy="no-referrer"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-60" />
           
