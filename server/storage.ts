@@ -497,8 +497,8 @@ export class DatabaseStorage implements IStorage {
       return newDeal;
     } catch (error) {
       console.error("Failed to create featured deal with full schema, retrying with basic columns:", error);
-      // Remove potentially missing columns (stops, duration) and retry
-      const { stops, duration, ...basicDeal } = deal as any;
+      // Remove potentially missing columns (stops, duration, departureDate, returnDate) and retry
+      const { stops, duration, departureDate, returnDate, ...basicDeal } = deal as any;
       const [newDeal] = await db.insert(featuredDeals).values(basicDeal).returning();
       return newDeal;
     }
@@ -511,7 +511,7 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Failed to update featured deal with full schema, retrying with basic columns:", error);
       // Remove potentially missing columns and retry
-      const { stops, duration, ...basicUpdates } = updates as any;
+      const { stops, duration, departureDate, returnDate, ...basicUpdates } = updates as any;
       const [updated] = await db.update(featuredDeals).set(basicUpdates).where(eq(featuredDeals.id, id)).returning();
       return updated;
     }

@@ -1604,43 +1604,57 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                 <div className="space-y-4">
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Inteligência de Mercado:</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {dealOffers.map((offer) => (
-                      <button
-                        key={offer.id}
-                        type="button"
-                        className="rounded-2xl border border-white/5 bg-slate-950/60 p-5 text-left hover:bg-indigo-500/10 hover:border-indigo-500/30 transition-all group/offer"
-                        onClick={() => {
-                          setDealDraft((current) =>
-                            current
-                              ? {
-                                  ...current,
-                                  price: offer.price ? String(offer.price) : current.price,
-                                  currency: offer.currency || current.currency,
-                                  headline: `${offer.airline || "Tarifa Especial"} ${offer.origin} → ${offer.destination}`,
-                                  description: `Voo operado por ${offer.airline || "Parceiro"} a partir de ${offer.currency || "USD"} ${offer.price ?? ""}. Curadoria premium.`,
-                                  stops: 0,
-                                  duration: "Varia",
-                                }
-                              : current,
-                          );
-                        }}
-                      >
-                        <div className="flex items-center justify-between gap-4">
-                          <div>
-                            <p className="text-sm font-black text-white tracking-tight">
-                              {offer.origin} → {offer.destination}
-                            </p>
-                            <p className="text-[10px] font-bold text-slate-500 uppercase mt-0.5 tracking-widest">{offer.airline || "—"}</p>
+                    {dealOffers.map((offer) => {
+                      const isSelected = dealDraft?.price === String(offer.price) && 
+                                        dealDraft?.airline === offer.airline;
+                      return (
+                        <button
+                          key={offer.id}
+                          type="button"
+                          className={`rounded-2xl border p-5 text-left transition-all group/offer ${
+                            isSelected 
+                              ? "bg-indigo-500/20 border-indigo-500/50 shadow-lg shadow-indigo-500/10" 
+                              : "border-white/5 bg-slate-950/60 hover:bg-indigo-500/10 hover:border-indigo-500/30"
+                          }`}
+                          onClick={() => {
+                            setDealDraft((current) =>
+                              current
+                                ? {
+                                    ...current,
+                                    origin: offer.origin || current.origin,
+                                    destination: offer.destination || current.destination,
+                                    price: offer.price ? String(offer.price) : current.price,
+                                    currency: offer.currency || current.currency,
+                                    airline: offer.airline || current.airline,
+                                    headline: `${offer.airline || "Tarifa Especial"} ${offer.origin} → ${offer.destination}`,
+                                    description: `Voo operado por ${offer.airline || "Parceiro"} a partir de ${offer.currency || "USD"} ${offer.price ?? ""}. Curadoria premium em classe ${current.cabinClass || "economy"}.`,
+                                    stops: 0,
+                                    duration: "Varia",
+                                  }
+                                : current,
+                            );
+                          }}
+                        >
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                              {isSelected && <div className="h-2 w-2 rounded-full bg-indigo-400 animate-pulse" />}
+                              <div>
+                                <p className={`text-sm font-black tracking-tight ${isSelected ? "text-white" : "text-white/90"}`}>
+                                  {offer.origin} → {offer.destination}
+                                </p>
+                                <p className="text-[10px] font-bold text-slate-500 uppercase mt-0.5 tracking-widest">{offer.airline || "—"}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                               <p className={`text-sm font-black font-display ${isSelected ? "text-indigo-400" : "text-slate-300"}`}>
+                                 {offer.currency || "USD"} {offer.price ?? "—"}
+                               </p>
+                               <p className="text-[8px] font-bold text-slate-600 uppercase">Live Rate</p>
+                            </div>
                           </div>
-                          <div className="text-right">
-                             <p className="text-sm font-black text-indigo-400 font-display">
-                               {offer.currency || "USD"} {offer.price ?? "—"}
-                             </p>
-                             <p className="text-[8px] font-bold text-slate-600 uppercase">Live Rate</p>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
