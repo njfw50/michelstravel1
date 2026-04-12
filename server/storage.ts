@@ -501,16 +501,16 @@ export class DatabaseStorage implements IStorage {
       try {
         // Stage 2: Remove stops, duration, departureDate, returnDate
         const { stops, duration, departureDate, returnDate, ...stage2 } = deal as any;
-        const [newDeal] = await db.insert(featuredDeals).values(stage2).returning();
-        return newDeal;
+        const [inserted] = await db.insert(featuredDeals).values(stage2).returning({ id: featuredDeals.id });
+        return { ...stage2, id: inserted.id } as any;
       } catch (err2: any) {
         console.error("Stage 2 fallback failed:", err2.message);
         
         try {
           // Stage 3: Remove originCity, destinationCity, cabinClass
           const { stops, duration, departureDate, returnDate, originCity, destinationCity, cabinClass, ...stage3 } = deal as any;
-          const [newDeal] = await db.insert(featuredDeals).values(stage3).returning();
-          return newDeal;
+          const [inserted] = await db.insert(featuredDeals).values(stage3).returning({ id: featuredDeals.id });
+          return { ...stage3, id: inserted.id } as any;
         } catch (err3: any) {
           console.error("Stage 3 fallback failed:", err3.message);
           // Final attempt with absolute minimums
@@ -524,8 +524,8 @@ export class DatabaseStorage implements IStorage {
             airline: deal.airline,
             isActive: true
           };
-          const [finalDeal] = await db.insert(featuredDeals).values(minDeal).returning();
-          return finalDeal;
+          const [inserted] = await db.insert(featuredDeals).values(minDeal).returning({ id: featuredDeals.id });
+          return { ...minDeal, id: inserted.id } as any;
         }
       }
     }
@@ -535,12 +535,13 @@ export class DatabaseStorage implements IStorage {
     try {
       const [updated] = await db.update(featuredDeals).set(updates).where(eq(featuredDeals.id, id)).returning();
       return updated;
-    } catch (error) {
-      console.error("Failed to update featured deal with full schema, retrying with basic columns:", error);
+    } catch (error: any) {
+      console.error("Failed to update featured deal with full schema, retrying with basic columns:", error.message);
       // Remove potentially missing columns and retry
       const { stops, duration, departureDate, returnDate, ...basicUpdates } = updates as any;
-      const [updated] = await db.update(featuredDeals).set(basicUpdates).where(eq(featuredDeals.id, id)).returning();
-      return updated;
+      const [updated] = await db.update(featuredDeals).set(basicUpdates).where(eq(featuredDeals.id, id)).returning({ id: featuredDeals.id });
+      if (!updated) return undefined;
+      return { ...basicUpdates, id: updated.id } as any;
     }
   }
 
