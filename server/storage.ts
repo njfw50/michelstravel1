@@ -499,33 +499,39 @@ export class DatabaseStorage implements IStorage {
       console.error("Failed to create deal with full schema:", error.message);
       
       try {
-        // Stage 2: Remove stops, duration, departureDate, returnDate
-        const { stops, duration, departureDate, returnDate, ...stage2 } = deal as any;
-        const [inserted] = await db.insert(featuredDeals).values(stage2).returning({ id: featuredDeals.id });
-        return { ...stage2, id: inserted.id } as any;
+        // Stage 2: Using Raw SQL to bypass Drizzle schema-auto-inclusion
+        const { stops, duration, departureDate, returnDate, originCity, destinationCity, cabinClass, ...data } = deal as any;
+        const result = await db.execute(sql`
+          INSERT INTO featured_deals (
+            origin, destination, origin_city, destination_city, 
+            price, currency, airline, cabin_class, 
+            headline, description, is_active
+          ) VALUES (
+            ${deal.origin}, ${deal.destination}, ${deal.originCity || null}, ${deal.destinationCity || null},
+            ${deal.price}, ${deal.currency || 'USD'}, ${deal.airline || null}, ${deal.cabinClass || 'economy'},
+            ${deal.headline}, ${deal.description}, true
+          ) RETURNING id
+        `);
+        const insertedId = (result.rows[0] as any).id;
+        return { ...deal, id: insertedId } as any;
       } catch (err2: any) {
-        console.error("Stage 2 fallback failed:", err2.message);
+        console.error("Stage 2 (Raw SQL) failed:", err2.message);
         
         try {
-          // Stage 3: Remove originCity, destinationCity, cabinClass
-          const { stops, duration, departureDate, returnDate, originCity, destinationCity, cabinClass, ...stage3 } = deal as any;
-          const [inserted] = await db.insert(featuredDeals).values(stage3).returning({ id: featuredDeals.id });
-          return { ...stage3, id: inserted.id } as any;
+          // Final attempt with absolute minimums using Raw SQL
+          const result = await db.execute(sql`
+            INSERT INTO featured_deals (
+              origin, destination, price, currency, airline, headline, description, is_active
+            ) VALUES (
+              ${deal.origin}, ${deal.destination}, ${deal.price}, ${deal.currency || 'USD'}, 
+              ${deal.airline || null}, ${deal.headline}, ${deal.description}, true
+            ) RETURNING id
+          `);
+          const insertedId = (result.rows[0] as any).id;
+          return { ...deal, id: insertedId, origin: deal.origin, destination: deal.destination } as any;
         } catch (err3: any) {
-          console.error("Stage 3 fallback failed:", err3.message);
-          // Final attempt with absolute minimums
-          const minDeal = {
-            origin: deal.origin,
-            destination: deal.destination,
-            price: deal.price,
-            currency: deal.currency || 'USD',
-            headline: deal.headline,
-            description: deal.description,
-            airline: deal.airline,
-            isActive: true
-          };
-          const [inserted] = await db.insert(featuredDeals).values(minDeal).returning({ id: featuredDeals.id });
-          return { ...minDeal, id: inserted.id } as any;
+          console.error("Stage 3 (Final Raw SQL) failed:", err3.message);
+          throw new Error(`Critical persistence failure: ${err3.message}`);
         }
       }
     }
