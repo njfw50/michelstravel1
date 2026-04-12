@@ -308,7 +308,7 @@ export function buildSeniorRecommendations(
       .map((item) => ({ ...item, kind }))
       .sort(compareFlightByKind(kind, preferences));
 
-    const next = ranked.find((item) => !selectedIds.has(item.flight.id)) || ranked[0];
+    const next = ranked.find((item) => !selectedIds.has(item.flight.id));
     if (!next) continue;
 
     selectedIds.add(next.flight.id);

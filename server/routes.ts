@@ -1286,7 +1286,6 @@ export function registerRoutes(app: Express) {
       if (booking.status === 'confirmed' || booking.stripePaymentStatus === 'paid') {
         return res.json({ verified: true, status: 'confirmed', booking });
       }
-
       const paymentId = booking.stripePaymentIntentId;
 
       if (paymentId) {
@@ -1294,40 +1293,93 @@ export function registerRoutes(app: Express) {
           const { getUncachableStripeClient } = await import('./stripeClient');
           const stripe = await getUncachableStripeClient();
 
+          let paymentSucceeded = false;
+          let receiptUrl = booking.stripeReceiptUrl;
+
           if (paymentId.startsWith('cs_')) {
             const session = await stripe.checkout.sessions.retrieve(paymentId);
             if (session.payment_status === 'paid') {
-              let receiptUrl = booking.stripeReceiptUrl;
+              paymentSucceeded = true;
               if (!receiptUrl && session.payment_intent) {
                 try {
                   const pi = await stripe.paymentIntents.retrieve(session.payment_intent as string, { expand: ['latest_charge'] });
                   receiptUrl = (pi.latest_charge as any)?.receipt_url || null;
                 } catch {}
               }
-              const [updated] = await db.update(bookings)
-                .set({ 
-                  status: 'confirmed', 
-                  stripePaymentStatus: 'paid',
-                  ...(receiptUrl ? { stripeReceiptUrl: receiptUrl } : {}),
-                })
-                .where(eq(bookings.id, id))
-                .returning();
-              return res.json({ verified: true, status: 'confirmed', booking: updated });
             }
           } else if (paymentId.startsWith('pi_')) {
             const pi = await stripe.paymentIntents.retrieve(paymentId, { expand: ['latest_charge'] });
             if (pi.status === 'succeeded') {
-              const receiptUrl = booking.stripeReceiptUrl || (pi.latest_charge as any)?.receipt_url || null;
-              const [updated] = await db.update(bookings)
-                .set({ 
-                  status: 'confirmed', 
-                  stripePaymentStatus: 'paid',
-                  ...(receiptUrl ? { stripeReceiptUrl: receiptUrl } : {}),
-                })
-                .where(eq(bookings.id, id))
-                .returning();
-              return res.json({ verified: true, status: 'confirmed', booking: updated });
+              paymentSucceeded = true;
+              receiptUrl = receiptUrl || (pi.latest_charge as any)?.receipt_url || null;
             }
+          }
+
+          if (paymentSucceeded) {
+            // Check if we need to create Duffel order
+            let duffelOrderId = booking.duffelOrderId;
+            let duffelRef = booking.duffelBookingReference;
+
+            if (!duffelOrderId) {
+              try {
+                const { createDuffelOrder } = await import('./services/duffel');
+                const flightData = booking.flightData as any;
+                const passengerDetails = (booking.passengerDetails as any[]) || [];
+                
+                // Construct Duffel passengers with IDs from the offer
+                const offerPassengers = flightData.passengers || [];
+                const duffelPassengers = passengerDetails.map((pax, idx) => {
+                  // Link to offer passenger ID by index if not provided
+                  const offerPaxId = pax.passengerId || offerPassengers[idx]?.id;
+                  return {
+                    passengerId: offerPaxId,
+                    givenName: pax.givenName,
+                    familyName: pax.familyName,
+                    bornOn: pax.bornOn,
+                    gender: pax.gender,
+                    email: pax.email || booking.contactEmail,
+                    phoneNumber: pax.phoneNumber || booking.contactPhone || "",
+                    type: pax.type || "adult",
+                    title: pax.title,
+                    documentNumber: pax.documentNumber || pax.passportNumber,
+                  } as any;
+                });
+
+                const orderResult = await createDuffelOrder(
+                  flightData.id,
+                  duffelPassengers
+                );
+
+                if (orderResult) {
+                  duffelOrderId = orderResult.orderId;
+                  duffelRef = orderResult.bookingReference;
+                  
+                  await storage.createBookingLog({
+                    bookingId: id,
+                    event: 'order_created',
+                    message: `Duffel order created: ${duffelOrderId} (Ref: ${duffelRef})`,
+                    metadata: { duffelOrderId, duffelRef }
+                  });
+                }
+              } catch (duffelErr) {
+                console.error('Failed to create Duffel order after payment:', duffelErr);
+                // We DON'T fail the request here, but the booking will stay in 'confirmed' status
+                // and an admin will have to MANUALLY book it if Duffel failed.
+              }
+            }
+
+            const [updated] = await db.update(bookings)
+              .set({ 
+                status: 'confirmed', 
+                stripePaymentStatus: 'paid',
+                duffelOrderId: duffelOrderId || undefined,
+                duffelBookingReference: duffelRef || undefined,
+                ...(receiptUrl ? { stripeReceiptUrl: receiptUrl } : {}),
+              })
+              .where(eq(bookings.id, id))
+              .returning();
+            
+            return res.json({ verified: true, status: 'confirmed', booking: updated });
           }
         } catch (stripeErr) {
           console.error('Payment verification error:', stripeErr);
