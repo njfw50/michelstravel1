@@ -241,13 +241,14 @@ export default function Home() {
       <section className="py-24 bg-white">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="text-center mb-16">
-             <h2 className="text-3xl font-black text-slate-950 uppercase tracking-tighter mb-4">Nossa Rede de Alianças</h2>
-             <p className="text-slate-500 font-medium max-w-xl mx-auto">Parcerias estratégicas com as melhores companhias aéreas do mundo para garantir seu conforto e suporte.</p>
+             <Badge variant="outline" className="mb-4 border-slate-200 text-slate-400 text-[9px] uppercase font-black tracking-widest">Global Partnerships</Badge>
+             <h2 className="text-3xl md:text-4xl font-black text-slate-950 uppercase tracking-tighter mb-4">Nossa Rede de Alianças</h2>
+             <p className="text-slate-500 font-medium max-w-xl mx-auto">Conexão direta com as maiores alianças aéreas para garantir sua segurança e conforto.</p>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
              {airlines?.slice(0, 12).map((airline) => (
-               <div key={airline.id} className="flex flex-col items-center gap-3 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all p-6 rounded-3xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50">
+               <div key={airline.id} className="flex flex-col items-center gap-3 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all p-6 rounded-3xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50">
                   {airline.logoUrl ? (
                     <img src={airline.logoUrl} alt={airline.name} className="h-8 md:h-12 w-auto object-contain" />
                   ) : (
@@ -257,6 +258,114 @@ export default function Home() {
                </div>
              ))}
           </div>
+        </div>
+      </section>
+
+      {/* Travel Ecosystem & Resources - NEW SECTION */}
+      <section className="py-24 bg-slate-50">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            <div className="p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm flex flex-col items-start gap-6">
+               <div className="h-14 w-14 rounded-2xl bg-blue-600/5 text-blue-600 flex items-center justify-center">
+                  <ShieldCheck className="h-7 w-7" />
+               </div>
+               <div>
+                  <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">Seguro Viagem & Proteção</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed font-medium">Cobertura completa para emergências médicas, cancelamentos e extravios. Essencial para viajantes sêniores.</p>
+               </div>
+               <Link href="/insurance" className="text-[10px] font-black uppercase text-blue-600 tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
+                  Consultar Coberturas <ArrowRight className="h-3 w-3" />
+               </Link>
+            </div>
+
+            <div className="p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm flex flex-col items-start gap-6">
+               <div className="h-14 w-14 rounded-2xl bg-orange-600/5 text-orange-600 flex items-center justify-center">
+                  <Globe2 className="h-7 w-7" />
+               </div>
+               <div>
+                  <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">Vistos & Documentação</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed font-medium">Assessoria especializada para vistos americanos, brasileiros e europeus (ETIAS). Não viaje com dúvidas.</p>
+               </div>
+               <Link href="/visa-support" className="text-[10px] font-black uppercase text-orange-600 tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
+                  Checklist Documental <ArrowRight className="h-3 w-3" />
+               </Link>
+            </div>
+
+            <div className="p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm flex flex-col items-start gap-6">
+               <div className="h-14 w-14 rounded-2xl bg-emerald-600/5 text-emerald-600 flex items-center justify-center">
+                  <Clock className="h-7 w-7" />
+               </div>
+               <div>
+                  <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">Gestão de Crise 24/7</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed font-medium">Voo cancelado ou atrasado? Nossa equipe assume a reacomodação e o suporte imediato para você.</p>
+               </div>
+               <span className="text-[10px] font-black uppercase text-emerald-600 tracking-widest flex items-center gap-2">
+                  Atendimento Prioritário <ArrowRight className="h-3 w-3" />
+               </span>
+            </div>
+
+            <div className="p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm flex flex-col items-start gap-6">
+               <div className="h-14 w-14 rounded-2xl bg-amber-600/5 text-amber-600 flex items-center justify-center">
+                  <Sparkles className="h-7 w-7" />
+               </div>
+               <div>
+                  <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">Salas VIP & Concierge</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed font-medium">Acesso a lounges exclusivos e serviços de Meet & Greet para uma experiência aeroportuária sem estresse.</p>
+               </div>
+               <Link href="/vip-services" className="text-[10px] font-black uppercase text-amber-600 tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
+                  Explorar Benefícios <ArrowRight className="h-3 w-3" />
+               </Link>
+            </div>
+
+            <div className="p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm flex flex-col items-start gap-6">
+               <div className="h-14 w-14 rounded-2xl bg-slate-950/5 text-slate-950 flex items-center justify-center">
+                  <Banknote className="h-7 w-7" />
+               </div>
+               <div>
+                  <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">Parcelamento Boutique</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed font-medium">Condições exclusivas de parcelamento no cartão ou boleto bancário para facilitar sua jornada.</p>
+               </div>
+               <span className="text-[10px] font-black uppercase text-slate-950 tracking-widest flex items-center gap-2">
+                  Simular Opções <ArrowRight className="h-3 w-3" />
+               </span>
+            </div>
+
+            <div className="p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm flex flex-col items-start gap-6">
+               <div className="h-14 w-14 rounded-2xl bg-red-600/5 text-red-600 flex items-center justify-center">
+                  <ShieldAlert className="h-7 w-7" />
+               </div>
+               <div>
+                  <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">Assistência Médica</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed font-medium">Organização de transporte de oxigênio, cadeiras de rodas e dietas especiais a bordo.</p>
+               </div>
+               <Link href="/assistance" className="text-[10px] font-black uppercase text-red-600 tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
+                  Solicitar Suporte <ArrowRight className="h-3 w-3" />
+               </Link>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* Quick FAQ / Knowledge Section - FINAL ENRICHMENT */}
+      <section className="py-24 bg-white">
+        <div className="container mx-auto px-4 max-w-4xl">
+           <div className="text-center mb-16">
+              <h2 className="text-2xl font-black text-slate-950 uppercase tracking-tighter">Dúvidas Frequentes de Viajantes</h2>
+           </div>
+           <div className="space-y-4">
+              {[
+                { q: "Quais documentos preciso para viajar dos EUA para o Brasil?", a: "Brasileiros precisam de passaporte válido. Estrangeiros devem verificar a necessidade de visto de visita (VIVIS)." },
+                { q: "Posso solicitar cadeira de rodas após a compra?", a: "Sim, recomendamos solicitar com no mínimo 48h de antecedência para garantir a disponibilidade em todos os trechos." },
+                { q: "Como funciona o suporte em caso de atraso de voo?", a: "Nossa equipe monitora os voos e entra em contato via WhatsApp para coordenar reacomodações e assistência necessária." }
+              ].map((faq, i) => (
+                <div key={i} className="p-6 rounded-3xl border border-slate-100 bg-slate-50/30">
+                   <h4 className="text-sm font-black text-slate-900 mb-2 uppercase tracking-tight">{faq.q}</h4>
+                   <p className="text-sm text-slate-500 leading-relaxed font-medium">{faq.a}</p>
+                </div>
+              ))}
+           </div>
         </div>
       </section>
 
