@@ -15,6 +15,7 @@ import { ConciergePromo } from "@/components/ConciergePromo";
 import { AirlineNetwork } from "@/components/AirlineNetwork";
 import { openChatbotAssistant } from "@/lib/chatbot";
 import { useI18n } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 import airplaneDestination from "@/assets/images/airplane-destination.jpg";
 import imgNewYork from "@/assets/images/destinations/new-york.jpg";
 import imgLondon from "@/assets/images/destinations/london.jpg";
@@ -52,19 +53,6 @@ export default function Home() {
       details: ["Olá, gostaria de ajuda especializada para planejar minha próxima viagem."],
     }),
   );
-
-  const formatDealPrice = (value: number | null, currency: string) => {
-    if (value === null || Number.isNaN(value)) return null;
-    try {
-      return new Intl.NumberFormat(language === "pt" ? "pt-BR" : "en-US", {
-        style: "currency",
-        currency: currency || "USD",
-        maximumFractionDigits: 0,
-      }).format(value);
-    } catch {
-      return `${currency || "USD"} ${value.toFixed(0)}`;
-    }
-  };
 
   const openDealSearch = (deal: PublicFeaturedDeal) => {
     const searchParams = new URLSearchParams({
@@ -118,16 +106,6 @@ export default function Home() {
         "https://www.facebook.com/michelstravel",
         "https://www.instagram.com/michelstravel"
       ]
-    },
-    {
-       "@context": "https://schema.org",
-       "@type": "WebSite",
-       "url": "https://www.michelstravel.agency",
-       "potentialAction": {
-         "@type": "SearchAction",
-         "target": "https://www.michelstravel.agency/search?origin={search_term_string}",
-         "query-input": "required name=search_term_string"
-       }
     }
   ];
 
@@ -140,7 +118,6 @@ export default function Home() {
         structuredData={structuredData}
       />
 
-      {/* --- HERO REVOLUTION --- */}
       <section className="relative pt-12 pb-24 md:pt-20 md:pb-32 overflow-hidden">
         <div className="absolute top-0 right-0 w-[60%] h-full bg-gradient-to-l from-blue-50/50 to-transparent pointer-events-none" />
         <div className="container mx-auto px-4 relative z-10">
@@ -185,8 +162,8 @@ export default function Home() {
                 </div>
              </div>
              <div className="mb-8">
-               <h2 className="text-2xl font-black text-slate-950 uppercase tracking-tight">Onde sua história continua?</h2>
-               <p className="text-slate-500 text-sm font-medium mt-1 uppercase tracking-widest">Disponibilidade global em Newark - NJ</p>
+                <h2 className="text-2xl font-black text-slate-950 uppercase tracking-tight">Onde sua história continua?</h2>
+                <p className="text-slate-500 text-sm font-medium mt-1 uppercase tracking-widest">Disponibilidade global em Newark - NJ</p>
              </div>
              <FlightSearchForm />
           </div>
@@ -216,7 +193,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- DEALS MERCHANDISING --- */}
+      {/* --- BENTO DEALS REVOLUTION --- */}
       <section className="py-24 md:py-32 overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
@@ -224,19 +201,42 @@ export default function Home() {
               <Badge className="bg-blue-50 text-blue-600 border-blue-100 mb-4 px-4 py-1.5 uppercase font-black text-[10px] tracking-widest">Oportunidades de Ouro</Badge>
               <h2 className="text-4xl md:text-6xl font-black text-slate-950 leading-none tracking-tighter">Ofertas em Destaque. <br /><span className="text-slate-400">Exclusividade do Ironbound.</span></h2>
             </div>
-            <Link href="/blog">
-              <Button variant="ghost" className="text-slate-500 font-bold hover:text-blue-600">
-                Ver Guia de Destinos <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 grid-rows-none md:grid-rows-2 gap-6 min-h-[800px]">
              {dealsLoading ? Array.from({length: 4}).map((_, i) => (
-                <div key={i} className="h-[480px] rounded-[32px] bg-slate-50 animate-pulse border border-slate-100" />
-             )) : catalogDeals.map((deal) => (
-                <DealCard key={deal.id} deal={deal} onSelect={openDealSearch} />
-             ))}
+                <div key={i} className="rounded-[32px] bg-slate-50 animate-pulse border border-slate-100" />
+             )) : (
+               <>
+                 {/* Main Highlight Deal (Card 0) - Large 2x2 */}
+                 {catalogDeals[0] && (
+                   <div className="md:col-span-2 md:row-span-2">
+                     <DealCard deal={catalogDeals[0]} onSelect={openDealSearch} size="large" />
+                   </div>
+                 )}
+                 
+                 {/* Card 1 - Medium/Horizontal 2x1 */}
+                 {catalogDeals[1] && (
+                   <div className="md:col-span-2 md:row-span-1">
+                     <DealCard deal={catalogDeals[1]} onSelect={openDealSearch} size="wide" />
+                   </div>
+                 )}
+
+                 {/* Card 2 - Compact 1x1 */}
+                 {catalogDeals[2] && (
+                   <div className="md:col-span-1 md:row-span-1">
+                     <DealCard deal={catalogDeals[2]} onSelect={openDealSearch} size="small" />
+                   </div>
+                 )}
+
+                 {/* Card 3 - Compact 1x1 */}
+                 {catalogDeals[3] && (
+                   <div className="md:col-span-1 md:row-span-1">
+                     <DealCard deal={catalogDeals[3]} onSelect={openDealSearch} size="small" />
+                   </div>
+                 )}
+               </>
+             )}
           </div>
         </div>
       </section>
@@ -356,44 +356,78 @@ function StatItem({ label, value }: { label: string, value: string }) {
   );
 }
 
-function DealCard({ deal, onSelect }: { deal: PublicFeaturedDeal, onSelect: (deal: PublicFeaturedDeal) => void }) {
+function DealCard({ deal, onSelect, size = "small" }: { deal: PublicFeaturedDeal, onSelect: (deal: PublicFeaturedDeal) => void, size?: "large" | "wide" | "small" }) {
   const coverImage = DESTINATION_IMAGES[deal.destination] || DESTINATION_IMAGES[deal.origin];
+  const isLarge = size === "large";
+  const isWide = size === "wide";
+
   return (
     <Card 
       onClick={() => onSelect(deal)}
-      className="overflow-hidden rounded-[32px] border border-slate-100 bg-white shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer group"
+      className={cn(
+        "group h-full overflow-hidden rounded-[32px] border border-slate-100 bg-white shadow-sm transition-all duration-500 cursor-pointer overflow-hidden",
+        isLarge && "shadow-xl hover:shadow-2xl",
+        !isLarge && "hover:shadow-lg"
+      )}
     >
-      <div className="relative h-64 overflow-hidden">
+      <div className={cn("relative overflow-hidden", isLarge ? "h-[60%]" : isWide ? "h-full" : "h-56")}>
         {coverImage ? (
-          <img src={coverImage} alt={deal.destination_city} className="h-full w-full object-cover group-hover:scale-110 transition-duration-700" />
+          <img src={coverImage} alt={deal.destination_city} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-[2000ms]" />
         ) : (
           <div className="h-full w-full bg-blue-600 flex items-center justify-center text-white font-black text-2xl">MT</div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute top-4 left-4">
-          <Badge className="bg-white/20 backdrop-blur-md text-white border-white/20 text-[10px] uppercase font-black tracking-widest">Oferta Luxo</Badge>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        
+        <div className="absolute top-6 left-6 flex gap-2">
+          {isLarge && <Badge className="bg-amber-500 text-white border-0 text-[10px] uppercase font-black tracking-widest px-3 py-1">Top Pick</Badge>}
+          <Badge className="bg-white/20 backdrop-blur-md text-white border-white/20 text-[10px] uppercase font-black tracking-widest px-3 py-1">Oferta Elite</Badge>
         </div>
-        <div className="absolute bottom-4 left-4 right-4 text-white">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1 opacity-80">{deal.origin} → {deal.destination}</p>
-          <h4 className="text-2xl font-black truncate">{deal.destination_city || deal.destination}</h4>
+
+        <div className="absolute bottom-6 left-6 right-6 text-white">
+          <div className="flex items-center gap-2 mb-2 opacity-80">
+             <MapPin className="h-3.5 w-3.5 text-blue-400" />
+             <p className="text-[10px] font-black uppercase tracking-[0.2em]">{deal.origin} → {deal.destination}</p>
+          </div>
+          <h4 className={cn("font-black leading-none truncate", isLarge ? "text-4xl" : "text-2xl")}>
+            {deal.destination_city || deal.destination}
+          </h4>
+          {isWide && (
+             <div className="mt-4 flex items-center gap-4">
+                <div className="text-2xl font-black">
+                  {deal.currency === 'BRL' ? 'R$' : '$'} 
+                   {new Intl.NumberFormat('en-US', { minimumFractionDigits: 0 }).format(deal.price_value || 0)}
+                </div>
+                <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
+                   <ArrowRight className="h-4 w-4" />
+                </div>
+             </div>
+          )}
         </div>
       </div>
-      <CardContent className="p-6">
-        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 mb-4">
-          <Wallet className="h-3 w-3" /> Tarifa de Custo Real
-        </div>
-        <div className="text-2xl font-black text-slate-950 mb-2">
-          {deal.currency === 'BRL' ? 'R$' : '$'} 
-          {new Intl.NumberFormat('en-US', { minimumFractionDigits: 0 }).format(deal.price_value || 0)}
-        </div>
-        <p className="text-xs text-slate-500 font-medium leading-relaxed line-clamp-2">{deal.headline}</p>
-        <div className="mt-6 flex items-center justify-between pt-4 border-t border-slate-50">
-           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{deal.cabin_class || 'Economy'}</span>
-           <div className="h-8 w-8 rounded-full bg-slate-950 text-white flex items-center justify-center group-hover:bg-blue-600 transition-colors">
-              <ArrowRight className="h-4 w-4" />
-           </div>
-        </div>
-      </CardContent>
+
+      {!isWide && (
+        <CardContent className={cn("p-6 flex flex-col justify-between", isLarge ? "h-[40%]" : "")}>
+          <div>
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 mb-3">
+              <Ticket className="h-3 w-3" /> Tarifa de Custo Real
+            </div>
+            <div className={cn("font-black text-slate-950 mb-3", isLarge ? "text-5xl" : "text-2xl")}>
+              {deal.currency === 'BRL' ? 'R$' : '$'} 
+              {new Intl.NumberFormat('en-US', { minimumFractionDigits: 0 }).format(deal.price_value || 0)}
+            </div>
+            <p className={cn("text-slate-500 font-medium leading-relaxed", isLarge ? "text-lg line-clamp-2" : "text-xs line-clamp-1")}>
+              {deal.headline}
+            </p>
+          </div>
+
+          <div className={cn("flex items-center justify-between pt-6 border-t border-slate-50 mt-auto")}>
+             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{deal.cabin_class || 'Economy'}</span>
+             <div className="flex items-center gap-2 text-blue-600 font-black text-[10px] uppercase tracking-widest group-hover:translate-x-1 transition-transform">
+                Ver Voo <ArrowRight className="h-3 w-3" />
+             </div>
+          </div>
+        </CardContent>
+      )}
     </Card>
   );
 }
