@@ -2,6 +2,7 @@ import { FlightSearchForm } from "@/components/FlightSearchForm";
 import SeniorCardImage from "@/components/SeniorCardImage";
 import AppLaunchPromo from "@/components/AppLaunchPromo";
 import { FlightBoard } from "@/components/FlightBoard";
+import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -135,7 +136,7 @@ export default function Home() {
               <Sparkles className="mr-2 h-4 w-4" />
               The Intelligence of Travel
             </Badge>
-            <h1 className="text-5xl md:text-8xl font-display font-black leading-[0.9] tracking-tighter text-slate-950 mb-8">
+            <h1 className="text-6xl md:text-[9rem] font-display font-black leading-[0.85] tracking-tighter text-slate-950 mb-8">
               Sua Agência <br />
               <span className="text-blue-600">em Newark & Ironbound.</span>
             </h1>
@@ -143,7 +144,7 @@ export default function Home() {
               Tarifas exclusivas curadas por tecnologia e suporte humano especializado 24h. Segurança absoluta para brasileiros nos EUA e no mundo.
             </p>
             
-            <div className="flex flex-wrap gap-4 mb-20">
+            <div className="flex flex-wrap gap-4 mb-2">
                <Button 
                 onClick={() => document.getElementById('search-anchor')?.scrollIntoView({ behavior: 'smooth' })}
                 className="rounded-full bg-blue-600 px-10 py-8 text-lg font-bold text-white shadow-2xl shadow-blue-600/30 hover:bg-blue-700 hover:scale-105 transition-all outline-none"
@@ -160,17 +161,43 @@ export default function Home() {
             </div>
           </div>
 
-          <div id="search-anchor" className="mt-8 rounded-[40px] border border-slate-100 bg-white p-6 shadow-[0_40px_100px_-40px_rgba(15,23,42,0.15)] md:p-10 relative">
-             <div className="absolute -top-12 right-12 hidden lg:flex items-center gap-4 bg-white/80 backdrop-blur-md border border-slate-100 p-4 rounded-3xl shadow-lg">
+          <div className="absolute top-1/2 -right-20 -translate-y-1/2 w-[45%] h-[80%] hidden lg:block z-0 pointer-events-none">
+             <div className="relative w-full h-full">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#fcfdff] via-transparent to-transparent z-10" />
+                <motion.img 
+                  initial={{ opacity: 0, x: 100, scale: 1.1 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  transition={{ duration: 1.2, ease: "easeOut" }}
+                  src="/premium_travel_hero_vibe_newark_1776004648777.png" 
+                  alt="Premium Travel Flight"
+                  className="w-full h-full object-cover rounded-[60px] shadow-[0_50px_100px_-20px_rgba(37,99,235,0.2)]"
+                />
+                <div className="absolute -bottom-10 -left-10 bg-white p-6 rounded-[32px] shadow-2xl border border-blue-50 z-20 max-w-[200px] animate-bounce-slow">
+                   <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 bg-blue-100 rounded-xl">
+                        <Plane className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <span className="text-xs font-black text-slate-950 uppercase tracking-tighter">Newark Base</span>
+                   </div>
+                   <p className="text-[10px] font-bold text-slate-500 uppercase leading-tight">Tarifas locais direto do NJ para o mundo.</p>
+                </div>
+             </div>
+          </div>
+
+          <div id="search-anchor" className="mt-20 rounded-[40px] border border-slate-100/50 bg-white/70 backdrop-blur-2xl p-6 shadow-[0_48px_100px_-24px_rgba(15,23,42,0.12)] md:p-10 relative z-20 border-t-white/80 overflow-hidden">
+             <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-50/20 to-transparent pointer-events-none" />
+             <div className="absolute -top-12 right-12 hidden lg:flex items-center gap-4 bg-white/90 backdrop-blur-md border border-slate-100 p-4 rounded-3xl shadow-xl z-30">
                 <div className="flex -space-x-3">
-                   {[1,2,3].map(i => <div key={i} className="h-10 w-10 rounded-full border-4 border-white bg-blue-100" />)}
+                   {[1,2,3].map(i => <div key={i} className="h-10 w-10 rounded-full border-4 border-white bg-blue-100 relative overflow-hidden">
+                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=pax${i}`} alt="passenger" className="w-full h-full object-cover" />
+                   </div>)}
                 </div>
                 <div>
                    <p className="text-xs font-black text-slate-950 leading-none">8.4k+ passageiros</p>
                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Este mês</p>
                 </div>
              </div>
-             <div className="mb-8">
+             <div className="mb-8 relative z-10">
                 <h2 className="text-2xl font-black text-slate-950 uppercase tracking-tight">Onde sua história continua?</h2>
                 <p className="text-slate-500 text-sm font-medium mt-1 uppercase tracking-widest">Disponibilidade global em Newark - NJ</p>
              </div>
