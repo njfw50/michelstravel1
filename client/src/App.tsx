@@ -35,6 +35,7 @@ import BrazilFlightsNewark from "@/pages/BrazilFlightsNewark";
 import AppSeniorDownload from "@/pages/AppSeniorDownload";
 import AppAdminDownload from "@/pages/AppAdminDownload";
 import AdminApp from "@/pages/AdminApp";
+import TravelExplorer from "@/pages/TravelExplorer";
 
 import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import CheckoutCancel from "@/pages/CheckoutCancel";
@@ -109,6 +110,7 @@ function Router() {
       <Route path="/profile" component={() => <Layout><Profile /></Layout>} />
       
       <Route path="/live/:sessionId" component={LiveSessionClient} />
+      <Route path="/travel-guide" component={() => <Layout><TravelExplorer /></Layout>} />
       <Route path="/checkout/success" component={CheckoutSuccess} />
       <Route path="/checkout/cancel" component={CheckoutCancel} />
 

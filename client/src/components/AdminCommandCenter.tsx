@@ -1,7 +1,11 @@
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect as useReactEffect, useMemo as useReactMemo } from "react";
-import { AlertTriangle, ArrowRight, CheckCircle2, Copy, DollarSign, ExternalLink, Loader2, Mail, MessageSquare, Phone, Plane, RefreshCw, Send, ShieldAlert, Smartphone, Sparkles, TrendingUp, Users } from "lucide-react";
+import { 
+  AlertTriangle, ArrowRight, CheckCircle2, Copy, DollarSign, ExternalLink, 
+  Info, Loader2, Mail, MessageSquare, Phone, Plane, RefreshCw, Send, 
+  ShieldAlert, Smartphone, Sparkles, TrendingUp, Users 
+} from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import { format, formatDistanceToNowStrict } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +20,7 @@ import { AdminOwnerDesk } from "@/components/AdminOwnerDesk";
 import { useAdminCommandCenter, useAdminOwnerDesk, type AdminCommandCenterData, type AdminOwnerDeskData } from "@/hooks/use-admin";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { fetchCityDetails, type CityHighlights } from "@/lib/travel-service";
 import { fetchAppReleaseManifest, getAdminAndroidPrimaryUrl, hasAdminAndroidRelease, DEFAULT_APP_RELEASE_MANIFEST } from "@/lib/app-release";
 import { formatBytes } from "@/lib/formatBytes";
 
@@ -282,6 +287,8 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
   const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
   const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
   const [systemHealthLoading, setSystemHealthLoading] = useState(false);
+  const [marketBriefing, setMarketBriefing] = useState<CityHighlights | null>(null);
+  const [marketBriefingLoading, setMarketBriefingLoading] = useState(false);
   const [dealSearchParams, setDealSearchParams] = useState({
     tripType: "one-way",
     departureDate: "",
@@ -619,27 +626,47 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
     setDealSearchError(null);
   };
 
-  const copyCampaignBrief = async (route: { route: string; searches: number; bookings: number }) => {
-    const brief = [
-      `Campaign angle for ${route.route}.`,
-      `${route.searches} searches and ${route.bookings} bookings already show live demand.`,
-      "Lead with personal support, safer booking guidance and fast human follow-up.",
-      "Push to site search, live help and senior support mode.",
-    ].join(" ");
-
+  const openMarketBriefing = async (route: { route: string; routeKey: string }) => {
+    setMarketBriefingLoading(true);
     try {
-      await navigator.clipboard.writeText(brief);
-      toast({
-        title: "Campaign brief copied",
-        description: `Growth brief for ${route.route} is ready to paste into marketing notes.`,
-      });
-    } catch {
-      toast({
-        title: "Clipboard unavailable",
-        description: "Could not copy the campaign brief from this browser session.",
-        variant: "destructive",
-      });
+      const [origin, destination] = route.routeKey.split("-");
+      // Try fetching details for the destination city
+      const details = await fetchCityDetails(destination);
+      if (details) {
+        setMarketBriefing(details);
+      } else {
+        toast({
+          title: "Inteligência indisponível",
+          description: `Não encontramos dados profundos para ${destination} ainda.`,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setMarketBriefingLoading(false);
     }
+  };
+
+  const useBriefingInDeal = (briefing: CityHighlights) => {
+    const [originCode = ""] = (marketBriefing?.name || "").split("-"); // Simple fallback
+    setDealDraft({
+      origin: "", 
+      destination: briefing.name,
+      originCity: "",
+      destinationCity: briefing.name,
+      departureDate: "",
+      returnDate: "",
+      price: "",
+      currency: "USD",
+      airline: "",
+      cabinClass: "economy",
+      headline: `Descubra a alma de ${briefing.name}`,
+      description: `${briefing.description?.slice(0, 300)}... Curadoria exclusiva Michels Travel.`,
+      stops: 0,
+      duration: "Varia",
+    });
+    setMarketBriefing(null);
   };
 
   if (isLoading) {
@@ -699,7 +726,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                 containerClassName="mt-8 max-w-[min(100%,42rem)]"
                 className="font-display font-bold tracking-tight text-white leading-[0.92]"
               >
-                {data.health.headline.split(" ").map((word, i) =>
+                {data.health.headline.split(" ").map((word: string, i: number) =>
                   i === 0 || i === 1 ? (
                     <span key={i}>{word} </span>
                   ) : (
@@ -1080,8 +1107,8 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                             <Sparkles className="mr-2 h-3.5 w-3.5" />
                             Lançar Oferta
                           </Button>
-                          <Button size="sm" variant="ghost" className="h-9 px-4 rounded-xl border border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5" onClick={() => copyCampaignBrief(route)}>
-                            <Copy className="mr-2 h-3.5 w-3.5" />
+                          <Button size="sm" variant="ghost" className="h-9 px-4 rounded-xl border border-white/5 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5" onClick={() => openMarketBriefing(route)}>
+                            <Info className="mr-2 h-3.5 w-3.5 text-indigo-400" />
                             Briefing
                           </Button>
                         </div>
@@ -1748,6 +1775,70 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Market Briefing Modal */}
+      <Dialog open={!!marketBriefing} onOpenChange={(open) => !open && setMarketBriefing(null)}>
+        <DialogContent className="max-w-2xl bg-slate-950 border-white/10 p-0 overflow-hidden rounded-[32px]">
+           {marketBriefing && (
+             <>
+               <div className="relative h-48">
+                 <img src={marketBriefing.image} alt={marketBriefing.name} className="w-full h-full object-cover" />
+                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent" />
+                 <Badge className="absolute top-6 left-6 bg-indigo-600 text-white font-black uppercase text-[9px] tracking-widest border-none">Inteligência de Destino</Badge>
+               </div>
+               <div className="p-8 space-y-6">
+                 <div>
+                   <h2 className="text-3xl font-black text-white font-display tracking-tight">{marketBriefing.name}</h2>
+                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">{marketBriefing.fullName}</p>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-4">
+                   {marketBriefing.scores.map(s => (
+                     <div key={s.name} className="space-y-2">
+                       <div className="flex justify-between text-[8px] font-black uppercase text-slate-600">
+                         <span>{s.name}</span>
+                         <span>{s.score.toFixed(1)}</span>
+                       </div>
+                       <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                         <div className="h-full bg-indigo-500/60" style={{ width: `${s.score * 10}%` }} />
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+
+                 <div className="bg-white/5 rounded-3xl p-6 border border-white/5">
+                    <p className="text-xs text-slate-400 leading-relaxed italic">"{marketBriefing.summary || marketBriefing.description.slice(0, 200) + '...'}"</p>
+                 </div>
+
+                 <DialogFooter className="pt-4 border-t border-white/5">
+                   <Button 
+                     variant="secondary" 
+                     className="h-12 rounded-2xl border border-white/10 bg-white/5 text-[10px] font-black uppercase text-slate-400"
+                     onClick={() => setMarketBriefing(null)}
+                   >
+                     Fechar
+                   </Button>
+                   <Button 
+                     className="h-12 px-8 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-[10px] font-black uppercase tracking-widest text-white shadow-xl shadow-indigo-600/20 transition-all"
+                     onClick={() => useBriefingInDeal(marketBriefing)}
+                   >
+                     Gerar Oferta com este Briefing
+                   </Button>
+                 </DialogFooter>
+               </div>
+             </>
+           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Loading Overlay for Market Briefing */}
+      <AnimatePresence>
+        {marketBriefingLoading && (
+          <div className="fixed inset-0 z-[100] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center">
+            <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
