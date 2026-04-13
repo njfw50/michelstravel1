@@ -111,122 +111,7 @@ const SEARCH_STEPS = [
   { key: "step5", icon: CheckCircle2 },
 ];
 
-function FlightSearchAnimation({ t }: { t: (key: string) => string }) {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    const stepInterval = setInterval(() => {
-      setCurrentStep((prev) => (prev < SEARCH_STEPS.length - 1 ? prev + 1 : prev));
-    }, 3500); // 3.5 seconds per step for a more rhythmic experience
-    const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 98) return 98;
-        return Math.min(prev + Math.random() * 1.5 + 0.3, 98); // Slower, more organic progress
-      });
-    }, 200);
-    return () => {
-      clearInterval(stepInterval);
-      clearInterval(progressInterval);
-    };
-  }, []);
-
-  return (
-    <div className="relative min-h-[500px] w-full overflow-hidden rounded-[40px] bg-slate-950 p-8 md:p-12 shadow-2xl">
-      {/* Dynamic Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.1, 0.2, 0.1] 
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-          className="absolute -top-1/4 -right-1/4 h-full w-full bg-blue-500/20 blur-[120px] rounded-full" 
-        />
-        <motion.div 
-          animate={{ 
-            scale: [1.2, 1, 1.2],
-            opacity: [0.05, 0.15, 0.05] 
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-          className="absolute -bottom-1/4 -left-1/4 h-full w-full bg-emerald-500/10 blur-[120px] rounded-full" 
-        />
-      </div>
-
-      <div className="relative z-10 flex flex-col items-center justify-center max-w-2xl mx-auto h-full space-y-12">
-        <div className="text-center space-y-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex h-20 w-20 items-center justify-center rounded-[28px] bg-white/5 border border-white/10 backdrop-blur-xl mb-4"
-          >
-            <motion.div
-              animate={{ 
-                rotate: [0, 5, 0, -5, 0],
-                y: [0, -5, 0]
-              }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <Plane className="h-10 w-10 text-white shadow-glow" />
-            </motion.div>
-          </motion.div>
-          <h3 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-            {t("search_loading.title") || "Orquestrando sua jornada..."}
-          </h3>
-        </div>
-
-        {/* Progress Bar Container */}
-        <div className="w-full space-y-6">
-          <div className="relative h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-            <motion.div 
-              className="absolute h-full bg-gradient-to-r from-blue-500 to-cyan-400" 
-              style={{ width: `${progress}%` }} 
-              transition={{ duration: 0.5 }}
-            />
-          </div>
-          
-          <div className="grid grid-cols-1 gap-3">
-            {SEARCH_STEPS.map((step, idx) => {
-              const isActive = idx === currentStep;
-              const isComplete = idx < currentStep;
-              const Icon = step.icon;
-              return (
-                <motion.div 
-                  key={step.key} 
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: isActive || isComplete ? 1 : 0.3, x: 0 }}
-                  className={`flex items-center gap-4 p-4 rounded-2xl transition-all duration-500 ${
-                    isActive ? "bg-white/10 border border-white/10 shadow-lg" : "bg-transparent border border-transparent"
-                  }`}
-                >
-                  <div className={`h-8 w-8 rounded-xl flex items-center justify-center transition-all ${
-                    isComplete ? "bg-emerald-500/20 text-emerald-400" : isActive ? "bg-blue-500 text-white shadow-blue-500/20 shadow-lg" : "bg-white/5 text-white/40"
-                  }`}>
-                    {isComplete ? <CheckCircle2 className="h-5 w-5" /> : <Icon className="h-4 w-4" />}
-                  </div>
-                  <span className={`text-sm md:text-base font-medium ${
-                    isComplete ? "text-emerald-400/80" : isActive ? "text-white font-bold" : "text-white/30"
-                  }`}>
-                    {t(`search_loading.${step.key}`)}
-                  </span>
-                  {isActive && (
-                    <motion.div 
-                      className="ml-auto"
-                      animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      <div className="h-2 w-2 rounded-full bg-blue-400 shadow-glow" />
-                    </motion.div>
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+import FlightSearchProgress from "@/components/FlightSearchProgress";
 
 export default function SearchResults() {
   const [, setLocation] = useLocation();
@@ -518,7 +403,7 @@ export default function SearchResults() {
     return new Intl.NumberFormat(priceLocale, { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
   };
 
-  const whatsAppHref = useMemo(() => buildWhatsAppHref(buildWhatsAppMessage(language)), [language]);
+  const whatsAppHref = useMemo(() => buildWhatsAppHref(buildWhatsAppMessage({ language: language || "pt" })), [language]);
   const openAssistant = useCallback(() => openChatbotAssistant(), []);
 
   const showTwoStepFlow = isRoundTrip && offerMatrix !== null;
@@ -579,7 +464,16 @@ export default function SearchResults() {
             <main className="space-y-6">
               {seniorHeader}
 
-              {isSearching ? <FlightSearchAnimation t={t} /> : (
+              <AnimatePresence>
+                {isSearching && (
+                  <FlightSearchProgress 
+                    origin={params.origin || "---"} 
+                    destination={params.destination || "---"} 
+                  />
+                )}
+              </AnimatePresence>
+              
+              {!isSearching && (
                 <div className="space-y-6">
                   {showTwoStepFlow && !selectedOutboundKey ? (
                     // Senior Two-Step: Step 1 (Outbound)
@@ -627,22 +521,17 @@ export default function SearchResults() {
                         </div>
                         <Button variant="ghost" size="sm" onClick={() => setSelectedOutboundKey(null)} className="text-blue-600">Mudar Ida</Button>
                       </div>
-                      {returnOptionsForSelected.map(r => (
-                        <SeniorFlightOptionCard 
-                          key={r.returnKey} 
-                          flight={r.offer} 
-                          kind="balanced" 
-                          insight={{ 
-                            totalDurationMinutes: 0, 
-                            totalStops: r.offer.stops, 
-                            longestLayoverMinutes: 0, 
-                            hasSensitiveHour: false, 
-                            hasCheckedBag: true, 
-                            hasCarryOn: true, 
-                            reasonLine: "Melhor opção para sua volta combinada" 
-                          }} 
-                        />
-                      ))}
+                      {returnOptionsForSelected.map(r => {
+                        const insight = getSeniorFlightInsight(r.offer, easyPreferences);
+                        return (
+                          <SeniorFlightOptionCard 
+                            key={r.returnKey} 
+                            flight={r.offer} 
+                            kind="balanced" 
+                            insight={insight} 
+                          />
+                        );
+                      })}
                     </>
                   ) : (
                     // Standard Senior Results
@@ -720,7 +609,16 @@ export default function SearchResults() {
               </select>
             </div>
 
-            {isSearching ? <FlightSearchAnimation t={t} /> : (
+            <AnimatePresence>
+              {isSearching && (
+                <FlightSearchProgress 
+                  origin={params.origin || "---"} 
+                  destination={params.destination || "---"} 
+                />
+              )}
+            </AnimatePresence>
+
+            {!isSearching && (
               <div className="space-y-4">
                 {showTwoStepFlow && !selectedOutboundKey ? outboundOptionsForDisplay.map(([k, o]) => (
                   <Card 

@@ -20,6 +20,14 @@
     "sort_best": "Melhor custo-benefício",
     "no_flights": "Nenhum voo encontrado",
     "no_flights_desc": "Tente ajustar as datas ou os filtros da busca.",
+    "search_loading": {
+      "title": "Estamos orquestrando sua melhor experiência de voo...",
+      "step1": "Sincronizando malha aérea global",
+      "step2": "Filtrando tarifas e conexões inteligentes",
+      "step3": "Validando assentos e bagagens inclusas",
+      "step4": "Analisando insights de conforto e segurança",
+      "step5": "Finalizando sua seleção exclusiva"
+    },
     "error": "Não conseguimos carregar os voos. Por favor, tente novamente.",
     "searching_airlines": "Buscando entre centenas de companhias...",
     "morning": "Manhã (06h - 12h)",
