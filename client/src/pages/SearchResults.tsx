@@ -461,59 +461,146 @@ export default function SearchResults() {
 
   const showTwoStepFlow = isRoundTrip && offerMatrix !== null;
 
-  // Easy Mode early return logic handled within the main render
-  if (isEasyMode && !showTwoStepFlow) {
+  // Render Section
+  if (isEasyMode) {
+    // Senior Mode Rendering
     const easyRecommendations = buildSeniorRecommendations(flights || [], easyPreferences);
-    const items = [
-      { label: easyModeCopy.summaryPriority, value: easyPreferences.priority === "fastest" ? easyModeCopy.priorityFastest : easyPreferences.priority === "balanced" ? easyModeCopy.priorityBalanced : easyPreferences.priority === "cheapest" ? easyModeCopy.priorityCheapest : easyModeCopy.priorityComfort },
-      { label: easyModeCopy.summaryConnections, value: easyPreferences.connections === "none" ? easyModeCopy.connectionsNone : easyPreferences.connections === "any" ? easyModeCopy.connectionsAny : easyModeCopy.connectionsOne },
-      { label: easyModeCopy.summaryBags, value: easyPreferences.bags === "checked" ? easyModeCopy.bagsChecked : easyPreferences.bags === "carry" ? easyModeCopy.bagsCarry : easyModeCopy.bagsFlexible },
-      { label: easyModeCopy.summaryTime, value: easyPreferences.time === "day" ? easyModeCopy.timeDay : easyModeCopy.timeAny },
-    ];
+    
+    // Header for Senior Mode
+    const seniorHeader = (
+      <div className="p-6 bg-blue-600 rounded-[30px] text-white flex justify-between items-center flex-wrap gap-4 shadow-xl">
+        <div>
+          <h1 className="text-2xl font-bold text-white">{easyModeCopy.title}</h1>
+          <p className="text-blue-50 text-sm mt-1">{easyModeCopy.description}</p>
+        </div>
+        <div className="flex gap-2">
+           <Button asChild className="rounded-full bg-white text-blue-600 hover:bg-blue-50">
+             <a href={whatsAppHref} target="_blank" rel="noreferrer"><MessageCircle className="mr-2 h-4 w-4" />{easyModeCopy.call}</a>
+           </Button>
+           <Button variant="outline" onClick={openAssistant} className="rounded-full border-white/30 text-white hover:bg-white/10">
+             <MessageCircle className="mr-2 h-4 w-4" />{easyModeCopy.assistant}
+           </Button>
+        </div>
+      </div>
+    );
+
+    const summaryPanel = (
+      <Card className="h-fit p-6 rounded-[30px] shadow-sm border-none bg-white">
+        <p className="text-sm font-bold uppercase text-gray-500 mb-4">{easyModeCopy.summaryTitle}</p>
+        <div className="space-y-3">
+          {[
+            { label: easyModeCopy.summaryPriority, value: easyPreferences.priority === "fastest" ? easyModeCopy.priorityFastest : easyPreferences.priority === "balanced" ? easyModeCopy.priorityBalanced : easyPreferences.priority === "cheapest" ? easyModeCopy.priorityCheapest : easyModeCopy.priorityComfort },
+            { label: easyModeCopy.summaryConnections, value: easyPreferences.connections === "none" ? easyModeCopy.connectionsNone : easyPreferences.connections === "any" ? easyModeCopy.connectionsAny : easyPreferences.connections === "one" ? easyModeCopy.connectionsOne : easyModeCopy.connectionsAny },
+            { label: easyModeCopy.summaryBags, value: easyPreferences.bags === "checked" ? easyModeCopy.bagsChecked : easyPreferences.bags === "carry" ? easyModeCopy.bagsCarry : easyModeCopy.bagsFlexible },
+            { label: easyModeCopy.summaryTime, value: easyPreferences.time === "day" ? easyModeCopy.timeDay : easyModeCopy.timeAny },
+          ].map(i => (
+            <div key={i.label} className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-tighter">{i.label}</p>
+              <p className="font-semibold text-gray-900">{i.value}</p>
+            </div>
+          ))}
+        </div>
+      </Card>
+    );
 
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
         <SEO title="Resultados Senior" description="Voos organizados com foco em conforto." path="/search" noindex={true} />
         <div className="container mx-auto max-w-6xl px-4 py-10">
-          <div className="grid gap-6 xl:grid-cols-[320px_1fr]">
-            <Card className="h-fit p-6 rounded-[30px] shadow-sm">
-              <p className="text-sm font-bold uppercase text-gray-500 mb-4">{easyModeCopy.summaryTitle}</p>
-              <div className="space-y-3">
-                {items.map(i => (
-                  <div key={i.label} className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-tighter">{i.label}</p>
-                    <p className="font-semibold text-gray-900">{i.value}</p>
-                  </div>
-                ))}
-              </div>
-            </Card>
-            <div className="space-y-6">
-              <div className="p-6 bg-blue-600 rounded-[30px] text-white flex justify-between items-center flex-wrap gap-4">
-                <div>
-                  <h1 className="text-2xl font-bold text-white">{easyModeCopy.title}</h1>
-                  <p className="text-blue-50 text-sm mt-1">{easyModeCopy.description}</p>
+          <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
+            <aside className="space-y-6">
+              {summaryPanel}
+              <Button variant="outline" className="w-full rounded-2xl py-6" onClick={() => window.history.back()}>
+                {t("results.back_to_search") || "Voltar para Busca"}
+              </Button>
+            </aside>
+            <main className="space-y-6">
+              {seniorHeader}
+
+              {isSearching ? <FlightSearchAnimation t={t} /> : (
+                <div className="space-y-6">
+                  {showTwoStepFlow && !selectedOutboundKey ? (
+                    // Senior Two-Step: Step 1 (Outbound)
+                    <>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge className="bg-blue-100 text-blue-700 px-3 py-1">Passo 1 de 2</Badge>
+                        <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Escolha sua Ida</h2>
+                      </div>
+                      {outboundOptionsForDisplay.map(([k, o]) => (
+                        <Card 
+                          key={k} 
+                          className="p-6 rounded-[30px] cursor-pointer hover:shadow-xl transition-all border-none bg-white group"
+                          onClick={() => setSelectedOutboundKey(k)}
+                        >
+                          <div className="flex items-center justify-between gap-6">
+                            <div className="flex items-center gap-6">
+                               <div className="h-16 w-16 bg-slate-50 rounded-2xl p-3 flex items-center justify-center border border-slate-100">
+                                 <img src={o.logoUrl!} className="h-full w-full object-contain" />
+                               </div>
+                               <div>
+                                 <p className="text-xl font-black text-slate-950 uppercase tracking-tight">{o.airline}</p>
+                                 <div className="flex items-center gap-3 mt-1">
+                                    <span className="text-2xl font-black text-slate-900">{format(parseISO(o.slice.segments[0].departureTime), "HH:mm")}</span>
+                                    <ArrowRight className="h-4 w-4 text-slate-300" />
+                                    <span className="text-2xl font-black text-slate-900">{format(parseISO(o.slice.segments[o.slice.segments.length-1].arrivalTime), "HH:mm")}</span>
+                                 </div>
+                               </div>
+                            </div>
+                            <div className="text-right">
+                               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Preços a partir de</p>
+                               <p className="text-3xl font-black text-blue-600">{formatPrice(o.lowestPrice)}</p>
+                               <Button className="mt-2 rounded-xl bg-blue-600 text-white font-bold group-hover:bg-blue-700">Explorar de Volta <ArrowRight className="ml-2 h-4 w-4" /></Button>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </>
+                  ) : showTwoStepFlow && selectedOutboundKey ? (
+                    // Senior Two-Step: Step 2 (Return)
+                    <>
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-blue-100 text-blue-700 px-3 py-1">Passo 2 de 2</Badge>
+                          <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Escolha sua Volta</h2>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => setSelectedOutboundKey(null)} className="text-blue-600">Mudar Ida</Button>
+                      </div>
+                      {returnOptionsForSelected.map(r => (
+                        <SeniorFlightOptionCard 
+                          key={r.returnKey} 
+                          flight={r.offer} 
+                          kind="balanced" 
+                          insight={{ 
+                            totalDurationMinutes: 0, 
+                            totalStops: r.offer.stops, 
+                            longestLayoverMinutes: 0, 
+                            hasSensitiveHour: false, 
+                            hasCheckedBag: true, 
+                            hasCarryOn: true, 
+                            reasonLine: "Melhor opção para sua volta combinada" 
+                          }} 
+                        />
+                      ))}
+                    </>
+                  ) : (
+                    // Standard Senior Results
+                    <>
+                      {easyRecommendations.recommendations.map(r => (
+                        <SeniorFlightOptionCard key={`${r.kind}-${r.flight.id}`} flight={r.flight} insight={r.insight} kind={r.kind} />
+                      ))}
+                      {!isSearching && (
+                        <Button variant="ghost" className="w-full" onClick={() => setShowEasyExtraOptions(!showEasyExtraOptions)}>
+                          {showEasyExtraOptions ? easyModeCopy.hideMore : easyModeCopy.showMore}
+                        </Button>
+                      )}
+                      {showEasyExtraOptions && easyRecommendations.rankedFlights.slice(0, 6).map(f => (
+                        <FlightCard key={f.flight.id} flight={f.flight} simplified />
+                      ))}
+                    </>
+                  )}
                 </div>
-                <div className="flex gap-2">
-                   <Button asChild className="rounded-full bg-white text-blue-600 hover:bg-blue-50">
-                     <a href={whatsAppHref} target="_blank" rel="noreferrer"><MessageCircle className="mr-2 h-4 w-4" />{easyModeCopy.call}</a>
-                   </Button>
-                   <Button variant="outline" onClick={openAssistant} className="rounded-full border-white/30 text-white hover:bg-white/10">
-                     <MessageCircle className="mr-2 h-4 w-4" />{easyModeCopy.assistant}
-                   </Button>
-                </div>
-              </div>
-              {isSearching ? <FlightSearchAnimation t={t} /> : easyRecommendations.recommendations.map(r => (
-                <SeniorFlightOptionCard key={`${r.kind}-${r.flight.id}`} flight={r.flight} insight={r.insight} kind={r.kind} />
-              ))}
-              {!isSearching && (
-                <Button variant="ghost" className="w-full" onClick={() => setShowEasyExtraOptions(!showEasyExtraOptions)}>
-                  {showEasyExtraOptions ? easyModeCopy.hideMore : easyModeCopy.showMore}
-                </Button>
               )}
-              {showEasyExtraOptions && easyRecommendations.rankedFlights.slice(0, 6).map(f => (
-                <FlightCard key={f.flight.id} flight={f.flight} simplified />
-              ))}
-            </div>
+            </main>
           </div>
         </div>
       </div>
@@ -574,21 +661,41 @@ export default function SearchResults() {
             {isSearching ? <FlightSearchAnimation t={t} /> : (
               <div className="space-y-4">
                 {showTwoStepFlow && !selectedOutboundKey ? outboundOptionsForDisplay.map(([k, o]) => (
-                  <Card key={k} className="p-4 cursor-pointer hover:border-blue-400" onClick={() => setSelectedOutboundKey(k)}>
+                  <Card 
+                    key={k} 
+                    className="p-5 cursor-pointer border-gray-100 hover:border-blue-400 hover:shadow-md transition-all rounded-2xl bg-white group" 
+                    onClick={() => setSelectedOutboundKey(k)}
+                  >
                     <div className="flex justify-between items-center gap-4">
                        <div className="flex gap-4 items-center">
-                         <img src={o.logoUrl!} className="h-8 w-8 object-contain" />
-                         <div><p className="font-bold">{o.airline}</p><p className="text-xs text-gray-500">{format(parseISO(o.slice.segments[0].departureTime), "HH:mm")} - {format(parseISO(o.slice.segments[o.slice.segments.length-1].arrivalTime), "HH:mm")}</p></div>
+                         <div className="h-12 w-12 bg-gray-50 rounded-xl p-2 flex items-center justify-center border border-gray-100">
+                           <img src={o.logoUrl!} className="h-full w-full object-contain" />
+                         </div>
+                         <div>
+                           <p className="font-bold text-gray-900">{o.airline}</p>
+                           <p className="text-sm font-semibold text-gray-600">
+                             {format(parseISO(o.slice.segments[0].departureTime), "HH:mm")} - {format(parseISO(o.slice.segments[o.slice.segments.length-1].arrivalTime), "HH:mm")}
+                           </p>
+                         </div>
                        </div>
                        <div className="text-right">
-                         <p className="text-lg font-bold text-blue-600">{formatPrice(o.lowestPrice)}</p>
-                         <Button size="sm">Selecionar Ida</Button>
+                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t("flight.from") || "A partir de"}</p>
+                         <p className="text-xl font-black text-blue-600 leading-tight">{formatPrice(o.lowestPrice)}</p>
+                         <Button size="sm" className="mt-2 rounded-lg bg-blue-600 group-hover:bg-blue-700">Selecionar Ida</Button>
                        </div>
                     </div>
                   </Card>
-                )) : showTwoStepFlow && selectedOutboundKey ? returnOptionsForSelected.map(r => (
-                  <FlightCard key={r.returnKey} flight={r.offer} />
-                )) : filteredAndSortedFlights.slice(0, visibleOneWayCount).map(f => (
+                )) : showTwoStepFlow && selectedOutboundKey ? (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                       <p className="text-sm font-bold text-blue-800">Selecione o voo de volta para compor seu pacote</p>
+                       <Button variant="ghost" size="sm" onClick={() => setSelectedOutboundKey(null)} className="text-blue-600 h-8">Mudar Ida</Button>
+                    </div>
+                    {returnOptionsForSelected.map(r => (
+                      <FlightCard key={r.returnKey} flight={r.offer} />
+                    ))}
+                  </div>
+                ) : filteredAndSortedFlights.slice(0, visibleOneWayCount).map(f => (
                   <FlightCard key={f.id} flight={f} />
                 ))}
               </div>
