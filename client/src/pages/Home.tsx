@@ -31,6 +31,7 @@ import {
   Zap
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { buildWhatsAppHref, buildWhatsAppMessage } from "@/lib/contact";
 import type { ContactLanguage } from "@/lib/contact";
 
