@@ -109,13 +109,15 @@ export async function fetchCityDetails(cityName: string, lang: "pt" | "es" = "pt
  */
 export const IBERO_PREMIUM_DESTINATIONS = [
   { name: "Lisboa", country: "Portugal", code: "LIS" },
+  { name: "Porto", country: "Portugal", code: "OPO" },
+  { name: "São Paulo", country: "Brasil", code: "GRU" },
   { name: "Rio de Janeiro", country: "Brasil", code: "GIG" },
-  { name: "Cartagena", country: "Colômbia", code: "CTG" },
+  { name: "Newark", country: "Estados Unidos", code: "EWR" },
   { name: "Madrid", country: "Espanha", code: "MAD" },
+  { name: "Barcelona", country: "Espanha", code: "BCN" },
+  { name: "Cartagena", country: "Colômbia", code: "CTG" },
+  { name: "Cusco", country: "Peru", code: "CUZ" },
   { name: "Buenos Aires", country: "Argentina", code: "EZE" },
   { name: "Santiago", country: "Chile", code: "SCL" },
-  { name: "São Paulo", country: "Brasil", code: "GRU" },
-  { name: "Barcelona", country: "Espanha", code: "BCN" },
   { name: "Cidade do México", country: "México", code: "MEX" },
-  { name: "Cusco", country: "Peru", code: "CUZ" },
 ];

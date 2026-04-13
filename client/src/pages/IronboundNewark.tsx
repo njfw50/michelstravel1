@@ -38,6 +38,11 @@ const faqItems = [
       "Pode. Se você quiser comparar opções, validar bagagem, horário, escalas ou regras de alteração antes de pagar, o atendimento humano pode te orientar antes da emissão.",
   },
   {
+    question: "Preciso de ajuda com passaportes vencidos para viajar ao Brasil?",
+    answer:
+      "Embora não sejamos o consulado, orientamos nossos clientes do Ironbound sobre qual documento é aceito para embarque imediato e como proceder com passaportes brasileiros ou americanos em casos de urgência.",
+  },
+  {
     question: "Por que escolher a Michels Travel para viajar saindo de Newark?",
     answer:
       "Porque você encontra atendimento em português, busca mais direta para voos saindo de Newark e apoio humano para comparar tarifa, bagagem, escalas e regras antes de pagar.",
@@ -256,6 +261,21 @@ export default function IronboundNewark() {
                 </Card>
               </motion.div>
             ))}
+          </div>
+
+          <div className="mt-12 rounded-[32px] bg-blue-600 p-8 text-white md:p-12">
+            <div className="flex flex-col gap-8 md:flex-row md:items-center">
+              <div className="flex-1">
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-blue-100">Dica de Especialista Local</span>
+                <h3 className="mt-4 text-3xl font-extrabold">Vai de carro até o Newark Liberty (EWR)?</h3>
+                <p className="mt-4 text-lg text-blue-50 leading-relaxed">
+                  Para nossos clientes de Newark, recomendamos sempre reservar o estacionamento no <strong className="text-white">P4</strong> ou no Terminal novo com antecedência. Evite o estresse de última hora e economize até 40% nas tarifas diárias se fizer a reserva online pelo site oficial do aeroporto.
+                </p>
+              </div>
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
+                <ShieldCheck className="h-10 w-10 text-white" />
+              </div>
+            </div>
           </div>
         </div>
       </section>
