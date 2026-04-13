@@ -496,6 +496,62 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.get('/api/external/currency', async (_req, res) => {
+    try {
+      const response = await fetch('https://api.frankfurter.app/latest?from=USD&to=BRL,EUR,GBP');
+      if (!response.ok) throw new Error('Failed to fetch from Frankfurter');
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error("Currency API error:", error);
+      res.status(500).json({ error: "Failed to fetch live currency data" });
+    }
+  });
+
+  app.get('/api/external/weather/:city', async (req, res) => {
+    try {
+      const { city } = req.params;
+      const response = await fetch(`https://wttr.in/${city}?format=j1`);
+      if (!response.ok) throw new Error('Failed to fetch from wttr.in');
+      const data = await response.json();
+      
+      // Simplificar o retorno para o frontend
+      const current = data.current_condition[0];
+      const simplified = {
+        temp: current.temp_C,
+        condition: current.weatherDesc[0].value,
+        humidity: current.humidity,
+        feelsLike: current.FeelsLikeC,
+        city: data.nearest_area[0].areaName[0].value
+      };
+      
+      res.json(simplified);
+    } catch (error) {
+      console.error("Weather API error:", error);
+      res.status(500).json({ error: "Failed to fetch weather data" });
+    }
+  });
+
+  app.get('/api/external/advisory/:country', async (req, res) => {
+    try {
+      const { country } = req.params;
+      const response = await fetch(`https://www.travel-advisory.info/api?countrycode=${country}`);
+      if (!response.ok) throw new Error('Failed to fetch from Travel Advisory');
+      const data = await response.json();
+      
+      const info = data.data[country];
+      res.json({
+        score: info.advisory.score,
+        message: info.advisory.message,
+        updated: info.advisory.updated,
+        source: info.advisory.source
+      });
+    } catch (error) {
+      console.error("Advisory API error:", error);
+      res.status(500).json({ error: "Failed to fetch advisory data" });
+    }
+  });
+
   app.get('/api/aircraft', async (req, res) => {
     try {
       await ensureTestModeLoaded();

@@ -48,6 +48,11 @@ import Messenger from "@/pages/Messenger";
 import HelpCenter from "@/pages/HelpCenter";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import Insurance from "@/pages/Insurance";
+import Toolbox from "@/pages/Toolbox";
+import VisaSupport from "@/pages/VisaSupport";
+import VipServices from "@/pages/VipServices";
+import Assistance from "@/pages/Assistance";
 
 function TestModeBanner() {
   const { t } = useI18n();
@@ -112,6 +117,11 @@ function Router() {
       
       <Route path="/live/:sessionId" component={LiveSessionClient} />
       <Route path="/travel-guide" component={() => <Layout><TravelExplorer /></Layout>} />
+      <Route path="/insurance" component={() => <Layout><Insurance /></Layout>} />
+      <Route path="/toolbox" component={() => <Layout><Toolbox /></Layout>} />
+      <Route path="/visa-support" component={() => <Layout><VisaSupport /></Layout>} />
+      <Route path="/vip-services" component={() => <Layout><VipServices /></Layout>} />
+      <Route path="/assistance" component={() => <Layout><Assistance /></Layout>} />
       <Route path="/checkout/success" component={CheckoutSuccess} />
       <Route path="/checkout/cancel" component={CheckoutCancel} />
 
