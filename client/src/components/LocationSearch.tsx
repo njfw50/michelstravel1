@@ -89,10 +89,10 @@ export function LocationSearch({ label, placeholder, value, onChange, className,
         isLarge ? "text-sm tracking-[0.08em]" : "text-xs uppercase tracking-wider",
       )}>{label}</label>
       <div className={cn(
-        "flex items-center bg-gray-50/80 border border-gray-200 relative transition-all duration-300 hover:border-blue-300 hover:bg-white focus-within:border-blue-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-500/10",
-        isLarge ? "rounded-2xl px-5 h-16 md:h-[72px]" : "rounded-xl px-4 h-14",
+        "flex items-center bg-white border border-slate-200 relative transition-all duration-300 hover:border-blue-400 focus-within:border-blue-600 focus-within:ring-8 focus-within:ring-blue-600/5",
+        isLarge ? "rounded-3xl px-6 h-16 md:h-20" : "rounded-2xl px-4 h-14",
       )}>
-        <MapPin className={cn("text-blue-500 shrink-0", isLarge ? "h-6 w-6 mr-4" : "h-5 w-5 mr-3")} />
+        <MapPin className={cn("text-slate-400 shrink-0", isLarge ? "h-6 w-6 mr-4" : "h-5 w-5 mr-3")} />
         <Input 
           autoComplete="off"
           autoCorrect="off"
@@ -121,35 +121,28 @@ export function LocationSearch({ label, placeholder, value, onChange, className,
 
       {isOpen && results.length > 0 && (
         <div className={cn(
-          "absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 shadow-2xl z-50 max-h-72 overflow-y-auto overflow-x-hidden",
-          isLarge ? "rounded-2xl" : "rounded-xl",
+          "absolute top-full left-0 right-0 mt-1 bg-white/95 backdrop-blur-xl border border-slate-200 shadow-2xl z-[100] max-h-72 overflow-y-auto rounded-2xl",
         )}>
-          <div className="p-2 space-y-0.5">
+          <div className="p-1.5 space-y-0.5">
             {results.map((place) => (
               <button
                 type="button"
                 key={place.id}
                 onClick={() => handleSelect(place)}
-                data-testid={`place-option-${place.iataCode}`}
-                className={cn(
-                  "w-full text-left transition-colors flex items-center gap-3 group hover:bg-blue-50",
-                  isLarge ? "px-4 py-4 rounded-xl" : "px-3 py-3 rounded-lg",
-                )}
+                className="w-full text-left transition-all flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 group px-4"
               >
-                <div className={cn(
-                  "rounded-xl bg-gray-100 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors",
-                  isLarge ? "h-12 w-12" : "h-10 w-10",
-                )}>
+                <div className="h-10 w-10 min-w-[40px] rounded-lg bg-slate-100 flex items-center justify-center group-hover:bg-blue-600 transition-colors">
                   {place.type === 'airport'
-                    ? <Plane className={cn("text-blue-500", isLarge ? "h-6 w-6" : "h-5 w-5")} />
-                    : <MapPin className={cn("text-blue-500", isLarge ? "h-6 w-6" : "h-5 w-5")} />}
+                    ? <Plane className="h-5 w-5 text-slate-400 group-hover:text-white transition-colors" />
+                    : <MapPin className="h-5 w-5 text-slate-400 group-hover:text-white transition-colors" />}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className={cn("font-semibold text-gray-900", isLarge ? "text-base" : "text-sm")}>
-                    {place.name} <span className="text-blue-600 font-bold">({place.iataCode})</span>
+                <div className="flex-1 truncate">
+                  <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <span className="truncate">{place.name}</span> 
+                    <span className="text-blue-600 font-black shrink-0">{place.iataCode}</span>
                   </div>
-                  <div className={cn("text-gray-400 mt-0.5", isLarge ? "text-sm" : "text-xs")}>
-                    {place.cityName ? `${place.cityName}, ` : ''}{place.countryName}
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">
+                    {place.cityName || place.name}, {place.countryName}
                   </div>
                 </div>
               </button>

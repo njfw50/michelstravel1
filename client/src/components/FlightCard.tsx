@@ -148,88 +148,53 @@ function SliceTimeline({
 
   const stopsCount = Math.max((slice.segments?.length ?? 1) - 1, 0);
   const stopsLabel = getStopsLabel(stopsCount, t as any);
-  const connectionCities = getConnectionCities(slice);
 
   return (
-    <div className="border-b pb-3 last:border-0 last:pb-0">
-      <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-blue-600">
-        <span>{index === 0 ? (t("results.outbound") || "Outbound") : (t("results.return") || "Return")}</span>
-        <span className="text-[10px] font-normal text-gray-400">
+    <div className="flex flex-col gap-3 py-2 px-1 hover:bg-slate-50/50 rounded-2xl transition-all group/slice">
+      <div className="flex items-center gap-3">
+        <span className="text-[9px] font-black uppercase tracking-[0.3em] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
+          {index === 0 ? (t("results.outbound") || "Voo de Ida") : (t("results.return") || "Voo de Volta")}
+        </span>
+        <span className="text-[10px] font-bold text-slate-400">
           {safeFormatMonthDay(firstSegment.departureTime)}
         </span>
       </div>
 
-      <div className="flex items-center justify-between gap-2">
-        <div className="text-center">
-          <div className="text-xl font-bold leading-none text-gray-900">
-            {safeFormatTime(firstSegment.departureTime)}
-          </div>
-          <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
-            {slice.originCode || "DEP"}
-          </div>
-          {slice.originCity && (
-            <div className="mt-0.5 max-w-[80px] truncate text-[10px] text-gray-400">
-              {slice.originCity}
+      <div className="flex items-center justify-between gap-8">
+        <div className="flex-1 flex items-center gap-8">
+          {/* Departure */}
+          <div className="text-left">
+            <div className="text-3xl font-black text-slate-900 leading-none tracking-tighter">
+              {safeFormatTime(firstSegment.departureTime)}
             </div>
-          )}
-        </div>
-
-        <div className="flex flex-1 flex-col items-center px-2 sm:px-4">
-          <div className="mb-1 flex items-center gap-1 text-xs text-gray-400">
-            <Clock className="h-3 w-3" />
-            {formatDuration(slice.duration)}
-          </div>
-
-          <div className="relative my-1 h-[2px] w-full bg-gray-200">
-            <div className="absolute left-0 right-0 top-1/2 flex -translate-y-1/2 items-center justify-between px-1">
-              <div className="h-2 w-2 rounded-full border-2 border-white bg-blue-400" />
-              <Plane className="absolute left-1/2 h-4 w-4 -translate-x-1/2 -translate-y-[1px] rotate-90 text-blue-500" />
-              <div className="h-2 w-2 rounded-full border-2 border-white bg-blue-400" />
+            <div className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              {slice.originCode || "DEP"}
             </div>
           </div>
 
-          <div
-            className={`mt-1 text-xs font-medium ${stopsCount === 0 ? "text-emerald-600" : "text-amber-600"
-              }`}
-          >
-            {stopsLabel}
-          </div>
-
-          {connectionCities.length > 0 && (
-            <div className="mt-2 space-y-1">
-              <div className="text-[11px] font-semibold text-blue-700">
-                {t("flight.connection_in") || "Conexão em"}
-              </div>
-              <div className="flex flex-wrap items-start gap-2">
-                {connectionCities.map((conn, idx) => (
-                  <div key={`${conn.code || conn.label}-${idx}`} className="flex flex-col">
-                    <span className="rounded-full border border-blue-100 bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-800">
-                      {conn.label}
-                    </span>
-                    {conn.airport || conn.city || conn.code ? (
-                      <span className="mt-0.5 text-[10px] text-gray-500">
-                        {conn.airport || conn.city || conn.code}
-                      </span>
-                    ) : null}
-                  </div>
-                ))}
+          {/* Connection Line */}
+          <div className="flex-1 flex flex-col items-center">
+            <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mb-2">{formatDuration(slice.duration)}</span>
+            <div className="relative w-full h-[2px] bg-slate-100 rounded-full">
+              <div className="absolute inset-0 bg-blue-600/10 opacity-0 group-hover/slice:opacity-100 transition-opacity" />
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2">
+                <Plane className="h-4 w-4 text-slate-300 group-hover:text-blue-600 transition-all rotate-90" />
               </div>
             </div>
-          )}
-        </div>
-
-        <div className="text-center">
-          <div className="text-xl font-bold leading-none text-gray-900">
-            {safeFormatTime(lastSegment.arrivalTime)}
-          </div>
-          <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
-            {slice.destinationCode || "ARR"}
-          </div>
-          {slice.destinationCity && (
-            <div className="mt-0.5 max-w-[80px] truncate text-[10px] text-gray-400">
-              {slice.destinationCity}
+            <div className={`mt-2 text-[10px] font-black uppercase tracking-widest ${stopsCount === 0 ? "text-emerald-500" : "text-amber-500"}`}>
+              {stopsLabel}
             </div>
-          )}
+          </div>
+
+          {/* Arrival */}
+          <div className="text-right">
+            <div className="text-3xl font-black text-slate-900 leading-none tracking-tighter">
+              {safeFormatTime(lastSegment.arrivalTime)}
+            </div>
+            <div className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              {slice.destinationCode || "ARR"}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -246,62 +211,40 @@ function SingleFlightTimeline({
   const stopsLabel = getStopsLabel(flight.stops, t as any);
 
   return (
-    <div className="mb-2 flex items-end justify-between gap-2">
-      <div className="text-center">
-        <div
-          className="text-xl font-bold leading-none text-gray-900 sm:text-2xl"
-          data-testid="text-departure-time"
-        >
-          {safeFormatTime(flight.departureTime)}
-        </div>
-        <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
-          {flight.originCode || "DEP"}
-        </div>
-        {flight.originCity && (
-          <div className="mt-0.5 max-w-[80px] truncate text-[10px] text-gray-400">
-            {flight.originCity}
+    <div className="flex items-center justify-between gap-8 py-2 px-1">
+      <div className="flex-1 flex items-center gap-8">
+        {/* Departure */}
+        <div className="text-left">
+          <div className="text-3xl font-black text-slate-900 leading-none tracking-tighter">
+            {safeFormatTime(flight.departureTime)}
           </div>
-        )}
-      </div>
-
-      <div className="flex flex-1 flex-col items-center px-2 sm:px-6">
-        <div className="mb-1 flex items-center gap-1 text-xs font-medium text-gray-500">
-          <Clock className="h-3 w-3" />
-          {formatDuration(flight.duration)}
-        </div>
-
-        <div className="relative my-1 h-[2px] w-full bg-gray-200">
-          <div className="absolute left-0 right-0 top-1/2 flex -translate-y-1/2 items-center justify-between px-1">
-            <div className="h-2 w-2 rounded-full border-2 border-white bg-blue-400" />
-            <Plane className="absolute left-1/2 h-4 w-4 -translate-x-1/2 -translate-y-[1px] rotate-90 text-blue-500" />
-            <div className="h-2 w-2 rounded-full border-2 border-white bg-blue-400" />
+          <div className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+            {flight.originCode || "DEP"}
           </div>
         </div>
 
-        <div
-          className={`mt-1 text-xs font-bold ${flight.stops === 0 ? "text-emerald-600" : "text-amber-600"
-            }`}
-          data-testid="text-stops"
-        >
-          {stopsLabel}
-        </div>
-      </div>
-
-      <div className="text-center">
-        <div
-          className="text-xl font-bold leading-none text-gray-900 sm:text-2xl"
-          data-testid="text-arrival-time"
-        >
-          {safeFormatTime(flight.arrivalTime)}
-        </div>
-        <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
-          {flight.destinationCode || "ARR"}
-        </div>
-        {flight.destinationCity && (
-          <div className="mt-0.5 max-w-[80px] truncate text-[10px] text-gray-400">
-            {flight.destinationCity}
+        {/* Connection Line */}
+        <div className="flex-1 flex flex-col items-center">
+          <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mb-2">{formatDuration(flight.duration)}</span>
+          <div className="relative w-full h-[2px] bg-slate-100 rounded-full">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2">
+              <Plane className="h-4 w-4 text-slate-300 rotate-90" />
+            </div>
           </div>
-        )}
+          <div className={`mt-2 text-[10px] font-black uppercase tracking-widest ${flight.stops === 0 ? "text-emerald-500" : "text-amber-500"}`}>
+            {stopsLabel}
+          </div>
+        </div>
+
+        {/* Arrival */}
+        <div className="text-right">
+          <div className="text-3xl font-black text-slate-900 leading-none tracking-tighter">
+            {safeFormatTime(flight.arrivalTime)}
+          </div>
+          <div className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+            {flight.destinationCode || "ARR"}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -327,166 +270,108 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
   const slices = Array.isArray(flight.slices) ? flight.slices : [];
   const hasSlices = slices.length > 0;
 
-  const totalEmissionsKg = (flight as FlightOffer & { totalEmissionsKg?: number })
-    .totalEmissionsKg;
-
   return (
     <Card
       data-testid={`flight-card-${flight.id}`}
-      className="group overflow-hidden rounded-[24px] border border-gray-200 bg-white p-0 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_8px_32px_-8px_hsl(213_90%_50%/0.18)] md:rounded-2xl"
+      className="group relative overflow-hidden rounded-[32px] border border-slate-100 bg-white shadow-sm transition-all duration-500 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)] hover:-translate-y-1"
     >
-      <div className="grid grid-cols-1 items-start gap-4 p-4 sm:gap-5 sm:p-5 md:grid-cols-12 md:gap-6 md:p-6">
-        {/* Airline Info */}
-        <div className="flex items-start gap-3 sm:items-center sm:gap-4 md:col-span-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-100 p-2 sm:h-12 sm:w-12" aria-label="Logo da companhia aérea">
-            {flight.logoUrl ? (
-              <img
-                src={flight.logoUrl}
-                alt={flight.airline}
-                className="h-full w-full object-contain"
-                loading="lazy"
-                aria-label={`Logo da companhia ${flight.airline}`}
+      <div className="flex flex-col lg:flex-row">
+        {/* Main Content Area */}
+        <div className="flex-1 p-6 lg:p-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-8">
+            {/* Airline Identity */}
+            <div className="flex items-center gap-5 min-w-[180px]">
+              <div className="h-16 w-16 shrink-0 flex items-center justify-center rounded-[20px] bg-slate-50 border border-slate-100 p-2 group-hover:bg-white transition-colors">
+                {flight.logoUrl ? (
+                  <img
+                    src={flight.logoUrl}
+                    alt={flight.airline}
+                    className="h-full w-full object-contain grayscale-[0.2] group-hover:grayscale-0 transition-all"
+                  />
+                ) : (
+                  <Plane className="h-8 w-8 text-slate-300" />
+                )}
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-slate-900 tracking-tight leading-none mb-2">
+                  {flight.airline}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">
+                    {flight.flightNumber}
+                  </span>
+                  {cabinClassName && (
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">
+                      {cabinClassName}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Flight Timeline */}
+            <div className="flex-1 w-full">
+              {hasSlices ? (
+                <div className="space-y-6">
+                  {slices.map((slice, index) => (
+                    <SliceTimeline
+                      key={`${flight.id}-slice-${index}`}
+                      slice={slice as FlightSliceLike}
+                      index={index}
+                      t={t}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <SingleFlightTimeline flight={flight} t={t} />
+              )}
+            </div>
+          </div>
+
+          {/* Luxury Bottom Bar */}
+          <div className="mt-8 pt-6 border-t border-slate-50 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <FlightBaggageHighlights
+                flight={flight}
+                simplified={simplified}
+                compact
               />
-            ) : (
-              <Plane className="h-6 w-6 text-gray-400" aria-label="Ícone de avião" />
-            )}
-          </div>
-
-          <div>
-            <h3
-              className="leading-tight font-bold text-gray-900"
-              data-testid="text-airline-name"
-            >
-              {flight.airline}
-            </h3>
-
-            <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              <span className="guide-tag" data-testid="text-flight-number" aria-label={`Número do voo: ${flight.flightNumber}`}
-                title={`Número do voo: ${flight.flightNumber}`}>
-                {flight.flightNumber}
-              </span>
-
-              {cabinClassName && (
-                <span className="inline-block rounded-full border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600"
-                  aria-label={`Classe: ${cabinClassName}`}
-                  title={`Classe: ${cabinClassName}`}>
-                  {cabinClassName}
+              <div className="h-4 w-[1px] bg-slate-100 hidden sm:block" />
+              {fareBrand && (
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                  {fareBrand}
                 </span>
               )}
             </div>
 
-            {fareBrand && (
-              <div className="mt-1 text-[10px] text-gray-400" aria-label={`Tarifa: ${fareBrand}`} title={`Tarifa: ${fareBrand}`}>{fareBrand}</div>
-            )}
+            <div className="flex items-center gap-4">
+               {changeAllowed && (
+                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 uppercase tracking-wider bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                   <ArrowRightLeft className="h-3 w-3" />
+                   {t("flight.changeable") || "Flexível"}
+                 </div>
+               )}
+            </div>
           </div>
         </div>
 
-        {/* Flight Details */}
-        <div className="flex flex-col justify-center md:col-span-5">
-          {hasSlices ? (
-            <div className="space-y-4">
-              {slices.map((slice, index) => (
-                <SliceTimeline
-                  key={`${flight.id}-slice-${index}`}
-                  slice={slice as FlightSliceLike}
-                  index={index}
-                  t={t}
-                />
-              ))}
+        {/* Action Sidebar/Area */}
+        <div className="w-full lg:w-[260px] bg-slate-50/50 border-t lg:border-t-0 lg:border-l border-slate-100 p-8 flex flex-col justify-center items-center lg:items-end text-center lg:text-right gap-6">
+          <div className="space-y-1">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Total por Passageiro</p>
+            <div className="flex items-baseline justify-center lg:justify-end gap-1 text-slate-900">
+              <span className="text-sm font-black opacity-40">{flight.currency === "USD" ? "US$" : flight.currency}</span>
+              <span className="text-5xl font-black tracking-tighter leading-none">
+                {typeof flight.price === "number" ? Math.floor(flight.price) : flight.price}
+              </span>
             </div>
-          ) : (
-            <SingleFlightTimeline flight={flight} t={t} />
-          )}
-
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <FlightBaggageHighlights
-              flight={flight}
-              simplified={simplified}
-              compact
-            />
-
-            {(flight.aircraftType || totalEmissionsKg) && (
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                {flight.aircraftType && (
-                  <span className="flex items-center gap-1 text-[10px] text-gray-400"
-                    aria-label={`Tipo de aeronave: ${flight.aircraftType}`}
-                    title={`Tipo de aeronave: ${flight.aircraftType}`}>
-                    <Plane className="h-2.5 w-2.5" />
-                    {flight.aircraftType}
-                  </span>
-                )}
-
-                {typeof totalEmissionsKg === "number" && (
-                  <span
-                    className="flex items-center gap-1 text-[10px] text-emerald-500"
-                    data-testid="text-co2-emissions"
-                    aria-label={`Emissão estimada de CO2: ${Math.round(totalEmissionsKg)} kg`}
-                    title={`Emissão estimada de CO2: ${Math.round(totalEmissionsKg)} kg`}>
-                    <Leaf className="h-2.5 w-2.5" />
-                    {Math.round(totalEmissionsKg)} kg CO₂
-                  </span>
-                )}
-              </div>
+            {flight.taxAmount && (
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">+ Taxas incluídas</p>
             )}
           </div>
-        </div>
 
-        {/* Fare Conditions + Price and Select Button */}
-        <div className="mt-1 flex flex-col items-stretch justify-center gap-3 rounded-[22px] border border-gray-100 bg-slate-50/80 px-4 py-4 md:col-span-4 md:mt-0 md:items-end md:rounded-none md:border-0 md:border-l md:border-gray-200 md:bg-transparent md:px-0 md:py-0 md:pl-6">
-          <div className="flex w-full flex-wrap items-center justify-between gap-2 text-left md:block md:w-auto md:text-right">
-            {fareBrand && (
-              <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-700">
-                {fareBrand}
-              </span>
-            )}
-            <div className="flex flex-wrap gap-2 md:justify-end">
-              {typeof changeAllowed === "boolean" && (
-                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium ${changeAllowed ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-slate-50 text-slate-600 border border-slate-200"}`}>
-                  <ArrowRightLeft className="h-3 w-3" />
-                  {changeAllowed ? (t("flight.changeable") || "Changeable") : (t("flight.not_changeable") || "Not changeable")}
-                </span>
-              )}
-              {typeof refundAllowed === "boolean" && (
-                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium ${refundAllowed ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-slate-50 text-slate-600 border border-slate-200"}`}>
-                  <ArrowRightLeft className="h-3 w-3 rotate-45" />
-                  {refundAllowed ? (t("flight.refundable") || "Refundable") : (t("flight.non_refundable") || "Non refundable")}
-                </span>
-              )}
-            </div>
-                 <div className="flex w-full items-center justify-between text-left md:block md:w-auto md:text-right">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-1">
-              {t("flight.total_price") || "Preço Total"}
-            </span>
-
-            <div
-              className="font-display text-3xl font-black text-slate-900 leading-none"
-              data-testid="text-price"
-            >
-              <span className="text-sm font-bold mr-1">{flight.currency === "USD" ? "US$" : flight.currency}</span>
-              {typeof flight.price === "number" ? Math.floor(flight.price) : flight.price}
-            </div>
-
-            {flight.baseAmount && flight.taxAmount && (
-              <div className="mt-2 flex flex-col gap-0.5 text-[10px] text-slate-400 font-medium md:items-end">
-                <span className="opacity-70">
-                  {t("flight.base_fare") || "Base"}:{" "}
-                  {formatCurrency(flight.baseAmount, flight.currency, locale)}
-                </span>
-                <span className="opacity-70">
-                  {t("flight.taxes") || "Taxas"}:{" "}
-                  {formatCurrency(flight.taxAmount, flight.currency, locale)}
-                </span>
-              </div>
-            )}
-          </div>     </div>
-
-          <Link href={bookUrl} className="w-full" tabIndex={0} aria-label="Selecionar este voo">
-            <Button
-              data-testid="button-select-flight"
-              className="h-12 w-full rounded-xl border-0 bg-blue-600 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              tabIndex={0}
-              aria-label="Selecionar este voo"
-            >
+          <Link href={bookUrl} className="w-full">
+            <Button className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-black text-white font-black uppercase tracking-widest text-xs shadow-[0_12px_24px_-8px_rgba(37,99,235,0.4)] transition-all hover:-translate-y-1 active:scale-95 group">
               {t("flight.select")}
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
