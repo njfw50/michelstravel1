@@ -240,422 +240,211 @@ export function FlightSearchForm({ className, defaultValues, extraSearchParams }
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
       className={cn(
-        "relative z-10 mx-auto max-w-5xl rounded-[28px] border border-gray-200/90 bg-white shadow-[0_8px_40px_-8px_hsl(213_90%_50%/0.18)] md:rounded-2xl",
+        "relative z-10 mx-auto max-w-6xl rounded-[40px] border border-slate-100 bg-white p-2 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.12)]",
         className
       )}
       id="flight-search-form"
     >
-      <div className="flex flex-col gap-3 px-4 pb-3 pt-4 sm:px-6 md:flex-row md:items-center md:justify-between md:px-8 md:pt-6">
-        <Tabs defaultValue="round-trip" value={tripType} onValueChange={setTripType}>
-          <TabsList className="grid w-full grid-cols-3 rounded-[20px] border border-gray-200/80 bg-gray-50 p-1 sm:w-auto sm:rounded-full">
-            {["round-trip", "one-way", "multi-city"].map((type) => (
-              <TabsTrigger
-                key={type}
-                value={type}
-                className="rounded-2xl px-2 py-2 text-xs font-semibold text-gray-400 transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm sm:rounded-lg sm:px-4 sm:text-sm"
-                data-testid={`tab-${type}`}
-              >
-                {t(`search.${type.replace("-", "_")}`)}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      </div>
+      <div className="p-4 md:p-8">
+        {/* Tabs for Trip Type */}
+        <div className="mb-8 flex justify-center md:justify-start">
+          <Tabs value={tripType} onValueChange={setTripType} className="w-full md:w-auto">
+            <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-slate-50 p-1 md:w-auto">
+              {["round-trip", "one-way", "multi-city"].map((type) => (
+                <TabsTrigger
+                  key={type}
+                  value={type}
+                  className="rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                >
+                  {t(`search.${type.replace("-", "_")}`)}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
 
-      <form onSubmit={handleSearch} className="space-y-4 px-4 pb-5 pt-2 sm:px-6 md:px-8 md:pb-8">
-        {tripType === "multi-city" ? (
-          <div className="space-y-3">
-            {multiCityLegs.map((leg, i) => (
-              <div key={i} className="relative space-y-3 rounded-2xl border-2 border-gray-100 bg-gray-50/50 p-3 sm:p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-blue-500 uppercase tracking-wider">{t("search.leg") || "Leg"} {i + 1}</span>
-                  {multiCityLegs.length > 2 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeLeg(i)}
-                      data-testid={`button-remove-leg-${i}`}
-                    >
-                      <Trash2 className="h-4 w-4 text-gray-400" />
-                    </Button>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <LocationSearch
-                    label={t("search.origin")}
-                    placeholder={t("search.city_placeholder")}
-                    value={leg.origin}
-                    onChange={(v) => updateLeg(i, "origin", v)}
-                  />
-                  <LocationSearch
-                    label={t("search.destination")}
-                    placeholder={t("search.city_placeholder")}
-                    value={leg.destination}
-                    onChange={(v) => updateLeg(i, "destination", v)}
-                  />
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block pl-1">{t("search.departure")}</label>
+        <form onSubmit={handleSearch} className="space-y-8">
+          {tripType === "multi-city" ? (
+            <div className="space-y-4">
+              {multiCityLegs.map((leg, i) => (
+                <div key={i} className="group relative grid grid-cols-1 md:grid-cols-12 gap-4 rounded-3xl border border-slate-100 bg-slate-50/50 p-4 transition-all hover:bg-white hover:border-blue-200">
+                  <div className="md:col-span-4">
+                    <LocationSearch
+                      label={`${t("search.leg") || "Leg"} ${i + 1}: ${t("search.origin")}`}
+                      value={leg.origin}
+                      onChange={(v) => updateLeg(i, "origin", v)}
+                      placeholder={t("search.city_placeholder")}
+                    />
+                  </div>
+                  <div className="md:col-span-4">
+                    <LocationSearch
+                      label={t("search.destination")}
+                      value={leg.destination}
+                      onChange={(v) => updateLeg(i, "destination", v)}
+                      placeholder={t("search.city_placeholder")}
+                    />
+                  </div>
+                  <div className="md:col-span-3">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">{t("search.departure")}</label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <button
-                          type="button"
-                          className="w-full bg-gray-50/80 border border-gray-200 rounded-xl px-4 h-14 flex items-center text-left hover:border-blue-300 hover:bg-white transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 group"
-                          data-testid={`button-leg-date-${i}`}
-                        >
-                          <CalendarIcon className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0" />
-                          <span className={cn("text-base font-medium flex-1", !leg.date ? "text-gray-400" : "text-gray-900")}>
+                        <button type="button" className="w-full h-14 bg-white border border-slate-100 rounded-2xl px-4 flex items-center justify-between text-left hover:border-blue-300 transition-all group">
+                          <span className={cn("text-sm font-bold", !leg.date ? "text-slate-300" : "text-slate-900")}>
                             {leg.date ? format(leg.date, "dd MMM yyyy") : t("search.date_placeholder")}
                           </span>
-                          <ChevronDown className="h-4 w-4 text-gray-300 group-hover:text-blue-400 transition-colors" />
+                          <CalendarIcon className="h-4 w-4 text-slate-300 group-hover:text-blue-500 transition-colors" />
                         </button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[min(20rem,calc(100vw-1.5rem))] p-0 rounded-xl border-gray-200 shadow-xl sm:w-auto" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={leg.date}
-                          onSelect={(d) => updateLeg(i, "date", d)}
-                          initialFocus
-                          disabled={(d) => {
-                            const prevDate = i > 0 ? multiCityLegs[i - 1].date : null;
-                            return d < (prevDate || new Date());
-                          }}
-                        />
+                      <PopoverContent className="p-0 border-none shadow-2xl rounded-3xl overflow-hidden" align="start">
+                        <Calendar mode="single" selected={leg.date} onSelect={(d) => updateLeg(i, "date", d)} disabled={(d) => d < new Date()} />
                       </PopoverContent>
                     </Popover>
                   </div>
+                  <div className="md:col-span-1 flex items-end pb-1 justify-center">
+                    {multiCityLegs.length > 2 && (
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeLeg(i)} className="text-slate-300 hover:text-red-500">
+                        <Trash2 className="h-5 w-5" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {multiCityLegs.length < 5 && (
+                <button type="button" onClick={addLeg} className="w-full h-14 rounded-2xl border-2 border-dashed border-slate-100 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center gap-2">
+                  <Plus className="h-4 w-4" /> {t("search.add_leg") || "Adicionar novo trecho"}
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Main Search Row */}
+              <div className="relative grid grid-cols-1 md:grid-cols-11 gap-4 items-end">
+                <div className="md:col-span-5">
+                  <LocationSearch
+                    label={t("search.from") || "Origem"}
+                    value={origin}
+                    onChange={setOrigin}
+                    placeholder={t("search.origin_placeholder") || "De onde você sai?"}
+                    isLarge
+                  />
+                </div>
+                
+                <div className="md:col-span-1 flex items-center justify-center -my-4 md:my-0 md:pt-8 z-10">
+                  <button
+                    type="button"
+                    onClick={() => { const tmp = origin; setOrigin(destination); setDestination(tmp); }}
+                    className="h-12 w-12 rounded-full border border-slate-100 bg-white shadow-xl flex items-center justify-center text-slate-400 hover:text-blue-600 hover:border-blue-600 transition-all active:scale-90"
+                  >
+                    <ArrowRightLeft className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="md:col-span-5">
+                  <LocationSearch
+                    label={t("search.to") || "Destino"}
+                    value={destination}
+                    onChange={setDestination}
+                    placeholder={t("search.destination_placeholder") || "Para onde você vai?"}
+                    isLarge
+                  />
                 </div>
               </div>
-            ))}
-            {multiCityLegs.length < 5 && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addLeg}
-                className="w-full rounded-xl border-dashed border-2 border-gray-200 text-gray-500 hover:text-blue-600 hover:border-blue-300 h-12 gap-2"
-                data-testid="button-add-leg"
-              >
-                <Plus className="h-4 w-4" />
-                {t("search.add_leg") || "Add Another Flight"}
-              </Button>
-            )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block pl-1">{t("search.passengers_class")}</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      className="w-full bg-gray-50/80 border border-gray-200 rounded-xl px-4 h-14 flex items-center text-left hover:border-blue-300 hover:bg-white transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 group"
-                      data-testid="button-passengers-multi"
-                    >
-                      <Users className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0" />
-                      <div className="flex flex-col justify-center flex-1 min-w-0">
-                        <span className="text-base font-semibold text-gray-900 leading-tight">
-                          {totalPassengers} {totalPassengers !== 1 ? t("search.people") : t("search.person")}
-                        </span>
-                        <span className="text-xs text-blue-500 leading-tight font-medium">
-                          {classLabel(cabinClass)}
-                        </span>
-                      </div>
-                      <ChevronDown className="h-4 w-4 text-gray-300 group-hover:text-blue-400 transition-colors flex-shrink-0" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[min(20rem,calc(100vw-1.5rem))] p-5 rounded-xl border-gray-200 shadow-xl sm:w-80" align="end">
-                    <div className="space-y-5">
-                      <div className="space-y-3">
-                        <h4 className="font-bold text-sm text-gray-900 border-b border-gray-100 pb-2">{t("search.class")}</h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          {[
-                            { id: "economy" },
-                            { id: "premium_economy" },
-                            { id: "business" },
-                            { id: "first" },
-                          ].map((cls) => (
-                            <div 
-                              key={cls.id}
-                              onClick={() => setCabinClass(cls.id)}
-                              className={cn(
-                                "cursor-pointer text-sm p-2.5 rounded-lg border text-center transition-all duration-200 font-medium",
-                                cabinClass === cls.id 
-                                  ? "bg-blue-500 text-white border-blue-400 shadow-md shadow-blue-500/20" 
-                                  : "border-gray-200 hover:bg-gray-50 text-gray-600"
-                              )}
-                              data-testid={`class-option-multi-${cls.id}`}
-                            >
-                              {classLabel(cls.id)}
-                            </div>
-                          ))}
+
+              {/* Date and Passengers Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block pl-1">{t("search.departure")}</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button type="button" className="w-full h-16 bg-slate-50 border border-slate-50 rounded-2xl px-5 flex items-center justify-between text-left hover:bg-white hover:border-blue-200 transition-all group">
+                        <div className="flex items-center gap-3">
+                          <CalendarIcon className="h-5 w-5 text-blue-500" />
+                          <span className={cn("text-base font-bold", !date ? "text-slate-300" : "text-slate-900")}>
+                            {date ? format(date, "dd MMM yyyy") : t("search.date_placeholder")}
+                          </span>
                         </div>
-                      </div>
-                      <div className="space-y-3">
-                        <h4 className="font-bold text-sm text-gray-900 border-b border-gray-100 pb-2">{t("search.passengers")}</h4>
-                        {[
-                          { label: t("search.adults"), sub: t("search.adults_desc"), value: adults, set: setAdults, min: 1 },
-                          { label: t("search.children"), sub: t("search.children_desc"), value: children, set: setChildren, min: 0 },
-                          { label: t("search.infants"), sub: t("search.infants_desc"), value: infants, set: setInfants, min: 0 },
-                        ].map((pax) => (
-                          <div key={pax.label} className="flex justify-between items-center gap-4">
-                            <div>
-                              <div className="font-bold text-sm text-gray-900">{pax.label}</div>
-                              <div className="text-xs text-gray-400">{pax.sub}</div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <button 
-                                type="button"
-                                onClick={() => pax.set(Math.max(pax.min, pax.value - 1))}
-                                className="h-8 w-8 rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-200 flex items-center justify-center text-gray-600 transition-colors disabled:opacity-30"
-                                disabled={pax.value <= pax.min}
-                              >
-                                <Minus className="h-4 w-4" />
-                              </button>
-                              <span className="text-sm font-bold w-4 text-center text-gray-900">{pax.value}</span>
-                              <button 
-                                type="button"
-                                onClick={() => pax.set(Math.min(9, pax.value + 1))}
-                                className="h-8 w-8 rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-200 flex items-center justify-center text-gray-600 transition-colors"
-                              >
-                                <Plus className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="flex flex-col justify-end space-y-2">
-                <label className="text-xs font-semibold text-transparent uppercase tracking-wider block pl-1 hidden sm:block">&nbsp;</label>
-                <Button 
-                  type="submit" 
-                  size="lg" 
-                  data-testid="button-search-flights-multi"
-                  className="h-14 w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold shadow-lg shadow-blue-500/20 transition-all text-base gap-2"
-                >
-                  <Search className="h-5 w-5" />
-                  {t("search.button")}
-                </Button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[1fr_auto_1fr]">
-              <LocationSearch 
-                label={t("search.origin")}
-                placeholder={t("search.city_placeholder")}
-                value={origin}
-                onChange={setOrigin}
-              />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 border-none shadow-2xl rounded-3xl overflow-hidden" align="start">
+                      <Calendar mode="single" selected={date} onSelect={setDate} disabled={(d) => d < new Date()} />
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-              <div className="hidden md:flex justify-center items-end pb-1">
-                <button 
-                  type="button"
-                  className="bg-white rounded-full p-2.5 border border-gray-200 text-gray-300 hover:text-blue-500 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-300 shadow-sm"
-                  onClick={() => {
-                    const temp = origin;
-                    setOrigin(destination);
-                    setDestination(temp);
-                  }}
-                  data-testid="button-swap"
-                >
-                  <ArrowRightLeft className="h-4 w-4" />
-                </button>
-              </div>
-
-              <LocationSearch 
-                label={t("search.destination")}
-                placeholder={t("search.city_placeholder")}
-                value={destination}
-                onChange={setDestination}
-              />
-            </div>
-
-            <div className="flex md:hidden justify-center">
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm transition-all hover:border-blue-300 hover:text-blue-600"
-                onClick={() => {
-                  const temp = origin;
-                  setOrigin(destination);
-                  setDestination(temp);
-                }}
-                data-testid="button-swap-mobile"
-              >
-                <ArrowRightLeft className="h-4 w-4" />
-                {t("search.swap") || "Swap"}
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block pl-1">{t("search.departure")}</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      className="w-full bg-gray-50/80 border border-gray-200 rounded-xl px-4 h-14 flex items-center text-left hover:border-blue-300 hover:bg-white transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 group"
-                      data-testid="button-departure-date"
-                    >
-                      <CalendarIcon className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0" />
-                      <span className={cn("text-base font-medium flex-1", !date ? "text-gray-400" : "text-gray-900")}>
-                        {date ? format(date, "dd MMM yyyy") : t("search.date_placeholder")}
-                      </span>
-                      <ChevronDown className="h-4 w-4 text-gray-300 group-hover:text-blue-400 transition-colors" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[min(20rem,calc(100vw-1.5rem))] p-0 rounded-xl border-gray-200 shadow-xl sm:w-auto" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={setDate}
-                      initialFocus
-                      disabled={(date) => date < new Date()}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-2">
-                <label className={cn("text-xs font-semibold text-gray-500 uppercase tracking-wider block pl-1", tripType === "one-way" && "opacity-40")}>{t("search.return")}</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <button 
-                      type="button" 
-                      className={cn(
-                        "w-full bg-gray-50/80 border border-gray-200 rounded-xl px-4 h-14 flex items-center text-left hover:border-blue-300 hover:bg-white transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 group",
-                        tripType === "one-way" && "bg-gray-50/50 text-gray-300 cursor-not-allowed border-gray-100 hover:border-gray-100 hover:bg-gray-50/50"
-                      )}
-                      disabled={tripType === "one-way"}
-                      data-testid="button-return-date"
-                    >
-                      <CalendarIcon className={cn("h-5 w-5 mr-3 flex-shrink-0", tripType === "one-way" ? "text-gray-300" : "text-blue-500")} />
-                      {tripType === "one-way" ? (
-                        <span className="text-base font-medium text-gray-300 flex-1">{t("search.optional")}</span>
-                      ) : (
-                        <span className={cn("text-base font-medium flex-1", !returnDate ? "text-gray-400" : "text-gray-900")}>
-                          {returnDate ? format(returnDate, "dd MMM yyyy") : t("search.date_placeholder")}
-                        </span>
-                      )}
-                      <ChevronDown className={cn("h-4 w-4 transition-colors", tripType === "one-way" ? "text-gray-200" : "text-gray-300 group-hover:text-blue-400")} />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[min(20rem,calc(100vw-1.5rem))] p-0 rounded-xl border-gray-200 shadow-xl sm:w-auto" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={returnDate}
-                      onSelect={setReturnDate}
-                      initialFocus
-                      disabled={(d) => d < (date || new Date())}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block pl-1">{t("search.passengers_class")}</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      className="w-full bg-gray-50/80 border border-gray-200 rounded-xl px-4 h-14 flex items-center text-left hover:border-blue-300 hover:bg-white transition-all duration-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 group"
-                      data-testid="button-passengers"
-                    >
-                      <Users className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0" />
-                      <div className="flex flex-col justify-center flex-1 min-w-0">
-                        <span className="text-base font-semibold text-gray-900 leading-tight">
-                          {totalPassengers} {totalPassengers !== 1 ? t("search.people") : t("search.person")}
-                        </span>
-                        <span className="text-xs text-blue-500 leading-tight font-medium">
-                          {classLabel(cabinClass)}
-                        </span>
-                      </div>
-                      <ChevronDown className="h-4 w-4 text-gray-300 group-hover:text-blue-400 transition-colors flex-shrink-0" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[min(20rem,calc(100vw-1.5rem))] p-5 rounded-xl border-gray-200 shadow-xl sm:w-80" align="end">
-                    <div className="space-y-5">
-                      <div className="space-y-3">
-                        <h4 className="font-bold text-sm text-gray-900 border-b border-gray-100 pb-2">{t("search.class")}</h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          {[
-                            { id: "economy" },
-                            { id: "premium_economy" },
-                            { id: "business" },
-                            { id: "first" },
-                          ].map((cls) => (
-                            <div 
-                              key={cls.id}
-                              onClick={() => setCabinClass(cls.id)}
-                              className={cn(
-                                "cursor-pointer text-sm p-2.5 rounded-lg border text-center transition-all duration-200 font-medium",
-                                cabinClass === cls.id 
-                                  ? "bg-blue-500 text-white border-blue-400 shadow-md shadow-blue-500/20" 
-                                  : "border-gray-200 hover:bg-gray-50 text-gray-600"
-                              )}
-                              data-testid={`class-option-${cls.id}`}
-                            >
-                              {classLabel(cls.id)}
-                            </div>
-                          ))}
+                <div className="space-y-2">
+                  <label className={cn("text-[10px] font-black uppercase tracking-widest text-slate-400 block pl-1", tripType === "one-way" && "opacity-20")}>{t("search.return")}</label>
+                  <Popover>
+                    <PopoverTrigger asChild disabled={tripType === "one-way"}>
+                      <button type="button" className={cn("w-full h-16 bg-slate-50 border border-slate-50 rounded-2xl px-5 flex items-center justify-between text-left transition-all group", tripType === "one-way" ? "opacity-40 cursor-not-allowed" : "hover:bg-white hover:border-blue-200")}>
+                        <div className="flex items-center gap-3">
+                          <CalendarIcon className={cn("h-5 w-5", tripType === "one-way" ? "text-slate-300" : "text-blue-500")} />
+                          <span className={cn("text-base font-bold", !returnDate ? "text-slate-300" : "text-slate-900")}>
+                            {tripType === "one-way" ? t("search.optional") : returnDate ? format(returnDate, "dd MMM yyyy") : t("search.date_placeholder")}
+                          </span>
                         </div>
-                      </div>
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 border-none shadow-2xl rounded-3xl overflow-hidden" align="start">
+                      <Calendar mode="single" selected={returnDate} onSelect={setReturnDate} disabled={(d) => d < (date || new Date())} />
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-                      <div className="space-y-3">
-                        <h4 className="font-bold text-sm text-gray-900 border-b border-gray-100 pb-2">{t("search.passengers")}</h4>
-                        {[
-                          { label: t("search.adults"), sub: t("search.adults_desc"), value: adults, set: setAdults, min: 1 },
-                          { label: t("search.children"), sub: t("search.children_desc"), value: children, set: setChildren, min: 0 },
-                          { label: t("search.infants"), sub: t("search.infants_desc"), value: infants, set: setInfants, min: 0 },
-                        ].map((pax) => (
-                          <div key={pax.label} className="flex justify-between items-center gap-4">
-                            <div>
-                              <div className="font-bold text-sm text-gray-900">{pax.label}</div>
-                              <div className="text-xs text-gray-400">{pax.sub}</div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <button 
-                                type="button"
-                                onClick={() => pax.set(Math.max(pax.min, pax.value - 1))}
-                                className="h-8 w-8 rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-200 flex items-center justify-center text-gray-600 transition-colors disabled:opacity-30"
-                                disabled={pax.value <= pax.min}
-                              >
-                                <Minus className="h-4 w-4" />
-                              </button>
-                              <span className="text-sm font-bold w-4 text-center text-gray-900">{pax.value}</span>
-                              <button 
-                                type="button"
-                                onClick={() => pax.set(Math.min(9, pax.value + 1))}
-                                className="h-8 w-8 rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-200 flex items-center justify-center text-gray-600 transition-colors"
-                              >
-                                <Plus className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
+                <div className="space-y-2 lg:col-span-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block pl-1">{t("search.passengers")}</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button type="button" className="w-full h-16 bg-slate-50 border border-slate-50 rounded-2xl px-5 flex items-center justify-between text-left hover:bg-white hover:border-blue-200 transition-all group">
+                        <div className="flex items-center gap-3">
+                          <Users className="h-5 w-5 text-blue-500" />
+                          <span className="text-base font-bold text-slate-900">{totalPassengers} {totalPassengers !== 1 ? t("search.people") : t("search.person")}</span>
+                        </div>
+                        <ChevronDown className="h-4 w-4 text-slate-300" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-6 rounded-3xl border-none shadow-2xl" align="end">
+                       <div className="space-y-6">
+                         <div className="space-y-3">
+                           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Classe</p>
+                           <div className="grid grid-cols-2 gap-2">
+                             {["economy", "business"].map(cls => (
+                               <button key={cls} type="button" onClick={() => setCabinClass(cls)} className={cn("py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all", cabinClass === cls ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/30" : "border-slate-100 text-slate-400 hover:border-blue-200")}>
+                                 {classLabel(cls)}
+                               </button>
+                             ))}
+                           </div>
+                         </div>
+                         <div className="space-y-4">
+                           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Viajantes</p>
+                           {[
+                             { label: t("search.adults"), val: adults, set: setAdults, min: 1 },
+                             { label: t("search.children"), val: children, set: setChildren, min: 0 }
+                           ].map(p => (
+                             <div key={p.label} className="flex justify-between items-center">
+                               <span className="text-sm font-bold text-slate-900">{p.label}</span>
+                               <div className="flex items-center gap-4">
+                                 <button type="button" onClick={() => p.set(Math.max(p.min, p.val - 1))} className="h-8 w-8 rounded-full border border-slate-100 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-colors"><Minus className="h-4 w-4" /></button>
+                                 <span className="text-sm font-black w-4 text-center">{p.val}</span>
+                                 <button type="button" onClick={() => p.set(Math.min(9, p.val + 1))} className="h-8 w-8 rounded-full border border-slate-100 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-colors"><Plus className="h-4 w-4" /></button>
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+                       </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-              <div className="flex flex-col justify-end space-y-2">
-                <label className="text-xs font-semibold text-transparent uppercase tracking-wider block pl-1 hidden lg:block">&nbsp;</label>
-                <Button 
-                  type="submit" 
-                  size="lg" 
-                  data-testid="button-search-flights"
-                  className="h-14 w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold shadow-lg shadow-blue-500/20 transition-all text-base gap-2"
-                >
-                  <Search className="h-5 w-5" />
-                  {t("search.button")}
-                </Button>
+                <div className="flex items-end">
+                  <Button type="submit" className="w-full h-16 rounded-2xl bg-blue-600 hover:bg-black text-white font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-blue-600/20 transition-all hover:-translate-y-1 active:scale-95">
+                    {t("search.button")}
+                  </Button>
+                </div>
               </div>
             </div>
-          </>
-        )}
-      </form>
+          )}
+        </form>
+      </div>
     </motion.div>
   );
 }

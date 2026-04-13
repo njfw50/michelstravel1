@@ -20,22 +20,25 @@ export default function FlightSearchProgress({ origin, destination }: FlightSear
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Lock scroll to prevent UI shifts
+    // Lock scroll with gutter compensation to prevent layout shifts
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = "hidden";
+    document.body.style.paddingRight = `${scrollbarWidth}px`;
     
     const stepInterval = setInterval(() => {
       setCurrentStep((prev) => (prev < SEARCH_STEPS.length - 1 ? prev + 1 : prev));
-    }, 3200);
+    }, 2800);
 
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 99) return 99;
         return Math.min(prev + (Math.random() * 0.8 + 0.2), 99);
       });
-    }, 150);
+    }, 120);
 
     return () => {
       document.body.style.overflow = "unset";
+      document.body.style.paddingRight = "0px";
       clearInterval(stepInterval);
       clearInterval(progressInterval);
     };
@@ -46,7 +49,7 @@ export default function FlightSearchProgress({ origin, destination }: FlightSear
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#020617] p-4 md:p-12"
+      className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950 p-4 md:p-12 overflow-hidden"
     >
       {/* Premium Cinematic Background */}
       <div className="absolute inset-0 z-0 overflow-hidden">

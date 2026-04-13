@@ -1298,6 +1298,12 @@ export default function Booking() {
     }
   }, [t, searchParamsString, params?.id, setLocation, validateFlightPrice]);
 
+  useEffect(() => {
+    if (params?.id) {
+      fetchFlight(params.id);
+    }
+  }, [params?.id, fetchFlight]);
+
   const executeBooking = useCallback(async (data: BookingFormValues) => {
     if (!flight) return;
     integrityManager?.recordInteraction();
@@ -1559,7 +1565,7 @@ export default function Booking() {
                       disabled={!isVoiceSupported}
                       onClick={() => {
                         if (speakingPage) stopPage();
-                        else speakPage(paymentAudio, audioLang);
+                        else speak(paymentAudio, { lang: audioLang });
                       }}
                     >
                       <Headphones className="h-4 w-4 mr-2" />
@@ -1599,7 +1605,7 @@ export default function Booking() {
                       disabled={!isVoiceSupported}
                       onClick={() => {
                         if (speakingPage) stopPage();
-                        else speakPage(contactAudio, audioLang);
+                        else speak(contactAudio, { lang: audioLang });
                       }}
                     >
                       <Headphones className="h-4 w-4 mr-2" />
