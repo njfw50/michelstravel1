@@ -184,7 +184,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f4f7ff] text-slate-900 selection:bg-blue-500/15 selection:text-slate-950">
+    <div className="min-h-screen bg-[#F8F9FA] text-slate-900 selection:bg-blue-500/15 selection:text-slate-950">
       <header className="fixed inset-x-0 top-0 z-50">
         <div className="container mx-auto px-4 pb-2 pt-4 md:px-6 md:pb-3 md:pt-5">
           <div

@@ -281,10 +281,10 @@ export default function SearchResults() {
   const showTwoStepFlow = isRoundTrip && offerMatrix !== null;
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
+    <div className="min-h-screen bg-[#F8F9FA]">
       <SEO title="Resultados da Pesquisa | Michels Travel" path="/search" noindex={true} />
       
-      <div className="sticky top-[88px] z-40 w-full mb-8">
+      <div className="sticky top-[104px] z-40 w-full mb-10">
         <div className="container mx-auto max-w-7xl px-4">
           <div className="bg-white/40 backdrop-blur-3xl border border-white/20 rounded-[28px] shadow-[0_8px_32px_rgba(0,0,0,0.06)] p-1">
             <FlightSearchForm defaultValues={defaultValues} isCompact={true} className="shadow-none border-none !bg-transparent" />
@@ -296,7 +296,7 @@ export default function SearchResults() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           <aside className="hidden lg:block lg:col-span-3 space-y-10">
-            <div className="bg-white rounded-[32px] border border-slate-100 p-8 shadow-sm space-y-8">
+            <div className="lg:sticky lg:top-[180px] bg-white rounded-[32px] border border-slate-100 p-8 shadow-sm space-y-8">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-900 flex items-center gap-2">
                   <Filter className="h-4 w-4 text-blue-600" />
