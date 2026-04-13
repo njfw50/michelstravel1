@@ -632,7 +632,17 @@ export function registerRoutes(app: Express) {
         }
 
         const price = parseFloat(bookingData.totalPrice);
+        if (isNaN(price)) {
+          console.error("[BOOKING ERROR] Invalid totalPrice:", bookingData.totalPrice);
+          return res.status(400).json({ error: "Invalid total price provided." });
+        }
+
         const commissionAmount = (price * (commissionRate / (1 + commissionRate))).toFixed(2);
+        
+        if (commissionAmount === "NaN") {
+           console.error("[BOOKING ERROR] Commission calculation resulted in NaN. price:", price, "rate:", commissionRate);
+           return res.status(500).json({ error: "Financial calculation error. Please try again." });
+        }
 
         const flightDataWithMode = {
             ...bookingData.flightData,
@@ -640,12 +650,13 @@ export function registerRoutes(app: Express) {
         };
 
         const refCode = generateReferenceCode();
+        console.log(`[BOOKING] Attempting to create booking ${refCode} for ${resolvedContactEmail}`);
 
         const [booking] = await db.insert(bookings).values({
             referenceCode: refCode,
             flightData: flightDataWithMode,
             passengerDetails: bookingData.passengerDetails || bookingData.passengers,
-            totalPrice: bookingData.totalPrice,
+            totalPrice: price.toFixed(2),
             currency: bookingData.currency || 'USD',
             contactEmail: resolvedContactEmail,
             contactPhone: bookingData.contactPhone || null,
@@ -656,13 +667,19 @@ export function registerRoutes(app: Express) {
             userId: resolvedUserId ? String(resolvedUserId) : null
         }).returning();
 
+        console.log(`[BOOKING] Successfully created booking ID ${booking.id} with ref ${refCode}`);
+
         // [TRAVEL INTELLIGENCE] Log the lifecycle event
-        await storage.createBookingLog({
-          bookingId: booking.id,
-          event: 'created',
-          message: `Booking created with reference ${refCode}`,
-          metadata: { price, currency: booking.currency }
-        });
+        try {
+          await storage.createBookingLog({
+            bookingId: booking.id,
+            event: 'created',
+            message: `Booking created with reference ${refCode}`,
+            metadata: { price, currency: booking.currency }
+          });
+        } catch (logErr) {
+          console.error("[BOOKING WARNING] Failed to create booking log:", logErr);
+        }
 
          if (resolvedUserId) {
            const passengerSummary = (bookingData.passengerDetails || bookingData.passengers || [])
@@ -670,31 +687,35 @@ export function registerRoutes(app: Express) {
              .filter(Boolean)
              .join(', ');
 
-           // [TRAVEL INTELLIGENCE] Update centralized CRM Customer profile
-           await storage.createCustomer({
-             userId: String(resolvedUserId),
-             fullName: passengerSummary.split(',')[0], // Primary passenger
-             email: resolvedContactEmail,
-             phone: bookingData.contactPhone || null
-           }).catch(() => { /* Silence duplicate visitorId unique constraint errors */ });
+          // [TRAVEL INTELLIGENCE] Update centralized CRM Customer profile
+          try {
+            await storage.createCustomer({
+              userId: String(resolvedUserId),
+              fullName: passengerSummary.split(',')[0], // Primary passenger
+              email: resolvedContactEmail,
+              phone: bookingData.contactPhone || null
+            }).catch(() => { /* Silence duplicate visitorId unique constraint errors */ });
 
-          await db
-            .update(customerProfiles)
-            .set({
-              preferredAirport: flightDataWithMode.originCode || flightDataWithMode.origin || null,
-              lastActiveBookingId: booking.id,
-              lastActiveOfferId: requestedOfferId,
-              savedPassengers: (bookingData.passengerDetails || bookingData.passengers || []).map((passenger: any) => ({
-                type: passenger.type,
-                givenName: passenger.givenName,
-                familyName: passenger.familyName,
-                bornOn: passenger.bornOn,
-                documentType: passenger.documentType,
-                nationality: passenger.nationality,
-              })),
-              updatedAt: new Date(),
-            })
-            .where(eq(customerProfiles.userId, String(resolvedUserId)));
+            await db
+              .update(customerProfiles)
+              .set({
+                preferredAirport: flightDataWithMode.originCode || flightDataWithMode.origin || null,
+                lastActiveBookingId: booking.id,
+                lastActiveOfferId: requestedOfferId,
+                savedPassengers: (bookingData.passengerDetails || bookingData.passengers || []).map((passenger: any) => ({
+                  type: passenger.type,
+                  givenName: passenger.givenName,
+                  familyName: passenger.familyName,
+                  bornOn: passenger.bornOn,
+                  documentType: passenger.documentType,
+                  nationality: passenger.nationality,
+                })),
+                updatedAt: new Date(),
+              })
+              .where(eq(customerProfiles.userId, String(resolvedUserId)));
+          } catch (crmErr) {
+            console.error("[BOOKING WARNING] Failed to update CRM customer profile:", crmErr);
+          }
         }
 
         const flightInfo = bookingData.flightData || {};
@@ -741,26 +762,28 @@ export function registerRoutes(app: Express) {
 
       } catch (error: any) {
         const isTestModeForLog = (await storage.getSiteSettings())?.testMode ?? true;
-        console.error(`Booking creation error [${isTestModeForLog ? 'TEST' : 'LIVE'} mode]:`, error?.message || error);
-        console.error("Booking creation error details:", JSON.stringify({
-          type: error?.type,
-          code: error?.code,
-          statusCode: error?.statusCode,
-          raw: error?.raw?.message,
-          decline_code: error?.decline_code,
-          param: error?.param,
-        }));
+        console.error(`[CRITICAL] Booking creation error [${isTestModeForLog ? 'TEST' : 'LIVE'} mode]:`, error);
+        
+        // Log more specifics about where it might have failed
+        if (error.stack) {
+          console.error("[CRITICAL] Error stack:", error.stack);
+        }
+
         let userMessage: string;
         if (error?.type === 'StripeInvalidRequestError') {
-          userMessage = "Payment service configuration error. Please contact support.";
+          userMessage = `Payment service configuration error (${error.message}). Please contact support.`;
+          console.error("[STRIPE ERROR] Invalid Request:", error.message);
         } else if (error?.type === 'StripeAuthenticationError') {
           userMessage = "Payment service authentication failed. Please contact support.";
         } else if (error?.message?.includes('No Stripe')) {
           userMessage = `Payment keys not configured for ${isTestModeForLog ? 'test' : 'live'} mode. Please contact support.`;
         } else if (error?.message?.includes('Stripe')) {
-          userMessage = "Payment processing is temporarily unavailable. Please try again.";
+          userMessage = `Payment processing error: ${error.message}`;
+        } else if (error?.code === '23505') { // Postgres Unique Violation
+          userMessage = "A technical error occurred during booking. Please try one more time.";
+          console.error("[DB ERROR] Unique constraint violation:", error.detail);
         } else {
-          userMessage = "Failed to create booking. Please try again.";
+          userMessage = `Failed to create booking: ${error.message || 'Unknown error'}. Please try again.`;
         }
         res.status(500).json({ error: userMessage });
     }
