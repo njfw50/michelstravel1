@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { MapPin, Loader2, Plane } from "lucide-react";
+import { MapPin, Loader2, Plane, Globe } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -11,6 +11,7 @@ interface LocationSearchProps {
   placeholder?: string;
   className?: string;
   isLarge?: boolean;
+  dark?: boolean;
 }
 
 interface Place {
@@ -28,7 +29,8 @@ export function LocationSearch({
   onChange,
   placeholder,
   className,
-  isLarge
+  isLarge,
+  dark = false
 }: LocationSearchProps) {
   const [query, setQuery] = useState(value);
   const [displayText, setDisplayText] = useState("");
@@ -90,22 +92,29 @@ export function LocationSearch({
 
   return (
     <div className={cn("relative", className)} ref={wrapperRef}>
-      <label className={cn(
-        "font-black text-slate-400 block mb-2 pl-1 uppercase tracking-[0.2em] text-[10px]",
-      )}>{label}</label>
+      {label && (
+        <label className={cn(
+          "font-black block mb-2 pl-1 uppercase tracking-[0.25em] text-[10px]",
+          dark ? "text-slate-500" : "text-slate-400"
+        )}>{label}</label>
+      )}
       
       <div className={cn(
-        "flex items-center bg-slate-50 border border-slate-50 relative transition-all duration-300 hover:bg-white hover:border-blue-200 focus-within:bg-white focus-within:border-blue-600 focus-within:ring-8 focus-within:ring-blue-600/5",
-        isLarge ? "rounded-[24px] px-6 h-16 md:h-20 shadow-sm" : "rounded-2xl px-4 h-14",
+        "flex items-center relative transition-all duration-500",
+        dark 
+          ? "bg-slate-950/40 border-white/10 hover:bg-white/5 hover:border-blue-500/50 focus-within:bg-white/5 focus-within:border-blue-600 focus-within:ring-4 focus-within:ring-blue-600/10" 
+          : "bg-slate-50 border-slate-50 hover:bg-white hover:border-blue-200 focus-within:bg-white focus-within:border-blue-600 focus-within:ring-8 focus-within:ring-blue-600/5",
+        isLarge ? "rounded-[24px] px-6 h-16 md:h-20 shadow-xl border" : "rounded-2xl px-5 h-12 md:h-14 border",
       )}>
-        <MapPin className={cn("text-blue-500 shrink-0", isLarge ? "h-6 w-6 mr-4" : "h-4 w-4 mr-3")} />
+        <MapPin className={cn(dark ? "text-blue-400" : "text-blue-500", "shrink-0", isLarge ? "h-6 w-6 mr-4" : "h-5 w-5 mr-3")} />
         <Input 
           autoComplete="off"
           autoCorrect="off"
           spellCheck={false}
           placeholder={placeholder || "Cidade ou Aeroporto"} 
           className={cn(
-            "border-none shadow-none focus-visible:ring-0 p-0 h-full w-full bg-transparent text-slate-900 placeholder:text-slate-300 appearance-none",
+            "border-none shadow-none focus-visible:ring-0 p-0 h-full w-full bg-transparent appearance-none",
+            dark ? "text-white placeholder:text-slate-700" : "text-slate-900 placeholder:text-slate-300",
             isLarge ? "text-lg md:text-xl font-black" : "text-sm font-bold",
           )}
           data-testid={`input-${label.toLowerCase()}`}
@@ -122,32 +131,42 @@ export function LocationSearch({
             if (results.length > 0) setIsOpen(true);
           }}
         />
-        {isLoading && <Loader2 className={cn("animate-spin text-blue-500 absolute", isLarge ? "h-6 w-6 right-5" : "h-5 w-5 right-4")} />}
+        {isLoading && <Loader2 className={cn("animate-spin absolute", dark ? "text-blue-400" : "text-blue-500", isLarge ? "h-6 w-6 right-5" : "h-5 w-5 right-4")} />}
       </div>
 
       {isOpen && results.length > 0 && (
         <div className={cn(
-          "absolute top-full left-0 right-0 mt-3 bg-white border border-slate-100 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.15)] z-[200] max-h-80 overflow-y-auto rounded-3xl p-2",
+          "absolute top-full left-0 right-0 mt-3 z-[200] max-h-80 overflow-y-auto rounded-3xl p-3 border border-white/10 shadow-2xl backdrop-blur-3xl",
+          dark ? "bg-slate-950/95 shadow-black/80" : "bg-white/95 border-slate-100 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.15)]"
         )}>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {results.map((place) => (
               <button
                 type="button"
                 key={place.id}
                 onClick={() => handleSelect(place)}
-                className="w-full text-left transition-all flex items-center gap-4 p-3 rounded-2xl hover:bg-blue-50 group"
+                className={cn(
+                  "w-full text-left transition-all flex items-center gap-4 p-3 rounded-2xl group",
+                  dark ? "hover:bg-blue-600/20" : "hover:bg-blue-50"
+                )}
               >
-                <div className="h-12 w-12 min-w-[48px] rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-blue-600 transition-colors">
+                <div className={cn(
+                  "h-12 w-12 min-w-[48px] rounded-xl flex items-center justify-center transition-colors shadow-lg",
+                  dark ? "bg-white/5 border border-white/5 group-hover:bg-blue-600 group-hover:border-blue-600" : "bg-slate-50 group-hover:bg-blue-600"
+                )}>
                   {place.type === 'airport'
-                    ? <Plane className="h-5 w-5 text-blue-500 group-hover:text-white transition-colors" />
-                    : <MapPin className="h-5 w-5 text-blue-500 group-hover:text-white transition-colors" />}
+                    ? <Plane className={cn("h-5 w-5 transition-colors", dark ? "text-blue-400 group-hover:text-white" : "text-blue-500 group-hover:text-white")} />
+                    : <Globe className={cn("h-5 w-5 transition-colors", dark ? "text-blue-400 group-hover:text-white" : "text-blue-500 group-hover:text-white")} />}
                 </div>
                 <div className="flex-1 truncate">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-black text-slate-900 text-sm truncate">{place.name}</span> 
-                    <span className="text-[10px] font-black text-white bg-blue-600 px-2 py-0.5 rounded-md shadow-sm shrink-0">{place.iataCode}</span>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className={cn("font-black text-sm truncate", dark ? "text-white" : "text-slate-900")}>{place.name}</span> 
+                    <span className="text-[10px] font-black text-white bg-blue-600 px-2 py-0.5 rounded-md shadow-lg shrink-0">{place.iataCode}</span>
                   </div>
-                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] truncate mt-1">
+                  <div className={cn(
+                    "text-[10px] font-black uppercase tracking-[0.15em] truncate mt-1.5",
+                    dark ? "text-slate-500" : "text-slate-400"
+                  )}>
                     {place.cityName || place.name}, {place.countryName}
                   </div>
                 </div>

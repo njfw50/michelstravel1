@@ -24,6 +24,8 @@ import {
   ArrowRight,
   HeartHandshake,
   MessageCircle,
+  TrendingDown,
+  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +59,7 @@ import {
   type SeniorPriority,
   type SeniorTimePreference,
 } from "@/lib/senior-flight";
+import FlightSearchProgress from "@/components/FlightSearchProgress";
 
 type SortOption = "cheapest" | "fastest" | "best";
 type DepartureTime = "morning" | "afternoon" | "evening" | "night";
@@ -70,48 +73,11 @@ function parseDurationToMinutes(duration: string): number {
   return hours * 60 + minutes;
 }
 
-function formatDurationUtil(duration: string): string {
-  if (!duration) return "";
-  const hoursMatch = duration.match(/(\d+)H/);
-  const minutesMatch = duration.match(/(\d+)M/);
-  const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
-  const minutes = minutesMatch ? parseInt(minutesMatch[1], 10) : 0;
-  if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`;
-  if (hours > 0) return `${hours}h`;
-  return `${minutes}m`;
-}
-
-function getDepartureHour(departureTime: string): number {
-  try {
-    return new Date(departureTime).getHours();
-  } catch {
-    return 0;
-  }
-}
-
 function getStopsBucket(stops: number): string {
   if (stops === 0) return "direct";
   if (stops === 1) return "1stop";
   return "2plus";
 }
-
-function getDepartureTimeBucket(departureTime: string): DepartureTime {
-  const hour = getDepartureHour(departureTime);
-  if (hour >= 6 && hour < 12) return "morning";
-  if (hour >= 12 && hour < 18) return "afternoon";
-  if (hour >= 18 && hour < 24) return "evening";
-  return "night";
-}
-
-const SEARCH_STEPS = [
-  { key: "step1", icon: Globe },
-  { key: "step2", icon: BarChart3 },
-  { key: "step3", icon: Armchair },
-  { key: "step4", icon: Sparkles },
-  { key: "step5", icon: CheckCircle2 },
-];
-
-import FlightSearchProgress from "@/components/FlightSearchProgress";
 
 export default function SearchResults() {
   const [, setLocation] = useLocation();
@@ -155,6 +121,7 @@ export default function SearchResults() {
     infants: searchParams.get("infants") || "0",
     cabinClass: searchParams.get("cabinClass") || "economy",
     returnDate: searchParams.get("returnDate") || undefined,
+    tripType: searchParams.get("tripType") || "one-way",
   }), [isMultiCity, multiCityLegs, searchParams, legsRaw]);
 
   // Data Loading
@@ -212,8 +179,8 @@ export default function SearchResults() {
       passengers: params.passengers || "1",
       date: parseDate(date),
       returnDate: parseDate(returnDate),
-      tripType: (params as any).tripType || (isRoundTrip ? "round-trip" : "one-way"),
-      legs: isMultiCity ? multiCityLegs : undefined,
+      tripType: params.tripType || (isRoundTrip ? "round-trip" : "one-way"),
+      legs: isMultiCity ? multiCityLegs.map((l: any) => ({ ...l, date: parseDate(l.date) })) : undefined,
     };
   }, [params, isRoundTrip, isMultiCity, multiCityLegs]);
 
@@ -281,37 +248,47 @@ export default function SearchResults() {
   const showTwoStepFlow = isRoundTrip && offerMatrix !== null;
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA]">
-      <SEO title="Resultados da Pesquisa | Michels Travel" path="/search" noindex={true} />
+    <div className="min-h-screen bg-slate-950 selection:bg-blue-500/30">
+      <SEO title="Search Results | Michels Travel" path="/search" noindex={true} />
       
-      <div className="sticky top-[104px] z-40 w-full mb-10">
+      {/* Background Gradients */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px]" />
+      </div>
+
+      <div className="relative z-50 w-full mb-10 pt-8">
         <div className="container mx-auto max-w-7xl px-4">
-          <div className="bg-white/40 backdrop-blur-3xl border border-white/20 rounded-[28px] shadow-[0_8px_32px_rgba(0,0,0,0.06)] p-1">
-            <FlightSearchForm defaultValues={defaultValues} isCompact={true} className="shadow-none border-none !bg-transparent" />
+          <div className="bg-slate-900/40 backdrop-blur-3xl border border-white/10 rounded-[40px] shadow-2xl p-1 overflow-hidden transition-all hover:bg-slate-900/60">
+            <FlightSearchForm defaultValues={defaultValues as any} isCompact={true} className="shadow-none border-none !bg-transparent" />
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto max-w-7xl px-4 py-8 md:py-10">
+      <div className="relative z-10 container mx-auto max-w-7xl px-4 py-8 md:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           
-          <aside className="hidden lg:block lg:col-span-3 space-y-10">
-            <div className="lg:sticky lg:top-[180px] bg-white rounded-[32px] border border-slate-100 p-8 shadow-sm space-y-8">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-900 flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-blue-600" />
-                  {t("results.filters") || "Filtros"}
+          {/* Filters Sidebar */}
+          <aside className="hidden lg:block lg:col-span-3 space-y-8">
+            <div className="sticky top-[180px] bg-slate-900/60 backdrop-blur-3xl rounded-[40px] border border-white/10 p-8 shadow-2xl">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-white flex items-center gap-3">
+                  <Filter className="h-4 w-4 text-blue-500" />
+                  {t("results.filters") || "Filters"}
                 </h3>
                 {activeFilterCount > 0 && (
-                  <button onClick={() => { setSelectedStops(new Set()); setSelectedAirlines(new Set()); setPriceRange(null); }} className="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-black transition-colors">
-                    Limpar
+                  <button onClick={() => { setSelectedStops(new Set()); setSelectedAirlines(new Set()); setPriceRange(null); }} className="text-[10px] font-black uppercase tracking-widest text-blue-400 hover:text-white transition-colors">
+                    Reset
                   </button>
                 )}
               </div>
 
-              <div className="space-y-8">
-                <div className="space-y-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Faixa de Preço</p>
+              <div className="space-y-10">
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Price Range</p>
+                    <Badge variant="outline" className="bg-blue-500/10 border-blue-500/20 text-blue-400 text-[10px] font-black">{formatPrice(priceRange?.[1] || priceExtents.max)}</Badge>
+                  </div>
                   <Slider 
                     min={priceExtents.min} 
                     max={priceExtents.max} 
@@ -319,27 +296,27 @@ export default function SearchResults() {
                     onValueChange={v => setPriceRange([v[0], v[1]])} 
                     className="!py-4"
                   />
-                  <div className="flex justify-between text-[11px] font-black text-slate-900 font-mono">
+                  <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
                     <span>{formatPrice(priceRange?.[0] || priceExtents.min)}</span>
                     <span>{formatPrice(priceRange?.[1] || priceExtents.max)}</span>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Companhias</p>
-                  <div className="flex flex-col gap-3">
+                <div className="space-y-6">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Airlines</p>
+                  <div className="flex flex-col gap-4">
                     {uniqueAirlines.map(airline => (
-                      <label key={airline} className="flex items-center gap-3 cursor-pointer group">
+                      <label key={airline} className="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition-opacity">
                         <div className="relative flex items-center justify-center">
                            <input 
                              type="checkbox" 
                              checked={selectedAirlines.has(airline)} 
                              onChange={() => toggleSetItem(setSelectedAirlines, airline)}
-                             className="peer h-5 w-5 rounded-lg border-2 border-slate-200 bg-white checked:bg-blue-600 checked:border-blue-600 transition-all cursor-pointer appearance-none"
+                             className="peer h-6 w-6 rounded-xl border-2 border-white/5 bg-slate-950 checked:bg-blue-600 checked:border-blue-600 transition-all cursor-pointer appearance-none shadow-xl"
                            />
-                           <CheckCircle2 className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
+                           <CheckCircle2 className="absolute h-4 w-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
                         </div>
-                        <span className="text-sm font-bold text-slate-600 group-hover:text-blue-600 transition-colors uppercase tracking-tight">{airline}</span>
+                        <span className="text-xs font-black text-slate-300 uppercase tracking-widest truncate">{airline}</span>
                       </label>
                     ))}
                   </div>
@@ -348,28 +325,36 @@ export default function SearchResults() {
             </div>
           </aside>
 
+          {/* Results Main Section */}
           <main className="lg:col-span-9">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 border-b border-slate-100 pb-8">
-              <div className="space-y-2">
-                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 px-4 py-1.5 bg-blue-50 rounded-full">
-                  Curadoria Michels Travel
-                </span>
-                <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter">
-                  {filteredAndSortedFlights.length} {filteredAndSortedFlights.length === 1 ? "Opção Disponível" : "Opções Encontradas"}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-[9px] font-black uppercase tracking-[0.4em] text-blue-400 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full shadow-xl shadow-blue-500/5">
+                    Curated Results
+                  </span>
+                  {flights && flights.length > 0 && (
+                    <span className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-emerald-400 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                       <TrendingDown className="h-3 w-3" />
+                       Best Prices Now
+                    </span>
+                  )}
+                </div>
+                <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-none">
+                  {filteredAndSortedFlights.length} {filteredAndSortedFlights.length === 1 ? "Option" : "Options"} Found
                 </h1>
               </div>
               
               {!isSearching && (
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 bg-slate-900/60 p-2 rounded-2xl border border-white/5 shadow-2xl">
                   <select 
                     value={sortBy} 
                     onChange={e => setSortBy(e.target.value as SortOption)} 
-                    className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black uppercase tracking-widest text-slate-900 focus:border-blue-600 focus:outline-none transition-all shadow-sm"
+                    className="h-12 rounded-xl bg-transparent px-6 text-[10px] font-black uppercase tracking-widest text-white focus:outline-none transition-all cursor-pointer min-w-[200px]"
                   >
-                    <option value="cheapest">Menor Preço</option>
-                    <option value="fastest">Mais Rápido</option>
-                    <option value="best">Melhor Custo</option>
+                    <option value="cheapest" className="bg-slate-950">Cheapest First</option>
+                    <option value="fastest" className="bg-slate-950">Fastest First</option>
+                    <option value="best" className="bg-slate-950">Best Value</option>
                   </select>
                 </div>
               )}
@@ -380,57 +365,77 @@ export default function SearchResults() {
                 <FlightSearchProgress 
                   origin={params.origin || "---"} 
                   destination={params.destination || "---"} 
+                  className="bg-transparent border-white/5"
                 />
               )}
             </AnimatePresence>
 
             {!isSearching && (
-              <div className="space-y-6">
+              <div className="space-y-8">
+                {/* Legal Info Card */}
+                <div className="relative overflow-hidden rounded-[32px] border border-blue-500/10 bg-blue-500/5 p-6 backdrop-blur-md mb-8">
+                   <div className="flex items-start gap-4">
+                      <div className="h-10 w-10 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center shrink-0">
+                         <Info className="h-5 w-5 text-blue-400" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 leading-none">Price Transparency Notice</p>
+                        <p className="text-xs font-medium text-slate-400 leading-relaxed">
+                          All prices displayed include taxes, service fees, and surcharges. Baggage policies vary by airline and brand. Review specific terms during the booking process.
+                        </p>
+                      </div>
+                   </div>
+                </div>
+
                 {showTwoStepFlow && !selectedOutboundKey ? (
                   Array.from(offerMatrix!.outboundMap.entries()).map(([k, o]) => (
                     <Card 
                       key={k} 
-                      className="group relative overflow-hidden rounded-[32px] border border-slate-100 bg-white shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+                      className="group relative overflow-hidden rounded-[40px] border border-white/5 bg-slate-900/40 backdrop-blur-3xl shadow-2xl transition-all duration-500 hover:bg-slate-900/60 hover:-translate-y-1 cursor-pointer"
                       onClick={() => setSelectedOutboundKey(k)}
                     >
                       <div className="flex flex-col md:flex-row">
-                        <div className="flex-1 p-8">
-                          <div className="flex items-center gap-6">
-                            <div className="h-16 w-16 bg-slate-50 flex items-center justify-center rounded-2xl border border-slate-100 p-3">
-                              <img src={o.logoUrl} className="h-full w-full object-contain" />
+                        <div className="flex-1 p-8 md:p-10">
+                          <div className="flex items-center gap-8">
+                            <div className="h-20 w-20 bg-white/5 backdrop-blur-md flex items-center justify-center rounded-[24px] border border-white/10 p-4 transition-all group-hover:scale-105 shadow-xl">
+                              <img src={o.logoUrl} alt={o.airline} className="h-full w-full object-contain" />
                             </div>
                              <div>
-                               <p className="text-xl font-black text-slate-900 tracking-tight">{o.airline}</p>
-                               <div className="mt-2 flex items-center gap-4">
-                                  <span className="text-3xl font-black text-slate-900">{format(parseISO(o.slice.segments[0].departureTime), "HH:mm")}</span>
-                                  <ArrowRight className="h-4 w-4 text-slate-300" />
-                                  <span className="text-3xl font-black text-slate-900">{format(parseISO(o.slice.segments[o.slice.segments.length-1].arrivalTime), "HH:mm")}</span>
+                               <p className="text-2xl font-black text-white tracking-tight leading-none">{o.airline}</p>
+                               <div className="mt-4 flex items-center gap-6">
+                                  <span className="text-4xl font-black text-white tracking-tighter">{format(parseISO(o.slice.segments[0].departureTime), "HH:mm")}</span>
+                                  <ArrowRight className="h-5 w-5 text-slate-700" />
+                                  <span className="text-4xl font-black text-white tracking-tighter">{format(parseISO(o.slice.segments[o.slice.segments.length-1].arrivalTime), "HH:mm")}</span>
                                </div>
-                               <p className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">{o.slice.originCode} para {o.slice.destinationCode}</p>
+                               <p className="mt-3 text-[10px] font-black uppercase tracking-[0.3em] text-blue-400">{o.slice.originCode} <span className="text-slate-700 mx-2">→</span> {o.slice.destinationCode}</p>
                              </div>
                           </div>
                         </div>
-                        <div className="w-full md:w-[240px] bg-slate-50/50 border-t md:border-t-0 md:border-l border-slate-100 p-8 flex flex-col justify-center items-center md:items-end gap-6">
+                        <div className="w-full md:w-[280px] bg-white/5 backdrop-blur-md border-t md:border-t-0 md:border-l border-white/5 p-8 md:p-10 flex flex-col justify-center items-center md:items-end gap-6 shadow-inner">
                           <div className="text-center md:text-right">
-                             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Ida a partir de</p>
-                             <p className="text-4xl font-black text-blue-600 tracking-tighter leading-none mt-1">{formatPrice(o.lowestPrice)}</p>
+                             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Outbound from</p>
+                             <p className="text-5xl font-black text-white tracking-tighter leading-none mt-2">{formatPrice(o.lowestPrice)}</p>
                           </div>
-                          <Button className="w-full h-12 rounded-xl bg-blue-600 text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-blue-600/20">
-                            Selecionar Ida <ArrowRight className="ml-2 h-4 w-4" />
+                          <Button className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl shadow-blue-600/30 transition-all hover:scale-105 active:scale-95">
+                            SELECT OUTBOUND <ArrowRight className="ml-3 h-4 w-4" />
                           </Button>
                         </div>
                       </div>
                     </Card>
                   ))
                 ) : showTwoStepFlow && selectedOutboundKey ? (
-                  <div className="space-y-6">
-                    <div className="bg-blue-600 p-6 rounded-[30px] shadow-xl text-white flex justify-between items-center animate-in fade-in slide-in-from-top-4">
+                  <div className="space-y-8">
+                    <motion.div 
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-blue-600 p-8 rounded-[40px] shadow-2xl shadow-blue-600/20 text-white flex justify-between items-center"
+                    >
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-100">Voo de Ida selecionado</p>
-                        <h3 className="text-xl font-bold mt-1">Agora selecione seu voo de Volta</h3>
+                        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-200">Outbound Flight Selected</p>
+                        <h3 className="text-2xl md:text-3xl font-black mt-2 tracking-tight">Now choose your Return flight</h3>
                       </div>
-                      <Button variant="outline" onClick={() => setSelectedOutboundKey(null)} className="rounded-full border-white/30 text-white hover:bg-white/10 font-bold uppercase text-[10px] tracking-widest px-6 h-10">Mudar Ida</Button>
-                    </div>
+                      <Button variant="outline" onClick={() => setSelectedOutboundKey(null)} className="rounded-2xl border-white/20 bg-white/10 text-white hover:bg-white/20 font-black uppercase text-[10px] tracking-widest px-8 h-12 shadow-xl">Change Outbound</Button>
+                    </motion.div>
                     {filteredAndSortedFlights.filter(f => getOutboundKey(f) === selectedOutboundKey).map(f => (
                       <FlightCard key={f.id} flight={f} />
                     ))}
@@ -440,10 +445,11 @@ export default function SearchResults() {
                     <FlightCard key={f.id} flight={f} />
                   ))
                 ) : (
-                  <Card className="p-20 text-center rounded-[40px] border-dashed border-2 bg-transparent">
-                    <AlertCircle className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Nenhum voo encontrado</h3>
-                    <p className="text-sm text-slate-400 mt-1">Tente ajustar seus filtros ou mudar as datas da pesquisa.</p>
+                  <Card className="p-24 text-center rounded-[50px] border-dashed border-2 border-white/5 bg-slate-900/20 backdrop-blur-xl">
+                    <AlertCircle className="h-16 w-16 text-slate-800 mx-auto mb-6" />
+                    <h3 className="text-2xl font-black text-white uppercase tracking-tight">No flights found</h3>
+                    <p className="text-sm font-medium text-slate-500 mt-2 max-w-sm mx-auto">Try adjusting your filters or changing search dates to find more options.</p>
+                    <Button variant="link" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="mt-8 text-blue-400 font-black uppercase tracking-widest text-[10px] hover:text-white">Adjust Search Parameters</Button>
                   </Card>
                 )}
               </div>
