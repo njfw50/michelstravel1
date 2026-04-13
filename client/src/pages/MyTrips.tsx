@@ -39,7 +39,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import type { Booking } from "@shared/schema";
+import type { Booking, BookingLog } from "@shared/schema";
 import { SEO } from "@/components/SEO";
 import { openLoginDialog } from "@/lib/auth-utils";
 import {
@@ -104,6 +104,18 @@ function BookingCard({ booking, defaultExpanded = false }: { booking: Booking; d
     },
   });
 
+  const { data: logs } = useQuery<BookingLog[]>({
+    queryKey: [`/api/bookings/${booking.id}/logs`],
+    queryFn: async () => {
+      const res = await fetch(`/api/bookings/${booking.id}/logs`, { credentials: "include" });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!booking.id,
+  });
+
+  const checkInAlert = logs?.find(l => l.event === 'check-in_dashboard_alert');
+
   const fd = booking.flightData as any;
   const passengers = booking.passengerDetails as any[];
   const slices = fd?.slices || [];
@@ -161,6 +173,18 @@ function BookingCard({ booking, defaultExpanded = false }: { booking: Booking; d
         {expanded && (
           <div className="border-t border-gray-200">
             <div className="p-5 space-y-5">
+              {checkInAlert && (
+                <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3 animate-pulse">
+                  <AlertCircle className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-bold text-blue-900 text-sm">Próximo passo: Check-in</h4>
+                    <p className="text-xs text-blue-700 mt-1">
+                      {checkInAlert.message || "Seu check-in estará disponível em breve. Recomendamos verificar o site da companhia aérea."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">{t("confirm.ref_code") || "Reference Code"}</span>
@@ -591,7 +615,7 @@ export default function MyTrips() {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <Card className="bg-white border-gray-200 shadow-sm rounded-2xl">
                   <CardContent className="p-10 flex flex-col items-center text-center space-y-4">
-                    <div className="h-16 w-16 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100">
+                    <div className="h-16 w-16 rounded-full bg-gray-50 flex items-center justify-center border border-blue-100">
                       <Plane className="h-7 w-7 text-gray-300" />
                     </div>
                     <div>

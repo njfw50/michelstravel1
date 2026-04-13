@@ -14,6 +14,7 @@ import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 import { runAppMigrations } from "./appMigrations";
 import { ensureDefaultBlogPosts } from "./blogSeed";
 import { startOwnerPushLoop } from "./services/ownerPush";
+import { startItineraryNotificationLoop } from "./services/itineraryNotification";
 
 const app = express();
 const httpServer = createServer(app);
@@ -208,6 +209,7 @@ app.use((req, res, next) => {
   registerOwnerPushRoutes(app);
   registerSeniorCareRoutes(app);
   startOwnerPushLoop();
+  startItineraryNotificationLoop();
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

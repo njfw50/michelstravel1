@@ -45,6 +45,7 @@ import { useVoiceGuide } from "@/hooks/use-voice-guide";
 import { Switch } from "@/components/ui/switch";
 import { Headphones } from "lucide-react";
 import { SeniorIntegrityManager } from "@/lib/senior-integrity";
+import { cn } from "@/lib/utils";
 
 const passengerSchema = z.object({
   title: z.enum(["mr", "mrs", "ms", "miss", "dr"]).default("mr"),
@@ -69,7 +70,12 @@ function createBookingSchema(isDocRequired: boolean) {
     passengers: z.array(passengerSchema).min(1),
     contactEmail: z.string().email("Invalid email"),
     contactPhone: z.string().min(7, "Min 7 digits").max(20),
-    audioGuideConfirmed: z.boolean().optional(),
+    audioGuideConfirmed: z.boolean().refine(v => v === true, {
+      message: "Por favor, ative ou confirme o guia de áudio"
+    }),
+    termsAccepted: z.boolean().refine(v => v === true, {
+      message: "Você deve aceitar os termos e condições"
+    }),
   });
 
   if (!isDocRequired) return baseSchema;
@@ -106,13 +112,7 @@ function createBookingSchema(isDocRequired: boolean) {
       }
     });
 
-    if (data.audioGuideConfirmed === false) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Confirme o guia de áudio antes de prosseguir",
-        path: ["audioGuideConfirmed"],
-      });
-    }
+    // Terms and Audio are now handled in the base schema refinement/zod logic
   });
 }
 
@@ -121,6 +121,7 @@ type BookingFormValues = {
   contactEmail: string;
   contactPhone: string;
   audioGuideConfirmed?: boolean;
+  termsAccepted: boolean;
 };
 
 const formatDuration = (duration: string) => {
@@ -997,7 +998,7 @@ export default function Booking() {
         };
   const whatsAppHref = buildWhatsAppHref(
     buildWhatsAppMessage({
-      language,
+      language: (language || "pt") as any,
       topic: isEasyMode
         ? language === "en"
           ? "Senior booking"
@@ -1010,35 +1011,18 @@ export default function Booking() {
             ? "Ayuda con reserva"
             : "Ajuda com reserva",
       details: [
-        flight?.originCode ? `${language === "en" ? "Origin" : language === "es" ? "Origen" : "Origem"}: ${flight.originCode}` : null,
-        flight?.destinationCode ? `${language === "en" ? "Destination" : language === "es" ? "Destino" : "Destino"}: ${flight.destinationCode}` : null,
-        flight?.departureTime ? `${language === "en" ? "Departure" : language === "es" ? "Salida" : "Ida"}: ${flight.departureTime}` : null,
-        flight?.price ? `${language === "en" ? "Price" : language === "es" ? "Precio" : "Preco"}: ${flight.price} ${flight.currency}` : null,
-      ],
+          flight?.originCode ? `${language === "en" ? "Origin" : language === "es" ? "Origen" : "Origem"}: ${flight.originCode}` : null,
+          flight?.destinationCode ? `${language === "en" ? "Destination" : language === "es" ? "Destino" : "Destino"}: ${flight.destinationCode}` : null,
+          flight?.departureTime ? `${language === "en" ? "Departure" : language === "es" ? "Salida" : "Ida"}: ${flight.departureTime}` : null,
+          flight?.price ? `${language === "en" ? "Price" : language === "es" ? "Precio" : "Preco"}: ${flight.price} ${flight.currency}` : null,
+        ].filter((x): x is string => x !== null),
     }),
   );
+  const openAssistantRef = useRef<() => void>(() => {});
+
   const openAssistant = useCallback(() => {
-    const tripSummary = [
-      flight?.originCode ? `${flight.originCode}` : null,
-      flight?.destinationCode ? `${flight.destinationCode}` : null,
-      flight?.departureTime ? format(parseISO(flight.departureTime), "yyyy-MM-dd HH:mm") : null,
-    ]
-      .filter(Boolean)
-      .join(" - ");
-
-    const starter =
-      language === "en"
-        ? `Mia, help me review this booking calmly before payment: ${tripSummary}.`
-        : language === "es"
-          ? `Mia, ayúdeme a revisar esta reserva con calma antes del pago: ${tripSummary}.`
-          : `Mia, me ajude a revisar esta reserva com calma antes do pagamento: ${tripSummary}.`;
-
-    // Integrity NUANCE: Open assistant records as voice-confirmed start
-    if (integrityManager) {
-      integrityManager.setVoiceConfirmed(true);
-    }
-    openChatbotAssistant({ message: starter, autoSend: true });
-  }, [flight?.departureTime, flight?.destinationCode, flight?.originCode, language, integrityManager]);
+    openAssistantRef.current();
+  }, []);
 
   const integrityManager = useMemo(() => {
     if (!isEasyMode) return null;
@@ -1061,6 +1045,31 @@ export default function Booking() {
       }
     });
   }, [isEasyMode, toast, speak, language, openAssistant]);
+
+  // Actual logic for assistant runner
+  useEffect(() => {
+    openAssistantRef.current = () => {
+      const tripSummary = [
+        flight?.originCode ? `${flight.originCode}` : null,
+        flight?.destinationCode ? `${flight.destinationCode}` : null,
+        flight?.departureTime ? format(parseISO(flight.departureTime), "yyyy-MM-dd HH:mm") : null,
+      ]
+        .filter(Boolean)
+        .join(" - ");
+
+      const starter =
+        language === "en"
+          ? `Mia, help me review this booking calmly before payment: ${tripSummary}.`
+          : language === "es"
+            ? `Mia, ayúdeme a revisar esta reserva con calma antes del pago: ${tripSummary}.`
+            : `Mia, me ajude a revisar esta reserva com calma antes do pagamento: ${tripSummary}.`;
+
+      if (integrityManager) {
+        integrityManager.setVoiceConfirmed(true);
+      }
+      openChatbotAssistant({ message: starter, autoSend: true });
+    };
+  }, [flight, language, integrityManager]);
 
   useEffect(() => {
     return () => {
@@ -1106,7 +1115,8 @@ export default function Booking() {
       passengers: buildDefaultPassengers(),
       contactEmail: user?.email || "",
       contactPhone: "",
-      audioGuideConfirmed: false,
+      audioGuideConfirmed: true,
+      termsAccepted: false,
     },
   });
 
@@ -1454,6 +1464,7 @@ export default function Booking() {
     );
   }
 
+
   const firstPaxBaggage = flight?.passengers?.[0]?.baggages || [];
   const cabinClassName = flight?.passengers?.[0]?.cabinClassName || flight?.cabinClass || "Economy";
   const fareBrand = flight?.passengers?.[0]?.fareBrandName;
@@ -1549,7 +1560,6 @@ export default function Booking() {
       <div className="container mx-auto max-w-6xl px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-
             {paymentStep && paymentData ? (
               <Card className="border border-gray-200 shadow-sm rounded-2xl bg-white">
                 <CardContent className="p-5 md:p-6">
@@ -1588,172 +1598,216 @@ export default function Booking() {
                 </CardContent>
               </Card>
             ) : (
-
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <Card className="border border-gray-200 shadow-sm rounded-2xl bg-white">
-                <CardHeader className="border-b border-gray-100 gap-2">
-                  <div className="flex flex-wrap items-center gap-3 justify-between">
-                    <CardTitle className="flex items-center gap-2 text-gray-900">
-                      <User className="h-5 w-5 text-blue-500" />
-                      {t("booking.contact_info")}
-                    </CardTitle>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-blue-700 hover:bg-blue-50"
-                      disabled={!isVoiceSupported}
-                      onClick={() => {
-                        if (speakingPage) stopPage();
-                        else speak(contactAudio, { lang: audioLang });
-                      }}
-                    >
-                      <Headphones className="h-4 w-4 mr-2" />
-                      {speakingPage ? t("booking.audio_stop", { defaultValue: "Parar" }) : t("booking.audio_play", { defaultValue: "Ouvir dica" })}
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-5 md:p-6 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label className="text-gray-500 text-xs font-medium">{t("booking.contact_email")} *</Label>
-                      <Input
-                        {...form.register("contactEmail")}
-                        type="email"
-                        className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
-                        placeholder="contact@email.com"
-                        data-testid="input-contact-email"
-                      />
-                      {form.formState.errors.contactEmail && (
-                        <p className="text-xs text-red-400">{form.formState.errors.contactEmail.message}</p>
-                      )}
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <Card className="border border-gray-200 shadow-sm rounded-2xl bg-white">
+                  <CardHeader className="border-b border-gray-100 gap-2">
+                    <div className="flex flex-wrap items-center gap-3 justify-between">
+                      <CardTitle className="flex items-center gap-2 text-gray-900">
+                        <User className="h-5 w-5 text-blue-500" />
+                        {t("booking.contact_info")}
+                      </CardTitle>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-blue-700 hover:bg-blue-50"
+                        disabled={!isVoiceSupported}
+                        onClick={() => {
+                          if (speakingPage) stopPage();
+                          else speak(contactAudio, { lang: audioLang });
+                        }}
+                      >
+                        <Headphones className="h-4 w-4 mr-2" />
+                        {speakingPage ? t("booking.audio_stop", { defaultValue: "Parar" }) : t("booking.audio_play", { defaultValue: "Ouvir dica" })}
+                      </Button>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-gray-500 text-xs font-medium">{t("booking.contact_phone")} *</Label>
-                      <Input
-                        {...form.register("contactPhone")}
-                        type="tel"
-                        className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
-                        placeholder="+1 234 567 8900"
-                        data-testid="input-contact-phone"
-                      />
-                      {form.formState.errors.contactPhone && (
-                        <p className="text-xs text-red-400">{form.formState.errors.contactPhone.message}</p>
-                      )}
+                  </CardHeader>
+                  <CardContent className="p-5 md:p-6 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-gray-500 text-xs font-medium">{t("booking.contact_email")} *</Label>
+                        <Input
+                          {...form.register("contactEmail")}
+                          type="email"
+                          className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
+                          placeholder="contact@email.com"
+                          data-testid="input-contact-email"
+                        />
+                        {form.formState.errors.contactEmail && (
+                          <p className="text-xs text-red-400">{form.formState.errors.contactEmail.message}</p>
+                        )}
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-gray-500 text-xs font-medium">{t("booking.contact_phone")} *</Label>
+                        <Input
+                          {...form.register("contactPhone")}
+                          type="tel"
+                          className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
+                          placeholder="+1 234 567 8900"
+                          data-testid="input-contact-phone"
+                        />
+                        {form.formState.errors.contactPhone && (
+                          <p className="text-xs text-red-400">{form.formState.errors.contactPhone.message}</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border border-gray-200 shadow-sm rounded-2xl bg-white">
-                <CardHeader className="border-b border-gray-100 gap-2">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <CardTitle className="flex items-center gap-2 text-gray-900">
-                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                      {t("booking.passenger_details")}
-                    </CardTitle>
-                    <span className="text-xs text-gray-400">
-                      {totalPassengers} {totalPassengers > 1 ? t("booking.passengers_label") : t("booking.passenger")}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4 space-y-3">
-                  {fields.map((field, index) => (
-                    <PassengerForm
-                      key={field.id}
-                      index={index}
-                      control={form.control}
-                      register={form.register}
-                      errors={form.formState.errors}
-                      passengerType={field.type}
-                      isDocRequired={isDocRequired}
-                      t={t}
-                      setValue={form.setValue}
-                      getValues={form.getValues}
-                      isEasyMode={isEasyMode}
-                      language={language}
-                    />
-                  ))}
-                </CardContent>
-              </Card>
-
-              {flight && (
-                <BaggageSelector
-                  offerId={flight.id}
-                  passengerCount={totalPassengers}
-                  onBaggageSelected={setBaggageSelections}
-                  includedBaggage={firstPaxBaggage}
-                  flight={flight}
-                  simplified={isEasyMode}
-                />
-              )}
-
-              {flight?.conditions && (
-                <Card className="border border-amber-200 bg-amber-50 rounded-xl">
-                  <CardContent className="p-4 space-y-2">
-                    <h4 className="text-sm font-semibold text-amber-800 flex items-center gap-2">
-                      <Shield className="h-4 w-4" />
-                      {t("booking.fare_rules") || "Fare Rules"}
-                    </h4>
-                    <div className="space-y-1.5 text-xs text-amber-700">
-                      {flight.conditions.changeBeforeDeparture && (
-                        <div className="flex items-start gap-2">
-                          {flight.conditions.changeBeforeDeparture.allowed ? (
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 mt-0.5 shrink-0" />
-                          ) : (
-                            <XIcon className="h-3.5 w-3.5 text-red-600 mt-0.5 shrink-0" />
-                          )}
-                          <span>
-                            {t("booking.change_before_departure")}: {flight.conditions.changeBeforeDeparture.allowed 
-                              ? (flight.conditions.changeBeforeDeparture.penaltyAmount 
-                                ? `${t("booking.allowed_with_fee")} ${flight.conditions.changeBeforeDeparture.penaltyCurrency} ${flight.conditions.changeBeforeDeparture.penaltyAmount}`
-                                : t("booking.allowed_free"))
-                              : t("booking.not_allowed")}
-                          </span>
-                        </div>
-                      )}
-                      {flight.conditions.refundBeforeDeparture && (
-                        <div className="flex items-start gap-2">
-                          {flight.conditions.refundBeforeDeparture.allowed ? (
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 mt-0.5 shrink-0" />
-                          ) : (
-                            <XIcon className="h-3.5 w-3.5 text-red-600 mt-0.5 shrink-0" />
-                          )}
-                          <span>
-                            {t("booking.refund_before_departure")}: {flight.conditions.refundBeforeDeparture.allowed 
-                              ? (flight.conditions.refundBeforeDeparture.penaltyAmount 
-                                ? `${t("booking.allowed_with_fee")} ${flight.conditions.refundBeforeDeparture.penaltyCurrency} ${flight.conditions.refundBeforeDeparture.penaltyAmount}`
-                                : t("booking.allowed_free"))
-                              : t("booking.not_allowed")}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-[10px] text-amber-600 pt-1">
-                      {t("booking.conditions_disclaimer") || "By proceeding, you accept these fare conditions and the airline's terms of carriage."}
-                    </p>
                   </CardContent>
                 </Card>
-              )}
 
-              <div className="space-y-3">
-                <Button 
-                  type="submit" 
-                  className="w-full h-14 text-base font-bold bg-blue-600 shadow-lg shadow-blue-600/20 transition-all border-0 text-white rounded-xl gap-2" 
-                  disabled={createBooking.isPending || !flight}
-                  data-testid="button-pay"
-                >
-                  <CreditCard className="h-5 w-5" />
-                  {createBooking.isPending 
-                    ? t("booking.processing") 
-                    : `${t("booking.continue_to_payment") || "Continue to Payment"} - ${flight ? new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(grandTotal) : '...'}`}
-                </Button>
-                <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
-                  <Lock className="h-3 w-3" />
-                  <span>{t("booking.secure_payment")}</span>
+                <Card className="border border-gray-200 shadow-sm rounded-2xl bg-white">
+                  <CardHeader className="border-b border-gray-100 gap-2">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <CardTitle className="flex items-center gap-2 text-gray-900">
+                        <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                        {t("booking.passenger_details")}
+                      </CardTitle>
+                      <span className="text-xs text-gray-400">
+                        {totalPassengers} {totalPassengers > 1 ? t("booking.passengers_label") : t("booking.passenger")}
+                      </span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-4 space-y-3">
+                    {fields.map((field, index) => (
+                      <PassengerForm
+                        key={field.id}
+                        index={index}
+                        control={form.control}
+                        register={form.register}
+                        errors={form.formState.errors}
+                        passengerType={field.type}
+                        isDocRequired={isDocRequired}
+                        t={t}
+                        setValue={form.setValue}
+                        getValues={form.getValues}
+                        isEasyMode={isEasyMode}
+                        language={language}
+                      />
+                    ))}
+                  </CardContent>
+                </Card>
+
+                {flight && (
+                  <BaggageSelector
+                    offerId={flight.id}
+                    passengerCount={totalPassengers}
+                    onBaggageSelected={setBaggageSelections}
+                    includedBaggage={firstPaxBaggage}
+                    flight={flight}
+                    simplified={isEasyMode}
+                  />
+                )}
+
+                {flight?.conditions && (
+                  <Card className="border border-amber-200 bg-amber-50 rounded-xl">
+                    <CardContent className="p-4 space-y-2">
+                      <h4 className="text-sm font-semibold text-amber-800 flex items-center gap-2">
+                        <Shield className="h-4 w-4" />
+                        {t("booking.fare_rules") || "Fare Rules"}
+                      </h4>
+                      <div className="space-y-1.5 text-xs text-amber-700">
+                        {flight.conditions.changeBeforeDeparture && (
+                          <div className="flex items-start gap-2">
+                            {flight.conditions.changeBeforeDeparture.allowed ? (
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 mt-0.5 shrink-0" />
+                            ) : (
+                              <XIcon className="h-3.5 w-3.5 text-red-600 mt-0.5 shrink-0" />
+                            )}
+                            <span>
+                              {t("booking.change_before_departure")}: {flight.conditions.changeBeforeDeparture.allowed 
+                                ? (flight.conditions.changeBeforeDeparture.penaltyAmount 
+                                  ? `${t("booking.allowed_with_fee")} ${flight.conditions.changeBeforeDeparture.penaltyCurrency} ${flight.conditions.changeBeforeDeparture.penaltyAmount}`
+                                  : t("booking.allowed_free"))
+                                : t("booking.not_allowed")}
+                            </span>
+                          </div>
+                        )}
+                        {flight.conditions.refundBeforeDeparture && (
+                          <div className="flex items-start gap-2">
+                            {flight.conditions.refundBeforeDeparture.allowed ? (
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 mt-0.5 shrink-0" />
+                            ) : (
+                              <XIcon className="h-3.5 w-3.5 text-red-600 mt-0.5 shrink-0" />
+                            )}
+                            <span>
+                              {t("booking.refund_before_departure")}: {flight.conditions.refundBeforeDeparture.allowed 
+                                ? (flight.conditions.refundBeforeDeparture.penaltyAmount 
+                                  ? `${t("booking.allowed_with_fee")} ${flight.conditions.refundBeforeDeparture.penaltyCurrency} ${flight.conditions.refundBeforeDeparture.penaltyAmount}`
+                                  : t("booking.allowed_free"))
+                                : t("booking.not_allowed")}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-amber-600 pt-1">
+                        {t("booking.conditions_disclaimer") || "By proceeding, you accept these fare conditions and the airline's terms of carriage."}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
+                  <div className="flex items-start gap-3">
+                    <Switch
+                      id="audio-guide-switch"
+                      checked={form.watch("audioGuideConfirmed")}
+                      onCheckedChange={(checked) => form.setValue("audioGuideConfirmed", checked)}
+                    />
+                    <div className="space-y-1">
+                      <Label htmlFor="audio-guide-switch" className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <Headphones className="h-4 w-4 text-blue-600" />
+                        {t("booking.enable_audio_guide") || "Ativar Guia de Áudio de Auxílio"}
+                      </Label>
+                      <p className="text-[10px] text-slate-500 leading-relaxed uppercase tracking-wider">
+                        Recomendado para viajantes que desejam orientações por voz durante o preenchimento e pagamento.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-200">
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        id="terms-checkbox"
+                        {...form.register("termsAccepted")}
+                        className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <div className="space-y-1">
+                        <Label htmlFor="terms-checkbox" className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-emerald-600" />
+                          {t("booking.accept_terms") || "Li e aceito as Regras da Tarifa e Termos de Uso"}
+                        </Label>
+                        <p className="text-[10px] text-slate-500 leading-relaxed uppercase tracking-wider">
+                          Ao prosseguir, você concorda com as políticas de cancelamento, reembolso e taxas da companhia aérea.
+                        </p>
+                        {form.formState.errors.termsAccepted && (
+                          <p className="text-[10px] font-black text-red-500 uppercase">{form.formState.errors.termsAccepted.message}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </form>
+
+                <div className="space-y-3">
+                  <Button 
+                    type="submit" 
+                    className={cn(
+                      "w-full h-16 text-base font-black uppercase tracking-[0.2em] shadow-xl transition-all border-0 text-white rounded-2xl gap-3",
+                      form.watch("termsAccepted") ? "bg-blue-600 shadow-blue-600/30 hover:bg-black hover:-translate-y-1" : "bg-slate-300 cursor-not-allowed"
+                    )}
+                    disabled={createBooking.isPending || !flight || !form.watch("termsAccepted")}
+                    data-testid="button-pay"
+                  >
+                    <CreditCard className="h-5 w-5" />
+                    {createBooking.isPending 
+                      ? t("booking.processing") 
+                      : `${t("booking.continue_to_payment") || "Finalizar Reserva"} - ${flight ? new Intl.NumberFormat('en-US', { style: 'currency', currency: flight.currency }).format(grandTotal) : '...'}`}
+                  </Button>
+                  <div className="flex items-center justify-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <Lock className="h-3 w-3" />
+                    <span>{t("booking.secure_payment")}</span>
+                  </div>
+                </div>
+              </form>
             )}
           </div>
 

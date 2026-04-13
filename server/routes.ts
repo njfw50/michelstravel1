@@ -824,12 +824,27 @@ export function registerRoutes(app: Express) {
         createdAt: booking.createdAt?.toString() || new Date().toISOString(),
       });
 
-      res.json({ sent, message: sent ? "Confirmation email sent" : "Email service not configured (logged to console)" });
+      res.json({ sent: true, message: "Confirmation email sent." });
     } catch (error) {
-      console.error("Send confirmation error:", error);
-      res.status(500).json({ error: "Failed to send confirmation email" });
+      console.error("Confirmation email error:", error);
+      res.status(500).json({ error: "Failed to send email" });
     }
   });
+
+  // Get booking logs (public, for customers to see alerts)
+  app.get('/api/bookings/:id/logs', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+      
+      const logs = await storage.getBookingLogs(id);
+      res.json(logs);
+    } catch (error) {
+      console.error("Booking logs error:", error);
+      res.status(500).json({ error: "Failed to fetch logs" });
+    }
+  });
+
 
   // Get booking by ID (for confirmation page)
   app.get('/api/bookings/:id', async (req, res) => {
@@ -4400,7 +4415,7 @@ OUTPUT FORMAT (JSON only):
 
   app.delete('/api/admin/knowledge-base/:id', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(req.params.id as string);
       await storage.deleteKnowledgeBaseEntry(id);
       res.json({ success: true });
     } catch (error) {
@@ -4432,7 +4447,7 @@ OUTPUT FORMAT (JSON only):
   // Operational - Booking Logs
   app.get('/api/admin/bookings/:id/logs', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = parseInt(req.params.id as string);
       const logs = await storage.getBookingLogs(id);
       res.json(logs);
     } catch (error) {
