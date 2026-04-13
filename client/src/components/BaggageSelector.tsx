@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Luggage, Plus, Minus, Package, Check, ShieldCheck, Ruler } from "lucide-react";
+import { Luggage, Plus, Minus, Package, Check, ShieldCheck, Ruler, Loader2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import type { FlightOffer } from "@shared/schema";
 import BaggageInformationHub from "@/components/BaggageInformationHub";
@@ -159,58 +158,67 @@ export default function BaggageSelector({
 
   if (isLoading) {
     return (
-      <Card className="border border-gray-200 shadow-sm rounded-2xl" data-testid="baggage-selector-loading">
-        <CardHeader className="border-b border-gray-100 gap-2">
-          <CardTitle className="flex items-center gap-2 text-gray-900">
-            <Luggage className="h-5 w-5 text-blue-500" />
-            {t("baggage.title")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 space-y-4">
-          <Skeleton className="h-24 w-full rounded-xl" />
-          <Skeleton className="h-16 w-full rounded-xl" />
-          <Skeleton className="h-16 w-full rounded-xl" />
-        </CardContent>
-      </Card>
+      <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-slate-900/60 p-8 backdrop-blur-xl shadow-2xl" data-testid="baggage-selector-loading">
+        <div className="flex items-center gap-4 mb-8">
+           <div className="h-12 w-12 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+             <Loader2 className="h-6 w-6 text-blue-400 animate-spin" />
+           </div>
+           <div className="space-y-2">
+             <div className="h-6 w-48 bg-white/10 rounded-lg animate-pulse" />
+             <div className="h-3 w-32 bg-white/5 rounded-md animate-pulse" />
+           </div>
+        </div>
+        <div className="space-y-4">
+          <Skeleton className="h-24 w-full rounded-2xl bg-white/5" />
+          <Skeleton className="h-20 w-full rounded-2xl bg-white/5" />
+        </div>
+      </div>
     );
   }
 
   if (isError) {
     return (
-      <Card className="border border-gray-200 shadow-sm rounded-2xl" data-testid="baggage-selector-error">
-        <CardHeader className="border-b border-gray-100 gap-2">
-          <CardTitle className="flex items-center gap-2 text-gray-900">
-            <Luggage className="h-5 w-5 text-blue-500" />
-            {t("baggage.title")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <p className="text-sm text-red-500" data-testid="text-baggage-error">{t("baggage.error")}</p>
-        </CardContent>
-      </Card>
+      <div className="relative overflow-hidden rounded-[32px] border border-red-500/10 bg-red-500/5 p-8 backdrop-blur-xl" data-testid="baggage-selector-error">
+        <div className="flex items-center gap-4">
+           <div className="h-12 w-12 rounded-2xl bg-red-500/10 flex items-center justify-center border border-red-500/20">
+             <Luggage className="h-6 w-6 text-red-400" />
+           </div>
+           <div>
+             <h3 className="text-white font-black uppercase tracking-wider">{t("baggage.title")}</h3>
+             <p className="text-red-400 text-xs font-bold mt-1" data-testid="text-baggage-error">{t("baggage.error")}</p>
+           </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="border border-gray-200 shadow-sm rounded-2xl" data-testid="baggage-selector">
-      <CardHeader className="border-b border-gray-100 gap-2">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-gray-900">
-              <Luggage className="h-5 w-5 text-blue-500" />
-              {t("baggage.title")}
-            </CardTitle>
-            <p className="text-xs text-gray-400 mt-1">{t("baggage.subtitle")}</p>
+    <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-slate-900/60 p-6 md:p-8 backdrop-blur-xl shadow-2xl" data-testid="baggage-selector">
+      <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-blue-600/5 blur-[100px]" />
+      
+      <div className="relative flex items-center justify-between flex-wrap gap-4 mb-8 border-b border-white/5 pb-6">
+        <div>
+          <div className="flex items-center gap-3">
+             <div className="h-12 w-12 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-400">
+               <Luggage className="h-6 w-6" />
+             </div>
+             <div>
+               <h3 className="text-xl font-black text-white tracking-tight uppercase tracking-wider">
+                 {t("baggage.title")}
+               </h3>
+               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5 leading-none">{t("baggage.subtitle")}</p>
+             </div>
           </div>
-          {totalIncluded > 0 && (
-            <Badge className="bg-emerald-50 text-emerald-600 border-emerald-200 text-xs no-default-active-elevate">
-              <Check className="h-3 w-3 mr-1" />
-              {tReplace("baggage.bags_included", { count: totalIncluded })}
-            </Badge>
-          )}
         </div>
-      </CardHeader>
-      <CardContent className="p-4 md:p-6 space-y-5">
+        {totalIncluded > 0 && (
+          <Badge className="h-10 px-4 rounded-xl bg-emerald-500/10 text-emerald-300 border-emerald-500/20 text-xs font-black uppercase tracking-widest no-default-active-elevate">
+            <Check className="h-4 w-4 mr-2" />
+            {tReplace("baggage.bags_included", { count: totalIncluded })}
+          </Badge>
+        )}
+      </div>
+
+      <div className="relative space-y-8">
         <BaggageInformationHub
           flight={flight}
           services={baggageServices}
@@ -219,34 +227,34 @@ export default function BaggageSelector({
         />
 
         <div
-          className="rounded-xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/80 to-white p-4"
+          className="relative overflow-hidden rounded-[24px] border border-emerald-500/20 bg-emerald-500/5 p-6 backdrop-blur-sm"
           data-testid="personal-item-card"
         >
-          <div className="flex items-start gap-4">
-            <div className="w-20 h-20 rounded-xl bg-white border border-emerald-100 flex items-center justify-center shrink-0 p-1.5">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            <div className="w-24 h-24 rounded-2xl bg-slate-950/80 border border-emerald-500/20 flex items-center justify-center shrink-0 p-3 shadow-inner">
               <img
                 src={personalItemImg}
                 alt={t("baggage.personal_item")}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain brightness-110"
                 data-testid="img-personal-item"
               />
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h4 className="text-sm font-semibold text-gray-900" data-testid="text-personal-item-title">
+            <div className="flex-1 min-w-0 text-center sm:text-left">
+              <div className="flex flex-col sm:flex-row items-center gap-3 mb-2">
+                <h4 className="text-lg font-black text-white uppercase tracking-tight" data-testid="text-personal-item-title">
                   {t("baggage.personal_item")}
                 </h4>
-                <Badge className="bg-emerald-500 text-white text-[10px] no-default-active-elevate" data-testid="badge-personal-item-included">
-                  <ShieldCheck className="h-3 w-3 mr-1" />
+                <Badge className="bg-emerald-500 text-slate-950 text-[10px] font-black uppercase tracking-[0.15em] py-1 no-default-active-elevate" data-testid="badge-personal-item-included">
+                  <ShieldCheck className="h-3 w-3 mr-1.5" />
                   {t("baggage.personal_item_included")}
                 </Badge>
               </div>
-              <p className="text-xs text-gray-500 mt-1.5 leading-relaxed" data-testid="text-personal-item-desc">
+              <p className="text-sm text-slate-400 font-medium leading-relaxed" data-testid="text-personal-item-desc">
                 {t("baggage.personal_item_desc")}
               </p>
-              <div className="flex items-center gap-1.5 mt-2">
-                <Ruler className="h-3.5 w-3.5 text-gray-400" />
-                <span className="text-xs font-medium text-gray-600" data-testid="text-personal-item-dimensions">
+              <div className="flex items-center justify-center sm:justify-start gap-2 mt-4 text-emerald-400/70">
+                <Ruler className="h-4 w-4" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-300" data-testid="text-personal-item-dimensions">
                   {t("baggage.personal_item_dimensions")}
                 </span>
               </div>
@@ -255,78 +263,82 @@ export default function BaggageSelector({
         </div>
 
         {baggageServices.length > 0 ? (
-          <>
-            <div className="flex items-center gap-2">
-              <div className="h-px flex-1 bg-gray-200" />
-              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider whitespace-normal text-balance text-left">
+          <div className="space-y-8 pt-4">
+            <div className="relative flex items-center">
+              <div className="h-px flex-1 bg-white/5" />
+              <span className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.25em]">
                 {t("baggage.extra_options")}
               </span>
-              <div className="h-px flex-1 bg-gray-200" />
+              <div className="h-px flex-1 bg-white/5" />
             </div>
 
             {Object.entries(grouped).map(([type, services]) => (
-              <div key={type} className="space-y-3" data-testid={`baggage-group-${type}`}>
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{getTypeLabel(type)}</p>
+              <div key={type} className="space-y-5" data-testid={`baggage-group-${type}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                  <p className="text-[11px] font-black text-white uppercase tracking-[0.2em]">{getTypeLabel(type)}</p>
+                </div>
 
                 {services.map((service) => (
                   <div
                     key={service.id}
-                    className="rounded-xl border border-gray-200 bg-white"
+                    className="overflow-hidden rounded-[24px] border border-white/5 bg-slate-950/40 transition-all hover:border-white/10"
                     data-testid={`baggage-service-${service.id}`}
                   >
-                    <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100 flex-wrap gap-2">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
-                          {type === "carry_on" ? <Package className="h-5 w-5 text-blue-500" /> : <Luggage className="h-5 w-5 text-blue-500" />}
+                    <div className="flex items-center justify-between px-6 py-5 bg-white/5 border-b border-white/5 flex-wrap gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 border border-blue-500/20">
+                          {type === "carry_on" ? <Package className="h-6 w-6 text-blue-400" /> : <Luggage className="h-6 w-6 text-blue-400" />}
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{getTypeLabel(type)}</p>
+                          <p className="text-base font-black text-white tracking-tight uppercase">{getTypeLabel(type)}</p>
                           {service.metadata?.maximum_weight_kg && (
-                            <p className="text-xs text-gray-400" data-testid={`text-weight-${service.id}`}>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5" data-testid={`text-weight-${service.id}`}>
                               {tReplace("baggage.weight", { weight: service.metadata.maximum_weight_kg })}
                             </p>
                           )}
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold text-gray-900" data-testid={`text-price-${service.id}`}>
+                        <p className="text-lg font-black text-white" data-testid={`text-price-${service.id}`}>
                           {formatPrice(parseFloat(service.totalAmount), service.totalCurrency)}
                         </p>
-                        <p className="text-[10px] text-gray-400">{t("baggage.per_unit")}</p>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">{t("baggage.per_unit")}</p>
                       </div>
                     </div>
 
-                    <div className="px-4 py-3 space-y-2.5">
+                    <div className="px-6 py-4 space-y-4">
                       {getEligiblePassengerIndexes(service).map((paxIdx) => {
                         const key = getKey(service.id, paxIdx);
                         const qty = quantities[key] || 0;
                         return (
                           <div
                             key={paxIdx}
-                            className="flex items-center justify-between flex-wrap gap-2"
+                            className="flex items-center justify-between gap-4 p-3 rounded-2xl transition-colors hover:bg-white/5"
                             data-testid={`baggage-passenger-row-${service.id}-${paxIdx}`}
                           >
-                            <div className="flex items-center gap-2">
-                              <div className="h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center">
-                                <span className="text-[10px] font-bold text-gray-500">{paxIdx + 1}</span>
+                            <div className="flex items-center gap-3">
+                              <div className="h-7 w-7 rounded-lg bg-slate-900 border border-white/10 flex items-center justify-center">
+                                <span className="text-[10px] font-black text-slate-400">{paxIdx + 1}</span>
                               </div>
-                              <span className="text-sm text-gray-600">
-                                {t("booking.passenger") || "Passenger"} {paxIdx + 1}
+                              <span className="text-sm font-bold text-slate-300 uppercase tracking-tighter">
+                                {t("booking.passenger") || "Passageiro"} {paxIdx + 1}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-4">
                               <Button
                                 type="button"
                                 size="icon"
-                                variant="outline"
+                                variant="ghost"
+                                className="h-8 w-8 rounded-lg bg-slate-900 border border-white/5 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 disabled:opacity-30 transition-all"
                                 disabled={qty === 0}
                                 onClick={() => handleDecrement(service, paxIdx)}
                                 data-testid={`button-decrement-${service.id}-${paxIdx}`}
                               >
-                                <Minus className="h-3.5 w-3.5" />
+                                <Minus className="h-4 w-4" />
                               </Button>
                               <span
-                                className="w-8 text-center text-sm font-bold text-gray-900"
+                                className="w-6 text-center text-base font-black text-white"
                                 data-testid={`text-quantity-${service.id}-${paxIdx}`}
                               >
                                 {qty}
@@ -334,12 +346,13 @@ export default function BaggageSelector({
                               <Button
                                 type="button"
                                 size="icon"
-                                variant="outline"
+                                variant="ghost"
+                                className="h-8 w-8 rounded-lg bg-slate-900 border border-white/5 hover:bg-blue-500/10 hover:text-blue-400 hover:border-blue-500/20 disabled:opacity-30 transition-all"
                                 disabled={qty >= service.maxQuantity}
                                 onClick={() => handleIncrement(service, paxIdx)}
                                 data-testid={`button-increment-${service.id}-${paxIdx}`}
                               >
-                                <Plus className="h-3.5 w-3.5" />
+                                <Plus className="h-4 w-4" />
                               </Button>
                             </div>
                           </div>
@@ -350,25 +363,26 @@ export default function BaggageSelector({
                 ))}
               </div>
             ))}
-          </>
+          </div>
         ) : (
-          <div className="text-center py-2">
-            <p className="text-xs text-gray-400" data-testid="text-no-extras">{t("baggage.no_extras")}</p>
+          <div className="text-center py-6 border border-white/5 rounded-2xl bg-white/5">
+            <p className="text-xs font-black text-slate-600 uppercase tracking-[0.2em]" data-testid="text-no-extras">{t("baggage.no_extras")}</p>
           </div>
         )}
 
         {totalExtraCost > 0 && (
-          <div className="flex items-center justify-between rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-white px-5 py-4" data-testid="baggage-total">
-            <div>
-              <p className="text-sm font-medium text-gray-700">{t("baggage.extra_total")}</p>
-              <p className="text-xs text-gray-400">{t("baggage.added_to_total")}</p>
+          <div className="relative overflow-hidden flex items-center justify-between rounded-[24px] border border-[#ff7f50]/20 bg-[#ff7f50]/5 px-6 py-6" data-testid="baggage-total">
+            <div className="absolute -left-10 -top-10 h-24 w-24 rounded-full bg-[#ff7f50]/10 blur-2xl" />
+            <div className="relative">
+              <p className="text-xs font-black text-[#ffb293] uppercase tracking-widest mb-1">{t("baggage.extra_total")}</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{t("baggage.added_to_total")}</p>
             </div>
-            <span className="text-lg font-bold text-blue-600" data-testid="text-baggage-total-price">
+            <span className="relative text-2xl font-black text-white tracking-tight" data-testid="text-baggage-total-price">
               {formatPrice(totalExtraCost, currency)}
             </span>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

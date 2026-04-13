@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CheckCircle2, Sparkles } from "lucide-react";
+import { CheckCircle2, Sparkles, AlertCircle } from "lucide-react";
 
 export type SeniorNameCoachMode = "suggest" | "confirm";
 export type SeniorNameCoachReason = "characters" | "spacing" | "case";
@@ -147,45 +147,50 @@ function TeacherBoardScene({
   fullName: string;
 }) {
   return (
-    <div className="grid gap-4 rounded-[30px] border border-blue-100 bg-[linear-gradient(180deg,#f8fbff_0%,#eef5ff_100%)] p-4 md:grid-cols-[160px_minmax(0,1fr)]">
-      <div className="relative mx-auto flex h-[180px] w-[150px] items-end justify-center">
-        <div className="absolute bottom-0 h-24 w-24 rounded-[28px] bg-blue-600" />
-        <div className="absolute bottom-20 h-16 w-16 rounded-full border-4 border-slate-900 bg-[#ffd7b8]" />
-        <div className="absolute bottom-[114px] left-[58px] h-4 w-4 rounded-full bg-slate-900" />
-        <div className="absolute bottom-[102px] left-[48px] h-8 w-20 rounded-b-[32px] rounded-t-lg bg-slate-900" />
+    <div className="grid gap-6 rounded-[40px] border border-white/10 bg-slate-900/60 p-6 md:grid-cols-[180px_minmax(0,1fr)] relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent pointer-events-none" />
+      
+      <div className="relative mx-auto flex h-[180px] w-[150px] items-end justify-center z-10">
+        {/* Simple Abstract Teacher Avatar */}
+        <div className="absolute bottom-0 h-24 w-24 rounded-[32px] bg-blue-600 shadow-lg shadow-blue-500/20" />
+        <div className="absolute bottom-20 h-16 w-16 rounded-full border-4 border-slate-950 bg-[#ffd7b8]" />
+        <div className="absolute bottom-[114px] left-[58px] h-3 w-3 rounded-full bg-slate-950" />
+        <div className="absolute bottom-[102px] left-[48px] h-8 w-20 rounded-b-[32px] rounded-t-lg bg-slate-950" />
         <div className="absolute bottom-[70px] left-[20px] h-5 w-16 origin-right rotate-[18deg] rounded-full bg-[#ffd7b8]" />
         <div className="absolute bottom-[80px] left-[74px] h-3 w-14 rounded-full bg-[#ffd7b8]" />
-        <div className="absolute bottom-[84px] left-[126px] h-4 w-4 rounded-full border-2 border-blue-900 bg-white" />
-        <div className="absolute bottom-8 left-[98px] h-12 w-5 rotate-[10deg] rounded-full bg-slate-900" />
-        <div className="absolute bottom-6 left-[120px] h-14 w-5 rotate-[-6deg] rounded-full bg-slate-900" />
+        <div className="absolute bottom-[84px] left-[126px] h-5 w-5 rounded-full border-2 border-blue-400 bg-white" />
+        <div className="absolute bottom-8 left-[98px] h-12 w-5 rotate-[10deg] rounded-full bg-slate-950" />
+        <div className="absolute bottom-6 left-[120px] h-14 w-5 rotate-[-6deg] rounded-full bg-slate-950" />
       </div>
 
-      <div className="rounded-[26px] border-[5px] border-slate-900 bg-[#f4f7f0] p-5 shadow-[inset_0_0_0_2px_rgba(255,255,255,0.35)]">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-xs font-extrabold uppercase tracking-[0.22em] text-slate-700">{copy.boardTitle}</p>
-          <Sparkles className="h-4 w-4 text-amber-500" />
+      <div className="rounded-[32px] border-[6px] border-slate-950 bg-slate-800/40 p-6 shadow-2xl relative z-10 backdrop-blur-md">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-400/80">{copy.boardTitle}</p>
+          <Sparkles className="h-4 w-4 text-coral-500" />
         </div>
 
-        <div className="mt-4 space-y-3 text-left text-slate-900">
+        <div className="space-y-4 text-left">
           {mode === "suggest" ? (
             <>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">{copy.fieldLabel}</p>
-                <p className="mt-1 text-sm font-semibold">{fieldLabel}</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{copy.fieldLabel}</p>
+                <p className="mt-1 text-sm font-black text-white">{fieldLabel}</p>
               </div>
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">{copy.wroteLabel}</p>
-                <p className="mt-1 rounded-2xl bg-white/80 px-3 py-2 text-base font-bold break-words">{typedValue || "-"}</p>
-              </div>
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">{copy.suggestLabel}</p>
-                <p className="mt-1 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-base font-bold text-emerald-900 break-words">{suggestedValue || "-"}</p>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">{copy.wroteLabel}</p>
+                  <p className="text-base font-black text-slate-400 line-through opacity-70 break-words">{typedValue || "-"}</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-blue-400 mb-2">{copy.suggestLabel}</p>
+                  <p className="text-base font-black text-white break-words">{suggestedValue || "-"}</p>
+                </div>
               </div>
             </>
           ) : (
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">{copy.fullNameLabel}</p>
-              <p className="mt-2 rounded-2xl border border-blue-200 bg-white/80 px-4 py-3 text-lg font-bold text-slate-950 break-words">{fullName || "-"}</p>
+            <div className="p-5 rounded-2xl bg-blue-500/10 border border-blue-500/20">
+              <p className="text-[9px] font-black uppercase tracking-widest text-blue-400 mb-2">{copy.fullNameLabel}</p>
+              <p className="text-xl font-black text-white break-words">{fullName || "-"}</p>
             </div>
           )}
         </div>
@@ -212,23 +217,25 @@ export default function SeniorNameCoachDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl overflow-hidden rounded-[32px] border-0 bg-white p-0 shadow-[0_40px_120px_-48px_rgba(15,23,42,0.5)]">
-        <div className="bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-6 md:p-8">
-          <DialogHeader className="space-y-4 text-left">
-            <Badge className="w-fit rounded-full border-blue-200 bg-blue-50 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-700">
+      <DialogContent className="max-w-3xl overflow-hidden rounded-[48px] border border-white/10 bg-slate-950 p-0 shadow-2xl">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(30,58,138,0.25)_0%,rgba(2,6,23,0)_70%)] pointer-events-none" />
+        
+        <div className="p-8 md:p-12 relative z-10">
+          <DialogHeader className="space-y-6 text-left">
+            <Badge className="w-fit rounded-full border-blue-500/20 bg-blue-500/10 px-5 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">
               {copy.badge}
             </Badge>
             <div>
-              <DialogTitle className="text-2xl font-display font-extrabold text-slate-950">
+              <DialogTitle className="text-3xl font-black text-white tracking-tight uppercase">
                 {isSuggest ? copy.titleSuggest : copy.titleConfirm}
               </DialogTitle>
-              <DialogDescription className="mt-2 max-w-2xl text-base leading-relaxed text-slate-600">
+              <DialogDescription className="mt-4 max-w-2xl text-lg font-medium text-slate-400 leading-relaxed">
                 {isSuggest ? copy.descSuggest : copy.descConfirm}
               </DialogDescription>
             </div>
           </DialogHeader>
 
-          <div className="mt-6">
+          <div className="mt-10">
             <TeacherBoardScene
               copy={copy}
               mode={mode}
@@ -239,38 +246,36 @@ export default function SeniorNameCoachDialog({
             />
           </div>
 
-          <div className="mt-6 space-y-3 rounded-[26px] border border-slate-200 bg-slate-50 p-4">
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
-              <div>
-                {isSuggest && (
-                  <p className="text-sm font-semibold leading-relaxed text-slate-700">
-                    {getReasonText(copy, reason)}
-                  </p>
-                )}
-                <p className="mt-1 text-sm font-bold leading-relaxed text-slate-950">
-                  {isSuggest ? copy.questionSuggest : copy.questionConfirm}
+          <div className="mt-10 flex items-start gap-4 p-6 rounded-3xl bg-white/5 border border-white/5">
+            <div className="h-10 w-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20">
+              <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+            </div>
+            <div>
+              {isSuggest && (
+                <p className="text-sm font-bold text-slate-300 mb-2">
+                  {getReasonText(copy, reason)}
                 </p>
-                <p className="mt-1 text-xs leading-relaxed text-slate-500">{copy.note}</p>
-              </div>
+              )}
+              <p className="text-base font-black text-white uppercase tracking-tight">
+                {isSuggest ? copy.questionSuggest : copy.questionConfirm}
+              </p>
+              <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-slate-500">{copy.note}</p>
             </div>
           </div>
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <div className="mt-12 flex flex-col gap-4 sm:flex-row sm:justify-end">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={onSecondary}
-              className="min-h-12 rounded-2xl border-slate-300 bg-white px-5 text-sm font-bold text-slate-800"
-              data-testid="button-name-coach-secondary"
+              className="h-14 rounded-2xl bg-white/5 px-8 text-xs font-black uppercase tracking-widest text-white hover:bg-white/10 transition-all"
             >
               {isSuggest ? copy.secondarySuggest : copy.secondaryConfirm}
             </Button>
             <Button
               type="button"
               onClick={onPrimary}
-              className="min-h-12 rounded-2xl bg-blue-600 px-5 text-sm font-bold text-white hover:bg-blue-700"
-              data-testid="button-name-coach-primary"
+              className="h-14 rounded-2xl bg-blue-600 px-10 text-xs font-black uppercase tracking-widest text-white hover:bg-blue-500 shadow-xl shadow-blue-600/20 transition-all"
             >
               {isSuggest ? copy.primarySuggest : copy.primaryConfirm}
             </Button>

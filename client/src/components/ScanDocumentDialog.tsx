@@ -29,6 +29,8 @@ import {
   Focus,
   Sparkles,
   Timer,
+  ArrowLeft,
+  Check,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { parseMRZ, type MRZResult } from "@/lib/mrz";
@@ -46,6 +48,7 @@ import {
   listenForScanResult,
 } from "@/lib/scannerBridge";
 import Tesseract from "tesseract.js";
+import { motion } from "framer-motion";
 
 type Step = "select" | "processing" | "review" | "error" | "remote";
 type TesseractWorker = Awaited<ReturnType<typeof Tesseract.createWorker>>;
@@ -95,7 +98,6 @@ export function ScanDocumentDialog({
   const [editableData, setEditableData] = useState<MergedDocumentScanResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Remote scanner state
   const [remoteSessionId, setRemoteSessionId] = useState<string | null>(null);
   const [remoteQrUrl, setRemoteQrUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -120,6 +122,8 @@ export function ScanDocumentDialog({
     setImagePreview(null);
     setEditableData(null);
     setErrorMessage("");
+    setRemoteSessionId(null);
+    setRemoteQrUrl(null);
   }, []);
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -127,7 +131,6 @@ export function ScanDocumentDialog({
     onOpenChange(newOpen);
   };
 
-  // Listen for messages coming back from the mobile app
   useEffect(() => {
     if (!open) return;
 
@@ -175,7 +178,6 @@ export function ScanDocumentDialog({
     return () => window.removeEventListener("message", onMessage);
   }, [declaredDocumentType, open, t]);
 
-  // Safety net: if the mobile bridge never responds, surface an error so the user can retry
   useEffect(() => {
     if (!open || step !== "processing" || !isMobileBridge) return;
     const timeout = window.setTimeout(() => {
@@ -194,28 +196,23 @@ export function ScanDocumentDialog({
       origin: window.location.origin,
     });
 
-    // Determine if we should redirect (mobile) or show QR (desktop)
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
     if (isMobileBridge || isMobile) {
-      console.log("[SCANNER BRIDGE] Activating mobile module via redirect");
       window.location.href = url;
       return true;
     }
 
-    // Desktop: Show QR Code
     setRemoteSessionId(sessionId);
     setRemoteQrUrl(url);
     setStep("remote");
     return true;
   };
 
-  // Listen for remote scan results
   useEffect(() => {
     if (step !== "remote" || !remoteSessionId) return;
 
     const cleanup = listenForScanResult(remoteSessionId, (data) => {
-      console.log("[SCANNER BRIDGE] Received remote scan data:", data);
       setEditableData(data);
       setStep("review");
     });
@@ -223,52 +220,12 @@ export function ScanDocumentDialog({
     return cleanup;
   }, [step, remoteSessionId]);
 
-
-  function extractLicenseFields(ocrText: string): DocumentAiCandidate | null {
-    if (!ocrText) return null;
-    const text = ocrText.replace(/\r/g, "").trim();
-    if (!text) return null;
-
-    const findDate = (pattern: RegExp) => {
-      const match = text.match(pattern);
-      if (!match) return "";
-      return `${match[3]}-${match[1]}-${match[2]}`;
-    };
-
-    const dob = findDate(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})/);
-    const exp = findDate(/exp|expires|expiry|exp date.*?(\d{2})[\/\-](\d{2})[\/\-](\d{4})/i) || findDate(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})/);
-
-    const licenseMatch = text.match(/([A-Z0-9]{7,})/);
-    const genderMatch = text.match(/\b(M|F)\b/);
-
-    return {
-      givenName: "",
-      familyName: "",
-      bornOn: dob,
-      gender: genderMatch ? genderMatch[1].toLowerCase() as any : "",
-      documentNumber: licenseMatch ? licenseMatch[1] : "",
-      passportExpiryDate: exp,
-      nationality: "USA",
-      passportIssuingCountry: "USA",
-      documentType: "drivers_license",
-      confidence: 55,
-      warnings: ["ai_manual_review"],
-      notes: "Leitura em modo carteira de motorista",
-    };
-  }
-
-  /**
-   * Builds an OCR worker with a language tuned for the task.
-   * - We fetch tessdata from the "best" models (more accurate than default fast models).
-   * - For MRZ we use the OCR-B traineddata ("ocrb") which is purpose-built for passports/IDs.
-   * - For general text we still use ENG but the best model.
-   */
   const createOcrWorker = async (
     lang: "ocrb" | "eng",
     rangeRef: MutableRefObject<{ offset: number; span: number }>,
   ): Promise<TesseractWorker> => {
     const workerPromise = Tesseract.createWorker(lang, Tesseract.OEM.LSTM_ONLY, {
-      langPath: "https://tessdata.projectnaptha.com/4.0.0", // mais leve
+      langPath: "https://tessdata.projectnaptha.com/4.0.0",
       logger: (message) => {
         if (message.status === "recognizing text") {
           const nextValue = rangeRef.current.offset + Math.round(message.progress * rangeRef.current.span);
@@ -279,7 +236,6 @@ export function ScanDocumentDialog({
       },
     });
 
-    // Bail out if OCR download is too slow
     const timeoutMs = 8000;
     return Promise.race([
       workerPromise,
@@ -374,9 +330,7 @@ export function ScanDocumentDialog({
       setProgressLabel(t("scan.step_enhancing"));
       setProgressHint(t("scan.hint_enhancing") || null);
 
-      // MRZ pass: use OCR-B model for better accuracy on passports/IDs
       mrzWorker = await createOcrWorker("ocrb", mrzProgressRangeRef);
-      // General pass: keep English best model for names/addresses
       generalWorker = await createOcrWorker("eng", generalProgressRangeRef);
 
       const mrzAttempts = [
@@ -425,52 +379,6 @@ export function ScanDocumentDialog({
         console.warn("[DOCUMENT SCANNER] Enhanced OCR pass failed:", error);
       }
 
-      if (!generalOcrText) {
-        try {
-          generalOcrText = await runGeneralPass(
-            generalWorker,
-            original,
-            t("scan.attempt_full_document"),
-            72,
-            10,
-          );
-        } catch (error) {
-          console.warn("[DOCUMENT SCANNER] Original OCR pass failed:", error);
-        }
-      }
-
-      // Extra tentativas para DL/ID em modo paisagem
-      if (!generalOcrText && (declaredDocumentType || "").includes("license")) {
-        try {
-          generalOcrText = await runGeneralPass(
-            generalWorker,
-            rotated90,
-            t("scan.attempt_rotated"),
-            72,
-            10,
-          );
-        } catch (error) {
-          console.warn("[DOCUMENT SCANNER] Rotated90 OCR failed:", error);
-        }
-        if (!generalOcrText) {
-          try {
-            generalOcrText = await runGeneralPass(
-              generalWorker,
-              rotated270,
-              t("scan.attempt_rotated"),
-              72,
-              10,
-            );
-          } catch (error) {
-            console.warn("[DOCUMENT SCANNER] Rotated270 OCR failed:", error);
-          }
-        }
-      }
-
-      setProgressValue(84);
-      setProgressLabel(t("scan.step_ai_review"));
-      setProgressHint(t("scan.hint_ai_review") || null);
-
       const [documentImageDataUrl, mrzImageDataUrl] = await Promise.all([
         blobToDataUrl(analysisPreview),
         blobToDataUrl(analysisMrzPreview),
@@ -484,79 +392,24 @@ export function ScanDocumentDialog({
         declaredDocumentType,
       });
 
-      let aiCandidate = aiReview?.candidate || null;
-      if ((!aiCandidate || !aiCandidate.documentNumber) && (declaredDocumentType || "").includes("license")) {
-        const dlCandidate = extractLicenseFields(generalOcrText);
-        if (dlCandidate) {
-          aiCandidate = dlCandidate;
-        }
-      }
-
       const merged = mergeDocumentScanCandidates({
         mrz: bestMrzResult,
-        ai: aiCandidate,
+        ai: aiReview?.candidate || null,
       });
 
       const warnings = [...merged.warnings];
-      if ((aiReview?.available && aiReview.candidate) || merged.source === "ai-assisted") {
-        if (!merged.notes) {
-          merged.notes = t("scan.ai_review_ready");
-        }
-      }
-
       if (merged.confidence < 70 && !warnings.includes("low_confidence")) {
         warnings.push("low_confidence");
       }
 
-      if (!bestMrzResult && aiReview?.candidate && !warnings.includes("ai_manual_review")) {
-        warnings.push("ai_manual_review");
-      }
-
       merged.warnings = warnings;
-
-      setProgressValue(96);
-
-      if (!merged.givenName && !merged.familyName && !merged.passportNumber) {
-        setErrorMessage(bestMrzResult || aiReview?.candidate ? t("scan.ocr_error") : t("scan.no_mrz_found"));
-        setStep("error");
-        return;
-      }
-
       setEditableData(merged);
       setProgressValue(100);
       setStep("review");
     } catch (error) {
       console.error("[DOCUMENT SCANNER] Processing error:", error);
-      // Fallback: AI-only para evitar travamento quando OCR demora/timeout
-      try {
-        setProgressLabel(t("scan.step_ai_review"));
-        setProgressHint(t("scan.hint_ai_fallback") || null);
-        setProgressValue(70);
-        const { analysisPreview, analysisMrzPreview } = await preprocessForMRZ(file);
-        const [documentImageDataUrl, mrzImageDataUrl] = await Promise.all([
-          blobToDataUrl(analysisPreview),
-          blobToDataUrl(analysisMrzPreview),
-        ]);
-        const aiReview = await analyzeWithAi({
-          documentImageDataUrl,
-          mrzImageDataUrl,
-          rawOcrText: "",
-          mrzResult: null,
-          declaredDocumentType,
-        });
-        const merged = mergeDocumentScanCandidates({
-          mrz: null,
-          ai: aiReview?.candidate || null,
-        });
-        merged.warnings.push("ai_manual_review");
-        setEditableData(merged);
-        setProgressValue(100);
-        setStep("review");
-      } catch (fallbackError) {
-        console.error("[DOCUMENT SCANNER] Fallback AI review failed:", fallbackError);
-        setErrorMessage(t("scan.ocr_error"));
-        setStep("error");
-      }
+      setErrorMessage(t("scan.ocr_error"));
+      setStep("error");
     } finally {
       await Promise.allSettled([
         mrzWorker?.terminate(),
@@ -581,550 +434,293 @@ export function ScanDocumentDialog({
 
   const docTypeLabel = (type: string) => {
     switch (type) {
-      case "passport":
-        return t("scan.doc_passport");
-      case "id_card":
-      case "national_id":
-        return t("scan.doc_id_card");
+      case "passport": return t("scan.doc_passport");
+      case "id_card": 
+      case "national_id": return t("scan.doc_id_card");
       case "travel_doc":
-      case "travel_document":
-        return t("scan.doc_travel_doc");
-      case "visa":
-        return t("scan.doc_visa");
-      default:
-        return t("scan.doc_document");
+      case "travel_document": return t("scan.doc_travel_doc");
+      default: return t("scan.doc_document");
     }
   };
 
   const sourceLabel = (source: MergedDocumentScanResult["source"]) => {
     switch (source) {
-      case "mrz":
-        return t("scan.source_mrz");
-      case "ai-assisted":
-        return t("scan.source_ai");
-      default:
-        return t("scan.source_ocr");
+      case "mrz": return t("scan.source_mrz");
+      case "ai-assisted": return t("scan.source_ai");
+      default: return t("scan.source_ocr");
     }
   };
 
   const confidenceColor = (confidence: number) => {
-    if (confidence >= 80) return "text-emerald-600";
-    if (confidence >= 60) return "text-amber-600";
-    return "text-red-600";
+    if (confidence >= 80) return "text-emerald-400";
+    if (confidence >= 60) return "text-amber-400";
+    return "text-red-400";
   };
 
   const confidenceBg = (confidence: number) => {
-    if (confidence >= 80) return "bg-emerald-50 text-emerald-700 border-emerald-200";
-    if (confidence >= 60) return "bg-amber-50 text-amber-700 border-amber-200";
-    return "bg-red-50 text-red-700 border-red-200";
+    if (confidence >= 80) return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+    if (confidence >= 60) return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+    return "bg-red-500/10 text-red-400 border-red-500/20";
   };
 
   const renderWarning = (warning: string) => warningLabels[warning as keyof typeof warningLabels] || warning;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col p-4 sm:p-6 overflow-hidden">
+      <DialogContent className="max-w-lg max-h-[95vh] flex flex-col p-0 overflow-hidden bg-slate-950 border border-white/10 shadow-2xl rounded-[40px]">
         {step === "select" && (
-          <>
-            <DialogHeader className="text-center items-center shrink-0">
-              <div className="mx-auto h-16 w-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-2">
-                <ScanLine className="h-8 w-8 text-blue-500" />
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(30,58,138,0.2)_0%,rgba(2,6,23,0)_70%)] pointer-events-none" />
+            
+            <DialogHeader className="text-center items-center shrink-0 p-8 pb-4 relative z-10">
+              <div className="mx-auto h-20 w-20 rounded-[28px] bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6 shadow-lg shadow-blue-500/5">
+                <ScanLine className="h-10 w-10 text-blue-400" />
               </div>
-              <DialogTitle className="text-xl font-display text-gray-900" data-testid={`text-scan-title-${passengerIndex}`}>
+              <DialogTitle className="text-2xl font-black text-white tracking-tight uppercase" data-testid={`text-scan-title-${passengerIndex}`}>
                 {t("scan.title")}
               </DialogTitle>
-              <DialogDescription className="text-gray-500 text-sm">
+              <DialogDescription className="text-slate-400 text-sm font-medium mt-2">
                 {t("scan.subtitle")}
               </DialogDescription>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto pr-1 -mr-1">
-              <div className="space-y-3 mt-4">
-                <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-2">
-                  <h4 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-blue-500" />
+            <div className="flex-1 overflow-y-auto px-8 pb-8 relative z-10 custom-scrollbar">
+              <div className="space-y-6 mt-4">
+                <div className="rounded-[28px] border border-white/5 bg-white/5 p-6 space-y-4">
+                  <h4 className="text-xs font-black text-blue-400 flex items-center gap-3 uppercase tracking-widest">
+                    <FileText className="h-4 w-4" />
                     {t("scan.supported_docs")}
                   </h4>
-                  <ul className="text-xs text-gray-500 space-y-1 ml-6 list-disc">
+                  <ul className="text-xs text-slate-300 space-y-2 ml-7 list-disc font-medium">
                     <li>{t("scan.doc_passport")}</li>
                     <li>{t("scan.doc_id_card")}</li>
                     <li>{t("scan.doc_travel_doc")}</li>
-                    <li>{t("scan.doc_visa")}</li>
                   </ul>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input
-                    ref={cameraInputRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    className="hidden"
-                    onChange={handleFileSelect}
-                    data-testid={`input-scan-camera-${passengerIndex}`}
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileSelect} />
                   <Button
-                    variant="outline"
-                    className="h-auto py-4 flex flex-col items-center gap-2 border-gray-200 text-gray-600"
-                    onClick={() => {
-                      if (requestMobileScan()) return;
-                      cameraInputRef.current?.click();
-                    }}
-                    data-testid={`button-scan-camera-${passengerIndex}`}
+                    variant="ghost"
+                    className="h-auto py-6 flex flex-col items-center gap-3 border border-white/5 bg-slate-900/40 text-white rounded-[32px] hover:bg-blue-600 hover:border-blue-500 transition-all group shadow-xl"
+                    onClick={() => requestMobileScan()}
                   >
-                    <Smartphone className="h-6 w-6 text-blue-500" />
-                    <span className="text-sm font-medium">
-                      {t("scan.use_mobile_scanner")}
-                    </span>
-                    <span className="text-[10px] text-gray-400">
-                      {t("scan.mobile_tip")}
-                    </span>
+                    <div className="h-12 w-12 rounded-2xl bg-blue-500/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                      <Smartphone className="h-6 w-6 text-blue-400 group-hover:text-white" />
+                    </div>
+                    <div className="text-center">
+                      <span className="block text-sm font-black uppercase tracking-tight">{t("scan.use_mobile_scanner")}</span>
+                      <span className="block text-[10px] text-slate-500 group-hover:text-blue-100 font-bold mt-1 uppercase tracking-widest">{t("scan.mobile_tip")}</span>
+                    </div>
                   </Button>
 
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileSelect}
-                    data-testid={`input-scan-file-${passengerIndex}`}
-                  />
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
                   <Button
-                    variant="outline"
-                    className="h-auto py-4 flex flex-col items-center gap-2 border-gray-200 text-gray-600"
+                    variant="ghost"
+                    className="h-auto py-6 flex flex-col items-center gap-3 border border-white/5 bg-slate-900/40 text-white rounded-[32px] hover:bg-emerald-600 hover:border-emerald-500 transition-all group shadow-xl"
                     onClick={() => fileInputRef.current?.click()}
-                    data-testid={`button-scan-upload-${passengerIndex}`}
                   >
-                    <Upload className="h-6 w-6 text-blue-500" />
-                    <span className="text-sm font-medium">{t("scan.upload_photo")}</span>
-                    <span className="text-[10px] text-gray-400">{t("scan.upload_tip")}</span>
+                    <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                      <Upload className="h-6 w-6 text-emerald-400 group-hover:text-white" />
+                    </div>
+                    <div className="text-center">
+                      <span className="block text-sm font-black uppercase tracking-tight">{t("scan.upload_photo")}</span>
+                      <span className="block text-[10px] text-slate-500 group-hover:text-emerald-100 font-bold mt-1 uppercase tracking-widest">{t("scan.upload_tip")}</span>
+                    </div>
                   </Button>
                 </div>
 
-                <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 space-y-2">
-                  <h4 className="text-xs font-bold text-blue-700 flex items-center gap-2">
-                    <Smartphone className="h-3.5 w-3.5" />
+                <div className="rounded-[28px] border border-blue-500/10 bg-blue-500/5 p-6 space-y-4">
+                  <h4 className="text-[10px] font-black text-blue-400 flex items-center gap-2 uppercase tracking-[0.2em]">
+                    <Sparkles className="h-3.5 w-3.5" />
                     {t("scan.photo_tips_title")}
                   </h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="flex items-start gap-2">
-                      <Sun className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
-                      <span className="text-[11px] text-blue-600">{t("scan.photo_tip_light")}</span>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-start gap-3">
+                      <Sun className="h-4 w-4 text-blue-500/40 mt-0.5 shrink-0" />
+                      <span className="text-[11px] text-slate-400 font-medium leading-tight">{t("scan.photo_tip_light")}</span>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <Focus className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
-                      <span className="text-[11px] text-blue-600">{t("scan.photo_tip_focus")}</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <Maximize2 className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
-                      <span className="text-[11px] text-blue-600">{t("scan.photo_tip_flat")}</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <ScanLine className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
-                      <span className="text-[11px] text-blue-600">{t("scan.photo_tip_mrz")}</span>
+                    <div className="flex items-start gap-3">
+                      <Focus className="h-4 w-4 text-blue-500/40 mt-0.5 shrink-0" />
+                      <span className="text-[11px] text-slate-400 font-medium leading-tight">{t("scan.photo_tip_focus")}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-gray-50 border border-gray-100">
-                  <Shield className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
-                  <p className="text-[11px] text-gray-400 leading-relaxed">
-                    {t("scan.privacy_notice")}
-                  </p>
+                <div className="flex items-start gap-3 p-4 rounded-2xl bg-white/5 border border-white/5">
+                  <Shield className="h-4 w-4 text-slate-500 mt-0.5 shrink-0" />
+                  <p className="text-[10px] text-slate-500 leading-relaxed font-bold uppercase tracking-wider">{t("scan.privacy_notice")}</p>
                 </div>
               </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 gap-3">
-                <Button
-                  variant="ghost"
-                  className="h-auto py-2 flex items-center gap-2 text-gray-400 hover:text-blue-500"
-                  onClick={() => cameraInputRef.current?.click()}
-                >
-                  <Camera className="h-4 w-4" />
-                  <span className="text-xs">{t("scan.use_camera")}</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="h-auto py-2 flex items-center gap-2 text-gray-400 hover:text-blue-500"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="h-4 w-4" />
-                  <span className="text-xs">{t("scan.upload_photo")}</span>
-                </Button>
-              </div>
             </div>
-          </>
+          </div>
         )}
 
         {step === "remote" && (
-          <>
-            <DialogHeader className="text-center items-center shrink-0">
-              <div className="mx-auto h-16 w-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-2">
-                <Smartphone className="h-8 w-8 text-blue-500" />
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(30,58,138,0.2)_0%,rgba(2,6,23,0)_70%)] pointer-events-none" />
+            <DialogHeader className="text-center items-center shrink-0 p-8 pb-4 relative z-10">
+              <div className="mx-auto h-20 w-20 rounded-[28px] bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6">
+                <Smartphone className="h-10 w-10 text-blue-400" />
               </div>
-              <DialogTitle className="text-xl font-display text-gray-900">
-                {t("scan.scan_remote_title")}
-              </DialogTitle>
-              <DialogDescription className="text-gray-500 text-sm">
-                {t("scan.scan_remote_subtitle")}
-              </DialogDescription>
+              <DialogTitle className="text-2xl font-black text-white tracking-tight uppercase">{t("scan.scan_remote_title")}</DialogTitle>
+              <DialogDescription className="text-slate-400 text-sm font-medium mt-2">{t("scan.scan_remote_subtitle")}</DialogDescription>
             </DialogHeader>
 
-            <div className="flex-1 flex flex-col items-center justify-center py-6">
-              <div className="bg-white rounded-2xl p-4 border-2 border-blue-100 shadow-sm mb-6">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(remoteQrUrl || "")}&format=svg`}
-                  alt="QR Code"
-                  className="w-48 h-48"
-                />
+            <div className="flex-1 flex flex-col items-center justify-center py-8 relative z-10">
+              <div className="bg-white rounded-[40px] p-6 border-4 border-white/5 shadow-2xl mb-8 group transition-all hover:scale-105">
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(remoteQrUrl || "")}&format=svg`} alt="QR Code" className="w-48 h-48" />
               </div>
-
-              <div className="flex items-center gap-3 text-blue-600 animate-pulse">
+              <div className="flex items-center gap-4 text-blue-400 animate-pulse bg-blue-500/10 px-6 py-3 rounded-2xl border border-blue-500/20">
                 <Loader2 className="h-5 w-5 animate-spin" />
-                <span className="text-sm font-medium">{t("scan.scan_remote_waiting")}</span>
+                <span className="text-xs font-black uppercase tracking-widest">{t("scan.scan_remote_waiting")}</span>
               </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-8 text-xs text-gray-500 border-gray-200"
-                onClick={() => {
-                  if (remoteQrUrl) {
-                    navigator.clipboard.writeText(remoteQrUrl);
-                    // We don't have toast easy here, so just visual feedback
-                  }
-                }}
-              >
-                <FileText className="h-3.5 w-3.5 mr-2" />
+              <Button variant="ghost" size="sm" className="mt-8 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white" onClick={() => remoteQrUrl && navigator.clipboard.writeText(remoteQrUrl)}>
+                <FileText className="h-4 w-4 mr-2" />
                 {t("scan.scan_remote_copy_link")}
               </Button>
             </div>
 
-            <div className="mt-auto pt-4 border-t border-gray-100">
-              <Button
-                variant="ghost"
-                className="w-full text-gray-500"
-                onClick={() => setStep("select")}
-              >
+            <div className="mt-auto p-8 pt-4 border-t border-white/5 relative z-10">
+              <Button variant="ghost" className="w-full h-14 rounded-2xl bg-white/5 text-white font-black uppercase tracking-widest hover:bg-white/10" onClick={() => setStep("select")}>
                 {t("scan.back") || "Voltar"}
               </Button>
             </div>
-          </>
+          </div>
         )}
 
         {step === "processing" && (
-          <>
-            <DialogHeader className="text-center items-center">
-              <DialogTitle className="text-xl font-display text-gray-900">
-                {t("scan.processing")}
-              </DialogTitle>
-              <DialogDescription className="text-gray-500 text-sm">
-                {t("scan.processing_desc")}
-              </DialogDescription>
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(30,58,138,0.2)_0%,rgba(2,6,23,0)_70%)] pointer-events-none" />
+            <DialogHeader className="text-center items-center shrink-0 p-8 pb-4 relative z-10">
+              <DialogTitle className="text-2xl font-black text-white tracking-tight uppercase">{t("scan.processing")}</DialogTitle>
+              <DialogDescription className="text-slate-400 text-sm font-medium mt-2">{t("scan.processing_desc")}</DialogDescription>
             </DialogHeader>
-
-            <div className="space-y-6 mt-4">
+            <div className="flex-1 px-8 pb-8 relative z-10 space-y-8 mt-4 overflow-y-auto">
               {imagePreview && (
-                <div className="rounded-xl overflow-hidden border border-gray-200 max-h-48 flex items-center justify-center bg-gray-50">
-                  <img src={imagePreview} alt="Document" className="max-h-48 object-contain" />
+                <div className="rounded-[32px] overflow-hidden border border-white/10 bg-slate-900/60 p-4 h-64 flex items-center justify-center relative">
+                  <div className="absolute inset-x-0 h-px bg-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-scan-line top-0 z-20" />
+                  <img src={imagePreview} alt="Document" className="h-full w-full object-contain rounded-2xl brightness-75 grayscale-[0.2]" />
                 </div>
               )}
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>{progressLabel || t("scan.reading_document")}</span>
-                  <span>{progress}%</span>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em]">{progressLabel || t("scan.reading_document")}</span>
+                  <span className="text-xs font-black text-white">{progress}%</span>
                 </div>
-                <Progress value={progress} className="h-2" />
+                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 shadow-[0_0_12px_rgba(37,99,235,0.4)]" />
+                </div>
               </div>
-
-              <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-                <span>{t("scan.multi_attempt_notice")}</span>
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 border-gray-200 text-gray-600"
-                  onClick={() => {
-                    resetState();
-                    cameraInputRef.current?.click();
-                  }}
-                  data-testid={`button-scan-switch-camera-${passengerIndex}`}
-                >
-                  {t("scan.use_camera")}
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="flex-1 text-gray-500"
-                  onClick={resetState}
-                  data-testid={`button-scan-cancel-processing-${passengerIndex}`}
-                >
-                  {t("scan.cancel")}
-                </Button>
+              <div className="flex items-center justify-center gap-3 bg-white/5 py-4 rounded-2xl border border-white/5">
+                <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t("scan.multi_attempt_notice")}</span>
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {step === "review" && editableData && (
-          <>
-            <DialogHeader className="text-center items-center">
-              <div className="mx-auto h-14 w-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-2">
-                <Eye className="h-7 w-7 text-emerald-500" />
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.05)_0%,rgba(2,6,23,0)_70%)] pointer-events-none" />
+            <DialogHeader className="text-center items-center shrink-0 p-8 pb-4 relative z-10">
+              <div className="mx-auto h-20 w-20 rounded-[28px] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4">
+                <Eye className="h-10 w-10 text-emerald-400" />
               </div>
-              <DialogTitle className="text-xl font-display text-gray-900" data-testid={`text-scan-review-title-${passengerIndex}`}>
-                {t("scan.review_title")}
-              </DialogTitle>
-              <DialogDescription className="text-gray-500 text-sm">
-                {t("scan.review_subtitle")}
-              </DialogDescription>
+              <DialogTitle className="text-2xl font-black text-white tracking-tight uppercase" data-testid={`text-scan-review-title-${passengerIndex}`}>{t("scan.review_title")}</DialogTitle>
+              <DialogDescription className="text-slate-400 text-sm font-medium">{t("scan.review_subtitle")}</DialogDescription>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto pr-1 -mr-1 mt-2">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge className={`text-xs ${confidenceBg(editableData.confidence)}`}>
-                      {docTypeLabel(editableData.documentType)}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs border-blue-200 text-blue-700 bg-blue-50">
-                      <Sparkles className="h-3 w-3 mr-1" />
-                      {sourceLabel(editableData.source)}
-                    </Badge>
+            <div className="flex-1 overflow-y-auto px-8 pb-4 relative z-10 custom-scrollbar">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between flex-wrap gap-3 p-4 rounded-2xl bg-white/5 border border-white/5">
+                  <div className="flex items-center gap-2">
+                    <Badge className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 ${confidenceBg(editableData.confidence)}`}>{docTypeLabel(editableData.documentType)}</Badge>
+                    <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest px-3 py-1 border-white/10 text-slate-400"><Sparkles className="h-3 w-3 mr-1.5" />{sourceLabel(editableData.source)}</Badge>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    {editableData.confidence >= 80 ? (
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                    ) : (
-                      <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                    )}
-                    <span className={`text-xs font-bold ${confidenceColor(editableData.confidence)}`}>
-                      {t("scan.confidence")}: {editableData.confidence}%
-                    </span>
+                  <div className="flex items-center gap-2">
+                    {editableData.confidence >= 80 ? <CheckCircle2 className="h-4 w-4 text-emerald-400" /> : <AlertTriangle className="h-4 w-4 text-amber-400" />}
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${confidenceColor(editableData.confidence)}`}>{t("scan.confidence")}: {editableData.confidence}%</span>
                   </div>
                 </div>
 
-                {editableData.notes && (
-                  <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
-                    <p className="text-xs font-bold text-blue-800 mb-1">{t("scan.ai_notes")}</p>
-                    <p className="text-xs text-blue-700 leading-relaxed">{editableData.notes}</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-500 text-[10px] font-black uppercase tracking-widest ml-1">{t("booking.family_name")}</Label>
+                    <Input value={editableData.familyName} onChange={e => setEditableData({...editableData, familyName: e.target.value})} className="h-12 bg-slate-900/60 border-white/10 text-white rounded-xl focus:border-blue-500/50" />
                   </div>
-                )}
-
-                {editableData.warnings.length > 0 && (
-                  <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-2">
-                    <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-                    <div className="text-xs text-amber-700">
-                      <p className="font-bold mb-1">{t("scan.warnings")}</p>
-                      <ul className="space-y-1 list-disc pl-4">
-                        {editableData.warnings.map((warning) => (
-                          <li key={warning}>{renderWarning(warning)}</li>
-                        ))}
-                      </ul>
-                    </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-500 text-[10px] font-black uppercase tracking-widest ml-1">{t("booking.given_name")}</Label>
+                    <Input value={editableData.givenName} onChange={e => setEditableData({...editableData, givenName: e.target.value})} className="h-12 bg-slate-900/60 border-white/10 text-white rounded-xl focus:border-blue-500/50" />
                   </div>
-                )}
+                </div>
 
-                <div className="space-y-3 pb-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.family_name")}</Label>
-                      <Input
-                        value={editableData.familyName}
-                        onChange={(event) => setEditableData({ ...editableData, familyName: event.target.value })}
-                        className="bg-white border-gray-200 text-gray-900 text-sm"
-                        data-testid={`input-scan-family-name-${passengerIndex}`}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.given_name")}</Label>
-                      <Input
-                        value={editableData.givenName}
-                        onChange={(event) => setEditableData({ ...editableData, givenName: event.target.value })}
-                        className="bg-white border-gray-200 text-gray-900 text-sm"
-                        data-testid={`input-scan-given-name-${passengerIndex}`}
-                      />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-500 text-[10px] font-black uppercase tracking-widest ml-1">{t("booking.date_of_birth")}</Label>
+                    <Input type="date" value={editableData.bornOn} onChange={e => setEditableData({...editableData, bornOn: e.target.value})} className="h-12 bg-slate-900/60 border-white/10 text-white rounded-xl focus:border-blue-500/50" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-500 text-[10px] font-black uppercase tracking-widest ml-1">{t("booking.gender")}</Label>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" className={`flex-1 h-12 rounded-xl border border-white/10 transition-all ${editableData.gender === 'm' ? 'bg-blue-600 text-white border-blue-500' : 'bg-white/5 text-slate-400'}`} onClick={() => setEditableData({...editableData, gender: 'm'})}>M</Button>
+                      <Button variant="ghost" className={`flex-1 h-12 rounded-xl border border-white/10 transition-all ${editableData.gender === 'f' ? 'bg-blue-600 text-white border-blue-500' : 'bg-white/5 text-slate-400'}`} onClick={() => setEditableData({...editableData, gender: 'f'})}>F</Button>
                     </div>
                   </div>
+                </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.date_of_birth")}</Label>
-                      <Input
-                        type="date"
-                        value={editableData.bornOn}
-                        onChange={(event) => setEditableData({ ...editableData, bornOn: event.target.value })}
-                        className="bg-white border-gray-200 text-gray-900 text-sm"
-                        data-testid={`input-scan-dob-${passengerIndex}`}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.gender")}</Label>
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant={editableData.gender === "m" ? "default" : "outline"}
-                          className={`flex-1 text-xs ${editableData.gender === "m" ? "" : "border-gray-200 text-gray-500"}`}
-                          onClick={() => setEditableData({ ...editableData, gender: "m" })}
-                          data-testid={`button-scan-gender-m-${passengerIndex}`}
-                        >
-                          {t("booking.male")}
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant={editableData.gender === "f" ? "default" : "outline"}
-                          className={`flex-1 text-xs ${editableData.gender === "f" ? "" : "border-gray-200 text-gray-500"}`}
-                          onClick={() => setEditableData({ ...editableData, gender: "f" })}
-                          data-testid={`button-scan-gender-f-${passengerIndex}`}
-                        >
-                          {t("booking.female")}
-                        </Button>
-                      </div>
-                    </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-500 text-[10px] font-black uppercase tracking-widest ml-1">{t("scan.doc_number")}</Label>
+                    <Input value={editableData.passportNumber} onChange={e => setEditableData({...editableData, passportNumber: e.target.value.toUpperCase()})} className="h-12 bg-slate-900/60 border-white/10 text-white rounded-xl focus:border-blue-500/50" />
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("scan.doc_number")}</Label>
-                      <Input
-                        value={editableData.passportNumber}
-                        onChange={(event) => setEditableData({ ...editableData, passportNumber: event.target.value.toUpperCase() })}
-                        className="bg-white border-gray-200 text-gray-900 text-sm"
-                        data-testid={`input-scan-doc-number-${passengerIndex}`}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.passport_expiry")}</Label>
-                      <Input
-                        type="date"
-                        value={editableData.passportExpiryDate}
-                        onChange={(event) => setEditableData({ ...editableData, passportExpiryDate: event.target.value })}
-                        className="bg-white border-gray-200 text-gray-900 text-sm"
-                        data-testid={`input-scan-expiry-${passengerIndex}`}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.nationality")}</Label>
-                      <Input
-                        value={editableData.nationality}
-                        onChange={(event) => setEditableData({ ...editableData, nationality: event.target.value.toUpperCase() })}
-                        className="bg-white border-gray-200 text-gray-900 text-sm"
-                        maxLength={3}
-                        placeholder="BRA"
-                        data-testid={`input-scan-nationality-${passengerIndex}`}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">{t("booking.issuing_country")}</Label>
-                      <Input
-                        value={editableData.passportIssuingCountry}
-                        onChange={(event) => setEditableData({ ...editableData, passportIssuingCountry: event.target.value.toUpperCase() })}
-                        className="bg-white border-gray-200 text-gray-900 text-sm"
-                        maxLength={3}
-                        placeholder="BRA"
-                        data-testid={`input-scan-issuing-${passengerIndex}`}
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-500 text-[10px] font-black uppercase tracking-widest ml-1">{t("booking.passport_expiry")}</Label>
+                    <Input type="date" value={editableData.passportExpiryDate} onChange={e => setEditableData({...editableData, passportExpiryDate: e.target.value})} className="h-12 bg-slate-900/60 border-white/10 text-white rounded-xl focus:border-blue-500/50" />
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-2 pt-4 mt-auto shrink-0 bg-white border-t sm:border-t-0 sm:pt-2 sm:mt-0 sm:bg-transparent -mx-4 px-4 sm:mx-0 sm:px-0">
-              <Button
-                variant="outline"
-                className="flex-1 border-gray-200 text-gray-500"
-                onClick={resetState}
-                data-testid={`button-scan-retry-${passengerIndex}`}
-              >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                {t("scan.try_again")}
-              </Button>
-              <Button
-                className="flex-1 gap-2"
-                onClick={handleConfirm}
-                data-testid={`button-scan-confirm-${passengerIndex}`}
-              >
-                <CheckCircle2 className="h-4 w-4" />
-                {t("scan.confirm_data")}
-              </Button>
+            <div className="p-8 pt-4 border-t border-white/5 flex gap-4 relative z-10 shrink-0">
+              <Button variant="ghost" className="flex-1 h-14 rounded-2xl bg-white/5 text-white font-black uppercase tracking-widest hover:bg-white/10" onClick={resetState}><RotateCcw className="h-4 w-4 mr-2" />{t("scan.try_again")}</Button>
+              <Button className="flex-1 h-14 rounded-2xl bg-blue-600 text-white font-black uppercase tracking-widest hover:bg-blue-500" onClick={handleConfirm}><Check className="h-4 w-4 mr-2" />{t("scan.confirm_data")}</Button>
             </div>
-          </>
+          </div>
         )}
 
         {step === "error" && (
-          <>
-            <DialogHeader className="text-center items-center">
-              <div className="mx-auto h-14 w-14 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mb-2">
-                <AlertTriangle className="h-7 w-7 text-red-500" />
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(239,68,68,0.1)_0%,rgba(2,6,23,0)_70%)] pointer-events-none" />
+            <DialogHeader className="text-center items-center shrink-0 p-8 pb-4 relative z-10">
+              <div className="mx-auto h-20 w-20 rounded-[28px] bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6 shadow-lg shadow-red-500/5">
+                <AlertTriangle className="h-10 w-10 text-red-400" />
               </div>
-              <DialogTitle className="text-xl font-display text-gray-900">
-                {t("scan.error_title")}
-              </DialogTitle>
-              <DialogDescription className="text-gray-500 text-sm">
-                {errorMessage}
-              </DialogDescription>
+              <DialogTitle className="text-2xl font-black text-white tracking-tight uppercase">{t("scan.error_title")}</DialogTitle>
+              <DialogDescription className="text-red-400 text-sm font-medium mt-2">{errorMessage}</DialogDescription>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto pr-1 -mr-1 mt-4">
-              <div className="space-y-4">
-                {imagePreview && (
-                  <div className="rounded-xl overflow-hidden border border-gray-200 max-h-32 flex items-center justify-center bg-gray-50">
-                    <img src={imagePreview} alt="Document" className="max-h-32 object-contain opacity-50" />
-                  </div>
-                )}
-
-                <div className="p-4 rounded-xl bg-white border border-gray-200 space-y-3 pb-2">
-                  <p className="text-xs font-bold text-gray-700">{t("scan.tips_title")}</p>
-                  <div className="grid grid-cols-1 gap-2">
-                    <div className="flex items-start gap-2">
-                      <Sun className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
-                      <span className="text-[11px] text-gray-500">{t("scan.tip_1")}</span>
+            <div className="flex-1 px-8 pb-8 flex flex-col items-center justify-center relative z-10 space-y-8">
+               <div className="rounded-[28px] border border-white/5 bg-white/5 p-6 w-full space-y-4">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">{t("scan.tips_title")}</p>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="flex items-center justify-center gap-3 text-slate-300">
+                      <Sun className="h-4 w-4 text-blue-500/40" />
+                      <span className="text-xs font-medium">{t("scan.tip_1")}</span>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <Focus className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
-                      <span className="text-[11px] text-gray-500">{t("scan.tip_2")}</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <Maximize2 className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
-                      <span className="text-[11px] text-gray-500">{t("scan.tip_3")}</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <ScanLine className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
-                      <span className="text-[11px] text-gray-500">{t("scan.tip_4")}</span>
+                    <div className="flex items-center justify-center gap-3 text-slate-300">
+                      <Focus className="h-4 w-4 text-blue-500/40" />
+                      <span className="text-xs font-medium">{t("scan.tip_2")}</span>
                     </div>
                   </div>
-                </div>
-              </div>
+               </div>
             </div>
 
-            <div className="flex gap-2 pt-4 mt-auto shrink-0 bg-white border-t sm:border-t-0 sm:pt-2 sm:mt-0 sm:bg-transparent -mx-4 px-4 sm:mx-0 sm:px-0">
-              <Button
-                variant="outline"
-                className="flex-1 border-gray-200 text-gray-500"
-                onClick={() => handleOpenChange(false)}
-                data-testid={`button-scan-cancel-${passengerIndex}`}
-              >
-                <X className="h-4 w-4 mr-2" />
-                {t("scan.cancel")}
-              </Button>
-              <Button
-                className="flex-1 gap-2"
-                onClick={resetState}
-                data-testid={`button-scan-retry-error-${passengerIndex}`}
-              >
-                <RotateCcw className="h-4 w-4" />
-                {t("scan.try_again")}
-              </Button>
+            <div className="p-8 pt-4 border-t border-white/5 flex gap-4 relative z-10">
+              <Button variant="ghost" className="flex-1 h-14 rounded-2xl bg-white/5 text-white font-black uppercase tracking-widest" onClick={() => handleOpenChange(false)}><X className="h-4 w-4 mr-2" />{t("scan.cancel")}</Button>
+              <Button className="flex-1 h-14 rounded-2xl bg-blue-600 text-white font-black uppercase tracking-widest" onClick={resetState}><RotateCcw className="h-4 w-4 mr-2" />{t("scan.try_again")}</Button>
             </div>
-          </>
+          </div>
         )}
       </DialogContent>
     </Dialog>
