@@ -1,11 +1,30 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { FlightSearchForm } from "@/components/FlightSearchForm";
 import { FlightCard } from "@/components/FlightCard";
 import FlightBaggageHighlights from "@/components/FlightBaggageHighlights";
 import SeniorFlightOptionCard from "@/components/SeniorFlightOptionCard";
 import { useFlightSearch, type FlightSearchQuery } from "@/hooks/use-flights";
-import { Loader2, Filter, AlertCircle, Plane, X, Sun, Sunrise, Sunset, Moon, Globe, BarChart3, Armchair, Sparkles, CheckCircle2, Clock, ArrowRight, HeartHandshake, MessageCircle } from "lucide-react";
+import {
+  Loader2,
+  Filter,
+  AlertCircle,
+  Plane,
+  X,
+  Sun,
+  Sunrise,
+  Sunset,
+  Moon,
+  Globe,
+  BarChart3,
+  Armchair,
+  Sparkles,
+  CheckCircle2,
+  Clock,
+  ArrowRight,
+  HeartHandshake,
+  MessageCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
@@ -13,8 +32,7 @@ import { Card } from "@/components/ui/card";
 import { useI18n } from "@/lib/i18n";
 import { enforceI18n } from "@/lib/enforceI18n";
 import { SEO } from "@/components/SEO";
-import { Link } from "wouter";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AGENCY_WHATSAPP_DISPLAY,
@@ -44,6 +62,7 @@ type SortOption = "cheapest" | "fastest" | "best";
 type DepartureTime = "morning" | "afternoon" | "evening" | "night";
 
 function parseDurationToMinutes(duration: string): number {
+  if (!duration) return 0;
   const hoursMatch = duration.match(/(\d+)H/);
   const minutesMatch = duration.match(/(\d+)M/);
   const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
@@ -52,6 +71,7 @@ function parseDurationToMinutes(duration: string): number {
 }
 
 function formatDurationUtil(duration: string): string {
+  if (!duration) return "";
   const hoursMatch = duration.match(/(\d+)H/);
   const minutesMatch = duration.match(/(\d+)M/);
   const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
@@ -84,11 +104,11 @@ function getDepartureTimeBucket(departureTime: string): DepartureTime {
 }
 
 const SEARCH_STEPS = [
-  { key: "step1", icon: Globe, duration: 2500 },
-  { key: "step2", icon: BarChart3, duration: 2500 },
-  { key: "step3", icon: Armchair, duration: 2500 },
-  { key: "step4", icon: Sparkles, duration: 2500 },
-  { key: "step5", icon: CheckCircle2, duration: 2500 },
+  { key: "step1", icon: Globe },
+  { key: "step2", icon: BarChart3 },
+  { key: "step3", icon: Armchair },
+  { key: "step4", icon: Sparkles },
+  { key: "step5", icon: CheckCircle2 },
 ];
 
 function FlightSearchAnimation({ t }: { t: (key: string) => string }) {
@@ -97,119 +117,149 @@ function FlightSearchAnimation({ t }: { t: (key: string) => string }) {
 
   useEffect(() => {
     const stepInterval = setInterval(() => {
-      setCurrentStep(prev => (prev < SEARCH_STEPS.length - 1 ? prev + 1 : prev));
+      setCurrentStep((prev) => (prev < SEARCH_STEPS.length - 1 ? prev + 1 : prev));
     }, 2500);
-    return () => clearInterval(stepInterval);
-  }, []);
-
-  useEffect(() => {
     const progressInterval = setInterval(() => {
-      setProgress(prev => {
+      setProgress((prev) => {
         if (prev >= 95) return 95;
-        const increment = Math.random() * 3 + 1;
-        return Math.min(prev + increment, 95);
+        return Math.min(prev + Math.random() * 3 + 1, 95);
       });
     }, 200);
-    return () => clearInterval(progressInterval);
+    return () => {
+      clearInterval(stepInterval);
+      clearInterval(progressInterval);
+    };
   }, []);
 
   return (
-    <div className="bg-white dark:bg-card rounded-md shadow-sm border border-border overflow-hidden" data-testid="search-loading-animation">
-      <div className="relative px-6 py-12 md:py-16">
-        <div className="flex flex-col items-center text-center max-w-md mx-auto">
-          <div className="relative mb-8">
-            <div className="h-20 w-20 rounded-full bg-blue-50 dark:bg-blue-950 flex items-center justify-center">
-              <motion.div
-                animate={{ x: [0, 60, 0], y: [0, -15, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <Plane className="h-8 w-8 text-blue-500 dark:text-blue-400 -rotate-12" />
-              </motion.div>
-            </div>
-            <motion.div
-              className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-blue-500"
-              animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            />
+    <div className="bg-white dark:bg-card rounded-md shadow-sm border border-border overflow-hidden p-6 text-center">
+      <div className="flex flex-col items-center max-w-md mx-auto py-8">
+        <div className="relative mb-8">
+          <div className="h-20 w-20 rounded-full bg-blue-50 dark:bg-blue-950 flex items-center justify-center">
+            <motion.div animate={{ x: [0, 40, 0], y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity }}>
+              <Plane className="h-8 w-8 text-blue-500 -rotate-12" />
+            </motion.div>
           </div>
-          <h3 className="text-lg font-bold text-foreground mb-2" data-testid="text-search-loading-title">
-            {t("search_loading.title")}
-          </h3>
-
-          <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 mb-6 overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full"
-              style={{ width: `${progress}%` }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
-
-          <div className="w-full space-y-3 mb-6">
-            {SEARCH_STEPS.map((step, index) => {
-              const StepIcon = step.icon;
-              const isActive = index === currentStep;
-              const isComplete = index < currentStep;
-
-              return (
-                <motion.div
-                  key={step.key}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: isComplete || isActive ? 1 : 0.3, x: 0 }}
-                  transition={{ delay: index * 0.1, duration: 0.3 }}
-                  className={`flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${
-                    isActive ? "bg-blue-50 dark:bg-blue-950/50" : ""
-                  }`}
-                  data-testid={`search-step-${step.key}`}
-                >
-                  <div className={`flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center transition-colors ${
-                    isComplete
-                      ? "bg-green-100 dark:bg-green-900/50"
-                      : isActive
-                      ? "bg-blue-100 dark:bg-blue-900/50"
-                      : "bg-gray-100 dark:bg-gray-800"
-                  }`}>
-                    {isComplete ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    ) : isActive ? (
-                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
-                        <Loader2 className="h-4 w-4 text-blue-500" />
-                      </motion.div>
-                    ) : (
-                      <StepIcon className="h-3.5 w-3.5 text-gray-400" />
-                    )}
-                  </div>
-                  <span className={`text-sm ${
-                    isComplete ? "text-green-600 dark:text-green-400 line-through" : isActive ? "text-foreground font-medium" : "text-muted-foreground"
-                  }`}>
-                    {t(`search_loading.${step.key}`)}
-                  </span>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-muted-foreground bg-gray-50 dark:bg-gray-800/50 rounded-md px-4 py-2">
-            <Sparkles className="h-3 w-3 text-amber-500" />
-            <span>{t("search_loading.tip")}</span>
-          </div>
+        </div>
+        <h3 className="text-lg font-bold mb-4">{t("search_loading.title")}</h3>
+        <div className="w-full bg-gray-100 rounded-full h-1.5 mb-6 overflow-hidden">
+          <motion.div className="h-full bg-blue-500" style={{ width: `${progress}%` }} />
+        </div>
+        <div className="w-full space-y-3">
+          {SEARCH_STEPS.map((step, idx) => {
+            const isActive = idx === currentStep;
+            const isComplete = idx < currentStep;
+            const Icon = step.icon;
+            return (
+              <div key={step.key} className={`flex items-center gap-3 p-2 rounded-md ${isActive ? "bg-blue-50" : ""}`}>
+                <div className={`h-6 w-6 rounded-full flex items-center justify-center ${isComplete ? "bg-green-100" : isActive ? "bg-blue-100" : "bg-gray-100"}`}>
+                  {isComplete ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Icon className={`h-3.5 w-3.5 ${isActive ? "text-blue-500" : "text-gray-400"}`} />}
+                </div>
+                <span className={`text-sm ${isComplete ? "text-green-600 line-through" : isActive ? "font-bold" : "text-gray-500"}`}>
+                  {t(`search_loading.${step.key}`)}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
   );
 }
 
-
 export default function SearchResults() {
-  const [location] = useLocation();
+  const [, setLocation] = useLocation();
   const { t, language } = useI18n();
   const searchParams = new URLSearchParams(window.location.search);
-  const tripType = searchParams.get('tripType');
-  const legsRaw = searchParams.get('legs');
+
+  // URL State
+  const tripType = searchParams.get("tripType");
+  const legsRaw = searchParams.get("legs");
   const isEasyMode = searchParams.get("ui") === "easy";
   const seniorPriority = (searchParams.get("seniorPriority") || "comfort") as SeniorPriority;
   const seniorConnections = (searchParams.get("seniorConnections") || "one") as SeniorConnectionPreference;
   const seniorBags = (searchParams.get("seniorBags") || "flexible") as SeniorBagPreference;
   const seniorTime = (searchParams.get("seniorTime") || "day") as SeniorTimePreference;
+
+  // Memoized Helpers
+  const isMultiCity = tripType === "multi-city" && !!legsRaw;
+  const isRoundTrip = !!searchParams.get("returnDate");
+
+  const multiCityLegs = useMemo(() => {
+    try {
+      return isMultiCity ? JSON.parse(legsRaw!) : [];
+    } catch {
+      return [];
+    }
+  }, [isMultiCity, legsRaw]);
+
+  const params: FlightSearchQuery = useMemo(() => (isMultiCity ? {
+    origin: multiCityLegs[0]?.origin || "",
+    destination: multiCityLegs[0]?.destination || "",
+    date: multiCityLegs[0]?.date || "",
+    passengers: searchParams.get("passengers") || "1",
+    adults: searchParams.get("adults") || "1",
+    children: searchParams.get("children") || "0",
+    infants: searchParams.get("infants") || "0",
+    cabinClass: searchParams.get("cabinClass") || "economy",
+    tripType: "multi-city",
+    legs: legsRaw || undefined,
+  } : {
+    origin: searchParams.get("origin") || "",
+    destination: searchParams.get("destination") || "",
+    date: searchParams.get("date") || "",
+    passengers: searchParams.get("passengers") || "1",
+    adults: searchParams.get("adults") || "1",
+    children: searchParams.get("children") || "0",
+    infants: searchParams.get("infants") || "0",
+    cabinClass: searchParams.get("cabinClass") || "economy",
+    returnDate: searchParams.get("returnDate") || undefined,
+  }), [isMultiCity, multiCityLegs, searchParams, legsRaw]);
+
+  // Data Loading
+  const { data: flights, isLoading, isFetching, error } = useFlightSearch(params);
+
+  // Component State
+  const [showAnimation, setShowAnimation] = useState(true);
+  const [selectedOutboundKey, setSelectedOutboundKey] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>(isEasyMode ? "best" : "cheapest");
+  const [selectedStops, setSelectedStops] = useState<Set<string>>(new Set());
+  const [selectedAirlines, setSelectedAirlines] = useState<Set<string>>(new Set());
+  const [selectedDepartureTimes, setSelectedDepartureTimes] = useState<Set<DepartureTime>>(new Set());
+  const [selectedReturnTimes, setSelectedReturnTimes] = useState<Set<DepartureTime>>(new Set());
+  const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [showEasyExtraOptions, setShowEasyExtraOptions] = useState(false);
+
+  const priceLocale = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
+  const FLIGHTS_PER_PAGE = isEasyMode ? 1 : 10;
+  const [visibleOneWayCount, setVisibleOneWayCount] = useState(FLIGHTS_PER_PAGE);
+  const [visibleOutboundCount, setVisibleOutboundCount] = useState(FLIGHTS_PER_PAGE);
+  const [visibleReturnCount, setVisibleReturnCount] = useState(FLIGHTS_PER_PAGE);
+
+  // Animation Control
+  const searchKey = useMemo(() => JSON.stringify(params), [params]);
+  useEffect(() => {
+    setShowAnimation(true);
+    setSelectedOutboundKey(null);
+  }, [searchKey]);
+
+  useEffect(() => {
+    if (!isLoading && !isFetching && showAnimation) {
+      const timer = setTimeout(() => setShowAnimation(false), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, isFetching, showAnimation]);
+
+  const isSearching = isLoading || isFetching || showAnimation;
+
+  // Senior Preferences Logic
+  const easyPreferences: SeniorPreferences = useMemo(() => ({
+    priority: ["comfort", "fastest", "balanced", "cheapest"].includes(seniorPriority) ? seniorPriority : "comfort",
+    connections: ["none", "one", "any"].includes(seniorConnections) ? seniorConnections : "one",
+    bags: ["checked", "carry", "flexible"].includes(seniorBags) ? seniorBags : "flexible",
+    time: ["day", "any"].includes(seniorTime) ? seniorTime : "day",
+  }), [seniorPriority, seniorConnections, seniorBags, seniorTime]);
 
   const easyModeCopy = useMemo(() => ({
     badge: enforceI18n(t("results.senior_badge"), "results.senior_badge"),
@@ -241,138 +291,139 @@ export default function SearchResults() {
     timeAny: enforceI18n(t("results.senior_time_any"), "results.senior_time_any"),
   }), [t, language]);
 
-  const isMultiCity = tripType === 'multi-city' && legsRaw;
-  const multiCityLegs = useMemo(() => {
-    try {
-      return isMultiCity ? JSON.parse(legsRaw) : [];
-    } catch {
-      return [];
-    }
-  }, [isMultiCity, legsRaw]);
+  // Derived Values
+  const priceExtents = useMemo(() => {
+    if (!flights || flights.length === 0) return { min: 0, max: 10000 };
+    const prices = flights.map((f) => f.price);
+    return { min: Math.floor(Math.min(...prices)), max: Math.ceil(Math.max(...prices)) };
+  }, [flights]);
 
-  const params: FlightSearchQuery = useMemo(() => isMultiCity ? {
-    origin: multiCityLegs[0]?.origin || "",
-    destination: multiCityLegs[0]?.destination || "",
-    date: multiCityLegs[0]?.date || "",
-    passengers: searchParams.get('passengers') || "1",
-    adults: searchParams.get('adults') || "1",
-    children: searchParams.get('children') || "0",
-    infants: searchParams.get('infants') || "0",
-    cabinClass: searchParams.get('cabinClass') || "economy",
-    tripType: 'multi-city',
-    legs: legsRaw || undefined,
-  } : {
-    origin: searchParams.get('origin') || "",
-    destination: searchParams.get('destination') || "",
-    date: searchParams.get('date') || "",
-    passengers: searchParams.get('passengers') || "1",
-    adults: searchParams.get('adults') || "1",
-    children: searchParams.get('children') || "0",
-    infants: searchParams.get('infants') || "0",
-    cabinClass: searchParams.get('cabinClass') || "economy",
-    returnDate: searchParams.get('returnDate') || undefined,
-  }, [isMultiCity, multiCityLegs, searchParams, legsRaw]);
+  const uniqueAirlines = useMemo(() => {
+    if (!flights) return [];
+    return Array.from(new Set(flights.map((f) => f.airline))).sort();
+  }, [flights]);
 
-  const { data: flights, isLoading, isFetching, error } = useFlightSearch(params);
+  const defaultValues = useMemo(() => {
+    const parseDate = (d: any) => {
+      if (!d) return undefined;
+      const parsed = parseISO(d);
+      return isValid(parsed) ? parsed : undefined;
+    };
+    const { date, returnDate, ...rest } = params;
+    return {
+      ...rest,
+      origin: params.origin || "",
+      destination: params.destination || "",
+      passengers: params.passengers || "1",
+      date: parseDate(date),
+      returnDate: parseDate(returnDate),
+      tripType: (params as any).tripType || (isRoundTrip ? "round-trip" : "one-way"),
+      legs: isMultiCity ? multiCityLegs : undefined,
+    };
+  }, [params, isRoundTrip, isMultiCity, multiCityLegs]);
 
-  const searchKey = useMemo(() => `${params.origin}-${params.destination}-${params.date}-${(params as any).returnDate || ''}-${params.passengers}-${params.adults}-${params.children}-${params.infants}-${params.cabinClass}-${(params as any).tripType || ''}-${(params as any).legs || ''}`, [params]);
-  const [showAnimation, setShowAnimation] = useState(true);
-  const [lastSearchKey, setLastSearchKey] = useState(searchKey);
-  const [showEasyExtraOptions, setShowEasyExtraOptions] = useState(false);
-
-  useEffect(() => {
-    if (searchKey !== lastSearchKey) {
-      setShowAnimation(true);
-      setLastSearchKey(searchKey);
-    }
-  }, [searchKey, lastSearchKey]);
-
-  useEffect(() => {
-    if (!isLoading && !isFetching && showAnimation) {
-      const timer = setTimeout(() => setShowAnimation(false), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, isFetching, showAnimation]);
-
-  const isSearching = (isLoading || isFetching) || showAnimation;
-
-  const easyPreferences: SeniorPreferences = {
-    priority: ["comfort", "fastest", "balanced", "cheapest"].includes(seniorPriority) ? seniorPriority : "comfort",
-    connections: ["none", "one", "any"].includes(seniorConnections) ? seniorConnections : "one",
-    bags: ["checked", "carry", "flexible"].includes(seniorBags) ? seniorBags : "flexible",
-    time: ["day", "any"].includes(seniorTime) ? seniorTime : "day",
-  };
-
-  const initialSortBy: SortOption =
-    isEasyMode
-      ? seniorPriority === "fastest"
-        ? "fastest"
-        : seniorPriority === "cheapest"
-          ? "cheapest"
-          : "best"
-      : "cheapest";
-
-  const [sortBy, setSortBy] = useState<SortOption>(initialSortBy);
-  const [selectedStops, setSelectedStops] = useState<Set<string>>(new Set());
-  const [selectedAirlines, setSelectedAirlines] = useState<Set<string>>(new Set());
-  const [selectedDepartureTimes, setSelectedDepartureTimes] = useState<Set<DepartureTime>>(new Set());
-  const [selectedReturnTimes, setSelectedReturnTimes] = useState<Set<DepartureTime>>(new Set());
-  const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-
-  const [selectedOutboundKey, setSelectedOutboundKey] = useState<string | null>(null);
-  const priceLocale = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
-
-  const FLIGHTS_PER_PAGE = isEasyMode ? 1 : 10;
-  const [visibleOneWayCount, setVisibleOneWayCount] = useState(FLIGHTS_PER_PAGE);
-  const [visibleOutboundCount, setVisibleOutboundCount] = useState(FLIGHTS_PER_PAGE);
-  const [visibleReturnCount, setVisibleReturnCount] = useState(FLIGHTS_PER_PAGE);
-
-  const isRoundTrip = !!(params as any).returnDate;
-
+  // Key Helpers
   const getOutboundKey = useCallback((flight: FlightOffer) => {
-    if (!flight.slices || flight.slices.length < 1) return flight.id;
-    const s = flight.slices[0];
-    return s.segments.map(seg => `${seg.flightNumber}-${seg.departureTime}`).join("|");
+    if (!flight.slices?.[0]) return flight.id;
+    return flight.slices[0].segments.map((seg) => `${seg.flightNumber}-${seg.departureTime}`).join("|");
   }, []);
 
   const getReturnKey = useCallback((flight: FlightOffer) => {
-    if (!flight.slices || flight.slices.length < 2) return flight.id;
-    const s = flight.slices[1];
-    return s.segments.map(seg => `${seg.flightNumber}-${seg.departureTime}`).join("|");
+    if (!flight.slices?.[1]) return flight.id;
+    return flight.slices[1].segments.map((seg) => `${seg.flightNumber}-${seg.departureTime}`).join("|");
   }, []);
 
-  useEffect(() => {
-    if (searchKey !== lastSearchKey) {
-      setSelectedOutboundKey(null);
-      setVisibleOneWayCount(FLIGHTS_PER_PAGE);
-      setVisibleOutboundCount(FLIGHTS_PER_PAGE);
-      setVisibleReturnCount(FLIGHTS_PER_PAGE);
-      setShowEasyExtraOptions(false);
+  // Filter Logic
+  const compareFlights = useCallback((a: FlightOffer, b: FlightOffer) => {
+    if (isEasyMode) {
+      if (sortBy === "cheapest") return a.price - b.price || parseDurationToMinutes(a.duration) - parseDurationToMinutes(b.duration);
+      if (sortBy === "fastest") return parseDurationToMinutes(a.duration) - parseDurationToMinutes(b.duration) || a.price - b.price;
+      const insightA = getSeniorFlightInsight(a, easyPreferences);
+      const insightB = getSeniorFlightInsight(b, easyPreferences);
+      const scoreA = easyPreferences.priority === "balanced" || easyPreferences.priority === "cheapest" ? insightA.balancedScore : insightA.comfortScore;
+      const scoreB = easyPreferences.priority === "balanced" || easyPreferences.priority === "cheapest" ? insightB.balancedScore : insightB.comfortScore;
+      return scoreA - scoreB || a.price - b.price || parseDurationToMinutes(a.duration) - parseDurationToMinutes(b.duration);
     }
-  }, [searchKey, lastSearchKey]);
+    switch (sortBy) {
+      case "cheapest": return a.price - b.price;
+      case "fastest": return parseDurationToMinutes(a.duration) - parseDurationToMinutes(b.duration);
+      case "best": return (a.price * 0.6 + parseDurationToMinutes(a.duration) * 0.4) - (b.price * 0.6 + parseDurationToMinutes(b.duration) * 0.4);
+      default: return 0;
+    }
+  }, [isEasyMode, sortBy, easyPreferences]);
 
-  useEffect(() => {
-    setVisibleReturnCount(FLIGHTS_PER_PAGE);
-  }, [selectedOutboundKey]);
-
-  useEffect(() => {
-    setVisibleOneWayCount(FLIGHTS_PER_PAGE);
-    setVisibleOutboundCount(FLIGHTS_PER_PAGE);
-    setVisibleReturnCount(FLIGHTS_PER_PAGE);
-  }, [sortBy, selectedStops, selectedAirlines, selectedDepartureTimes, selectedReturnTimes, priceRange, FLIGHTS_PER_PAGE]);
-
-  const toggleSetItem = useCallback(<T,>(setter: React.Dispatch<React.SetStateAction<Set<T>>>, item: T) => {
-    setter(prev => {
-      const next = new Set(prev);
-      if (next.has(item)) {
-        next.delete(item);
-      } else {
-        next.add(item);
+  const filteredAndSortedFlights = useMemo(() => {
+    if (!flights) return [];
+    let filtered = flights.filter((flight) => {
+      if (selectedStops.size > 0 && !selectedStops.has(getStopsBucket(flight.stops))) return false;
+      if (selectedAirlines.size > 0 && !selectedAirlines.has(flight.airline)) return false;
+      if (selectedDepartureTimes.size > 0 && !selectedDepartureTimes.has(getDepartureTimeBucket(flight.departureTime))) return false;
+      if (selectedReturnTimes.size > 0 && flight.slices?.[1]?.segments?.[0]) {
+        if (!selectedReturnTimes.has(getDepartureTimeBucket(flight.slices[1].segments[0].departureTime))) return false;
       }
-      return next;
+      if (priceRange && (flight.price < priceRange[0] || flight.price > priceRange[1])) return false;
+      return true;
     });
-  }, []);
+    return filtered.sort(compareFlights);
+  }, [flights, selectedStops, selectedAirlines, selectedDepartureTimes, selectedReturnTimes, priceRange, compareFlights]);
+
+  const offerMatrix = useMemo(() => {
+    if (!isRoundTrip || !flights?.length) return null;
+    const outboundMap = new Map<string, any>();
+    const returnMap = new Map<string, any>();
+    const comboMap = new Map<string, FlightOffer>();
+
+    flights.forEach(f => {
+      if (!f.slices || f.slices.length < 2) return;
+      const obKey = getOutboundKey(f);
+      const rtKey = getReturnKey(f);
+      const comboKey = `${obKey}::${rtKey}`;
+
+      if (!comboMap.has(comboKey) || f.price < comboMap.get(comboKey)!.price) comboMap.set(comboKey, f);
+      if (!outboundMap.has(obKey) || f.price < outboundMap.get(obKey).lowestPrice) {
+        outboundMap.set(obKey, { slice: f.slices[0], airline: f.airline, logoUrl: f.logoUrl, lowestPrice: f.price, offer: f });
+      }
+      if (!returnMap.has(rtKey) || f.price < returnMap.get(rtKey).lowestPrice) {
+        returnMap.set(rtKey, { slice: f.slices[1], airline: f.airline, logoUrl: f.logoUrl, lowestPrice: f.price, offer: f });
+      }
+    });
+    return { outboundMap, returnMap, comboMap };
+  }, [flights, isRoundTrip, getOutboundKey, getReturnKey]);
+
+  const filteredComboMap = useMemo(() => {
+    const map = new Map<string, FlightOffer>();
+    if (!isRoundTrip) return map;
+    filteredAndSortedFlights.forEach(f => {
+      if (!f.slices || f.slices.length < 2) return;
+      const key = `${getOutboundKey(f)}::${getReturnKey(f)}`;
+      if (!map.has(key) || f.price < map.get(key)!.price) map.set(key, f);
+    });
+    return map;
+  }, [filteredAndSortedFlights, isRoundTrip, getOutboundKey, getReturnKey]);
+
+  const outboundOptionsForDisplay = useMemo(() => {
+    if (!offerMatrix) return [];
+    const grouped = new Map<string, any>();
+    filteredAndSortedFlights.forEach(f => {
+      if (!f.slices?.[1]) return;
+      const key = getOutboundKey(f);
+      if (!grouped.has(key) || compareFlights(f, grouped.get(key).offer) < 0) {
+        grouped.set(key, { slice: f.slices[0], airline: f.airline, logoUrl: f.logoUrl, lowestPrice: f.price, offer: f });
+      }
+    });
+    return grouped.size ? Array.from(grouped.entries()).sort(([, a], [, b]) => compareFlights(a.offer, b.offer)) : Array.from(offerMatrix.outboundMap.entries()).sort(([, a], [, b]) => compareFlights(a.offer, b.offer));
+  }, [offerMatrix, filteredAndSortedFlights, getOutboundKey, compareFlights]);
+
+  const returnOptionsForSelected = useMemo(() => {
+    if (!selectedOutboundKey) return [];
+    const results: any[] = [];
+    filteredComboMap.forEach((offer, key) => {
+      if (key.startsWith(`${selectedOutboundKey}::`)) {
+        results.push({ returnKey: getReturnKey(offer), slice: offer.slices![1], airline: offer.airline, logoUrl: offer.logoUrl, offer, price: offer.price });
+      }
+    });
+    return results.sort((a, b) => compareFlights(a.offer, b.offer));
+  }, [selectedOutboundKey, filteredComboMap, getReturnKey, compareFlights]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -384,415 +435,84 @@ export default function SearchResults() {
     return count;
   }, [selectedStops, selectedAirlines, selectedDepartureTimes, selectedReturnTimes, priceRange, priceExtents]);
 
+  const toggleSetItem = useCallback(<T,>(setter: React.Dispatch<React.SetStateAction<Set<T>>>, item: T) => {
+    setter(prev => {
+      const next = new Set(prev);
+      if (next.has(item)) next.delete(item); else next.add(item);
+      return next;
+    });
+  }, []);
+
   const clearFilters = useCallback(() => {
     setSelectedStops(new Set());
     setSelectedAirlines(new Set());
     setSelectedDepartureTimes(new Set());
     setSelectedReturnTimes(new Set());
     setPriceRange(null);
-    setVisibleOneWayCount(FLIGHTS_PER_PAGE);
-    setVisibleOutboundCount(FLIGHTS_PER_PAGE);
-    setVisibleReturnCount(FLIGHTS_PER_PAGE);
   }, []);
-
-  const compareFlights = useCallback((a: FlightOffer, b: FlightOffer) => {
-    if (isEasyMode) {
-      if (sortBy === "cheapest") {
-        return a.price - b.price || parseDurationToMinutes(a.duration) - parseDurationToMinutes(b.duration);
-      }
-
-      if (sortBy === "fastest") {
-        return parseDurationToMinutes(a.duration) - parseDurationToMinutes(b.duration) || a.price - b.price;
-      }
-
-      const insightA = getSeniorFlightInsight(a, easyPreferences);
-      const insightB = getSeniorFlightInsight(b, easyPreferences);
-      const scoreA =
-        easyPreferences.priority === "balanced" || easyPreferences.priority === "cheapest"
-          ? insightA.balancedScore
-          : insightA.comfortScore;
-      const scoreB =
-        easyPreferences.priority === "balanced" || easyPreferences.priority === "cheapest"
-          ? insightB.balancedScore
-          : insightB.comfortScore;
-
-      return scoreA - scoreB || a.price - b.price || parseDurationToMinutes(a.duration) - parseDurationToMinutes(b.duration);
-    }
-
-    switch (sortBy) {
-      case "cheapest":
-        return a.price - b.price;
-      case "fastest":
-        return parseDurationToMinutes(a.duration) - parseDurationToMinutes(b.duration);
-      case "best": {
-        const scoreA = a.price * 0.6 + parseDurationToMinutes(a.duration) * 0.4;
-        const scoreB = b.price * 0.6 + parseDurationToMinutes(b.duration) * 0.4;
-        return scoreA - scoreB;
-      }
-      default:
-        return 0;
-    }
-  }, [easyPreferences, isEasyMode, sortBy]);
-
-  const filteredAndSortedFlights = useMemo(() => {
-    if (!flights) return [];
-
-    let filtered = flights.filter((flight: FlightOffer) => {
-      if (selectedStops.size > 0) {
-        const bucket = getStopsBucket(flight.stops);
-        if (!selectedStops.has(bucket)) return false;
-      }
-
-      if (selectedAirlines.size > 0) {
-        if (!selectedAirlines.has(flight.airline)) return false;
-      }
-
-      if (selectedDepartureTimes.size > 0) {
-        const bucket = getDepartureTimeBucket(flight.departureTime);
-        if (!selectedDepartureTimes.has(bucket)) return false;
-      }
-
-      if (selectedReturnTimes.size > 0) {
-        // Check return flight time for round trips
-        if (flight.slices && flight.slices.length > 1) {
-          const returnSlice = flight.slices[1];
-          const returnDepartureTime = returnSlice.segments?.[0]?.departureTime;
-          if (returnDepartureTime) {
-            const bucket = getDepartureTimeBucket(returnDepartureTime);
-            if (!selectedReturnTimes.has(bucket)) return false;
-          }
-        }
-      }
-
-      if (priceRange) {
-        if (flight.price < priceRange[0] || flight.price > priceRange[1]) return false;
-      }
-
-      return true;
-    });
-
-    filtered.sort(compareFlights);
-
-    return filtered;
-  }, [compareFlights, flights, selectedStops, selectedAirlines, selectedDepartureTimes, selectedReturnTimes, priceRange]);
-
-  const offerMatrix = useMemo(() => {
-    if (!isRoundTrip || !flights || flights.length === 0) return null;
-    const roundTripOffers = flights.filter(f => f.slices && f.slices.length >= 2);
-    if (roundTripOffers.length === 0) return null;
-
-    const outboundMap = new Map<string, { slice: FlightSlice; airline: string; logoUrl?: string | null; lowestPrice: number; offer: FlightOffer }>();
-    const returnMap = new Map<string, { slice: FlightSlice; airline: string; logoUrl?: string | null; lowestPrice: number; offer: FlightOffer }>();
-    const comboMap = new Map<string, FlightOffer>();
-
-    for (const flight of roundTripOffers) {
-      const obKey = getOutboundKey(flight);
-      const rtKey = getReturnKey(flight);
-      const comboKey = `${obKey}::${rtKey}`;
-
-      const existingCombo = comboMap.get(comboKey);
-      if (!existingCombo || flight.price < existingCombo.price) {
-        comboMap.set(comboKey, flight);
-      }
-
-      const existingOb = outboundMap.get(obKey);
-      if (!existingOb) {
-        outboundMap.set(obKey, { slice: flight.slices![0], airline: flight.airline, logoUrl: flight.logoUrl, lowestPrice: flight.price, offer: flight });
-      } else if (flight.price < existingOb.lowestPrice) {
-        existingOb.lowestPrice = flight.price;
-        existingOb.offer = flight;
-      }
-
-      const existingRt = returnMap.get(rtKey);
-      if (!existingRt) {
-        returnMap.set(rtKey, { slice: flight.slices![1], airline: flight.airline, logoUrl: flight.logoUrl, lowestPrice: flight.price, offer: flight });
-      } else if (flight.price < existingRt.lowestPrice) {
-        existingRt.lowestPrice = flight.price;
-        existingRt.offer = flight;
-      }
-    }
-
-    return { outboundMap, returnMap, comboMap };
-  }, [flights, isRoundTrip, getOutboundKey, getReturnKey]);
-
-  const filteredComboMap = useMemo(() => {
-    if (!isRoundTrip || !filteredAndSortedFlights) return new Map<string, FlightOffer>();
-    const map = new Map<string, FlightOffer>();
-    for (const flight of filteredAndSortedFlights) {
-      if (!flight.slices || flight.slices.length < 2) continue;
-      const obKey = getOutboundKey(flight);
-      const rtKey = getReturnKey(flight);
-      const comboKey = `${obKey}::${rtKey}`;
-      const existing = map.get(comboKey);
-      if (!existing || flight.price < existing.price) {
-        map.set(comboKey, flight);
-      }
-    }
-    return map;
-  }, [filteredAndSortedFlights, isRoundTrip, getOutboundKey, getReturnKey]);
-
-  const outboundOptionsForDisplay = useMemo(() => {
-    if (!offerMatrix) return [];
-
-    const grouped = new Map<string, { slice: FlightSlice; airline: string; logoUrl?: string | null; lowestPrice: number; offer: FlightOffer }>();
-
-    for (const flight of filteredAndSortedFlights) {
-      if (!flight.slices || flight.slices.length < 2) continue;
-      const outboundKey = getOutboundKey(flight);
-      const existing = grouped.get(outboundKey);
-      if (!existing || compareFlights(flight, existing.offer) < 0) {
-        grouped.set(outboundKey, {
-          slice: flight.slices[0],
-          airline: flight.airline,
-          logoUrl: flight.logoUrl,
-          lowestPrice: flight.price,
-          offer: flight,
-        });
-      }
-    }
-
-    if (grouped.size === 0) {
-      return Array.from(offerMatrix.outboundMap.entries()).sort(([, a], [, b]) => compareFlights(a.offer, b.offer));
-    }
-
-    return Array.from(grouped.entries()).sort(([, a], [, b]) => compareFlights(a.offer, b.offer));
-  }, [compareFlights, filteredAndSortedFlights, getOutboundKey, offerMatrix]);
-
-  const returnOptionsForSelected = useMemo(() => {
-    if (!selectedOutboundKey) return [];
-
-    const results: { returnKey: string; slice: FlightSlice; airline: string; logoUrl?: string | null; offer: FlightOffer; price: number }[] = [];
-
-    for (const [comboKey, offer] of Array.from(filteredComboMap.entries())) {
-      if (!comboKey.startsWith(`${selectedOutboundKey}::`) || !offer.slices || offer.slices.length < 2) continue;
-
-      results.push({
-        returnKey: getReturnKey(offer),
-        slice: offer.slices[1],
-        airline: offer.airline,
-        logoUrl: offer.logoUrl,
-        offer,
-        price: offer.price,
-      });
-    }
-
-    results.sort((a, b) => compareFlights(a.offer, b.offer));
-    return results;
-  }, [compareFlights, filteredComboMap, getReturnKey, selectedOutboundKey]);
-
-  const showTwoStepFlow = isRoundTrip && offerMatrix !== null;
-  const hideStandardFilters = isEasyMode && showTwoStepFlow;
-
-  useEffect(() => {
-    if (!hideStandardFilters) return;
-    clearFilters();
-  }, [clearFilters, hideStandardFilters]);
-
-  const stopsOptions = [
-    { key: "direct", label: t("flight.direct") || "Direct" },
-    { key: "1stop", label: t("flight.stop", { count: 1 }) || "1 stop" },
-    { key: "2plus", label: t("flight.stops", { count: "2+" }) || "2+ stops" },
-  ];
-
-  const departureTimeOptions: { key: DepartureTime; label: string; icon: typeof Sun }[] = [
-    { key: "morning", label: t("results.morning") || "Morning (06-12)", icon: Sunrise },
-    { key: "afternoon", label: t("results.afternoon") || "Afternoon (12-18)", icon: Sun },
-    { key: "evening", label: t("results.evening") || "Evening (18-24)", icon: Sunset },
-    { key: "night", label: t("results.night") || "Night (00-06)", icon: Moon },
-  ];
 
   const formatPrice = (amount: number) => {
     const currency = flights?.[0]?.currency || "USD";
-    return new Intl.NumberFormat(priceLocale, {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
+    return new Intl.NumberFormat(priceLocale, { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
   };
 
-  const easyPreferenceItems = [
-    {
-      label: easyModeCopy.summaryPriority,
-      value: easyPreferences.priority === "fastest"
-        ? easyModeCopy.priorityFastest
-        : easyPreferences.priority === "balanced"
-          ? easyModeCopy.priorityBalanced
-          : easyPreferences.priority === "cheapest"
-            ? easyModeCopy.priorityCheapest
-            : easyModeCopy.priorityComfort,
-    },
-    {
-      label: easyModeCopy.summaryConnections,
-      value: easyPreferences.connections === "none"
-        ? easyModeCopy.connectionsNone
-        : easyPreferences.connections === "any"
-          ? easyModeCopy.connectionsAny
-          : easyModeCopy.connectionsOne,
-    },
-    {
-      label: easyModeCopy.summaryBags,
-      value: easyPreferences.bags === "checked"
-        ? easyModeCopy.bagsChecked
-        : easyPreferences.bags === "carry"
-          ? easyModeCopy.bagsCarry
-          : easyModeCopy.bagsFlexible,
-    },
-    {
-      label: easyModeCopy.summaryTime,
-      value: easyPreferences.time === "day" ? easyModeCopy.timeDay : easyModeCopy.timeAny,
-    },
-  ];
+  const whatsAppHref = useMemo(() => buildWhatsAppHref(buildWhatsAppMessage(language)), [language]);
+  const openAssistant = useCallback(() => openChatbotAssistant(), []);
 
-  const easyRecommendations = useMemo(
-    () => buildSeniorRecommendations(flights || [], easyPreferences),
-    [flights, easyPreferences],
-  );
+  const showTwoStepFlow = isRoundTrip && offerMatrix !== null;
 
-  useEffect(() => {
-    if (!selectedOutboundKey) return;
-    const outboundStillVisible = outboundOptionsForDisplay.some(([key]) => key === selectedOutboundKey);
-    if (!outboundStillVisible) {
-      setSelectedOutboundKey(null);
-    }
-  }, [outboundOptionsForDisplay, selectedOutboundKey]);
-
+  // Easy Mode early return logic handled within the main render
   if (isEasyMode && !showTwoStepFlow) {
+    const easyRecommendations = buildSeniorRecommendations(flights || [], easyPreferences);
+    const items = [
+      { label: easyModeCopy.summaryPriority, value: easyPreferences.priority === "fastest" ? easyModeCopy.priorityFastest : easyPreferences.priority === "balanced" ? easyModeCopy.priorityBalanced : easyPreferences.priority === "cheapest" ? easyModeCopy.priorityCheapest : easyModeCopy.priorityComfort },
+      { label: easyModeCopy.summaryConnections, value: easyPreferences.connections === "none" ? easyModeCopy.connectionsNone : easyPreferences.connections === "any" ? easyModeCopy.connectionsAny : easyModeCopy.connectionsOne },
+      { label: easyModeCopy.summaryBags, value: easyPreferences.bags === "checked" ? easyModeCopy.bagsChecked : easyPreferences.bags === "carry" ? easyModeCopy.bagsCarry : easyModeCopy.bagsFlexible },
+      { label: easyModeCopy.summaryTime, value: easyPreferences.time === "day" ? easyModeCopy.timeDay : easyModeCopy.timeAny },
+    ];
+
     return (
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.98),_rgba(241,245,249,0.98)_36%,_rgba(226,232,240,0.96)_100%)] pb-20">
-        <SEO title="Resultados Senior" description="Voos organizados com menos informacao irrelevante e mais foco em conforto, conexoes e clareza." path="/search" noindex={true} />
-
-        <section className="border-b border-slate-200 bg-white/90 backdrop-blur">
-          <div className="container mx-auto max-w-6xl px-4 py-6 md:py-10">
-            <div className="rounded-[28px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_55%,rgba(219,234,254,0.96))] p-4 shadow-[0_24px_80px_-48px_rgba(37,99,235,0.42)] sm:p-5 md:rounded-[32px] md:p-7">
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                <div className="max-w-3xl">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
-                    <HeartHandshake className="h-4 w-4" />
-                    {easyModeCopy.badge}
-                  </span>
-                  <h1 className="mt-4 text-3xl font-display font-extrabold text-slate-950 md:text-4xl">
-                    {easyModeCopy.title}
-                  </h1>
-                  <p className="mt-3 text-base leading-relaxed text-slate-600 md:text-lg">
-                    {easyModeCopy.description}
-                  </p>
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    <div className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
-                      {params.origin} - {params.destination}
-                    </div>
-                    <div className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
-                      {params.date ? format(parseISO(params.date), "dd MMM yyyy") : ""}
-                      {(params as any).returnDate ? ` - ${format(parseISO((params as any).returnDate), "dd MMM yyyy")}` : ""}
-                    </div>
-                    <div className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
-                      {params.passengers || "1"} {Number(params.passengers || "1") === 1 ? "viajante" : "viajantes"}
-                    </div>
+      <div className="min-h-screen bg-gray-50 pb-20">
+        <SEO title="Resultados Senior" description="Voos organizados com foco em conforto." path="/search" noindex={true} />
+        <div className="container mx-auto max-w-6xl px-4 py-10">
+          <div className="grid gap-6 xl:grid-cols-[320px_1fr]">
+            <Card className="h-fit p-6 rounded-[30px] shadow-sm">
+              <p className="text-sm font-bold uppercase text-gray-500 mb-4">{easyModeCopy.summaryTitle}</p>
+              <div className="space-y-3">
+                {items.map(i => (
+                  <div key={i.label} className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-tighter">{i.label}</p>
+                    <p className="font-semibold text-gray-900">{i.value}</p>
                   </div>
-                </div>
-
-                <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
-                  <Button asChild className="w-full rounded-full bg-blue-600 text-white hover:bg-blue-700 sm:w-auto" data-testid="button-easy-mode-call-results">
-                    <a href={whatsAppHref} target="_blank" rel="noreferrer">
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      {easyModeCopy.call}
-                    </a>
-                  </Button>
-                  <Button variant="outline" onClick={openAssistant} className="w-full rounded-full border-slate-300 bg-white text-slate-800 sm:w-auto" data-testid="button-easy-mode-chat-results">
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    {easyModeCopy.assistant}
-                  </Button>
-                  <Link href="/senior">
-                    <Button variant="ghost" className="w-full rounded-full text-blue-700 hover:bg-blue-50 sm:w-auto" data-testid="button-easy-mode-back-results">
-                      {easyModeCopy.back}
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="container mx-auto mt-6 max-w-6xl px-4 md:mt-8">
-          <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-            <Card className="order-2 h-fit rounded-[28px] border border-slate-200 bg-white shadow-[0_20px_70px_-42px_rgba(15,23,42,0.24)] xl:order-1 xl:rounded-[30px]">
-              <div className="p-5 md:p-6">
-                <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-slate-500">{easyModeCopy.summaryTitle}</p>
-                <div className="mt-5 space-y-3">
-                  {easyPreferenceItems.map((item) => (
-                    <div key={item.label} className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-4">
-                      <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">{item.label}</p>
-                      <p className="mt-2 text-base font-semibold leading-relaxed text-slate-900">{item.value}</p>
-                    </div>
-                  ))}
-                </div>
-                {easyRecommendations.fallbackApplied && (
-                  <div className="mt-4 rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-4 text-sm font-medium leading-relaxed text-amber-900">
-                    {easyModeCopy.fallback}
-                  </div>
-                )}
+                ))}
               </div>
             </Card>
-
-            <div className="order-1 space-y-5 xl:order-2">
-              {isSearching && <FlightSearchAnimation t={t} />}
-
-              {error && !isSearching && (
-                <div className="flex flex-col items-center justify-center rounded-[28px] border border-red-200 bg-red-50 py-20 text-red-600">
-                  <AlertCircle className="mb-4 h-10 w-10" />
-                  <p className="font-medium">{t("results.error") || "Failed to load flights."}</p>
+            <div className="space-y-6">
+              <div className="p-6 bg-blue-600 rounded-[30px] text-white flex justify-between items-center flex-wrap gap-4">
+                <div>
+                  <h1 className="text-2xl font-bold text-white">{easyModeCopy.title}</h1>
+                  <p className="text-blue-50 text-sm mt-1">{easyModeCopy.description}</p>
                 </div>
-              )}
-
-              {!isSearching && !error && flights?.length === 0 && (
-                <div className="flex flex-col items-center justify-center rounded-[28px] border border-slate-200 bg-white py-20 text-center shadow-sm">
-                  <Plane className="mb-4 h-10 w-10 text-slate-300" />
-                  <h2 className="text-xl font-bold text-slate-950">{t("results.no_flights") || "No flights found"}</h2>
-                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-500">{t("results.no_flights_desc") || "Try adjusting your search."}</p>
+                <div className="flex gap-2">
+                   <Button asChild className="rounded-full bg-white text-blue-600 hover:bg-blue-50">
+                     <a href={whatsAppHref} target="_blank" rel="noreferrer"><MessageCircle className="mr-2 h-4 w-4" />{easyModeCopy.call}</a>
+                   </Button>
+                   <Button variant="outline" onClick={openAssistant} className="rounded-full border-white/30 text-white hover:bg-white/10">
+                     <MessageCircle className="mr-2 h-4 w-4" />{easyModeCopy.assistant}
+                   </Button>
                 </div>
+              </div>
+              {isSearching ? <FlightSearchAnimation t={t} /> : easyRecommendations.recommendations.map(r => (
+                <SeniorFlightOptionCard key={`${r.kind}-${r.flight.id}`} flight={r.flight} insight={r.insight} kind={r.kind} />
+              ))}
+              {!isSearching && (
+                <Button variant="ghost" className="w-full" onClick={() => setShowEasyExtraOptions(!showEasyExtraOptions)}>
+                  {showEasyExtraOptions ? easyModeCopy.hideMore : easyModeCopy.showMore}
+                </Button>
               )}
-
-              {!isSearching && !error && easyRecommendations.recommendations.length > 0 && (
-                <>
-                  {easyRecommendations.recommendations.map((item) => (
-                    <SeniorFlightOptionCard
-                      key={`${item.kind}-${item.flight.id}`}
-                      flight={item.flight}
-                      insight={item.insight}
-                      kind={item.kind}
-                    />
-                  ))}
-
-                  <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-[0_20px_70px_-42px_rgba(15,23,42,0.22)] sm:p-5 md:rounded-[30px]">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <h2 className="text-xl font-extrabold text-slate-950">{easyModeCopy.extraTitle}</h2>
-                        <p className="mt-1 text-sm leading-relaxed text-slate-500">
-                          {showEasyExtraOptions
-                            ? `${Math.min(easyRecommendations.rankedFlights.length, 6)} opcoes extras visiveis`
-                            : `${easyRecommendations.rankedFlights.length} opcoes encontradas, mas escondidas para nao cansar a comparacao.`}
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        onClick={() => setShowEasyExtraOptions((value) => !value)}
-                        className="rounded-full border-slate-300 bg-white text-slate-800"
-                        data-testid="button-toggle-easy-extra-options"
-                      >
-                        {showEasyExtraOptions ? easyModeCopy.hideMore : easyModeCopy.showMore}
-                      </Button>
-                    </div>
-                  </div>
-
-                  {showEasyExtraOptions && (
-                    <div className="space-y-4">
-                      {easyRecommendations.rankedFlights.slice(0, 6).map((item) => (
-                        <FlightCard key={`easy-extra-${item.flight.id}`} flight={item.flight} simplified />
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
+              {showEasyExtraOptions && easyRecommendations.rankedFlights.slice(0, 6).map(f => (
+                <FlightCard key={f.flight.id} flight={f.flight} simplified />
+              ))}
             </div>
           </div>
         </div>
@@ -802,742 +522,78 @@ export default function SearchResults() {
 
   const filterPanel = (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 font-bold text-gray-900">
-          <Filter className="h-5 w-5 text-blue-500" /> {t("results.filters") || "Filters"}
-        </div>
-        {activeFilterCount > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearFilters}
-            data-testid="button-clear-filters"
-            className="text-blue-600 text-xs"
-          >
-            <X className="h-3 w-3 mr-1" />
-            {t("results.clear_filters") || "Clear"}
-          </Button>
-        )}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 font-bold"><Filter className="h-4 w-4" /> {t("results.filters") || "Filtros"}</div>
+        {activeFilterCount > 0 && <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs text-blue-600">{t("results.clear_filters") || "Limpar"}</Button>}
       </div>
-
-      <div>
-        <h4 className="text-sm font-semibold mb-3 text-gray-700">{t("results.stops_filter") || "Stops"}</h4>
-        <div className="space-y-2.5">
-          {stopsOptions.map(opt => (
-            <label
-              key={opt.key}
-              className="flex items-center gap-2.5 text-sm text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
-              data-testid={`filter-stops-${opt.key}`}
-            >
-              <input
-                type="checkbox"
-                className="rounded border-gray-300 bg-white text-blue-500 focus:ring-blue-500/30 h-4 w-4"
-                checked={selectedStops.has(opt.key)}
-                onChange={() => toggleSetItem(setSelectedStops, opt.key)}
-              />
-              {opt.label}
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div className="h-px bg-gray-100" />
-
-      <div>
-        <h4 className="text-sm font-semibold mb-3 text-gray-700">{t("results.airlines_filter") || "Airlines"}</h4>
-        <div className="space-y-2.5">
-          {uniqueAirlines.length > 0 ? uniqueAirlines.map(airline => (
-            <label
-              key={airline}
-              className="flex items-center gap-2.5 text-sm text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
-              data-testid={`filter-airline-${airline}`}
-            >
-              <input
-                type="checkbox"
-                className="rounded border-gray-300 bg-white text-blue-500 focus:ring-blue-500/30 h-4 w-4"
-                checked={selectedAirlines.has(airline)}
-                onChange={() => toggleSetItem(setSelectedAirlines, airline)}
-              />
-              {airline}
-            </label>
-          )) : (
-            <p className="text-xs text-gray-400">{t("results.no_airlines") || "No airlines available"}</p>
-          )}
-        </div>
-      </div>
-
-      <div className="h-px bg-gray-100" />
-
-      <div>
-        <h4 className="text-sm font-semibold mb-3 text-gray-700">{t("results.price_range") || "Price Range"}</h4>
-        {priceExtents.min < priceExtents.max ? (
-          <div className="space-y-3">
-            <Slider
-              data-testid="slider-price-range"
-              min={priceExtents.min}
-              max={priceExtents.max}
-              step={1}
-              value={priceRange || [priceExtents.min, priceExtents.max]}
-              onValueChange={(val) => setPriceRange([val[0], val[1]])}
-              className="w-full"
-            />
-            <div className="flex justify-between text-xs text-gray-500">
-              <span data-testid="text-price-min">{formatPrice(priceRange ? priceRange[0] : priceExtents.min)}</span>
-              <span data-testid="text-price-max">{formatPrice(priceRange ? priceRange[1] : priceExtents.max)}</span>
-            </div>
+      <div className="space-y-4">
+        <div>
+          <h4 className="text-xs font-bold uppercase text-gray-400 mb-2">{t("results.price_range") || "Preço"}</h4>
+          <Slider min={priceExtents.min} max={priceExtents.max} value={priceRange || [priceExtents.min, priceExtents.max]} onValueChange={v => setPriceRange([v[0], v[1]])} />
+          <div className="flex justify-between text-[10px] mt-2 text-gray-500 font-mono">
+            <span>{formatPrice(priceRange?.[0] || priceExtents.min)}</span>
+            <span>{formatPrice(priceRange?.[1] || priceExtents.max)}</span>
           </div>
-        ) : (
-          <p className="text-xs text-gray-400">{t("results.no_price_data") || "No price data"}</p>
-        )}
-      </div>
-
-      <div className="h-px bg-gray-100" />
-
-      <div>
-        <h4 className="text-sm font-semibold mb-3 text-gray-700">{t("results.departure_time") || "Outbound Time"}</h4>
-        <div className="space-y-2.5">
-          {departureTimeOptions.map(opt => {
-            const Icon = opt.icon;
-            return (
-              <label
-                key={opt.key}
-                className="flex items-center gap-2.5 text-sm text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
-                data-testid={`filter-departure-${opt.key}`}
-              >
-                <input
-                  type="checkbox"
-                  className="rounded border-gray-300 bg-white text-blue-500 focus:ring-blue-500/30 h-4 w-4"
-                  checked={selectedDepartureTimes.has(opt.key)}
-                  onChange={() => toggleSetItem(setSelectedDepartureTimes, opt.key)}
-                />
-                <Icon className="h-3.5 w-3.5 text-gray-400" />
-                {opt.label}
-              </label>
-            );
-          })}
         </div>
-      </div>
-
-      <div>
-        <h4 className="text-sm font-semibold mb-3 text-gray-700">{t("results.return_time") || "Return Time"}</h4>
-        <div className="space-y-2.5">
-          {departureTimeOptions.map(opt => {
-            const Icon = opt.icon;
-            return (
-              <label
-                key={opt.key}
-                className="flex items-center gap-2.5 text-sm text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
-                data-testid={`filter-return-${opt.key}`}
-              >
-                <input
-                  type="checkbox"
-                  className="rounded border-gray-300 bg-white text-blue-500 focus:ring-blue-500/30 h-4 w-4"
-                  checked={selectedReturnTimes.has(opt.key)}
-                  onChange={() => toggleSetItem(setSelectedReturnTimes, opt.key)}
-                />
-                <Icon className="h-3.5 w-3.5 text-gray-400" />
-                {opt.label}
+        <div>
+          <h4 className="text-xs font-bold uppercase text-gray-400 mb-2">{t("results.airlines_filter") || "Companhias"}</h4>
+          <div className="space-y-1">
+            {uniqueAirlines.map(a => (
+              <label key={a} className="flex items-center gap-2 text-sm cursor-pointer hover:text-blue-600 transition-colors">
+                <input type="checkbox" checked={selectedAirlines.has(a)} onChange={() => toggleSetItem(setSelectedAirlines, a)} className="rounded border-gray-300" />
+                {a}
               </label>
-            );
-          })}
+            ))}
+          </div>
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <SEO title="Resultados da Pesquisa" description="Compare voos e encontre as melhores ofertas de passagens aéreas. Preços atualizados em tempo real." path="/search" noindex={true} />
-      <div className="bg-white border-b border-gray-200 shadow-sm pb-6 pt-8 px-4">
-        <div className="container mx-auto max-w-6xl">
-           <FlightSearchForm
-             defaultValues={defaultValues}
-             extraSearchParams={
-               isEasyMode
-                 ? {
-                     ui: "easy",
-                     seniorPriority,
-                     seniorConnections,
-                     seniorBags,
-                     seniorTime,
-                   }
-                 : undefined
-             }
-           />
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      <SEO title="Resultados da Pesquisa" path="/search" noindex={true} />
+      <div className="bg-white border-b sticky top-0 z-50">
+        <div className="container mx-auto max-w-6xl px-4 py-4"><FlightSearchForm defaultValues={defaultValues} /></div>
       </div>
-
-      <div className="container mx-auto px-4 mt-8 max-w-6xl">
-        {isEasyMode && (
-          <div className="mb-6 rounded-[28px] border border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(239,246,255,0.98)_55%,rgba(219,234,254,0.96))] p-4 shadow-[0_20px_80px_-44px_rgba(37,99,235,0.45)] sm:p-5 md:p-6">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-              <div className="max-w-2xl">
-                <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
-                  <HeartHandshake className="h-4 w-4" />
-                  {easyModeCopy.badge}
-                </span>
-                <h2 className="mt-4 text-2xl md:text-3xl font-display font-extrabold text-slate-950">
-                  {easyModeCopy.title}
-                </h2>
-                <p className="mt-2 text-sm md:text-base leading-relaxed text-slate-600">
-                  {easyModeCopy.description}
-                </p>
-              </div>
-
-              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
-                <Button asChild className="w-full rounded-full bg-blue-600 text-white hover:bg-blue-700 sm:w-auto" data-testid="button-easy-mode-call-results">
-                  <a href={whatsAppHref} target="_blank" rel="noreferrer">
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    {easyModeCopy.call}
-                  </a>
-                </Button>
-                <Button variant="outline" onClick={openAssistant} className="w-full rounded-full border-slate-300 bg-white text-slate-800 sm:w-auto" data-testid="button-easy-mode-chat-results">
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  {easyModeCopy.assistant}
-                </Button>
-                <Link href="/senior">
-                  <Button variant="ghost" className="w-full rounded-full text-blue-700 hover:bg-blue-50 sm:w-auto" data-testid="button-easy-mode-back-results">
-                    {easyModeCopy.back}
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {hideStandardFilters && (
-          <div className="mb-6 rounded-[28px] border border-slate-200 bg-white p-4 shadow-[0_20px_70px_-42px_rgba(15,23,42,0.22)] sm:p-5">
-            <div className="grid gap-3 md:grid-cols-4">
-              {easyPreferenceItems.map((item) => (
-                <div key={item.label} className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-4">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">{item.label}</p>
-                  <p className="mt-2 text-sm font-semibold leading-relaxed text-slate-900">{item.value}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className={hideStandardFilters ? "grid grid-cols-1 gap-8" : "grid grid-cols-1 lg:grid-cols-12 gap-8"}>
-
-          {!hideStandardFilters && (
-            <div className="hidden lg:block lg:col-span-3 space-y-6">
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 sticky top-24">
-                {filterPanel}
-              </div>
-            </div>
-          )}
-
-          {!hideStandardFilters && (
-            <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
-              <SheetContent side="left" className="overflow-y-auto">
-                <SheetHeader>
-                  <SheetTitle>{t("results.filters") || "Filters"}</SheetTitle>
-                  <SheetDescription>{t("results.filter_desc") || "Refine your search results"}</SheetDescription>
-                </SheetHeader>
-                <div className="mt-4">
-                  {filterPanel}
-                </div>
-              </SheetContent>
-            </Sheet>
-          )}
-
-          <div className={hideStandardFilters ? "space-y-4" : "lg:col-span-9 space-y-4"}>
-            <div className="flex justify-between items-center mb-2 flex-wrap gap-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-xl font-bold text-gray-900" data-testid="text-results-count">
-                  {isSearching
-                    ? t("results.searching") || "Searching..."
-                    : showTwoStepFlow && !selectedOutboundKey && offerMatrix
-                      ? t("results.outbound_flights", { count: outboundOptionsForDisplay.length })
-                      : showTwoStepFlow && selectedOutboundKey
-                        ? t("results.return_flights", { count: returnOptionsForSelected.length })
-                        : t("results.flights_found", { count: filteredAndSortedFlights.length })}
-                </h2>
-                {!hideStandardFilters && activeFilterCount > 0 && (
-                  <Badge variant="secondary" data-testid="badge-active-filters">
-                    {activeFilterCount} {activeFilterCount === 1
-                      ? (t("results.filter_active") || "filter")
-                      : (t("results.filters_active") || "filters")}
-                  </Badge>
-                )}
-                {!hideStandardFilters && activeFilterCount > 0 && flights && filteredAndSortedFlights.length < flights.length && (
-                  <span className="text-xs text-gray-400" data-testid="text-total-count">
-                    ({t("results.of") || "of"} {flights.length})
-                  </span>
-                )}
-              </div>
-              {!hideStandardFilters && (
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="lg:hidden border-gray-200 bg-white text-gray-700"
-                    onClick={() => setMobileFiltersOpen(true)}
-                    data-testid="button-mobile-filters"
-                  >
-                    <Filter className="h-4 w-4 mr-2" />
-                    {t("results.filters") || "Filters"}
-                    {activeFilterCount > 0 && (
-                      <Badge variant="default" className="ml-1.5 text-[10px] px-1.5 py-0">
-                        {activeFilterCount}
-                      </Badge>
-                    )}
-                  </Button>
-                  <select
-                    className="bg-white border border-gray-200 text-sm rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-gray-700 cursor-pointer shadow-sm"
-                    data-testid="select-sort"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  >
-                    <option value="cheapest">{t("results.sort_cheapest") || "Cheapest"}</option>
-                    <option value="fastest">{t("results.sort_fastest") || "Fastest"}</option>
-                    <option value="best">{t("results.sort_best") || "Best"}</option>
-                  </select>
-                </div>
-              )}
+      <div className="container mx-auto max-w-6xl px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <aside className="hidden lg:block lg:col-span-3 h-fit sticky top-24 bg-white p-6 rounded-2xl border shadow-sm">
+            {filterPanel}
+          </aside>
+          <main className="lg:col-span-9 space-y-6">
+            <div className="flex justify-between items-center gap-4">
+              <h2 className="text-xl font-bold">{isSearching ? t("results.searching") : t("results.flights_found", { count: filteredAndSortedFlights.length })}</h2>
+              <select value={sortBy} onChange={e => setSortBy(e.target.value as SortOption)} className="text-sm bg-white border rounded-lg px-3 py-2">
+                <option value="cheapest">{t("results.sort_cheapest")}</option>
+                <option value="fastest">{t("results.sort_fastest")}</option>
+                <option value="best">{t("results.sort_best")}</option>
+              </select>
             </div>
 
-            {isSearching && (
-              <FlightSearchAnimation t={t} />
-            )}
-
-            {error && !isSearching && (
-              <div className="flex flex-col items-center justify-center py-20 bg-red-50 rounded-2xl border border-red-200 text-red-600">
-                <AlertCircle className="h-10 w-10 mb-4" />
-                <p className="font-medium">{t("results.error") || "Failed to load flights."}</p>
-              </div>
-            )}
-
-            {!isSearching && !error && flights?.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-gray-200">
-                <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <Plane className="h-8 w-8 text-gray-300" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{t("results.no_flights") || "No flights found"}</h3>
-                <p className="text-gray-500">{t("results.no_flights_desc") || "Try adjusting your search."}</p>
-              </div>
-            )}
-
-            {!isSearching && !error && flights && flights.length > 0 && filteredAndSortedFlights.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-gray-200">
-                <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <Filter className="h-8 w-8 text-gray-300" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{t("results.no_matching_flights") || "No matching flights"}</h3>
-                <p className="text-gray-500 mb-4">{t("results.adjust_filters") || "Try adjusting your filters."}</p>
-                <Button variant="outline" onClick={clearFilters} data-testid="button-clear-filters-empty">
-                  {t("results.clear_filters") || "Clear Filters"}
-                </Button>
-              </div>
-            )}
-
-            {!isSearching && showTwoStepFlow && offerMatrix && (
+            {isSearching ? <FlightSearchAnimation t={t} /> : (
               <div className="space-y-4">
-                <div className="bg-white dark:bg-card rounded-2xl border border-gray-200 dark:border-gray-700 p-4 mb-2" data-testid="step-progress-bar">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 flex-1">
-                      <div className={`h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${selectedOutboundKey ? "bg-emerald-500 text-white" : "bg-blue-600 text-white"}`}>
-                        {selectedOutboundKey ? <CheckCircle2 className="h-4.5 w-4.5" /> : "1"}
-                      </div>
-                      <div className="min-w-0">
-                        <p className={`text-xs font-semibold uppercase ${selectedOutboundKey ? "text-emerald-600" : "text-blue-600"}`}>
-                          {t("results.outbound") || "Ida"}
-                        </p>
-                        <p className="text-sm font-bold text-gray-900 truncate">
-                          {flights?.[0]?.originCity || params.origin} → {flights?.[0]?.destinationCity || params.destination}
-                        </p>
-                        {params.date && (
-                          <p className="text-xs text-gray-500">{format(parseISO(params.date), "dd MMM yyyy")}</p>
-                        )}
-                      </div>
+                {showTwoStepFlow && !selectedOutboundKey ? outboundOptionsForDisplay.map(([k, o]) => (
+                  <Card key={k} className="p-4 cursor-pointer hover:border-blue-400" onClick={() => setSelectedOutboundKey(k)}>
+                    <div className="flex justify-between items-center gap-4">
+                       <div className="flex gap-4 items-center">
+                         <img src={o.logoUrl!} className="h-8 w-8 object-contain" />
+                         <div><p className="font-bold">{o.airline}</p><p className="text-xs text-gray-500">{format(parseISO(o.slice.segments[0].departureTime), "HH:mm")} - {format(parseISO(o.slice.segments[o.slice.segments.length-1].arrivalTime), "HH:mm")}</p></div>
+                       </div>
+                       <div className="text-right">
+                         <p className="text-lg font-bold text-blue-600">{formatPrice(o.lowestPrice)}</p>
+                         <Button size="sm">Selecionar Ida</Button>
+                       </div>
                     </div>
-
-                    <div className="hidden sm:flex items-center px-2">
-                      <div className={`w-12 h-0.5 transition-colors ${selectedOutboundKey ? "bg-emerald-400" : "bg-gray-200"}`} />
-                      <ArrowRight className={`h-4 w-4 mx-1 ${selectedOutboundKey ? "text-emerald-400" : "text-gray-300"}`} />
-                      <div className={`w-12 h-0.5 ${selectedOutboundKey ? "bg-blue-400" : "bg-gray-200"}`} />
-                    </div>
-
-                    <div className="flex items-center gap-2 flex-1">
-                      <div className={`h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${selectedOutboundKey ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>
-                        2
-                      </div>
-                      <div className="min-w-0">
-                        <p className={`text-xs font-semibold uppercase ${selectedOutboundKey ? "text-blue-600" : "text-gray-400"}`}>
-                          {t("results.return") || "Volta"}
-                        </p>
-                        <p className={`text-sm font-bold truncate ${selectedOutboundKey ? "text-gray-900" : "text-gray-400"}`}>
-                          {flights?.[0]?.destinationCity || params.destination} → {flights?.[0]?.originCity || params.origin}
-                        </p>
-                        {(params as any).returnDate && (
-                          <p className={`text-xs ${selectedOutboundKey ? "text-gray-500" : "text-gray-300"}`}>{format(parseISO((params as any).returnDate), "dd MMM yyyy")}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {!selectedOutboundKey && (
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key="outbound-step"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.25 }}
-                      className="space-y-2"
-                    >
-                      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-2 flex items-center gap-3" data-testid="step-indicator-outbound">
-                        <Plane className="h-5 w-5 text-blue-600 shrink-0" />
-                        <div>
-                          <p className="text-sm font-bold text-blue-900 dark:text-blue-100">{t("results.select_outbound") || "Selecione o voo de ida"}</p>
-                          <p className="text-xs text-blue-600 dark:text-blue-400">
-                            {flights?.[0]?.originCity || params.origin} → {flights?.[0]?.destinationCity || params.destination} · {outboundOptionsForDisplay.length} {t("results.options") || "opções"}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        {(() => {
-                          const allOutbound = outboundOptionsForDisplay;
-                          const visibleOutbound = allOutbound.slice(0, visibleOutboundCount);
-                          return (<>
-                        {visibleOutbound.map(([key, group]) => {
-                            const slice = group.slice;
-                            const firstSeg = slice.segments[0];
-                            const lastSeg = slice.segments[slice.segments.length - 1];
-                            const stopsCount = slice.segments.length - 1;
-                            const sliceDuration = slice.duration.startsWith("P") ? formatDurationUtil(slice.duration) : slice.duration;
-                            const currency = filteredAndSortedFlights[0]?.currency || "USD";
-                            const depDate = format(parseISO(firstSeg.departureTime), "dd MMM");
-                            const arrDate = format(parseISO(lastSeg.arrivalTime), "dd MMM");
-                            const isDiffDay = depDate !== arrDate;
-
-                            return (
-                              <Card
-                                key={key}
-                                className="p-0 overflow-hidden border border-gray-200 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer bg-white rounded-2xl group"
-                                onClick={() => setSelectedOutboundKey(key)}
-                                data-testid={`outbound-option-${key}`}
-                              >
-                                <div className="p-5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                                  <div className="md:col-span-3 flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center p-1.5 overflow-hidden shrink-0">
-                                      {group.logoUrl ? (
-                                        <img src={group.logoUrl} alt={group.airline} className="w-full h-full object-contain" />
-                                      ) : (
-                                        <Plane className="text-gray-400 h-5 w-5" />
-                                      )}
-                                    </div>
-                                    <div>
-                                      <p className="font-bold text-gray-900 text-sm">{group.airline}</p>
-                                      <p className="text-xs text-gray-500">{firstSeg.flightNumber}</p>
-                                    </div>
-                                  </div>
-
-                                  <div className="md:col-span-5 flex items-center justify-between gap-2">
-                                    <div className="text-center min-w-[60px]">
-                                      <div className="text-xl font-bold text-gray-900">{format(parseISO(firstSeg.departureTime), "HH:mm")}</div>
-                                      <div className="text-xs text-gray-500 font-medium">{slice.originCity || slice.originCode}</div>
-                                      <div className="text-[10px] text-gray-400">{depDate}</div>
-                                    </div>
-                                    <div className="flex-1 flex flex-col items-center px-3">
-                                      <div className="text-[10px] text-gray-400 mb-1 flex items-center gap-1">
-                                        <Clock className="h-2.5 w-2.5" />
-                                        {sliceDuration}
-                                      </div>
-                                      <div className="w-full h-[2px] bg-gray-200 relative">
-                                        <Plane className="h-3 w-3 text-blue-500 rotate-90 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
-                                      </div>
-                                      <div className={`text-[10px] font-medium mt-1 ${stopsCount === 0 ? "text-emerald-600" : "text-amber-600"}`}>
-                                        {stopsCount === 0 ? (t("flight.direct") || "Direto") : (t(stopsCount === 1 ? "flight.stop" : "flight.stops", { count: stopsCount }))}
-                                      </div>
-                                    </div>
-                                    <div className="text-center min-w-[60px]">
-                                      <div className="text-xl font-bold text-gray-900">
-                                        {format(parseISO(lastSeg.arrivalTime), "HH:mm")}
-                                        {isDiffDay && <sup className="text-[10px] text-red-500 ml-0.5">+1</sup>}
-                                      </div>
-                                      <div className="text-xs text-gray-500 font-medium">{slice.destinationCity || slice.destinationCode}</div>
-                                      <div className="text-[10px] text-gray-400">{arrDate}</div>
-                                    </div>
-                                  </div>
-
-                                  <div className="md:col-span-4 flex items-center justify-end gap-3">
-                                    <div className="text-right">
-                                      <p className="text-[10px] text-gray-400 uppercase">{t("results.from") || "a partir de"}</p>
-                                      <p className="text-xl font-bold text-gray-900">
-                                        {new Intl.NumberFormat(priceLocale, { style: "currency", currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(group.lowestPrice)}
-                                      </p>
-                                      <p className="text-[10px] text-gray-400">{t("results.round_trip_total") || "ida + volta"}</p>
-                                    </div>
-                                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg group-hover:shadow-md transition-all" data-testid={`button-select-outbound-${key}`}>
-                                      {t("flight.select") || "Selecionar"} <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                                    </Button>
-                                  </div>
-
-                                  <div className="md:col-span-12">
-                                    <FlightBaggageHighlights
-                                      flight={group.offer}
-                                      simplified={isEasyMode}
-                                      compact
-                                    />
-                                  </div>
-                                </div>
-                              </Card>
-                            );
-                          })}
-
-                        {allOutbound.length > visibleOutboundCount && (
-                          <div className="flex flex-col items-center gap-2 pt-2" data-testid="outbound-pagination">
-                            <p className="text-xs text-gray-500">
-                              {t("results.showing") || "Mostrando"} {Math.min(visibleOutboundCount, allOutbound.length)} {t("results.of") || "de"} {t("results.outbound_flights", { count: allOutbound.length })}
-                            </p>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setVisibleOutboundCount(prev => prev + FLIGHTS_PER_PAGE)}
-                              className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300"
-                              data-testid="button-show-more-outbound"
-                            >
-                              <Plane className="h-3.5 w-3.5 mr-2" />
-                              {t("results.show_more") || "Mostrar mais voos"} ({Math.min(FLIGHTS_PER_PAGE, allOutbound.length - visibleOutboundCount)})
-                            </Button>
-                          </div>
-                        )}
-                        </>);
-                        })()}
-                      </div>
-                    </motion.div>
-                  </AnimatePresence>
-                )}
-
-                {selectedOutboundKey && offerMatrix?.outboundMap.get(selectedOutboundKey) && (
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key="return-step"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.25 }}
-                      className="space-y-3"
-                    >
-                      {(() => {
-                        const obData = offerMatrix!.outboundMap.get(selectedOutboundKey)!;
-                        const s = obData.slice;
-                        const firstSeg = s.segments[0];
-                        const lastSeg = s.segments[s.segments.length - 1];
-                        const stopsCount = s.segments.length - 1;
-                        const sliceDuration = s.duration.startsWith("P") ? formatDurationUtil(s.duration) : s.duration;
-                        return (
-                          <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-5 mb-1" data-testid="selected-outbound-summary">
-                            <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
-                              <div className="flex items-center gap-2">
-                                <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-                                <p className="text-xs text-emerald-600 font-bold uppercase tracking-wide">{t("results.outbound_selected") || "Voo de ida selecionado"}</p>
-                              </div>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setSelectedOutboundKey(null)}
-                                data-testid="button-change-outbound"
-                                className="border-emerald-300 text-emerald-700 hover:bg-emerald-100 text-xs"
-                              >
-                                {t("results.change_outbound") || "Alterar voo de ida"}
-                              </Button>
-                            </div>
-                            <div className="flex items-center gap-4 flex-wrap">
-                              <div className="h-10 w-10 rounded-xl bg-white border border-emerald-200 flex items-center justify-center p-1.5 overflow-hidden shrink-0">
-                                {obData.logoUrl ? (
-                                  <img src={obData.logoUrl} alt={obData.airline} className="w-full h-full object-contain" />
-                                ) : (
-                                  <Plane className="text-gray-400 h-5 w-5" />
-                                )}
-                              </div>
-                            <div className="flex items-center gap-4 flex-1 flex-wrap">
-                              <div>
-                                <p className="font-bold text-gray-900 text-sm">{obData.airline}</p>
-                                <p className="text-xs text-gray-500">{firstSeg.flightNumber}</p>
-                                </div>
-                                <div className="flex items-center gap-3 text-sm">
-                                  <div className="text-center">
-                                    <span className="font-bold text-gray-900">{format(parseISO(firstSeg.departureTime), "HH:mm")}</span>
-                                    <span className="text-xs text-gray-500 ml-1">{s.originCity || s.originCode}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1 text-gray-400">
-                                    <div className="w-6 h-px bg-gray-300" />
-                                    <span className="text-[10px]">{sliceDuration}</span>
-                                    <div className="w-6 h-px bg-gray-300" />
-                                  </div>
-                                  <div className="text-center">
-                                    <span className="font-bold text-gray-900">{format(parseISO(lastSeg.arrivalTime), "HH:mm")}</span>
-                                    <span className="text-xs text-gray-500 ml-1">{s.destinationCity || s.destinationCode}</span>
-                                  </div>
-                                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${stopsCount === 0 ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
-                                    {stopsCount === 0 ? (t("flight.direct") || "Direto") : (t(stopsCount === 1 ? "flight.stop" : "flight.stops", { count: stopsCount }))}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="mt-3">
-                              <FlightBaggageHighlights
-                                flight={obData.offer}
-                                simplified={isEasyMode}
-                                compact
-                              />
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex items-center gap-3" data-testid="step-indicator-return">
-                        <Plane className="h-5 w-5 text-blue-600 shrink-0 -scale-x-100" />
-                        <div>
-                          <p className="text-sm font-bold text-blue-900 dark:text-blue-100">{t("results.select_return") || "Agora selecione o voo de volta"}</p>
-                          <p className="text-xs text-blue-600 dark:text-blue-400">
-                            {flights?.[0]?.destinationCity || params.destination} → {flights?.[0]?.originCity || params.origin} · {returnOptionsForSelected.length} {t("results.available") || "disponíveis"}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        {returnOptionsForSelected.slice(0, visibleReturnCount).map((rt) => {
-                            const returnSlice = rt.slice;
-                            const firstSeg = returnSlice.segments[0];
-                            const lastSeg = returnSlice.segments[returnSlice.segments.length - 1];
-                            const stopsCount = returnSlice.segments.length - 1;
-                            const sliceDuration = returnSlice.duration.startsWith("P") ? formatDurationUtil(returnSlice.duration) : returnSlice.duration;
-                            const bookUrl = `/book/${rt.offer.id}?${searchParams.toString()}`;
-                            const depDate = format(parseISO(firstSeg.departureTime), "dd MMM");
-                            const arrDate = format(parseISO(lastSeg.arrivalTime), "dd MMM");
-                            const isDiffDay = depDate !== arrDate;
-
-                            return (
-                              <Card
-                                key={rt.returnKey}
-                                className="p-0 overflow-hidden border transition-all bg-white rounded-2xl border-gray-200 hover:border-blue-400 hover:shadow-md group"
-                                data-testid={`return-option-${rt.returnKey}`}
-                              >
-                                <div className="p-5 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                                  <div className="md:col-span-3 flex items-center gap-3">
-                                    <div className="h-10 w-10 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center p-1.5 overflow-hidden shrink-0">
-                                      {rt.logoUrl ? (
-                                        <img src={rt.logoUrl} alt={rt.airline} className="w-full h-full object-contain" />
-                                      ) : (
-                                        <Plane className="text-gray-400 h-5 w-5" />
-                                      )}
-                                    </div>
-                                    <div>
-                                      <p className="font-bold text-gray-900 text-sm">{rt.airline}</p>
-                                      <p className="text-xs text-gray-500">{firstSeg.flightNumber}</p>
-                                    </div>
-                                  </div>
-
-                                  <div className="md:col-span-5 flex items-center justify-between gap-2">
-                                    <div className="text-center min-w-[60px]">
-                                      <div className="text-xl font-bold text-gray-900">{format(parseISO(firstSeg.departureTime), "HH:mm")}</div>
-                                      <div className="text-xs text-gray-500 font-medium">{returnSlice.originCity || returnSlice.originCode}</div>
-                                      <div className="text-[10px] text-gray-400">{depDate}</div>
-                                    </div>
-                                    <div className="flex-1 flex flex-col items-center px-3">
-                                      <div className="text-[10px] text-gray-400 mb-1 flex items-center gap-1">
-                                        <Clock className="h-2.5 w-2.5" />
-                                        {sliceDuration}
-                                      </div>
-                                      <div className="w-full h-[2px] bg-gray-200 relative">
-                                        <Plane className="h-3 w-3 text-blue-500 rotate-90 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
-                                      </div>
-                                      <div className={`text-[10px] font-medium mt-1 ${stopsCount === 0 ? "text-emerald-600" : "text-amber-600"}`}>
-                                        {stopsCount === 0 ? (t("flight.direct") || "Direto") : (t(stopsCount === 1 ? "flight.stop" : "flight.stops", { count: stopsCount }))}
-                                      </div>
-                                    </div>
-                                    <div className="text-center min-w-[60px]">
-                                      <div className="text-xl font-bold text-gray-900">
-                                        {format(parseISO(lastSeg.arrivalTime), "HH:mm")}
-                                        {isDiffDay && <sup className="text-[10px] text-red-500 ml-0.5">+1</sup>}
-                                      </div>
-                                      <div className="text-xs text-gray-500 font-medium">{returnSlice.destinationCity || returnSlice.destinationCode}</div>
-                                      <div className="text-[10px] text-gray-400">{arrDate}</div>
-                                    </div>
-                                  </div>
-
-                                  <div className="md:col-span-4 flex items-center justify-end gap-3">
-                                    <div className="text-right">
-                                      <p className="text-[10px] text-gray-400 uppercase">{t("flight.total_price") || "Preço total"}</p>
-                                      <p className="text-2xl font-bold text-gray-900">
-                                        {new Intl.NumberFormat(priceLocale, { style: "currency", currency: rt.offer.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(rt.price)}
-                                      </p>
-                                      <p className="text-[10px] text-gray-400">{t("results.round_trip_total") || "ida + volta"}</p>
-                                    </div>
-                                    <Link href={bookUrl}>
-                                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg group-hover:shadow-md transition-all" data-testid={`button-select-return-${rt.returnKey}`}>
-                                        {t("flight.book") || "Reservar"} <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                                      </Button>
-                                    </Link>
-                                  </div>
-
-                                  <div className="md:col-span-12">
-                                    <FlightBaggageHighlights
-                                      flight={rt.offer}
-                                      simplified={isEasyMode}
-                                      compact
-                                    />
-                                  </div>
-                                </div>
-                              </Card>
-                            );
-                          })}
-                      </div>
-
-                      {returnOptionsForSelected.length > visibleReturnCount && (
-                        <div className="flex flex-col items-center gap-2 pt-2" data-testid="return-pagination">
-                          <p className="text-xs text-gray-500">
-                            {t("results.showing") || "Mostrando"} {Math.min(visibleReturnCount, returnOptionsForSelected.length)} {t("results.of") || "de"} {t("results.return_flights", { count: returnOptionsForSelected.length })}
-                          </p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setVisibleReturnCount(prev => prev + FLIGHTS_PER_PAGE)}
-                            className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300"
-                            data-testid="button-show-more-returns"
-                          >
-                            <Plane className="h-3.5 w-3.5 mr-2" />
-                            {t("results.show_more") || "Mostrar mais voos"} ({Math.min(FLIGHTS_PER_PAGE, returnOptionsForSelected.length - visibleReturnCount)})
-                          </Button>
-                        </div>
-                      )}
-                    </motion.div>
-                  </AnimatePresence>
-                )}
-              </div>
-            )}
-
-            {!isSearching && !showTwoStepFlow && filteredAndSortedFlights.length > 0 && (
-              <div className="space-y-4">
-                {filteredAndSortedFlights.slice(0, visibleOneWayCount).map((flight) => (
-                  <FlightCard key={flight.id} flight={flight} simplified={isEasyMode} />
+                  </Card>
+                )) : showTwoStepFlow && selectedOutboundKey ? returnOptionsForSelected.map(r => (
+                  <FlightCard key={r.returnKey} flight={r.offer} />
+                )) : filteredAndSortedFlights.slice(0, visibleOneWayCount).map(f => (
+                  <FlightCard key={f.id} flight={f} />
                 ))}
-                {filteredAndSortedFlights.length > visibleOneWayCount && (
-                  <div className="flex flex-col items-center gap-2 pt-2" data-testid="oneway-pagination">
-                    <p className="text-xs text-gray-500">
-                      {t("results.showing") || "Mostrando"} {Math.min(visibleOneWayCount, filteredAndSortedFlights.length)} {t("results.of") || "de"} {filteredAndSortedFlights.length} {t("results.flights") || "voos"}
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setVisibleOneWayCount(prev => prev + FLIGHTS_PER_PAGE)}
-                      className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300"
-                      data-testid="button-show-more-flights"
-                    >
-                      <Plane className="h-3.5 w-3.5 mr-2" />
-                      {t("results.show_more") || "Mostrar mais voos"} ({Math.min(FLIGHTS_PER_PAGE, filteredAndSortedFlights.length - visibleOneWayCount)})
-                    </Button>
-                  </div>
-                )}
               </div>
             )}
-          </div>
+          </main>
         </div>
       </div>
     </div>

@@ -13,9 +13,49 @@ import {
   ChevronRight,
   HandHelping,
   Ambulance,
-  PhoneCall
+  PhoneCall,
+  ShieldAlert,
+  Globe
 } from "lucide-react";
 import { buildWhatsAppHref, buildWhatsAppMessage } from "@/lib/contact";
+import { useState, useEffect } from "react";
+
+function TravelAdvisory() {
+  const [advisory, setAdvisory] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("https://www.travel-advisory.info/api?countrycode=BR")
+      .then(res => res.json())
+      .then(data => {
+        setAdvisory(data.data.BR);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading || !advisory) return null;
+
+  return (
+    <Card className="p-8 rounded-[40px] bg-amber-50 border-amber-200">
+      <div className="flex items-center gap-4 mb-4">
+        <div className="h-10 w-10 rounded-full bg-amber-500 flex items-center justify-center text-white">
+          <ShieldAlert className="h-5 w-5" />
+        </div>
+        <div>
+          <h4 className="font-black text-amber-900 uppercase tracking-tight">Status de Segurança: Brasil</h4>
+          <p className="text-[10px] font-bold text-amber-700 uppercase tracking-widest">Fonte: Travel Advisory (Real-Time)</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-6">
+         <div className="text-4xl font-black text-amber-600">{advisory.advisory.score.toFixed(1)}</div>
+         <p className="text-sm text-amber-800 font-medium leading-tight">
+           {advisory.advisory.message}
+         </p>
+      </div>
+    </Card>
+  );
+}
 
 export default function Assistance() {
   const { t, language } = useI18n();
@@ -108,7 +148,7 @@ export default function Assistance() {
               ))}
            </div>
 
-           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
               <Card className="p-10 rounded-[40px] bg-slate-100 border-none">
                  <h3 className="text-2xl font-black text-slate-950 uppercase tracking-tight mb-6 flex items-center gap-3">
                     <ShieldCheck className="h-7 w-7 text-blue-600" />
@@ -121,13 +161,13 @@ export default function Assistance() {
               </Card>
 
               <Card className="p-10 rounded-[40px] bg-slate-950 text-white border-none shadow-2xl">
-                 <div className="flex items-center gap-4 mb-8">
-                    <PhoneCall className="h-8 w-8 text-emerald-500" />
+                  <div className="flex items-center gap-4 mb-8">
+                    <PhoneCall className="h-8 w-8 text-emerald-400" />
                     <div>
-                       <h3 className="text-2xl font-black uppercase tracking-tight leading-none mb-1">Linha de Cuidado</h3>
-                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Atendimento de Emergência</p>
+                       <h3 className="text-2xl font-black uppercase tracking-tight leading-none mb-1 text-white">Linha de Cuidado</h3>
+                       <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">Atendimento de Emergência</p>
                     </div>
-                 </div>
+                  </div>
                  <p className="text-slate-400 font-medium leading-relaxed mb-10">
                     Seu bem-estar é nossa prioridade. Em caso de necessidade de última hora no aeroporto, nossa linha exclusiva de concierge médico está a um clique de distância.
                  </p>
@@ -137,6 +177,10 @@ export default function Assistance() {
                     </Button>
                  </a>
               </Card>
+           </div>
+           
+           <div className="max-w-3xl mx-auto">
+              <TravelAdvisory />
            </div>
         </div>
       </section>

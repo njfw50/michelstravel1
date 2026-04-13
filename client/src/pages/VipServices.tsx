@@ -8,7 +8,6 @@ import {
   Sparkles, 
   Coffee, 
   Wifi, 
-  Drip, 
   Armchair, 
   UserCheck, 
   Star,
@@ -62,7 +61,7 @@ export default function VipServices() {
         <div className="container mx-auto px-4 relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl">
             <Badge className="bg-amber-500 text-black px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6">Executivo & Luxo</Badge>
-            <h1 className="text-4xl md:text-7xl font-display font-black tracking-tighter uppercase leading-[0.9] mb-8">
+            <h1 className="text-4xl md:text-7xl font-display font-black tracking-tighter uppercase leading-[0.9] mb-8 text-white">
               Sua Viagem em <br />
               <span className="text-amber-500">Primeira Classe</span>
             </h1>
