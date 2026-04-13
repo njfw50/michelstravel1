@@ -85,10 +85,10 @@ function SliceTimeline({ slice, index, t }: { slice: FlightSliceLike; index: num
       <div className="flex items-center justify-between gap-8">
         <div className="flex-1 flex items-center gap-8">
           <div className="text-left">
-            <div className="text-3xl font-black text-slate-900 leading-none tracking-tighter">
+            <div className="text-2xl font-black text-slate-900 leading-none tracking-tighter">
               {safeFormatTime(firstSegment.departureTime)}
             </div>
-            <div className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+            <div className="mt-1 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
               {slice.originCode || "DEP"}
             </div>
           </div>
@@ -107,10 +107,10 @@ function SliceTimeline({ slice, index, t }: { slice: FlightSliceLike; index: num
           </div>
 
           <div className="text-right">
-            <div className="text-3xl font-black text-slate-900 leading-none tracking-tighter">
+            <div className="text-2xl font-black text-slate-900 leading-none tracking-tighter">
               {safeFormatTime(lastSegment.arrivalTime)}
             </div>
-            <div className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+            <div className="mt-1 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
               {slice.destinationCode || "ARR"}
             </div>
           </div>
@@ -138,10 +138,10 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
         "before:absolute before:inset-0 before:bg-gradient-to-br before:from-blue-600/[0.03] before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity"
       )}
     >
-      <div className="p-6 md:p-10 relative z-10">
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-10 mb-8 border-b border-slate-50 pb-8">
-          <div className="flex items-center gap-6 min-w-[200px]">
-            <div className="h-16 w-16 shrink-0 flex items-center justify-center rounded-[22px] bg-slate-50 border border-slate-100 p-2 group-hover:bg-white transition-colors">
+      <div className="p-5 md:p-8 relative z-10">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-6 border-b border-slate-50 pb-6">
+          <div className="flex items-center gap-4 min-w-[180px]">
+            <div className="h-14 w-14 shrink-0 flex items-center justify-center rounded-[18px] bg-slate-50 border border-slate-100 p-2 group-hover:bg-white transition-colors">
               {flight.logoUrl ? (
                 <img src={flight.logoUrl} alt={flight.airline} className="h-full w-full object-contain" />
               ) : (
@@ -187,24 +187,24 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
         </div>
       </div>
 
-      <div className="relative bg-slate-50/50 border-t md:border-t-0 md:border-l border-slate-100 p-10 flex flex-col justify-center items-center md:items-end gap-8 overflow-hidden">
+      <div className="relative bg-slate-50/50 border-t md:border-t-0 md:border-l border-slate-100 p-6 md:p-8 flex flex-col justify-center items-center md:items-end gap-6 overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-[60px] rounded-full translate-x-1/2 -translate-y-1/2" />
         
         <div className="relative z-10 text-center md:text-right space-y-2">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Vago por Passageiro</p>
-          <div className="flex items-baseline justify-center md:justify-end gap-1.5 text-slate-900">
-            <span className="text-base font-black text-blue-600">{flight.currency === "USD" ? "US$" : flight.currency}</span>
-            <span className="text-6xl font-black tracking-tighter leading-none">
+          <div className="flex items-baseline justify-center md:justify-end gap-1 text-slate-900">
+            <span className="text-sm font-black text-blue-600">{flight.currency === "USD" ? "US$" : flight.currency}</span>
+            <span className="text-5xl font-black tracking-tighter leading-none">
               {typeof flight.price === "number" ? Math.floor(flight.price) : flight.price}
             </span>
           </div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest opacity-60">Taxas e Encargos Incluídos</p>
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest opacity-60">Taxas e Encargos Incluídos</p>
         </div>
 
         <Link href={bookUrl} className="w-full relative z-10">
-          <Button className="w-full h-16 rounded-[24px] bg-blue-600 hover:bg-black text-white font-black uppercase tracking-[0.2em] text-[10px] shadow-[0_24px_48px_-12px_rgba(37,99,235,0.4)] transition-all hover:-translate-y-1 active:scale-95 group">
+          <Button className="w-full h-14 rounded-[20px] bg-blue-600 hover:bg-black text-white font-black uppercase tracking-[0.2em] text-[10px] shadow-[0_20px_40px_-10px_rgba(37,99,235,0.4)] transition-all hover:-translate-y-1 active:scale-95 group">
             {t("flight.select")}
-            <ArrowRight className="ml-3 h-5 w-5 transition-transform group-hover:translate-x-1.5" />
+            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1.5" />
           </Button>
         </Link>
       </div>

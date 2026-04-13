@@ -284,14 +284,15 @@ export default function SearchResults() {
     <div className="min-h-screen bg-slate-50/50">
       <SEO title="Resultados da Pesquisa | Michels Travel" path="/search" noindex={true} />
       
-      <div className="sticky top-0 z-[100] w-full">
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-2xl border-b border-slate-100 shadow-sm" />
-        <div className="relative container mx-auto max-w-7xl px-4 py-6">
-          <FlightSearchForm defaultValues={defaultValues} className="shadow-none border-none !bg-transparent !p-0" />
+      <div className="sticky top-[88px] z-40 w-full mb-8">
+        <div className="container mx-auto max-w-7xl px-4">
+          <div className="bg-white/40 backdrop-blur-3xl border border-white/20 rounded-[28px] shadow-[0_8px_32px_rgba(0,0,0,0.06)] p-1">
+            <FlightSearchForm defaultValues={defaultValues} isCompact={true} className="shadow-none border-none !bg-transparent" />
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto max-w-7xl px-4 py-12">
+      <div className="container mx-auto max-w-7xl px-4 py-8 md:py-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           <aside className="hidden lg:block lg:col-span-3 space-y-10">
@@ -349,7 +350,7 @@ export default function SearchResults() {
 
           <main className="lg:col-span-9">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-slate-100 pb-12">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 border-b border-slate-100 pb-8">
               <div className="space-y-2">
                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 px-4 py-1.5 bg-blue-50 rounded-full">
                   Curadoria Michels Travel
