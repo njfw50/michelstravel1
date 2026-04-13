@@ -57,21 +57,21 @@ function LanguageSwitcher({ variant = "navbar" }: { variant?: "navbar" | "footer
           size="sm"
           disabled={isLoading}
           className={cn(
-            "gap-1.5 rounded-full px-3 text-xs font-semibold transition-all duration-300",
+            "gap-2 rounded-2xl px-4 text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-xl",
             variant === "navbar"
-              ? "text-white/80 hover:bg-white/10 hover:text-white"
-              : "border border-white/[0.15] bg-white/5 text-white/80 hover:bg-white/10 hover:text-white",
+              ? "bg-white/5 border border-white/5 text-white/80 hover:bg-white/10 hover:text-white"
+              : "border border-white/10 bg-slate-900/40 text-white/80 hover:bg-blue-600 hover:text-white",
             isLoading && "opacity-50 grayscale",
           )}
           data-testid="button-language-switcher"
         >
-          <Globe className={cn("h-3.5 w-3.5", isLoading && "animate-spin")} />
+          <Globe className={cn("h-3.5 w-3.5 text-blue-400", isLoading && "animate-spin")} />
           <span>{isLoading ? "..." : current.flag}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align={variant === "footer" ? "start" : "end"}
-        className="min-w-[150px] rounded-2xl border border-slate-200 bg-white p-2 shadow-xl"
+        className="min-w-[160px] rounded-[24px] border border-white/10 bg-slate-950 backdrop-blur-3xl p-3 shadow-2xl shadow-black/60"
       >
         {LANG_OPTIONS.map((lang) => (
           <DropdownMenuItem
@@ -79,14 +79,14 @@ function LanguageSwitcher({ variant = "navbar" }: { variant?: "navbar" | "footer
             disabled={isLoading}
             onClick={() => setLanguage(lang.code)}
             className={cn(
-              "cursor-pointer gap-2 rounded-xl text-slate-700 hover:text-slate-900 focus:text-slate-900",
-              language === lang.code && "font-bold text-slate-900",
+              "cursor-pointer gap-3 rounded-xl py-3 px-4 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all hover:bg-white/5 focus:bg-white/5",
+              language === lang.code && "bg-white/5 text-blue-400 font-black",
             )}
             data-testid={`button-switch-lang-${lang.code}`}
           >
-            <span className="w-5 text-xs font-bold text-slate-500">{lang.flag}</span>
+            <span className="w-6 text-[11px] font-black text-slate-600">{lang.flag}</span>
             <span>{lang.label}</span>
-            {language === lang.code && <Check className="ml-auto h-3.5 w-3.5 text-blue-500" />}
+            {language === lang.code && <Check className="ml-auto h-3.5 w-3.5 text-blue-400" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -104,7 +104,7 @@ function UnreadBadge() {
 
   return (
     <span
-      className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white"
+      className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-black text-white shadow-lg"
       data-testid="badge-unread"
     >
       {data.count > 9 ? "9+" : data.count}
@@ -133,7 +133,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 24);
+    const handleScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -180,63 +180,59 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/senior", label: easyModeLabel },
     { href: "/my-trips", label: t("nav.my_trips") || "My Trips" },
     { href: "/about", label: t("footer.about") },
-    { href: "/blog", label: t("nav.blog") },
+    { href: "/blog", label: "Insights" },
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] text-slate-900 selection:bg-blue-500/15 selection:text-slate-950">
-      <header className="fixed inset-x-0 top-0 z-50">
-        <div className="container mx-auto px-4 pb-2 pt-4 md:px-6 md:pb-3 md:pt-5">
+    <div className="min-h-screen bg-slate-950 text-white selection:bg-blue-600/30 selection:text-white flex flex-col">
+      <header className="fixed inset-x-0 top-0 z-[100] transition-all duration-500">
+        <div className={cn(
+          "container mx-auto px-4 md:px-6 transition-all duration-500",
+          scrolled ? "pt-4 md:pt-4" : "pt-8 md:pt-10"
+        )}>
           <div
             className={cn(
-              "flex items-center justify-between gap-4 rounded-[20px] border border-white/10 px-3 py-2 shadow-[0_18px_50px_-24px_rgba(2,6,23,0.8)] backdrop-blur-xl transition-all duration-300 md:px-5 md:py-3",
-              scrolled || !isHome ? "bg-[#07132d]/[0.96]" : "bg-[#07132d]/[0.88]",
+              "flex items-center justify-between gap-4 rounded-[32px] border border-white/10 px-4 py-3 shadow-2xl backdrop-blur-3xl transition-all duration-500 md:px-6 md:py-4",
+              scrolled ? "bg-slate-900/90 scale-100" : "bg-slate-900/60 scale-[1.02]",
             )}
           >
-            <div className="flex min-w-0 items-center gap-4 md:gap-7">
-              <Link href="/" className="group flex min-w-0 items-center gap-4">
-                <div className="brand-mark-shell brand-mark-shell--header">
-                  <img src={brandMark} alt="Michels Travel" className="transition-transform duration-300 group-hover:scale-[1.03]" />
+            <div className="flex min-w-0 items-center gap-6 md:gap-10">
+              <Link href="/" className="group flex min-w-0 items-center gap-5">
+                <div className="brand-mark-shell brand-mark-shell--header shadow-2xl border border-white/20">
+                  <img src={brandMark} alt="Michels Travel" className="transition-transform duration-700 group-hover:scale-110" />
                 </div>
                 <div className="hidden min-w-0 lg:block">
-                  <span className="block whitespace-nowrap text-sm font-bold uppercase tracking-[0.2em] text-white/90">Michels Travel</span>
-                  <span className="block whitespace-nowrap text-[11px] uppercase tracking-[0.22em] text-[#b9d0ff]">{t("nav.sub_brand") || "Opcao eficiente"}</span>
+                  <span className="block whitespace-nowrap text-lg font-black uppercase tracking-[0.25em] text-white">Michels Travel</span>
+                  <span className="block whitespace-nowrap text-[10px] font-black uppercase tracking-[0.3em] text-blue-400/80">{t("nav.sub_brand") || "Opcao eficiente"}</span>
                 </div>
               </Link>
 
-              <nav className="hidden min-w-0 items-center gap-1 lg:flex">
+              <nav className="hidden min-w-0 items-center gap-2 lg:flex">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     className={cn(
-                      "relative whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200",
+                      "relative whitespace-nowrap rounded-2xl px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300",
                       location === link.href
-                        ? "bg-white/10 text-white"
-                        : "text-[#d9e6ff] hover:bg-white/[0.06] hover:text-white",
+                        ? "bg-blue-600 text-white shadow-xl shadow-blue-600/20"
+                        : "text-slate-400 hover:bg-white/5 hover:text-white",
                     )}
                   >
                     {link.label}
-                    {location === link.href && (
-                      <motion.div
-                        layoutId="activeNav"
-                        className="absolute bottom-1 left-4 right-4 h-[2px] rounded-full bg-[#ff7f50]"
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.45 }}
-                      />
-                    )}
                   </Link>
                 ))}
               </nav>
             </div>
 
-            <div className="flex min-w-0 items-center gap-2 md:gap-3">
+            <div className="flex min-w-0 items-center gap-3 md:gap-5">
               <LanguageSwitcher variant="navbar" />
-              <div className="hidden items-center gap-3 md:flex">
+              <div className="hidden items-center gap-4 md:flex">
                 {user ? (
                   <>
                     <Link href="/messages" data-testid="button-messages-nav">
-                      <Button variant="ghost" size="icon" className="relative rounded-full text-white/80 hover:bg-white/10 hover:text-white">
-                        <MessageSquare className="h-4 w-4" />
+                      <Button variant="ghost" size="icon" className="relative h-12 w-12 rounded-2xl bg-white/5 border border-white/5 text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-xl">
+                        <MessageSquare className="h-5 w-5" />
                         <UnreadBadge />
                       </Button>
                     </Link>
@@ -244,27 +240,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
-                          className="gap-2 rounded-full border border-white/10 bg-white/5 px-2 pr-4 text-white/90 hover:bg-white/10"
+                          className="h-12 gap-3 rounded-2xl border border-white/10 bg-white/5 px-2 pr-5 text-white shadow-xl hover:bg-white/10 transition-all"
                           data-testid="button-user-menu"
                         >
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ff7f50] text-white">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg">
                             <User className="h-4 w-4" />
                           </div>
-                          <span className="text-sm font-semibold">{user.firstName || "User"}</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest">{user.firstName || "User"}</span>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl">
-                        <DropdownMenuItem className="cursor-pointer rounded-xl text-slate-700 hover:text-slate-900 focus:text-slate-900" onClick={() => setLocation("/profile")} data-testid="button-profile">
-                          <User className="mr-2 h-4 w-4" /> {t("nav.profile") || "My Profile"}
+                      <DropdownMenuContent align="end" className="w-64 rounded-[32px] border border-white/10 bg-slate-950 backdrop-blur-3xl p-3 shadow-2xl shadow-black/80">
+                        <DropdownMenuItem className="cursor-pointer gap-3 rounded-xl py-4 px-5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 focus:bg-white/5" onClick={() => setLocation("/profile")} data-testid="button-profile">
+                          <User className="h-4 w-4" /> {t("nav.profile") || "My Profile"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer rounded-xl text-slate-700 hover:text-slate-900 focus:text-slate-900" onClick={() => setLocation("/my-trips")} data-testid="button-my-trips">
-                          <Briefcase className="mr-2 h-4 w-4" /> {t("nav.my_trips") || "My Trips"}
+                        <DropdownMenuItem className="cursor-pointer gap-3 rounded-xl py-4 px-5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 focus:bg-white/5" onClick={() => setLocation("/my-trips")} data-testid="button-my-trips">
+                          <Briefcase className="h-4 w-4" /> {t("nav.my_trips") || "My Trips"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer rounded-xl text-slate-700 hover:text-slate-900 focus:text-slate-900" onClick={() => setLocation("/messages")} data-testid="button-messages-dropdown">
-                          <MessageSquare className="mr-2 h-4 w-4" /> {t("nav.messages") || "Messages"}
+                        <DropdownMenuItem className="cursor-pointer gap-3 rounded-xl py-4 px-5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 focus:bg-white/5" onClick={() => setLocation("/messages")} data-testid="button-messages-dropdown">
+                          <MessageSquare className="h-4 w-4" /> {t("nav.messages") || "Messages"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer rounded-xl mt-1 border-t border-slate-100 pt-2 text-red-500 hover:text-red-600 focus:text-red-600" onClick={() => logout()} data-testid="button-logout">
-                          <LogOut className="mr-2 h-4 w-4" /> {t("nav.logout")}
+                        <DropdownMenuItem className="cursor-pointer gap-3 rounded-xl py-4 px-5 mt-2 border-t border-white/5 text-red-500 hover:bg-red-500/10 focus:bg-red-500/10" onClick={() => logout()} data-testid="button-logout">
+                          <LogOut className="h-4 w-4" /> {t("nav.logout")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -272,7 +268,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 ) : (
                   <Button
                     onClick={() => openLoginDialog()}
-                    className="whitespace-nowrap rounded-full bg-[#3d86ff] px-6 text-sm font-bold text-white shadow-[0_12px_30px_-14px_rgba(61,134,255,0.85)] hover:bg-[#2c74ea]"
+                    className="h-12 whitespace-nowrap rounded-2xl bg-blue-600 px-8 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-2xl shadow-blue-600/30 hover:bg-blue-500 transition-all hover:scale-105 active:scale-95"
                     data-testid="button-signin"
                   >
                     {t("nav.signin")}
@@ -281,7 +277,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
 
               <button
-                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-white/80 transition-colors hover:bg-white/10 hover:text-white lg:hidden"
+                className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-300 transition-all hover:bg-blue-600 hover:text-white shadow-xl lg:hidden"
                 onClick={() => setIsMobileMenuOpen((value) => !value)}
                 data-testid="button-mobile-menu"
               >
@@ -295,47 +291,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="fixed inset-x-0 top-[88px] z-40 px-4 lg:hidden"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed inset-0 z-[90] flex items-center justify-center px-4 bg-slate-950/95 backdrop-blur-2xl"
           >
-            <div className="container mx-auto rounded-[28px] border border-white/10 bg-[#07132d]/[0.98] p-4 shadow-[0_25px_60px_-28px_rgba(2,6,23,0.95)] backdrop-blur-xl">
-              <div className="space-y-2">
+            <div className="w-full max-w-sm rounded-[40px] border border-white/10 bg-slate-900/80 p-8 shadow-2xl shadow-black/80 space-y-3">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={cn(
-                      "block rounded-2xl px-4 py-3 text-base font-semibold transition-colors",
-                      location === link.href ? "bg-white/10 text-white" : "text-white/75 hover:bg-white/[0.06] hover:text-white",
+                      "flex items-center justify-center rounded-[24px] py-5 px-6 text-sm font-black uppercase tracking-[0.3em] transition-all",
+                      location === link.href ? "bg-blue-600 text-white shadow-xl shadow-blue-600/20" : "text-slate-400 hover:bg-white/5 hover:text-white",
                     )}
                   >
                     {link.label}
                   </Link>
                 ))}
-              </div>
-              <div className="mt-4 space-y-2 border-t border-white/10 pt-4">
-                {user ? (
-                  <>
-                    <button onClick={() => { setIsMobileMenuOpen(false); setLocation("/messages"); }} className="flex w-full items-center gap-2 rounded-2xl px-4 py-3 text-left text-base font-semibold text-white/75 hover:bg-white/[0.06] hover:text-white" data-testid="button-mobile-messages">
-                      <MessageSquare className="h-4 w-4" />
-                      {t("nav.messages") || "Messages"}
-                    </button>
-                    <button onClick={() => { setIsMobileMenuOpen(false); setLocation("/profile"); }} className="block w-full rounded-2xl px-4 py-3 text-left text-base font-semibold text-white/75 hover:bg-white/[0.06] hover:text-white" data-testid="button-mobile-profile">
-                      {t("nav.profile") || "My Profile"}
-                    </button>
-                    <button onClick={() => logout()} className="block w-full rounded-2xl px-4 py-3 text-left text-base font-semibold text-red-300 hover:bg-white/[0.06]">
-                      {t("nav.logout")}
-                    </button>
-                  </>
-                ) : (
-                  <Button onClick={() => { setIsMobileMenuOpen(false); openLoginDialog(); }} className="w-full rounded-2xl bg-[#3d86ff] text-white hover:bg-[#2c74ea]">
-                    {t("nav.signin")}
-                  </Button>
-                )}
-              </div>
+                
+                <div className="pt-8 space-y-4">
+                  {user ? (
+                    <Button onClick={() => { setIsMobileMenuOpen(false); logout(); }} variant="ghost" className="w-full h-16 rounded-[24px] text-red-500 hover:bg-red-500/10 font-black uppercase tracking-widest">
+                       Logout
+                    </Button>
+                  ) : (
+                    <Button onClick={() => { setIsMobileMenuOpen(false); openLoginDialog(); }} className="w-full h-16 rounded-[24px] bg-blue-600 text-white font-black uppercase tracking-[0.3em] shadow-2xl shadow-blue-600/30">
+                      {t("nav.signin")}
+                    </Button>
+                  )}
+                  <button onClick={() => setIsMobileMenuOpen(false)} className="w-full py-4 text-[10px] font-black uppercase tracking-[0.5em] text-slate-600 hover:text-white transition-all">Close Menu</button>
+                </div>
             </div>
           </motion.div>
         )}
@@ -343,32 +330,32 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <LoginDialog open={loginDialogOpen} onOpenChange={handleLoginDialogChange} authError={authError} />
 
-      <main className="flex-1 bg-slate-950 pt-20 md:pt-24">
+      <main className="flex-1 relative z-10 pt-32 md:pt-40">
         {children}
       </main>
 
-      <footer className="bg-[#07132d] text-white">
+      <footer className="bg-slate-950 border-t border-white/5 relative z-10">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="grid grid-cols-1 gap-10 py-14 md:grid-cols-12 md:gap-10 md:py-16">
-            <div className="space-y-5 md:col-span-4">
-              <div className="flex items-center gap-4">
-                <div className="brand-mark-shell brand-mark-shell--footer">
+          <div className="grid grid-cols-1 gap-16 py-24 md:grid-cols-12 md:gap-12">
+            <div className="space-y-8 md:col-span-5">
+              <div className="flex items-center gap-6">
+                <div className="brand-mark-shell brand-mark-shell--footer shadow-2xl border border-white/10">
                   <img src={brandMark} alt="Michels Travel" />
                 </div>
                 <div>
-                  <div className="text-lg font-bold uppercase tracking-[0.16em] text-white">Michels Travel</div>
-                  <div className="text-xs uppercase tracking-[0.22em] text-[#b1c6ef]">Opcao eficiente</div>
+                  <div className="text-xl font-black uppercase tracking-[0.3em] text-white">Michels Travel</div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.35em] text-blue-400/80">Premium Destination Partner</div>
                 </div>
               </div>
-              <p className="max-w-md text-sm leading-7 text-[#c6d6f4]">{t("footer.slogan")}</p>
-              <div className="flex flex-wrap gap-2 pt-1">
+              <p className="max-w-md text-sm leading-relaxed font-bold text-slate-500 uppercase tracking-tight">{t("footer.slogan")}</p>
+              <div className="flex flex-wrap gap-3">
                 {[
                   { icon: ShieldCheck, label: t("footer.seal_ssl") },
                   { icon: Lock, label: t("footer.seal_stripe") },
                   { icon: Award, label: t("footer.seal_iata") },
                 ].map((seal) => (
-                  <div key={seal.label} className="inline-flex items-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.06] px-3 py-1.5 text-xs font-semibold text-[#eef4ff]">
-                    <seal.icon className="h-3.5 w-3.5 text-[#7cb0ff]" />
+                  <div key={seal.label} className="inline-flex items-center gap-3 rounded-2xl border border-white/5 bg-white/5 px-5 py-2.5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 shadow-xl transition-all hover:bg-white/10 hover:text-white">
+                    <seal.icon className="h-3.5 w-3.5 text-blue-400" />
                     {seal.label}
                   </div>
                 ))}
@@ -376,76 +363,42 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="md:col-span-2">
-              <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-[#b9d0ff]">{t("footer.company")}</h4>
-              <ul className="space-y-3 text-sm text-[#dfe8ff]">
-                <li><Link href="/about" className="transition-colors hover:text-white">{t("footer.about")}</Link></li>
-                <li><Link href="/agencia-de-viagens-ironbound-newark" className="transition-colors hover:text-white">Ironbound Newark</Link></li>
-                <li><Link href="/passagens-para-o-brasil-saindo-de-newark" className="transition-colors hover:text-white">Brasil saindo de Newark</Link></li>
-                <li><Link href="/blog" className="transition-colors hover:text-white">{t("nav.blog")}</Link></li>
+              <h4 className="mb-8 text-[10px] font-black uppercase tracking-[0.4em] text-white/50">{t("footer.company")}</h4>
+              <ul className="space-y-4 text-xs font-black uppercase tracking-[0.2em] text-slate-400">
+                <li><Link href="/about" className="transition-colors hover:text-blue-400">{t("footer.about")}</Link></li>
+                <li><Link href="/blog" className="transition-colors hover:text-blue-400">Travel Hub</Link></li>
+                <li><Link href="/assistance" className="transition-colors hover:text-blue-400">Corporate</Link></li>
               </ul>
             </div>
 
-            <div className="md:col-span-2">
-              <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-[#b9d0ff]">{t("footer.support")}</h4>
-              <ul className="space-y-3 text-sm text-[#dfe8ff]">
-                <li><a href="/help" className="transition-colors hover:text-white">{t("footer.help")}</a></li>
-                <li><a href="/terms" className="transition-colors hover:text-white">{t("footer.terms")}</a></li>
-                <li><a href="/privacy" className="transition-colors hover:text-white">{t("footer.privacy")}</a></li>
-              </ul>
-            </div>
-
-            <div className="md:col-span-4">
-              <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-[#b9d0ff]">{t("footer.contact_title")}</h4>
-              <p className="mb-5 max-w-sm text-sm leading-7 text-[#c6d6f4]">{t("footer.contact_desc")}</p>
-              <ul className="space-y-4 text-sm">
-                <li className="flex items-start gap-3">
-                  <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-white/8 text-[#7cb0ff]">
-                    <MessageSquare className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <span className="block text-[11px] font-bold uppercase tracking-[0.18em] text-[#9db4de]">WhatsApp</span>
-                    <a href={footerWhatsAppHref} target="_blank" rel="noreferrer" className="text-base font-semibold text-white hover:text-[#7cb0ff]">{AGENCY_WHATSAPP_DISPLAY}</a>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-white/8 text-[#7cb0ff]">
-                    <Mail className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <span className="block text-[11px] font-bold uppercase tracking-[0.18em] text-[#9db4de]">{t("footer.email_label")}</span>
-                    <a href={`mailto:${AGENCY_EMAIL}`} className="text-base font-semibold text-white hover:text-[#7cb0ff]">{AGENCY_EMAIL}</a>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 border-t border-white/10 py-6 md:grid-cols-4 md:gap-6">
-            {[
-              { icon: Building2, title: t("footer.seal_nj"), subtitle: t("footer.seal_nj_sub") },
-              { icon: Award, title: t("footer.seal_iata"), subtitle: t("footer.seal_iata_sub") },
-              { icon: Lock, title: t("footer.seal_stripe"), subtitle: t("footer.seal_stripe_sub") },
-              { icon: ShieldCheck, title: t("footer.seal_ssl"), subtitle: t("footer.seal_ssl_sub") },
-            ].map((seal) => (
-              <div key={seal.title} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/8 text-[#7cb0ff]">
-                  <seal.icon className="h-4 w-4" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-white">{seal.title}</div>
-                  <div className="text-xs text-[#9fb2d0]">{seal.subtitle}</div>
-                </div>
+            <div className="md:col-span-5">
+              <h4 className="mb-8 text-[10px] font-black uppercase tracking-[0.4em] text-white/50">{t("footer.contact_title")}</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                 <div className="space-y-3">
+                    <span className="block text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">WhatsApp Support</span>
+                    <a href={footerWhatsAppHref} target="_blank" rel="noreferrer" className="block text-xl font-black text-white hover:text-blue-400 transition-colors tracking-tight">{AGENCY_WHATSAPP_DISPLAY}</a>
+                 </div>
+                 <div className="space-y-3">
+                    <span className="block text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">Secure Email</span>
+                    <a href={`mailto:${AGENCY_EMAIL}`} className="block text-xl font-black text-white hover:text-blue-400 transition-colors tracking-tight truncate">{AGENCY_EMAIL}</a>
+                 </div>
               </div>
-            ))}
+              <div className="mt-10 p-6 rounded-[32px] bg-white/5 border border-white/5 flex items-center justify-between group cursor-pointer hover:bg-blue-600 transition-all duration-500">
+                 <div className="flex items-center gap-4">
+                    <Globe className="h-6 w-6 text-blue-400 group-hover:text-white transition-colors" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 group-hover:text-white">Regional Support Active</span>
+                 </div>
+                 <LanguageSwitcher variant="footer" />
+              </div>
+            </div>
           </div>
 
-          <div className="flex flex-col items-center justify-between gap-4 border-t border-white/10 py-6 text-center md:flex-row md:text-left">
-            <span className="text-xs text-[#97adc9]">&copy; {new Date().getFullYear()} Michels Travel. {t("footer.rights")}</span>
-            <div className="flex items-center gap-3 text-sm text-[#d4e2fa]">
-              <span className="hidden sm:inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em]">
-                <ArrowRight className="h-3.5 w-3.5" /> {t("footer.motto") || "Atendimento claro e suporte humano"}
+          <div className="flex flex-col items-center justify-between gap-8 border-t border-white/5 py-12 text-center md:flex-row md:text-left">
+            <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-700">&copy; {new Date().getFullYear()} Michels Travel &bull; Elite Travel Management</span>
+            <div className="flex items-center gap-6">
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 px-6 py-2 rounded-full border border-white/5 shadow-xl">
+                {t("footer.motto") || "Atendimento claro e suporte humano"}
               </span>
-              <LanguageSwitcher variant="footer" />
             </div>
           </div>
         </div>

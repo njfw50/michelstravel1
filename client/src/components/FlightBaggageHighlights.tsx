@@ -37,7 +37,7 @@ const COPY: Record<DisplayLanguage, BaggageCopy> = {
     carryNone: "Sem bagagem de mão incluída",
     carryVaries: "Bagagem de mão varia por passageiro",
     perTraveler: "por passageiro",
-    nextStep: "Na próxima tela mostramos a bagagem completa por passageiro e por trecho.",
+    nextStep: "Maiores detalhes de bagagem na próxima etapa.",
     lightFare: "Tarifa leve: confirme a bagagem antes de pagar.",
     unavailable: "Veja os detalhes de bagagem antes de concluir.",
   },
@@ -51,7 +51,7 @@ const COPY: Record<DisplayLanguage, BaggageCopy> = {
     carryNone: "No carry-on included",
     carryVaries: "Carry-on varies by traveler",
     perTraveler: "per traveler",
-    nextStep: "On the next screen we show baggage details by traveler and by segment.",
+    nextStep: "More baggage details on the next step.",
     lightFare: "Light fare: confirm baggage before paying.",
     unavailable: "Check baggage details before completing the booking.",
   },
@@ -65,7 +65,7 @@ const COPY: Record<DisplayLanguage, BaggageCopy> = {
     carryNone: "Sin equipaje de mano incluido",
     carryVaries: "El equipaje de mano varía por pasajero",
     perTraveler: "por pasajero",
-    nextStep: "En la siguiente pantalla mostramos el equipaje completo por pasajero y por tramo.",
+    nextStep: "Más detalles del equipaje en la próxima etapa.",
     lightFare: "Tarifa ligera: confirme el equipaje antes de pagar.",
     unavailable: "Revise el detalle del equipaje antes de finalizar.",
   },
@@ -88,10 +88,10 @@ function getRelevantPassengers(passengers: FlightPassengerInfo[]) {
 }
 
 function getToneClasses(tone: SummaryTone) {
-  if (tone === "positive") return "border-emerald-200 bg-emerald-50 text-emerald-800";
-  if (tone === "info") return "border-blue-200 bg-blue-50 text-blue-800";
-  if (tone === "warning") return "border-amber-200 bg-amber-50 text-amber-800";
-  return "border-slate-200 bg-slate-50 text-slate-700";
+  if (tone === "positive") return "border-emerald-500/30 bg-emerald-500/10 text-emerald-400";
+  if (tone === "info") return "border-blue-500/30 bg-blue-500/10 text-blue-400";
+  if (tone === "warning") return "border-amber-500/30 bg-amber-500/10 text-amber-400";
+  return "border-white/10 bg-white/5 text-slate-400";
 }
 
 function buildSummary(
@@ -155,13 +155,13 @@ export default function FlightBaggageHighlights({
   return (
     <div
       className={cn(
-        "bg-transparent flex flex-col gap-2",
-        !compact && "rounded-2xl border border-slate-200 bg-white p-4",
+        "bg-transparent flex flex-col gap-3",
+        !compact && "rounded-[32px] border border-white/10 bg-slate-900/40 p-6 backdrop-blur-xl",
         className,
       )}
       data-testid="flight-baggage-highlights"
     >
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2.5">
         {[
           { icon: Luggage, summary: checkedSummary },
           { icon: Package, summary: carryOnSummary },
@@ -169,21 +169,21 @@ export default function FlightBaggageHighlights({
           <div
             key={`${index}-${summary.label}`}
             className={cn(
-              "inline-flex items-center gap-2 rounded-full border px-3 py-1.5",
-              compact ? "text-[11px]" : "text-xs",
+              "inline-flex items-center gap-2.5 rounded-2xl border px-4 py-2 transition-all backdrop-blur-md",
+              compact ? "text-[10px]" : "text-xs",
               getToneClasses(summary.tone),
             )}
           >
             <Icon className="h-3.5 w-3.5 shrink-0" />
-            <span className="font-semibold">{summary.label}</span>
-            {summary.detail && <span className="opacity-80">{summary.detail}</span>}
+            <span className="font-black uppercase tracking-widest">{summary.label}</span>
+            {summary.detail && <span className="text-[10px] opacity-60 font-medium normal-case tracking-normal">{summary.detail}</span>}
           </div>
         ))}
       </div>
 
-      <p className={cn("mt-2 flex items-start gap-2 leading-relaxed text-slate-500", compact ? "text-[11px]" : "text-xs")}>
-        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
-        <span>{shouldShowLightFareNote ? copy.lightFare : copy.nextStep}</span>
+      <p className={cn("mt-2 flex items-start gap-2.5 leading-relaxed text-slate-500", compact ? "text-[10px]" : "text-xs")}>
+        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-600" />
+        <span className="font-medium">{shouldShowLightFareNote ? copy.lightFare : copy.nextStep}</span>
       </p>
     </div>
   );

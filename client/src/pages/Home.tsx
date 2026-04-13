@@ -25,11 +25,13 @@ import {
   Navigation,
   Info,
   ShieldAlert,
-  Headphones
+  Headphones,
+  Compass,
+  Star,
+  Zap
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { buildWhatsAppHref, buildWhatsAppMessage } from "@/lib/contact";
-import { openChatbotAssistant } from "@/lib/chatbot";
 import type { ContactLanguage } from "@/lib/contact";
 
 const getDestinationImage = (iata?: string) => {
@@ -53,7 +55,6 @@ const getDestinationImage = (iata?: string) => {
 
 export default function Home() {
   const { data: airlines } = useAirlines(30);
-  const { data: airports } = useFeaturedAirports();
   const { t, language } = useI18n();
   const { data: catalogDeals = [], isLoading: dealsLoading } = useFeaturedDeals(language);
   const [, setLocation] = useLocation();
@@ -67,132 +68,166 @@ export default function Home() {
   );
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-600/10">
+    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-blue-500/30 overflow-x-hidden">
       <SEO title={t("home.search.title")} description={t("home.search.desc")} path="/" />
 
-      {/* Hero Search Section - Professional Utility */}
-      <section className="relative pt-12 pb-20 overflow-hidden bg-slate-50/50">
-        <div className="absolute top-0 right-0 w-[50%] h-[600px] bg-gradient-to-bl from-blue-600/5 via-transparent to-transparent pointer-events-none rounded-bl-[160px]" />
-        
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col gap-6 mb-12">
-               <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
-                  <Badge variant="outline" className="bg-blue-600/5 border-blue-100 text-blue-700 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
-                    <ShieldCheck className="h-3.5 w-3.5 mr-2" />
-                    {t("home.bot.badge")}
-                  </Badge>
-               </motion.div>
-               <h1 className="text-4xl md:text-6xl font-display font-black tracking-tighter text-slate-950 leading-[0.9] uppercase max-w-4xl">
-                 {t("home.hero.title")}
-               </h1>
-               <p className="text-slate-500 font-medium text-lg max-w-2xl leading-relaxed">
-                 {t("home.hero.desc")}
-               </p>
-            </div>
+      {/* Decorative Background Elements */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-blue-600/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-indigo-600/10 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(2,6,23,0.8)_100%)]" />
+      </div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative">
-               <div className="rounded-[40px] bg-white shadow-[0_40px_100px_-20px_rgba(15,23,42,0.1)] p-8 md:p-12 border border-slate-100">
-                  <div className="flex items-center gap-3 mb-8">
-                    <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center">
-                      <Plane className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">{t("home.search.title")}</h2>
-                      <p className="text-xs text-slate-400 font-bold uppercase tracking-tight">{t("home.search.tag")}</p>
-                    </div>
-                  </div>
-                  <FlightSearchForm />
-               </div>
+      {/* Hero Search Section */}
+      <section className="relative pt-20 pb-32 overflow-hidden">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-6xl mx-auto flex flex-col items-center text-center">
+            <motion.div 
+               initial={{ opacity: 0, y: -20 }} 
+               animate={{ opacity: 1, y: 0 }}
+               className="mb-8"
+            >
+              <Badge className="bg-blue-600/20 border border-blue-500/30 text-blue-400 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl shadow-blue-500/10 backdrop-blur-md">
+                <Sparkles className="h-4 w-4 mr-3 animate-pulse" />
+                {t("home.bot.badge")} Premium Experience
+              </Badge>
+            </motion.div>
+
+            <motion.h1 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="text-5xl md:text-8xl font-black tracking-tighter text-white leading-[0.9] uppercase max-w-5xl mb-10"
+            >
+              {t("home.hero.title")}
+            </motion.h1>
+
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-slate-400 font-medium text-lg md:text-xl max-w-2xl leading-relaxed mb-16"
+            >
+              {t("home.hero.desc")}
+            </motion.p>
+
+            <motion.div 
+              initial={{ opacity: 0, y: 40 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
+              className="w-full"
+            >
+               <FlightSearchForm className="hover:shadow-blue-500/5 transition-shadow duration-700" />
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Market Insights & Tools - ENRICHED CONTENT */}
-      <section className="py-24 bg-white">
+      {/* Stats / Value Section */}
+      <section className="py-24 relative z-10">
         <div className="container mx-auto px-4 max-w-6xl">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+              {[
+                { label: "Active Routes", value: "2,400+", icon: Compass },
+                { label: "Premium Partners", value: "45+", icon: Star },
+                { label: "Happy Travelers", value: "120k", icon: Globe2 },
+                { label: "Search Speed", value: "< 2s", icon: Zap }
+              ].map((stat, i) => (
+                <div key={i} className="flex flex-col items-center text-center space-y-3 p-6 rounded-[32px] bg-white/5 border border-white/5 backdrop-blur-sm">
+                   <stat.icon className="h-6 w-6 text-blue-500 mb-2" />
+                   <span className="text-3xl md:text-4xl font-black text-white tracking-tighter">{stat.value}</span>
+                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{stat.label}</span>
+                </div>
+              ))}
+           </div>
+        </div>
+      </section>
+
+      {/* Market Insights & Tools */}
+      <section className="py-32 relative z-10">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
             
-            {/* Intel Card: Market Trends */}
-            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-               <div className="p-8 rounded-[32px] bg-blue-50/50 border border-blue-100/50 hover:border-blue-200 transition-all">
-                  <div className="flex items-center justify-between mb-6">
-                    <TrendingUp className="h-6 w-6 text-blue-600" />
-                    <Badge className="bg-blue-600 text-white text-[9px] uppercase font-black">LIVE INSIGHTS</Badge>
+            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
+               <div className="group p-10 rounded-[48px] bg-slate-900/40 border border-white/5 backdrop-blur-3xl hover:border-blue-500/30 transition-all duration-500 shadow-2xl">
+                  <div className="flex items-center justify-between mb-8">
+                    <TrendingUp className="h-8 w-8 text-blue-500 group-hover:scale-110 transition-transform" />
+                    <Badge className="bg-blue-600/20 text-blue-400 border border-blue-500/20 text-[9px] uppercase font-black px-4 py-1.5 rounded-full">LIVE INSIGHTS</Badge>
                   </div>
-                  <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-4">{t("home.bot.badge")} Inteligência</h3>
-                  <div className="space-y-4">
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-6">Midnight Inteligência</h3>
+                  <div className="space-y-6">
                      {[
-                       { icon: CheckCircle2, label: "Rotas para o Brasil com 15% de queda na última semana", color: "text-emerald-500" },
-                       { icon: Info, label: "EWR → GRU: Melhor época de reserva é 45 dias antes", color: "text-blue-500" },
-                       { icon: Navigation, label: "Trending: Voos para Lisboa via Newark em alta", color: "text-amber-500" }
+                       { icon: CheckCircle2, label: "Rotas para o Brasil com 15% de queda na última semana", color: "text-emerald-400" },
+                       { icon: Info, label: "EWR → GRU: Melhor época de reserva é 45 dias antes", color: "text-blue-400" },
+                       { icon: Navigation, label: "Trending: Voos para Lisboa via Newark em alta", color: "text-coral-500" }
                      ].map((item, i) => (
-                       <div key={i} className="flex items-start gap-3">
-                          <item.icon className={`h-4 w-4 mt-0.5 ${item.color}`} />
-                          <p className="text-sm font-semibold text-slate-600 leading-tight">{item.label}</p>
+                       <div key={i} className="flex items-start gap-4">
+                          <item.icon className={cn("h-5 w-5 mt-0.5 shrink-0", item.color)} />
+                          <p className="text-sm font-bold text-slate-400 leading-relaxed">{item.label}</p>
                        </div>
                      ))}
                   </div>
                </div>
 
-               <div className="p-8 rounded-[32px] bg-amber-50/50 border border-amber-100/50 hover:border-amber-200 transition-all">
-                  <div className="flex items-center justify-between mb-6">
-                    <Clock className="h-6 w-6 text-amber-600" />
-                    <Badge className="bg-amber-600 text-white text-[9px] uppercase font-black">SENIOR CARE</Badge>
+               <div className="group p-10 rounded-[48px] bg-slate-900/40 border border-white/5 backdrop-blur-3xl hover:border-coral-500/30 transition-all duration-500 shadow-2xl">
+                  <div className="flex items-center justify-between mb-8">
+                    <Clock className="h-8 w-8 text-coral-500 group-hover:scale-110 transition-transform" />
+                    <Badge className="bg-coral-500/20 text-coral-400 border border-coral-500/20 text-[9px] uppercase font-black px-4 py-1.5 rounded-full">SENIOR CARE</Badge>
                   </div>
-                  <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-4">Dicas de Segurança</h3>
-                  <div className="space-y-4">
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-6">Segurança & Conforto</h3>
+                  <div className="space-y-6">
                      {[
-                       { icon: ShieldAlert, label: "Assistência especial em escalas: Peça com 48h de antecedência", color: "text-amber-600" },
-                       { icon: Plane, label: "Prefira voos diretos para reduzir o cansaço na chegada", color: "text-amber-600" },
-                       { icon: Headphones, label: "Suporte 24h via WhatsApp exclusivo para passageiros", color: "text-emerald-600" }
+                       { icon: ShieldAlert, label: "Assistência especial em escalas: Peça com 48h de antecedência", color: "text-coral-500" },
+                       { icon: Plane, label: "Prefira voos diretos para reduzir o cansaço na chegada", color: "text-coral-500" },
+                       { icon: Headphones, label: "Suporte 24h via WhatsApp exclusivo para passageiros", color: "text-emerald-400" }
                      ].map((item, i) => (
-                       <div key={i} className="flex items-start gap-3">
-                          <item.icon className={`h-4 w-4 mt-0.5 ${item.color}`} />
-                          <p className="text-sm font-semibold text-slate-600 leading-tight">{item.label}</p>
+                       <div key={i} className="flex items-start gap-4">
+                          <item.icon className={cn("h-5 w-5 mt-0.5 shrink-0", item.color)} />
+                          <p className="text-sm font-bold text-slate-400 leading-relaxed">{item.label}</p>
                        </div>
                      ))}
                   </div>
                </div>
             </div>
 
-            {/* Toolbox Card: Quick Info */}
-            <div className="p-8 rounded-[32px] bg-slate-950 text-white shadow-xl flex flex-col justify-between">
-               <div>
-                  <h3 className="text-2xl font-black uppercase tracking-tight mb-2">Traveler's Toolbox</h3>
-                  <p className="text-slate-400 text-sm mb-8 font-medium">Informações dinâmicas para sua viagem.</p>
+            <div className="p-10 rounded-[48px] bg-white text-slate-950 shadow-2xl flex flex-col justify-between relative overflow-hidden group">
+               {/* Background Gloss */}
+               <div className="absolute top-0 right-0 w-32 h-32 bg-slate-900/5 blur-[40px] rounded-full translate-x-1/2 -translate-y-1/2" />
+               
+               <div className="relative z-10">
+                  <h3 className="text-3xl font-black uppercase tracking-tight mb-3">Traveler's Toolbox</h3>
+                  <p className="text-slate-500 text-sm mb-12 font-bold uppercase tracking-widest">Informações Dinâmicas</p>
                   
-                  <div className="space-y-6">
+                  <div className="space-y-8">
                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                           <CloudSun className="h-5 w-5 text-blue-400" />
-                           <span className="text-sm font-bold opacity-80 uppercase tracking-widest">Weather (GRU)</span>
+                        <div className="flex items-center gap-4">
+                           <CloudSun className="h-6 w-6 text-blue-600" />
+                           <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Weather (GRU)</span>
                         </div>
-                        <span className="text-lg font-black tracking-tighter">24°C</span>
+                        <span className="text-2xl font-black tracking-tighter">24°C</span>
                      </div>
                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                           <Banknote className="h-5 w-5 text-emerald-400" />
-                           <span className="text-sm font-bold opacity-80 uppercase tracking-widest">Exchange Rate</span>
+                        <div className="flex items-center gap-4">
+                           <Banknote className="h-6 w-6 text-emerald-600" />
+                           <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Exchange Rate</span>
                         </div>
-                        <span className="text-lg font-black tracking-tighter">1 USD = 5.04 BRL</span>
+                        <span className="text-2xl font-black tracking-tighter">1 USD = 5.04 BRL</span>
                      </div>
                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                           <Navigation className="h-5 w-5 text-orange-400" />
-                           <span className="text-sm font-bold opacity-80 uppercase tracking-widest">Next Gate Info</span>
+                        <div className="flex items-center gap-4">
+                           <Navigation className="h-6 w-6 text-orange-600" />
+                           <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Flight Status</span>
                         </div>
-                        <span className="text-xs font-black text-orange-400 uppercase">Available 2h pre-flight</span>
+                        <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest bg-orange-50 px-3 py-1 rounded-md">Live Monitoring</span>
                      </div>
                   </div>
                </div>
                
                <Button 
                   onClick={() => setLocation("/toolbox")}
-                  className="w-full mt-10 rounded-2xl bg-white text-slate-950 hover:bg-slate-100 h-14 font-black text-xs uppercase tracking-widest"
+                  className="w-full mt-12 rounded-[24px] bg-slate-950 text-white hover:bg-blue-600 h-16 font-black text-xs uppercase tracking-[0.2em] shadow-2xl transition-all hover:scale-105 active:scale-95"
                 >
-                   Ver Ferramentas <ArrowRight className="ml-2 h-4 w-4" />
+                   Acessar Painel <ArrowRight className="ml-3 h-4 w-4" />
                 </Button>
             </div>
           </div>
@@ -200,25 +235,28 @@ export default function Home() {
       </section>
 
       {/* Featured Deals Section */}
-      <section className="py-24 bg-slate-50/50 border-y border-slate-100">
+      <section className="py-32 relative z-10 overflow-hidden">
+        {/* Decorative mask */}
+        <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-3xl -z-10" />
+        
         <div className="container mx-auto px-4 max-w-6xl">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-10 mb-16">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-12 mb-20">
             <div className="max-w-2xl">
-              <Badge className="bg-blue-600 text-white rounded-full px-5 py-1.5 mb-6 text-[10px] uppercase font-black tracking-[0.2em]">
-                <Globe2 className="h-3.5 w-3.5 mr-2" />
+              <Badge className="bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-full px-6 py-2 mb-8 text-[10px] uppercase font-black tracking-[0.4em]">
+                <Globe2 className="h-4 w-4 mr-3" />
                 {t("home.deals.badge")}
               </Badge>
-              <h2 className="text-4xl md:text-5xl font-display font-black text-slate-950 tracking-tighter leading-[0.9] uppercase mb-6">
+              <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-[0.9] uppercase mb-8">
                 {t("home.deals.title")} <br />
-                <span className="text-blue-600">{t("results.filter_active")}</span>
+                <span className="text-blue-500">{t("results.filter_active")}</span>
               </h2>
-              <p className="text-slate-500 font-medium text-lg leading-relaxed">{t("home.deals.desc")}</p>
+              <p className="text-slate-400 font-medium text-lg leading-relaxed">{t("home.deals.desc")}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {dealsLoading ? (
-              Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-[430px] rounded-[32px] bg-white border border-slate-100 animate-pulse" />)
+              Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-[430px] rounded-[48px] bg-white/5 border border-white/5 animate-pulse" />)
             ) : catalogDeals.length > 0 ? (
               catalogDeals.map((deal) => (
                 <DealCard 
@@ -232,167 +270,58 @@ export default function Home() {
                 />
               ))
             ) : (
-              <div className="col-span-full py-20 text-center bg-white rounded-[32px] border border-dashed border-slate-200">
-                 <p className="text-slate-400 font-black uppercase tracking-widest text-xs">{t("results.no_matching_flights")}</p>
+              <div className="col-span-full py-24 text-center bg-white/5 rounded-[48px] border border-dashed border-white/10">
+                 <p className="text-slate-500 font-black uppercase tracking-widest text-[10px]">{t("results.no_matching_flights")}</p>
               </div>
             )}
           </div>
         </div>
       </section>
 
-      {/* Airline Partner Network - PRO RICH CONTENT */}
-      <section className="py-24 bg-white">
+      {/* Airline Partner Network */}
+      <section className="py-32 relative z-10">
         <div className="container mx-auto px-4 max-w-6xl">
-          <div className="text-center mb-16">
-             <Badge variant="outline" className="mb-4 border-slate-200 text-slate-400 text-[9px] uppercase font-black tracking-widest">Global Partnerships</Badge>
-             <h2 className="text-3xl md:text-4xl font-black text-slate-950 uppercase tracking-tighter mb-4">Nossa Rede de Alianças</h2>
-             <p className="text-slate-500 font-medium max-w-xl mx-auto">Conexão direta com as maiores alianças aéreas para garantir sua segurança e conforto.</p>
+          <div className="text-center mb-20">
+             <Badge variant="outline" className="mb-6 border-white/10 text-slate-500 text-[9px] uppercase font-black tracking-[0.3em] px-5 py-1.5 rounded-full">Global Network</Badge>
+             <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-6">Nossa Rede de Alianças</h2>
+             <p className="text-slate-400 font-medium max-w-xl mx-auto text-lg leading-relaxed">Conexão direta com as maiores alianças aéreas para garantir sua segurança e conforto global.</p>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10">
              {airlines?.slice(0, 12).map((airline) => (
-               <div key={airline.id} className="flex flex-col items-center gap-3 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all p-6 rounded-3xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50">
-                  {airline.logoUrl ? (
-                    <img src={airline.logoUrl} alt={airline.name} className="h-8 md:h-12 w-auto object-contain" />
-                  ) : (
-                    <Plane className="h-8 w-8 text-slate-300" />
-                  )}
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{airline.name}</span>
+               <div key={airline.id} className="flex flex-col items-center gap-4 transition-all p-8 rounded-[32px] border border-white/5 bg-slate-900/40 hover:bg-slate-900/60 hover:border-blue-500/30 group">
+                  <div className="h-12 w-full flex items-center justify-center grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500">
+                    {airline.logoUrl ? (
+                      <img src={airline.logoUrl} alt={airline.name} className="h-full w-auto object-contain" />
+                    ) : (
+                      <Plane className="h-10 w-10 text-slate-700" />
+                    )}
+                  </div>
+                  <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest group-hover:text-slate-400 transition-colors">{airline.name}</span>
                </div>
              ))}
           </div>
         </div>
       </section>
 
-      {/* Travel Ecosystem & Resources - NEW SECTION */}
-      <section className="py-24 bg-slate-50">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            
-            <div className="p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm flex flex-col items-start gap-6">
-               <div className="h-14 w-14 rounded-2xl bg-blue-600/5 text-blue-600 flex items-center justify-center">
-                  <ShieldCheck className="h-7 w-7" />
-               </div>
-               <div>
-                  <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">Seguro Viagem & Proteção</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed font-medium">Cobertura completa para emergências médicas, cancelamentos e extravios. Essencial para viajantes sêniores.</p>
-               </div>
-               <Link href="/insurance" className="text-[10px] font-black uppercase text-blue-600 tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
-                  Consultar Coberturas <ArrowRight className="h-3 w-3" />
-               </Link>
-            </div>
-
-            <div className="p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm flex flex-col items-start gap-6">
-               <div className="h-14 w-14 rounded-2xl bg-orange-600/5 text-orange-600 flex items-center justify-center">
-                  <Globe2 className="h-7 w-7" />
-               </div>
-               <div>
-                  <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">Vistos & Documentação</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed font-medium">Assessoria especializada para vistos americanos, brasileiros e europeus (ETIAS). Não viaje com dúvidas.</p>
-               </div>
-               <button 
-                  onClick={() => setLocation("/visa-support")}
-                  className="text-[10px] font-black uppercase text-orange-600 tracking-widest flex items-center gap-2 hover:gap-3 transition-all"
-               >
-                  Checklist Documental <ArrowRight className="h-3 w-3" />
-               </button>
-            </div>
-
-            <div className="p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm flex flex-col items-start gap-6">
-               <div className="h-14 w-14 rounded-2xl bg-emerald-600/5 text-emerald-600 flex items-center justify-center">
-                  <Clock className="h-7 w-7" />
-               </div>
-               <div>
-                  <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">Gestão de Crise 24/7</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed font-medium">Voo cancelado ou atrasado? Nossa equipe assume a reacomodação e o suporte imediato para você.</p>
-               </div>
-               <button 
-                  onClick={() => setLocation("/assistance")}
-                  className="text-[10px] font-black uppercase text-emerald-600 tracking-widest flex items-center gap-2"
-               >
-                  Atendimento Prioritário <ArrowRight className="h-3 w-3" />
-               </button>
-            </div>
-
-            <div className="p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm flex flex-col items-start gap-6">
-               <div className="h-14 w-14 rounded-2xl bg-amber-600/5 text-amber-600 flex items-center justify-center">
-                  <Sparkles className="h-7 w-7" />
-               </div>
-               <div>
-                  <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">Salas VIP & Concierge</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed font-medium">Acesso a lounges exclusivos e serviços de Meet & Greet para uma experiência aeroportuária sem estresse.</p>
-               </div>
-               <Link href="/vip-services" className="text-[10px] font-black uppercase text-amber-600 tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
-                  Explorar Benefícios <ArrowRight className="h-3 w-3" />
-               </Link>
-            </div>
-
-            <div className="p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm flex flex-col items-start gap-6">
-               <div className="h-14 w-14 rounded-2xl bg-slate-950/5 text-slate-950 flex items-center justify-center">
-                  <Banknote className="h-7 w-7" />
-               </div>
-               <div>
-                  <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">Parcelamento Boutique</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed font-medium">Condições exclusivas de parcelamento no cartão ou boleto bancário para facilitar sua jornada.</p>
-               </div>
-               <button 
-                  onClick={() => setLocation("/senior")}
-                  className="text-[10px] font-black uppercase text-slate-950 tracking-widest flex items-center gap-2"
-               >
-                  Simular Opções <ArrowRight className="h-3 w-3" />
-               </button>
-            </div>
-
-            <div className="p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm flex flex-col items-start gap-6">
-               <div className="h-14 w-14 rounded-2xl bg-red-600/5 text-red-600 flex items-center justify-center">
-                  <ShieldAlert className="h-7 w-7" />
-               </div>
-               <div>
-                  <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">Assistência Médica</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed font-medium">Organização de transporte de oxigênio, cadeiras de rodas e dietas especiais a bordo.</p>
-               </div>
-               <Link href="/assistance" className="text-[10px] font-black uppercase text-red-600 tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
-                  Solicitar Suporte <ArrowRight className="h-3 w-3" />
-               </Link>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* Quick FAQ / Knowledge Section - FINAL ENRICHMENT */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-4 max-w-4xl">
-           <div className="text-center mb-16">
-              <h2 className="text-2xl font-black text-slate-950 uppercase tracking-tighter">Dúvidas Frequentes de Viajantes</h2>
-           </div>
-           <div className="space-y-4">
-              {[
-                { q: "Quais documentos preciso para viajar dos EUA para o Brasil?", a: "Brasileiros precisam de passaporte válido. Estrangeiros devem verificar a necessidade de visto de visita (VIVIS)." },
-                { q: "Posso solicitar cadeira de rodas após a compra?", a: "Sim, recomendamos solicitar com no mínimo 48h de antecedência para garantir a disponibilidade em todos os trechos." },
-                { q: "Como funciona o suporte em caso de atraso de voo?", a: "Nossa equipe monitora os voos e entra em contato via WhatsApp para coordenar reacomodações e assistência necessária." }
-              ].map((faq, i) => (
-                <div key={i} className="p-6 rounded-3xl border border-slate-100 bg-slate-50/30">
-                   <h4 className="text-sm font-black text-slate-900 mb-2 uppercase tracking-tight">{faq.q}</h4>
-                   <p className="text-sm text-slate-500 leading-relaxed font-medium">{faq.a}</p>
-                </div>
-              ))}
-           </div>
-        </div>
-      </section>
-
       {/* CTA Final */}
-      <section className="py-24 bg-slate-950 text-white relative overflow-hidden">
+      <section className="py-40 relative z-10 overflow-hidden bg-white text-slate-950">
+         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/5 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
          <div className="container mx-auto px-4 max-w-6xl relative z-10 text-center">
-            <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter uppercase leading-[0.9] mb-8">
+            <Badge className="bg-slate-950 text-white rounded-full px-6 py-2 mb-8 text-[10px] uppercase font-black tracking-[0.5em] shadow-xl">Ready for Takeoff</Badge>
+            <h2 className="text-5xl md:text-8xl font-black tracking-tighter uppercase leading-[0.9] mb-12">
               {t("home.cta.title")}
             </h2>
-            <p className="text-slate-400 text-xl font-medium max-w-2xl mx-auto mb-12">{t("home.cta.subtitle")}</p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a href={contactWhatsAppHref} target="_blank" rel="noreferrer" className="flex h-16 items-center justify-center gap-4 rounded-full bg-blue-600 px-12 text-sm font-black text-white hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20">
-                {t("footer.contact_cta")} <MessageCircle className="h-5 w-5" />
+            <p className="text-slate-500 text-xl md:text-2xl font-bold max-w-2xl mx-auto mb-16 uppercase tracking-tight">{t("home.cta.subtitle")}</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+              <a href={contactWhatsAppHref} target="_blank" rel="noreferrer" className="flex h-20 items-center justify-center gap-5 rounded-[24px] bg-blue-600 px-16 text-sm font-black text-white hover:bg-slate-950 transition-all shadow-2xl shadow-blue-600/30 hover:scale-105 active:scale-95">
+                {t("footer.contact_cta")} <MessageCircle className="h-6 w-6" />
               </a>
-              <Button variant="outline" className="h-16 rounded-full border-white/10 bg-white/5 px-12 text-sm font-bold text-white hover:bg-white/10" onClick={() => setLocation("/senior")}>
+              <Button 
+                variant="outline" 
+                className="h-20 rounded-[24px] border-slate-200 bg-white px-16 text-sm font-black uppercase tracking-widest text-slate-950 hover:bg-slate-50 shadow-xl transition-all hover:scale-105 active:scale-95" 
+                onClick={() => setLocation("/senior")}
+              >
                 {t("home.senior.btn")}
               </Button>
             </div>
