@@ -3,13 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, X, Send, Loader2, User, Bot, AlertTriangle, Headphones, Plane, ToggleLeft, ToggleRight, Clock, ArrowRight, UserCheck, Video, MonitorPlay, ShieldCheck, Lock } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, User, Bot, AlertTriangle, Headphones, Plane, ToggleLeft, ToggleRight, Clock, ArrowRight, UserCheck, MonitorPlay, ShieldCheck, Lock, Sparkles } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { buildLiveSessionRequestContext, getLiveSessionTheme, isSeniorServiceMode } from "@/lib/live-session-context";
-import { buildWhatsAppMessage } from "@/lib/contact";
 import { emitChatbotBookingPrefill } from "@/lib/chatbot";
+import { cn } from "@/lib/utils";
 
 interface FlightResult {
   id: string;
@@ -26,6 +26,8 @@ interface FlightResult {
   destinationCode?: string;
   originCity?: string | null;
   destinationCity?: string | null;
+  originName?: string;
+  destinationName?: string;
 }
 
 interface ChatMessage {
@@ -41,15 +43,7 @@ interface ChatbotStatus {
   available: boolean;
   agentMode: "ai" | "basic";
   label: string;
-  primaryModel: string | null;
-  fallbackModel: string | null;
-  agentModel: string | null;
 }
-
-type ChatbotOpenRequest = {
-  message?: string;
-  autoSend?: boolean;
-};
 
 export function Chatbot() {
   const { t, language } = useI18n();
@@ -65,9 +59,7 @@ export function Chatbot() {
   const [status, setStatus] = useState<ChatbotStatus | null>(null);
   const [showPulse, setShowPulse] = useState(true);
   const [lastAdminMsgId, setLastAdminMsgId] = useState(0);
-  const [pendingStarter, setPendingStarter] = useState<ChatbotOpenRequest | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -78,21 +70,13 @@ export function Chatbot() {
     scrollToBottom();
   }, [chatMessages, scrollToBottom]);
 
-  useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isOpen]);
-
   const loadStatus = useCallback(async () => {
     try {
       const res = await fetch("/api/chatbot/status");
       if (!res.ok) return;
-      const data = (await res.json()) as ChatbotStatus;
+      const data = await res.json();
       setStatus(data);
-    } catch {
-      // keep widget usable even if status check fails
-    }
+    } catch { }
   }, []);
 
   useEffect(() => {
@@ -109,7 +93,7 @@ export function Chatbot() {
             if (newMsgs.length > 0) {
               const mapped: ChatMessage[] = newMsgs.map((m: any) => ({
                 id: m.id,
-                role: "admin" as const,
+                role: "admin",
                 content: m.content,
                 createdAt: m.createdAt,
               }));
@@ -117,29 +101,17 @@ export function Chatbot() {
               setLastAdminMsgId(newMsgs[newMsgs.length - 1].id);
             }
           }
-        } catch {
-          // silently retry on next interval
-        }
+        } catch { }
       };
-
       pollIntervalRef.current = setInterval(poll, 3000);
-      poll();
-      return () => {
-        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-      };
+      return () => { if (pollIntervalRef.current) clearInterval(pollIntervalRef.current); };
     }
-    return () => {
-      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-    };
   }, [escalated, sessionId, isOpen, lastAdminMsgId]);
 
   const createSession = useCallback(async () => {
     try {
-      let visitorId = localStorage.getItem("michels-chatbot-visitor");
-      if (!visitorId) {
-        visitorId = Math.random().toString(36).substring(2, 12);
-        localStorage.setItem("michels-chatbot-visitor", visitorId);
-      }
+      let visitorId = localStorage.getItem("michels-chatbot-visitor") || Math.random().toString(36).substring(2, 12);
+      localStorage.setItem("michels-chatbot-visitor", visitorId);
 
       const res = await fetch("/api/chatbot/session", {
         method: "POST",
@@ -149,657 +121,267 @@ export function Chatbot() {
       const data = await res.json();
       setSessionId(data.sessionId);
       return data.sessionId;
-    } catch (error) {
-      console.error("Failed to create chat session:", error);
-      return null;
-    }
+    } catch { return null; }
   }, [language]);
 
-  const requestContext = useMemo(
-    () => buildLiveSessionRequestContext(location, window.location.search),
-    [location],
-  );
-  const theme = useMemo(
-    () => getLiveSessionTheme(requestContext.serviceMode),
-    [requestContext.serviceMode],
-  );
+  const requestContext = useMemo(() => buildLiveSessionRequestContext(location, window.location.search), [location]);
   const isSeniorContext = isSeniorServiceMode(requestContext.serviceMode);
+
+  const handleOpen = useCallback(async () => {
+    setIsOpen(true);
+    setShowPulse(false);
+    if (sessionId) return sessionId;
+    const id = await createSession();
+    if (id && chatMessages.length === 0) {
+      setChatMessages([{ id: -1, role: "assistant", content: getGreeting() }]);
+    }
+    return id;
+  }, [chatMessages.length, createSession, sessionId]);
+
+  const getGreeting = () => {
+    const greetings: Record<string, string> = {
+      en: "Hi! I'm Mia, your Midnight travel assistant. How can I illuminate your journey today?",
+      es: "\u00a1Hola! Soy Mia, tu asistente de viajes Midnight. \u00bfC\u00f3mo posso iluminar tu viaje hoy?",
+      pt: "Ol\u00e1! Eu sou a Mia, sua assistente Midnight. Como posso iluminar sua jornada hoje?"
+    };
+    return greetings[language as string] || greetings.pt;
+  };
+
+  const sendMessage = useCallback(async (overrideContent?: string) => {
+    const messageContent = (overrideContent ?? input).trim();
+    if (!messageContent || isStreaming) return;
+
+    let currentSessionId = sessionId || await createSession();
+    if (!currentSessionId) return;
+
+    setChatMessages(prev => [...prev, { id: Date.now(), role: "user", content: messageContent }]);
+    setInput("");
+    setIsStreaming(true);
+
+    const assistantMsgId = Date.now() + 1;
+    setChatMessages(prev => [...prev, { id: assistantMsgId, role: "assistant", content: "" }]);
+
+    try {
+      const res = await fetch(agentMode ? "/api/chatbot/agent-message" : "/api/chatbot/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: currentSessionId,
+          content: messageContent,
+          context: {
+            pathname: window.location.pathname,
+            search: window.location.search,
+            serviceMode: requestContext.serviceMode,
+          },
+        })
+      });
+
+      if (!res.ok) throw new Error("Failed");
+      
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No reader");
+
+      let fullContent = "";
+      let collectedFlights: FlightResult[] = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = new TextDecoder().decode(value);
+        const lines = chunk.split("\n");
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const event = JSON.parse(line.slice(6));
+            if (event.type === "action" && event.action?.type === "prefill_booking_form") {
+              emitChatbotBookingPrefill(event.action.payload);
+            }
+            if (event.type === "flights") {
+              collectedFlights = event.flights;
+            }
+            if (event.content) {
+              fullContent += event.content;
+            }
+            setChatMessages(prev => {
+              const next = [...prev];
+              const idx = next.findIndex(m => m.id === assistantMsgId);
+              if (idx !== -1) {
+                next[idx] = { ...next[idx], content: fullContent, flights: collectedFlights.length > 0 ? collectedFlights : next[idx].flights };
+              }
+              return next;
+            });
+            if (event.done && event.escalated) setEscalated(true);
+          } catch { }
+        }
+      }
+    } catch (error) {
+      setChatMessages(prev => prev.map(m => m.id === assistantMsgId ? { ...m, content: "Sorry, I encountered an error. Please contact our support." } : m));
+    } finally {
+      setIsStreaming(false);
+    }
+  }, [input, isStreaming, sessionId, createSession, agentMode, requestContext.serviceMode]);
 
   const handleRequestLiveSession = async () => {
     setRequestingLive(true);
     try {
-      let visitorId = localStorage.getItem("michels-chatbot-visitor");
-      if (!visitorId) {
-        visitorId = Math.random().toString(36).substring(2, 12);
-        localStorage.setItem("michels-chatbot-visitor", visitorId);
-      }
+      const visitorId = localStorage.getItem("michels-chatbot-visitor");
       const res = await fetch("/api/live-sessions/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          visitorId,
-          language: language || "pt",
-          conversationId: sessionId,
-          ...requestContext,
-        }),
+        body: JSON.stringify({ visitorId, language: language || "pt", conversationId: sessionId, ...requestContext }),
       });
       const data = await res.json();
       if (data.id) {
         setIsOpen(false);
         navigate(`/live/${data.id}?token=${encodeURIComponent(data.accessToken)}`);
       }
-    } catch (error) {
-      console.error("Failed to request live session:", error);
-    } finally {
-      setRequestingLive(false);
-    }
-  };
-
-  const handleOpen = useCallback(async () => {
-    setIsOpen(true);
-    setShowPulse(false);
-    if (!status) {
-      void loadStatus();
-    }
-    if (sessionId) return sessionId;
-
-    const id = await createSession();
-    if (id && chatMessages.length === 0) {
-      const greeting = getGreeting();
-      setChatMessages([{
-        id: -1,
-        role: "assistant",
-        content: greeting,
-      }]);
-    }
-    return id;
-  }, [chatMessages.length, createSession, loadStatus, sessionId, status]);
-
-  const getGreeting = () => {
-    if (language === "en") {
-      return "Hi! I'm Mia, your travel assistant at Michels Travel. How can I help you today? I can assist with flight searches, bookings, baggage questions, and more!";
-    } else if (language === "es") {
-      return "\u00a1Hola! Soy Mia, tu asistente de viajes en Michels Travel. \u00bfEn qu\u00e9 puedo ayudarte hoy? Puedo asistirte con b\u00fasqueda de vuelos, reservas, preguntas sobre equipaje y mucho m\u00e1s.";
-    }
-    return "Ol\u00e1! Eu sou a Mia, sua assistente de viagens na Michels Travel. Como posso te ajudar hoje? Posso ajudar com busca de voos, reservas, d\u00favidas sobre bagagem e muito mais!";
-  };
-
-  const handleActionEvent = useCallback((action: any) => {
-    if (!action || typeof action !== "object") return;
-
-    if (action.type === "prefill_booking_form" && action.payload) {
-      emitChatbotBookingPrefill(action.payload);
-    }
-  }, []);
-
-  const sendMessage = useCallback(async (overrideContent?: string) => {
-    const messageContent = (overrideContent ?? input).trim();
-    if (!messageContent || isStreaming) return;
-
-    let currentSessionId = sessionId;
-    if (!currentSessionId) {
-      currentSessionId = await createSession();
-      if (!currentSessionId) return;
-    }
-
-    const userMessage: ChatMessage = {
-      id: Date.now(),
-      role: "user",
-      content: messageContent,
-    };
-
-    setChatMessages(prev => [...prev, userMessage]);
-    setInput("");
-    setIsStreaming(true);
-
-    const assistantMsg: ChatMessage = {
-      id: Date.now() + 1,
-      role: "assistant",
-      content: "",
-    };
-    setChatMessages(prev => [...prev, assistantMsg]);
-
-    const endpoint = agentMode ? "/api/chatbot/agent-message" : "/api/chatbot/message";
-
-    try {
-      await new Promise<void>((resolve, reject) => {
-        let fullContent = "";
-        let collectedFlights: FlightResult[] = [];
-        let lastProcessed = 0;
-
-        const processSSELine = (line: string) => {
-          if (!line.startsWith("data: ")) return;
-          const jsonStr = line.slice(6).trim();
-          if (!jsonStr) return;
-          try {
-            const event = JSON.parse(jsonStr);
-
-            if (event.type === "action" && event.action) {
-              handleActionEvent(event.action);
-            }
-
-            if (event.type === "flights" && event.flights) {
-              collectedFlights = event.flights;
-              setChatMessages(prev => {
-                const updated = [...prev];
-                const lastIdx = updated.length - 1;
-                if (updated[lastIdx]?.role === "assistant") {
-                  updated[lastIdx] = { ...updated[lastIdx], flights: collectedFlights };
-                }
-                return updated;
-              });
-            }
-
-            if (event.content) {
-              fullContent += event.content;
-              setChatMessages(prev => {
-                const updated = [...prev];
-                const lastIdx = updated.length - 1;
-                if (updated[lastIdx]?.role === "assistant") {
-                  updated[lastIdx] = { ...updated[lastIdx], content: fullContent, flights: collectedFlights.length > 0 ? collectedFlights : updated[lastIdx].flights };
-                }
-                return updated;
-              });
-            }
-            if (event.done) {
-              if (event.escalated) {
-                setEscalated(true);
-              }
-            }
-          } catch (e) {
-            // skip unparseable lines
-          }
-        };
-
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", endpoint);
-        xhr.setRequestHeader("Content-Type", "application/json");
-
-        xhr.onprogress = () => {
-          const newData = xhr.responseText.substring(lastProcessed);
-          lastProcessed = xhr.responseText.length;
-          const lines = newData.split("\n");
-          for (const line of lines) {
-            if (line.trim()) processSSELine(line.trim());
-          }
-        };
-
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            const remaining = xhr.responseText.substring(lastProcessed);
-            if (remaining.trim()) {
-              const lines = remaining.split("\n");
-              for (const line of lines) {
-                if (line.trim()) processSSELine(line.trim());
-              }
-            }
-            if (!fullContent) {
-              const allLines = xhr.responseText.split("\n");
-              for (const line of allLines) {
-                if (line.trim()) processSSELine(line.trim());
-              }
-            }
-            resolve();
-          } else {
-            reject(new Error(`Server error: ${xhr.status}`));
-          }
-        };
-
-        xhr.onerror = () => reject(new Error("Network error"));
-        xhr.ontimeout = () => reject(new Error("Request timeout"));
-        xhr.timeout = 60000;
-
-        xhr.send(JSON.stringify({
-          sessionId: currentSessionId,
-          content: userMessage.content,
-          context: {
-            pathname: window.location.pathname,
-            search: window.location.search,
-            serviceMode: requestContext.serviceMode,
-          },
-        }));
-      });
-
-    } catch (error) {
-      console.error("Chat error:", error);
-      setChatMessages(prev => {
-        const updated = [...prev];
-        const lastIdx = updated.length - 1;
-        if (updated[lastIdx]?.role === "assistant" && !updated[lastIdx].content) {
-          updated[lastIdx] = {
-            ...updated[lastIdx],
-            content: t("chatbot.error"),
-          };
-        }
-        return updated;
-      });
-    } finally {
-      setIsStreaming(false);
-    }
-  }, [agentMode, createSession, handleActionEvent, input, isStreaming, requestContext.serviceMode, sessionId, t]);
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      void sendMessage();
-    }
-  };
-
-  useEffect(() => {
-    const handleExternalOpen = (event: Event) => {
-      const detail = (event as CustomEvent<ChatbotOpenRequest>).detail;
-      if (detail?.message) {
-        if (detail.autoSend) {
-          setPendingStarter(detail);
-        } else {
-          setInput(detail.message);
-        }
-      }
-      void handleOpen();
-    };
-
-    window.addEventListener("michels:open-chatbot", handleExternalOpen);
-    return () => window.removeEventListener("michels:open-chatbot", handleExternalOpen);
-  }, [handleOpen]);
-
-  useEffect(() => {
-    if (!pendingStarter?.message || !pendingStarter.autoSend) return;
-    if (!isOpen || !sessionId || isStreaming) return;
-
-    void sendMessage(pendingStarter.message);
-    setPendingStarter(null);
-  }, [isOpen, isStreaming, pendingStarter, sendMessage, sessionId]);
-
-  const handleAgentMode = async () => {
-    if (escalated || isStreaming) return;
-
-    let currentSessionId = sessionId;
-    if (!currentSessionId) {
-      currentSessionId = await createSession();
-      if (!currentSessionId) return;
-    }
-
-    setEscalated(true);
-
-    setChatMessages(prev => [...prev, {
-      id: Date.now(),
-      role: "assistant",
-      content: t("chatbot.agent_mode_confirm"),
-    }]);
-
-    try {
-      await fetch("/api/chatbot/escalate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: currentSessionId }),
-      });
-    } catch (error) {
-      console.error("Escalation error:", error);
-    }
-  };
-
-  const formatContent = (content: string) => {
-    return content.replace(/\[ESCALATE\]/gi, "").replace(/\[AGENT:.*?\]/g, "").trim();
-  };
-
-  const formatTime = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    } catch {
-      return dateStr;
-    }
+    } catch { } finally { setRequestingLive(false); }
   };
 
   const formatPrice = (price: number, currency: string) => {
-    try {
-      return new Intl.NumberFormat(language === "pt" ? "pt-BR" : language === "es" ? "es-ES" : "en-US", {
-        style: "currency",
-        currency,
-      }).format(price);
-    } catch {
-      return `${currency} ${price.toFixed(2)}`;
-    }
+    return new Intl.NumberFormat(language || "pt", { style: "currency", currency }).format(price);
   };
-
-  const providerLabel =
-    status?.provider === "cerebras"
-      ? "Cerebras"
-      : status?.provider === "gemini"
-      ? "Gemini"
-      : language === "pt"
-          ? "Modo básico"
-          : language === "es"
-            ? "Modo básico"
-            : "Basic mode";
-
-  const basicModeHint =
-    language === "pt"
-      ? "Modo básico ativo: para busca automática, envie origem, destino e data. Ex: GRU para MCO em 2026-06-15."
-      : language === "es"
-        ? "Modo básico activo: para búsqueda automática, envía origen, destino y fecha. Ej: GRU a MCO el 2026-06-15."
-        : "Basic mode is active: for automatic search, send origin, destination, and date. Example: GRU to MCO on 2026-06-15.";
-
-  const liveHelpLabel = isSeniorContext
-    ? language === "pt"
-      ? "Especialista senior"
-      : language === "es"
-        ? "Especialista senior"
-        : "Senior specialist"
-    : language === "pt"
-      ? "Atendimento ao vivo"
-      : language === "es"
-        ? "Atencion en vivo"
-        : "Live help";
-  const whatsappLabel = language === "pt"
-    ? "WhatsApp"
-    : language === "es"
-      ? "WhatsApp"
-      : "WhatsApp";
-  const seniorHint = language === "pt"
-    ? "Modo senior ativo: atendimento mais calmo, com menos ruido e explicacao passo a passo."
-    : language === "es"
-      ? "Modo senior activo: apoyo mas calmado, con menos ruido y explicacion paso a paso."
-      : "Senior mode is active: calmer support with less noise and step-by-step guidance.";
-  const quickPrompts = useMemo(
-    () =>
-      language === "en"
-        ? [
-            "Find flights from Newark to Sao Paulo",
-            "Explain baggage in simple terms",
-            isSeniorContext ? "I want calmer flight options" : "I need help choosing the best option",
-          ]
-        : language === "es"
-          ? [
-              "Buscar vuelos de Newark a Sao Paulo",
-              "Explicar equipaje de forma simple",
-              isSeniorContext ? "Quiero opciones de vuelo mas tranquilas" : "Necesito ayuda para elegir la mejor opcion",
-            ]
-          : [
-              "Buscar voos de Newark para Sao Paulo",
-              "Explicar bagagem de forma simples",
-              isSeniorContext ? "Quero opcoes de voo mais tranquilas" : "Preciso de ajuda para escolher a melhor opcao",
-            ],
-    [isSeniorContext, language],
-  );
-
-  const renderFlightCard = (flight: FlightResult) => (
-    <div
-      key={flight.id}
-      className="rounded-lg border border-border/60 bg-background p-2.5 mb-1.5"
-      data-testid={`chatbot-flight-card-${flight.id}`}
-    >
-      <div className="flex items-center justify-between gap-2 mb-1.5">
-        <div className="flex items-center gap-1.5">
-          {flight.logoUrl && (
-            <img src={flight.logoUrl} alt={flight.airline} className="h-4 w-4 rounded" />
-          )}
-          <span className="text-xs font-medium text-foreground">{flight.airline}</span>
-        </div>
-        <span className="text-xs font-bold text-[#0074DE]">
-          {formatPrice(flight.price, flight.currency)}
-        </span>
-      </div>
-      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-1.5">
-        <span className="font-medium text-foreground">{formatTime(flight.departureTime)}</span>
-        <span>{flight.originCode}</span>
-        <ArrowRight className="h-3 w-3" />
-        <span className="font-medium text-foreground">{formatTime(flight.arrivalTime)}</span>
-        <span>{flight.destinationCode}</span>
-      </div>
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-          <span className="flex items-center gap-0.5">
-            <Clock className="h-2.5 w-2.5" />
-            {flight.duration}
-          </span>
-          <span>
-            {flight.stops === 0
-              ? (language === "pt" ? "Direto" : language === "es" ? "Directo" : "Nonstop")
-              : `${flight.stops} ${flight.stops === 1 ? "stop" : "stops"}`
-            }
-          </span>
-        </div>
-        <a
-          href={`/book/${flight.id}`}
-          className="inline-flex items-center gap-1 rounded-md bg-[#0074DE] px-2 py-1 text-[10px] font-medium text-white transition-opacity hover:opacity-90"
-          data-testid={`button-book-flight-${flight.id}`}
-        >
-          <Plane className="h-2.5 w-2.5" />
-          {language === "pt" ? "Reservar" : language === "es" ? "Reservar" : "Book"}
-        </a>
-      </div>
-    </div>
-  );
 
   return (
     <>
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="fixed bottom-20 right-4 z-[9999] w-[360px] max-w-[calc(100vw-2rem)]"
-            data-testid="chatbot-panel"
+            exit={{ opacity: 0, y: 30, scale: 0.95 }}
+            className="fixed bottom-24 right-4 md:right-8 z-[100] w-[380px] max-w-[calc(100vw-2rem)]"
           >
-            <Card className="flex flex-col overflow-hidden shadow-xl border border-border/50">
-              <div className={`flex items-center justify-between gap-2 px-4 py-3 ${theme.headerClass}`}>
-                <div className="flex items-center gap-2">
-                  <div className={`flex h-8 w-8 items-center justify-center rounded-full ${isSeniorContext ? "bg-amber-900/10" : "bg-white/20"}`}>
-                    <Bot className="h-4 w-4" />
+            <div className="flex flex-col h-[600px] max-h-[80vh] bg-slate-950/90 backdrop-blur-3xl border border-white/10 rounded-[32px] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 bg-slate-900/50 border-b border-white/5">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <div className="h-12 w-12 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center">
+                      <Bot className="h-6 w-6 text-blue-400" />
+                    </div>
+                    <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 border-2 border-slate-950 shadow-lg" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold leading-tight">Mia</p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-[11px] leading-tight opacity-80">{t("chatbot.subtitle")}</p>
-                      <Badge className={isSeniorContext ? "bg-white/80 text-amber-900 border-amber-200 hover:bg-white/80" : "bg-white/15 text-white border-white/15 hover:bg-white/15"}>
-                        {providerLabel}
-                      </Badge>
-                      {isSeniorContext && (
-                        <Badge className="bg-amber-100 text-amber-900 border-amber-200 hover:bg-amber-100">
-                          Senior
-                        </Badge>
-                      )}
-                    </div>
+                    <h3 className="text-sm font-black text-white uppercase tracking-widest">Mia &bull; Midnight</h3>
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-0.5">Online Support</p>
                   </div>
                 </div>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => setIsOpen(false)}
-                  className={isSeniorContext ? "text-amber-950 hover:bg-amber-100/70" : "text-white no-default-hover-elevate"}
-                  data-testid="button-chatbot-close"
-                >
-                  <X className="h-4 w-4" />
+                <Button size="icon" variant="ghost" onClick={() => setIsOpen(false)} className="h-10 w-10 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition-all">
+                  <X className="h-5 w-5" />
                 </Button>
               </div>
 
-              {escalated && (
-                <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/30 px-4 py-2 text-xs text-amber-800 dark:text-amber-200">
-                  <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
-                  <span>{t("chatbot.escalated_notice")}</span>
-                </div>
-              )}
-
-              <div className="flex-1 overflow-y-auto p-3" style={{ height: "360px", maxHeight: "50vh" }}>
-                <div className="flex flex-col gap-3">
-                  {chatMessages.map((msg) => (
-                    <div key={msg.id}>
-                      <div
-                        className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
-                      >
-                        <div className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${
-                          msg.role === "user" 
-                            ? theme.userAvatarClass
-                            : msg.role === "admin"
-                            ? "bg-emerald-600 text-white"
-                            : "bg-muted text-muted-foreground"
-                        }`}>
-                          {msg.role === "user" ? <User className="h-3 w-3" /> : msg.role === "admin" ? <UserCheck className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
-                        </div>
-                        <div
-                          className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
-                            msg.role === "user"
-                              ? `${theme.userBubbleClass} rounded-br-md`
-                              : msg.role === "admin"
-                              ? "bg-emerald-50 dark:bg-emerald-950/40 text-foreground rounded-bl-md border border-emerald-200 dark:border-emerald-800"
-                              : "bg-muted text-foreground rounded-bl-md"
-                          }`}
-                          data-testid={`chatbot-message-${msg.role}`}
-                        >
-                          {msg.role === "admin" && (
-                            <div className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 mb-0.5">
-                              {language === "pt" ? "Agente Humano" : language === "es" ? "Agente Humano" : "Human Agent"}
-                            </div>
-                          )}
-                          {msg.role === "assistant" && msg.content === "" && isStreaming && !msg.flights ? (
-                            <div className="flex items-center gap-1">
-                              <div className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "0ms" }} />
-                              <div className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "150ms" }} />
-                              <div className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "300ms" }} />
-                            </div>
-                          ) : (
-                            formatContent(msg.content)
-                          )}
-                        </div>
+              {/* Messages Area */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
+                {chatMessages.map((msg) => (
+                  <div key={msg.id} className={cn("flex gap-3", msg.role === "user" ? "flex-row-reverse" : "flex-row")}>
+                    <div className={cn("h-8 w-8 rounded-xl flex items-center justify-center shrink-0 shadow-lg", 
+                      msg.role === "user" ? "bg-blue-600 text-white" : "bg-slate-900 border border-white/10 text-blue-400"
+                    )}>
+                      {msg.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                    </div>
+                    <div className="max-w-[85%] space-y-3">
+                      <div className={cn("rounded-2xl px-4 py-3 text-sm font-bold leading-relaxed shadow-xl", 
+                        msg.role === "user" 
+                          ? "bg-blue-600 text-white rounded-tr-none" 
+                          : "bg-white/5 border border-white/5 text-slate-200 rounded-tl-none backdrop-blur-md"
+                      )}>
+                        {msg.content === "" && isStreaming ? (
+                          <div className="flex gap-1 py-1">
+                            <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </div>
+                        ) : (
+                          msg.content
+                        )}
                       </div>
+                      
                       {msg.flights && msg.flights.length > 0 && (
-                        <div className="mt-2 ml-8" data-testid="chatbot-flight-results">
-                          {msg.flights.map(renderFlightCard)}
+                        <div className="space-y-3 pt-1">
+                          {msg.flights.map(flight => (
+                            <div key={flight.id} className="rounded-2xl bg-slate-900/60 border border-white/5 p-4 space-y-3 shadow-2xl">
+                               <div className="flex justify-between items-center">
+                                  <div className="flex items-center gap-2">
+                                     {flight.logoUrl && <img src={flight.logoUrl} className="h-4 w-4 rounded-sm grayscale" />}
+                                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{flight.airline}</span>
+                                  </div>
+                                  <span className="text-xs font-black text-blue-400">{formatPrice(flight.price, flight.currency)}</span>
+                               </div>
+                               <div className="flex items-center gap-3">
+                                  <span className="text-sm font-black text-white">{flight.originCode}</span>
+                                  <ArrowRight className="h-3 w-3 text-slate-600" />
+                                  <span className="text-sm font-black text-white">{flight.destinationCode}</span>
+                               </div>
+                               <Button size="sm" onClick={() => navigate(`/book/${flight.id}`)} className="w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-[9px] tracking-[0.2em] shadow-xl">
+                                  Reservar <Plane className="ml-2 h-3.5 w-3.5" />
+                               </Button>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
-                  ))}
-                  <div ref={messagesEndRef} />
-                </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
               </div>
 
-              <div className="border-t p-3">
-                {isSeniorContext && (
-                  <div className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
-                    {seniorHint}
-                  </div>
-                )}
-                {agentMode && status?.agentMode === "basic" && (
-                  <div className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-900">
-                    {basicModeHint}
-                  </div>
-                )}
-                {chatMessages.length <= 1 && !isStreaming && (
-                  <div className="mb-3">
-                    <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                      {language === "en" ? "Quick start" : language === "es" ? "Inicio rapido" : "Inicio rapido"}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {quickPrompts.map((prompt) => (
-                        <button
-                          key={prompt}
-                          type="button"
-                          onClick={() => void sendMessage(prompt)}
-                          className={`rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors ${isSeniorContext ? "border-amber-200 bg-amber-50 text-amber-900 hover:bg-amber-100" : "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"}`}
-                        >
-                          {prompt}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <button
-                    onClick={() => setAgentMode(!agentMode)}
-                    className="flex items-center gap-1.5 text-[11px] text-muted-foreground transition-colors"
-                    disabled={isStreaming}
-                    data-testid="button-chatbot-agent-toggle"
-                  >
-                    {agentMode ? (
-                      <ToggleRight className={`h-4 w-4 ${theme.accentTextClass}`} />
-                    ) : (
-                      <ToggleLeft className="h-4 w-4" />
-                    )}
-                    <span className={agentMode ? `${theme.accentTextClass} font-medium` : ""}>
-                      {t("chatbot.agent_mode")}
-                    </span>
-                  </button>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <button
-                    onClick={handleRequestLiveSession}
-                    disabled={requestingLive}
-                    className={`flex items-center gap-1 text-[11px] font-medium transition-colors ${isSeniorContext ? "text-amber-700 hover:text-amber-900" : "text-[#0074DE] hover:text-[#005bb5]"}`}
-                    data-testid="button-chatbot-live-session"
-                  >
-                    {requestingLive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MonitorPlay className="h-3.5 w-3.5" />}
-                    <span>{liveHelpLabel}</span>
-                  </button>
-                  {!escalated && (
-                    <button
-                      onClick={handleAgentMode}
-                      disabled={isStreaming}
-                      className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-                        data-testid="button-chatbot-human-agent"
-                      >
-                        <Headphones className="h-3.5 w-3.5" />
-                        <span>{t("chatbot.talk_to_human")}</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    ref={inputRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder={agentMode ? t("chatbot.agent_placeholder") : t("chatbot.placeholder")}
-                    disabled={isStreaming}
-                    className="flex-1 text-sm"
-                    data-testid="input-chatbot-message"
-                  />
-                  <Button
-                    size="icon"
-                    onClick={() => void sendMessage()}
-                    disabled={!input.trim() || isStreaming}
-                    data-testid="button-chatbot-send"
-                  >
-                    {isStreaming ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                <div className="mt-1.5 flex items-center justify-center gap-2 text-center text-[10px] text-muted-foreground">
-                  <ShieldCheck className="h-3 w-3 text-emerald-600" aria-hidden />
-                  <span>{t("chatbot.powered_by")} • {providerLabel}</span>
-                  <span className="mx-1 text-slate-300">|</span>
-                  <Lock className="h-3 w-3 text-slate-500" aria-hidden />
-                  <span>{t("chatbot.secure") ?? "Secure"} • HTTPS & SOC 2</span>
-                </div>
+              {/* Action Bar */}
+              <div className="p-6 bg-slate-900/30 border-t border-white/5 space-y-4">
+                 <div className="flex items-center gap-3">
+                    <button onClick={handleRequestLiveSession} disabled={requestingLive} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-400 hover:bg-blue-600 hover:text-white transition-all text-[9px] font-black uppercase tracking-widest shadow-xl">
+                       {requestingLive ? <Loader2 className="h-4 w-4 animate-spin" /> : <MonitorPlay className="h-4 w-4" />}
+                       Talk to Agent
+                    </button>
+                    <button onClick={() => setAgentMode(!agentMode)} className={cn("flex-1 flex items-center justify-center gap-2 h-10 rounded-xl border transition-all text-[9px] font-black uppercase tracking-widest shadow-xl", 
+                      agentMode ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" : "border-white/5 bg-white/5 text-slate-500 hover:text-white"
+                    )}>
+                       {agentMode ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
+                       Smart Agent
+                    </button>
+                 </div>
+
+                 <div className="relative">
+                    <Input 
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                      placeholder="Type your journey details..."
+                      className="h-14 bg-white/5 border-white/10 rounded-2xl pl-5 pr-14 text-white placeholder:text-slate-700 focus:border-blue-500/50 transition-all font-bold"
+                    />
+                    <Button size="icon" onClick={() => sendMessage()} disabled={!input.trim() || isStreaming} className="absolute right-2 top-2 h-10 w-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-xl transition-all">
+                       {isStreaming ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                    </Button>
+                 </div>
+                 
+                 <div className="flex items-center justify-center gap-1.5">
+                    <ShieldCheck className="h-3 w-3 text-emerald-500" />
+                    <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Midnight Secure &bull; AI Powered</span>
+                 </div>
               </div>
-            </Card>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <button
-        onClick={isOpen ? () => setIsOpen(false) : handleOpen}
-        className={`fixed bottom-4 right-4 z-[9999] flex h-14 w-14 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105 active:scale-95 ${isSeniorContext ? "bg-amber-600 hover:bg-amber-700" : "bg-[#0074DE]"}`}
-        data-testid="button-chatbot-toggle"
-        aria-expanded={isOpen}
+        onClick={handleOpen}
+        className={cn("fixed bottom-6 right-6 z-[100] h-16 w-16 rounded-[24px] flex items-center justify-center shadow-2xl transition-all group active:scale-95", 
+          isOpen ? "bg-slate-900 border border-white/10 text-white rotate-90" : "bg-blue-600 text-white hover:scale-110"
+        )}
       >
-        {isOpen ? (
-          <X className="h-6 w-6" />
-        ) : (
-          <>
-            <MessageCircle className="h-6 w-6" />
+        {isOpen ? <X className="h-7 w-7" /> : (
+          <div className="relative">
+            <MessageCircle className="h-8 w-8 group-hover:scale-110 transition-transform" />
             {showPulse && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-                <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-red-500" />
+              <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex h-4 w-4 rounded-full bg-red-500 shadow-md" />
               </span>
             )}
-          </>
+          </div>
         )}
       </button>
     </>

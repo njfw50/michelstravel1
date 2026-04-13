@@ -17,12 +17,16 @@ import {
   Mail,
   ShieldCheck,
   UserRound,
+  Sparkles,
+  Github
 } from "lucide-react";
 import { SiGithub } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
 import { useLocation } from "wouter";
 import { queryClient } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 type LoginStep = "login" | "email-signin" | "email-register" | "admin-password";
 
@@ -85,7 +89,7 @@ export function LoginDialog({ open, onOpenChange, authError }: LoginDialogProps)
     window.location.href = "/api/auth/github";
   };
 
-  const handleEmailStepChange = (nextStep: Extract<LoginStep, "email-signin" | "email-register">) => {
+  const handleEmailStepChange = (nextStep: LoginStep) => {
     setStep(nextStep);
     setFormError(null);
     setIsLoading(false);
@@ -176,302 +180,261 @@ export function LoginDialog({ open, onOpenChange, authError }: LoginDialogProps)
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-sm p-6 sm:p-8 rounded-[24px]">
-        {step === "login" && (
-          <>
-            <DialogHeader className="text-center items-center">
-              <div className="mx-auto h-14 w-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-2">
-                <Mail className="h-7 w-7 text-blue-500" />
-              </div>
-              <DialogTitle className="text-xl font-display text-gray-900" data-testid="text-login-dialog-title">
-                {t("login.title")}
-              </DialogTitle>
-              <DialogDescription className="text-gray-500 text-sm">
-                {t("login.description")}
-              </DialogDescription>
-            </DialogHeader>
+      <DialogContent className="max-w-md p-0 overflow-hidden border-none bg-transparent shadow-none">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative w-full bg-slate-950/90 backdrop-blur-3xl border border-white/10 rounded-[40px] p-10 shadow-[0_45px_100px_-20px_rgba(0,0,0,0.4)]"
+        >
+          {/* Top Decorative Gradient */}
+          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-600 via-coral-500 to-indigo-600" />
+          
+          <div className="relative z-10">
+            {step === "login" && (
+              <div className="space-y-10">
+                <div className="text-center space-y-4">
+                  <div className="mx-auto h-20 w-20 rounded-[28px] bg-blue-600/10 border border-blue-500/20 flex items-center justify-center mb-4 shadow-xl">
+                    <Sparkles className="h-10 w-10 text-blue-400 animate-pulse" />
+                  </div>
+                  <h2 className="text-3xl font-black text-white tracking-tighter uppercase leading-none">
+                    {t("login.title")}
+                  </h2>
+                  <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-xs mx-auto">
+                    {t("login.description")}
+                  </p>
+                </div>
 
-            {(authErrorMessage || formError) && (
-              <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                <span>{formError || authErrorMessage}</span>
-              </div>
-            )}
-
-            <div className="space-y-3 mt-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full gap-3 border-gray-200 text-gray-700 font-medium"
-                onClick={handleGitHubLogin}
-                disabled={isLoading}
-                data-testid="button-login-github"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <SiGithub className="h-4 w-4 text-gray-900" />
+                {(authErrorMessage || formError) && (
+                  <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-[10px] font-black uppercase tracking-widest text-red-400 flex items-start gap-4">
+                    <AlertCircle className="h-5 w-5 shrink-0" />
+                    <span className="leading-relaxed">{formError || authErrorMessage}</span>
+                  </div>
                 )}
-                {t("login.continue_github")}
-              </Button>
 
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-200" />
+                <div className="space-y-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-16 w-full gap-4 border-white/10 bg-white/5 text-white font-black uppercase tracking-[0.2em] text-[10px] transition-all hover:bg-white/10 hover:border-blue-500/50 rounded-2xl group"
+                    onClick={handleGitHubLogin}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <SiGithub className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                    )}
+                    {t("login.continue_github")}
+                  </Button>
+
+                  <div className="relative py-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-white/5" />
+                    </div>
+                    <div className="relative flex justify-center">
+                      <span className="bg-slate-950 px-4 text-[9px] font-black uppercase tracking-[0.5em] text-slate-700">{t("login.or")}</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    className="h-16 w-full gap-4 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl shadow-2xl shadow-blue-600/20 transition-all hover:-translate-y-1"
+                    onClick={() => handleEmailStepChange("email-signin")}
+                  >
+                    <Mail className="h-5 w-5" />
+                    {t("login.continue_email")}
+                  </Button>
                 </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="bg-white/80 backdrop-blur-sm px-2 text-gray-400">{t("login.or")}</span>
+
+                <div className="pt-8 flex flex-col items-center gap-6">
+                   <p className="text-[9px] text-slate-600 text-center font-bold uppercase tracking-[0.15em] leading-relaxed max-w-xs">
+                    {t("login.terms_notice")}
+                  </p>
+                  <button
+                    type="button"
+                    className="text-[9px] font-black uppercase tracking-[0.35em] text-slate-700 hover:text-blue-400 transition-colors"
+                    onClick={() => {
+                      setFormError(null);
+                      setStep("admin-password");
+                    }}
+                  >
+                    {t("login.admin_access")}
+                  </button>
                 </div>
-              </div>
-
-              <Button
-                type="button"
-                className="w-full gap-3 font-medium"
-                onClick={() => handleEmailStepChange("email-signin")}
-                data-testid="button-login-email"
-              >
-                <Mail className="h-4 w-4" />
-                {t("login.continue_email")}
-              </Button>
-
-              <p className="text-[11px] text-gray-400 text-center leading-relaxed pt-1">
-                {t("login.terms_notice")}
-              </p>
-
-              <div className="pt-2 border-t border-gray-100">
-                <button
-                  type="button"
-                  className="w-full text-xs text-gray-400 hover:text-gray-500 transition-colors py-1"
-                  onClick={() => {
-                    setFormError(null);
-                    setStep("admin-password");
-                  }}
-                  data-testid="button-admin-access"
-                >
-                  {t("login.admin_access")}
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-
-        {isEmailStep && (
-          <>
-            <DialogHeader className="text-center items-center">
-              <div className="mx-auto h-14 w-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-2">
-                <UserRound className="h-7 w-7 text-blue-500" />
-              </div>
-              <DialogTitle className="text-xl font-display text-gray-900" data-testid="text-email-auth-title">
-                {isRegisterStep
-                  ? t("login.create_account") || "Create account"
-                  : t("login.sign_in") || "Sign in"}
-              </DialogTitle>
-              <DialogDescription className="text-gray-500 text-sm">
-                {isRegisterStep
-                  ? t("login.create_account_desc") || "Create your account to manage bookings and travel details."
-                  : t("login.sign_in_desc") || "Enter your email and password to access your account."}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="mt-2 rounded-xl bg-gray-100 p-1 grid grid-cols-2 gap-1">
-              <button
-                type="button"
-                onClick={() => handleEmailStepChange("email-signin")}
-                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  !isRegisterStep ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"
-                }`}
-                data-testid="button-email-tab-signin"
-              >
-                {t("login.sign_in") || "Sign in"}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleEmailStepChange("email-register")}
-                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  isRegisterStep ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"
-                }`}
-                data-testid="button-email-tab-register"
-              >
-                {t("login.create_account") || "Create account"}
-              </button>
-            </div>
-
-            {(authErrorMessage || formError) && (
-              <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                <span>{formError || authErrorMessage}</span>
               </div>
             )}
 
-            <form onSubmit={handleEmailAuthSubmit} className="space-y-4 mt-4">
-              {isRegisterStep && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="first-name" className="text-gray-600 text-sm">
-                      {t("login.first_name") || "First name"}
-                    </Label>
+            {isEmailStep && (
+              <div className="space-y-10">
+                <div className="text-center space-y-4">
+                   <div className="mx-auto h-20 w-20 rounded-[28px] bg-blue-600/10 border border-blue-500/20 flex items-center justify-center mb-4 shadow-xl">
+                    <UserRound className="h-10 w-10 text-blue-400" />
+                  </div>
+                  <h2 className="text-3xl font-black text-white tracking-tighter uppercase leading-none">
+                    {isRegisterStep ? "Create Profile" : "Identify Yourself"}
+                  </h2>
+                  <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">
+                    {isRegisterStep ? "Join the Elite Travel Hub" : "Welcome back to Midnight"}
+                  </p>
+                </div>
+
+                <div className="p-1.5 rounded-[22px] bg-white/5 border border-white/5 grid grid-cols-2 gap-1.5 backdrop-blur-md">
+                  <button
+                    type="button"
+                    onClick={() => handleEmailStepChange("email-signin")}
+                    className={cn(
+                      "rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all",
+                      !isRegisterStep ? "bg-blue-600 text-white shadow-xl" : "text-slate-500 hover:text-white"
+                    )}
+                  >
+                    {t("login.sign_in")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleEmailStepChange("email-register")}
+                    className={cn(
+                      "rounded-xl py-3 text-[10px] font-black uppercase tracking-widest transition-all",
+                      isRegisterStep ? "bg-blue-600 text-white shadow-xl" : "text-slate-500 hover:text-white"
+                    )}
+                  >
+                    {t("login.create_account")}
+                  </button>
+                </div>
+
+                {(authErrorMessage || formError) && (
+                  <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-[10px] font-black uppercase tracking-widest text-red-400 flex items-start gap-4">
+                    <AlertCircle className="h-5 w-5 shrink-0" />
+                    <span>{formError || authErrorMessage}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleEmailAuthSubmit} className="space-y-6">
+                  {isRegisterStep && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <Label className="text-[9px] font-black uppercase tracking-widest text-slate-500 pl-1">{t("login.first_name")}</Label>
+                        <Input
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          placeholder="First Name"
+                          className="h-14 bg-white/5 border-white/10 rounded-2xl text-white placeholder:text-slate-700 focus:border-blue-500/50 font-bold"
+                        />
+                      </div>
+                      <div className="space-y-3">
+                         <Label className="text-[9px] font-black uppercase tracking-widest text-slate-500 pl-1">{t("login.last_name")}</Label>
+                        <Input
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          placeholder="Last Name"
+                          className="h-14 bg-white/5 border-white/10 rounded-2xl text-white placeholder:text-slate-700 focus:border-blue-500/50 font-bold"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-500 pl-1">{t("login.email_label")}</Label>
                     <Input
-                      id="first-name"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      placeholder={t("login.first_name_placeholder") || "First name"}
-                      className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
-                      data-testid="input-register-firstname"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@midnight.com"
+                      className="h-14 bg-white/5 border-white/10 rounded-2xl text-white placeholder:text-slate-700 focus:border-blue-500/50 font-bold"
+                      required
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="last-name" className="text-gray-600 text-sm">
-                      {t("login.last_name") || "Last name"}
-                    </Label>
+
+                  <div className="space-y-3">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-500 pl-1">{t("login.password_label")}</Label>
                     <Input
-                      id="last-name"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      placeholder={t("login.last_name_placeholder") || "Last name"}
-                      className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
-                      data-testid="input-register-lastname"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Password"
+                      className="h-14 bg-white/5 border-white/10 rounded-2xl text-white placeholder:text-slate-700 focus:border-blue-500/50 font-bold"
+                      required
                     />
                   </div>
-                </div>
-              )}
 
-              <div className="space-y-2">
-                <Label htmlFor="email-auth-email" className="text-gray-600 text-sm">
-                  {t("login.email_label") || "Email"}
-                </Label>
-                <Input
-                  id="email-auth-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t("login.email_placeholder") || "you@example.com"}
-                  className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
-                  required
-                  autoFocus
-                  data-testid={isRegisterStep ? "input-register-email" : "input-login-email"}
-                />
-              </div>
+                  <div className="pt-6 space-y-4">
+                    <Button
+                      type="submit"
+                      disabled={isLoading || !email.trim() || !password}
+                      className="h-16 w-full gap-4 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl shadow-2xl transition-all"
+                    >
+                      {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Mail className="h-5 w-5" />}
+                      {isRegisterStep ? "Register Profile" : "Grant Access"}
+                    </Button>
 
-              <div className="space-y-2">
-                <Label htmlFor="email-auth-password" className="text-gray-600 text-sm">
-                  {t("login.password_label") || "Password"}
-                </Label>
-                <Input
-                  id="email-auth-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t("login.password_placeholder") || "Enter your password"}
-                  className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
-                  required
-                  data-testid={isRegisterStep ? "input-register-password" : "input-login-password"}
-                />
-              </div>
-
-              <Button
-                type="submit"
-                disabled={isLoading || !email.trim() || !password}
-                className="w-full gap-2"
-                data-testid={isRegisterStep ? "button-submit-register" : "button-submit-login"}
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Mail className="h-4 w-4" />
-                )}
-                {isRegisterStep
-                  ? t("login.create_account_button") || "Create account"
-                  : t("login.sign_in_button") || "Sign in"}
-              </Button>
-
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full text-gray-400 text-sm gap-2"
-                onClick={() => {
-                  setFormError(null);
-                  setStep("login");
-                }}
-                data-testid="button-back-to-login-options"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                {t("login.back")}
-              </Button>
-            </form>
-          </>
-        )}
-
-        {step === "admin-password" && (
-          <>
-            <DialogHeader className="text-center items-center">
-              <div className="mx-auto h-14 w-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-2">
-                <ShieldCheck className="h-7 w-7 text-blue-500" />
-              </div>
-              <DialogTitle className="text-xl font-display text-gray-900" data-testid="text-admin-password-title">
-                {t("admin.login_title")}
-              </DialogTitle>
-              <DialogDescription className="text-gray-500 text-sm">
-                {t("admin.login_subtitle")}
-              </DialogDescription>
-            </DialogHeader>
-
-            {formError && (
-              <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                <span>{formError}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="h-14 w-full text-slate-500 font-black uppercase tracking-widest text-[10px] gap-3 rounded-2xl hover:text-white"
+                      onClick={() => handleEmailStepChange("login")}
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      {t("login.back")}
+                    </Button>
+                  </div>
+                </form>
               </div>
             )}
 
-            <form onSubmit={handleAdminPasswordSubmit} className="space-y-4 mt-2">
-              <div className="space-y-2">
-                <Label htmlFor="admin-password" className="text-gray-600 text-sm">
-                  {t("admin.password_label")}
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="admin-password"
-                    data-testid="input-admin-password"
-                    type="password"
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                    placeholder={t("admin.password_placeholder")}
-                    className="pl-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-400"
-                    required
-                    autoFocus
-                  />
+            {step === "admin-password" && (
+              <div className="space-y-10">
+                <div className="text-center space-y-4">
+                   <div className="mx-auto h-20 w-20 rounded-[28px] bg-coral-500/10 border border-coral-500/20 flex items-center justify-center mb-4 shadow-xl">
+                    <ShieldCheck className="h-10 w-10 text-coral-500" />
+                  </div>
+                  <h2 className="text-3xl font-black text-white tracking-tighter uppercase leading-none">
+                    Admin Terminal
+                  </h2>
+                  <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">
+                    Authorized Personnel Only
+                  </p>
                 </div>
+
+                <form onSubmit={handleAdminPasswordSubmit} className="space-y-6">
+                  <div className="space-y-3">
+                    <Label className="text-[9px] font-black uppercase tracking-widest text-slate-500 pl-1">Master Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-700" />
+                      <Input
+                        type="password"
+                        value={adminPassword}
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        placeholder="Admin Token"
+                        className="h-16 pl-14 bg-white/5 border-white/10 rounded-2xl text-white placeholder:text-slate-700 focus:border-coral-500/50 font-bold"
+                        required
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="pt-6 space-y-4">
+                    <Button
+                      type="submit"
+                      disabled={isLoading || !adminPassword}
+                      className="h-16 w-full gap-4 bg-coral-600 hover:bg-coral-500 text-white font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl shadow-2xl transition-all"
+                    >
+                      {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ShieldCheck className="h-5 w-5" />}
+                      Verify Credentials
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="h-14 w-full text-slate-500 font-black uppercase tracking-widest text-[10px] gap-3 rounded-2xl hover:text-white"
+                      onClick={() => handleEmailStepChange("login")}
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      Return Home
+                    </Button>
+                  </div>
+                </form>
               </div>
-              <Button
-                data-testid="button-admin-login"
-                type="submit"
-                disabled={isLoading || !adminPassword}
-                className="w-full gap-2"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <ShieldCheck className="h-4 w-4" />
-                )}
-                {t("admin.login_button")}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full text-gray-400 text-sm gap-2"
-                onClick={() => {
-                  setFormError(null);
-                  setStep("login");
-                  setAdminPassword("");
-                }}
-                data-testid="button-back-to-login"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                {t("login.back")}
-              </Button>
-            </form>
-          </>
-        )}
+            )}
+          </div>
+        </motion.div>
       </DialogContent>
     </Dialog>
   );

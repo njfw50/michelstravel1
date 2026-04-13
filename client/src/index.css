@@ -65,10 +65,21 @@
 }
 
 /* ─── Scrollbar ─────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { @apply bg-slate-300 rounded-full; }
-::-webkit-scrollbar-thumb:hover { @apply bg-slate-400; }
+::-webkit-scrollbar-thumb { 
+  background: rgba(255, 255, 255, 0.1); 
+  border-radius: 20px;
+}
+::-webkit-scrollbar-thumb:hover { 
+  background: rgba(59, 130, 246, 0.4); 
+}
+
+/* ─── Selection ─────────────────────────────────────────── */
+::selection {
+  background: rgba(59, 130, 246, 0.3) !important;
+  color: #fff !important;
+}
 
 /* ─── Glass utilities ────────────────────────────────────── */
 .glass {
