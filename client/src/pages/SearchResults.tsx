@@ -132,7 +132,6 @@ function FlightSearchAnimation({ t }: { t: (key: string) => string }) {
               transition={{ duration: 1.5, repeat: Infinity }}
             />
           </div>
-
           <h3 className="text-lg font-bold text-foreground mb-2" data-testid="text-search-loading-title">
             {t("search_loading.title")}
           </h3>
@@ -199,6 +198,7 @@ function FlightSearchAnimation({ t }: { t: (key: string) => string }) {
   );
 }
 
+
 export default function SearchResults() {
   const [location] = useLocation();
   const { t, language } = useI18n();
@@ -210,7 +210,8 @@ export default function SearchResults() {
   const seniorConnections = (searchParams.get("seniorConnections") || "one") as SeniorConnectionPreference;
   const seniorBags = (searchParams.get("seniorBags") || "flexible") as SeniorBagPreference;
   const seniorTime = (searchParams.get("seniorTime") || "day") as SeniorTimePreference;
-  const easyModeCopy = {
+
+  const easyModeCopy = useMemo(() => ({
     badge: enforceI18n(t("results.senior_badge"), "results.senior_badge"),
     title: enforceI18n(t("results.senior_title"), "results.senior_title"),
     description: enforceI18n(t("results.senior_description").replace("{whatsapp}", AGENCY_WHATSAPP_DISPLAY), "results.senior_description"),
@@ -238,15 +239,18 @@ export default function SearchResults() {
     bagsFlexible: enforceI18n(t("results.senior_bags_flexible"), "results.senior_bags_flexible"),
     timeDay: enforceI18n(t("results.senior_time_day"), "results.senior_time_day"),
     timeAny: enforceI18n(t("results.senior_time_any"), "results.senior_time_any"),
-  };
+  }), [t, language]);
 
   const isMultiCity = tripType === 'multi-city' && legsRaw;
-  let multiCityLegs: { origin: string; destination: string; date: string }[] = [];
-  try {
-    if (isMultiCity) multiCityLegs = JSON.parse(legsRaw);
-  } catch {}
+  const multiCityLegs = useMemo(() => {
+    try {
+      return isMultiCity ? JSON.parse(legsRaw) : [];
+    } catch {
+      return [];
+    }
+  }, [isMultiCity, legsRaw]);
 
-  const params: FlightSearchQuery = isMultiCity ? {
+  const params: FlightSearchQuery = useMemo(() => isMultiCity ? {
     origin: multiCityLegs[0]?.origin || "",
     destination: multiCityLegs[0]?.destination || "",
     date: multiCityLegs[0]?.date || "",
@@ -267,11 +271,11 @@ export default function SearchResults() {
     infants: searchParams.get('infants') || "0",
     cabinClass: searchParams.get('cabinClass') || "economy",
     returnDate: searchParams.get('returnDate') || undefined,
-  };
+  }, [isMultiCity, multiCityLegs, searchParams, legsRaw]);
 
   const { data: flights, isLoading, isFetching, error } = useFlightSearch(params);
 
-  const searchKey = `${params.origin}-${params.destination}-${params.date}-${(params as any).returnDate || ''}-${params.passengers}-${params.adults}-${params.children}-${params.infants}-${params.cabinClass}-${(params as any).tripType || ''}-${(params as any).legs || ''}`;
+  const searchKey = useMemo(() => `${params.origin}-${params.destination}-${params.date}-${(params as any).returnDate || ''}-${params.passengers}-${params.adults}-${params.children}-${params.infants}-${params.cabinClass}-${(params as any).tripType || ''}-${(params as any).legs || ''}`, [params]);
   const [showAnimation, setShowAnimation] = useState(true);
   const [lastSearchKey, setLastSearchKey] = useState(searchKey);
   const [showEasyExtraOptions, setShowEasyExtraOptions] = useState(false);
@@ -291,77 +295,6 @@ export default function SearchResults() {
   }, [isLoading, isFetching, showAnimation]);
 
   const isSearching = (isLoading || isFetching) || showAnimation;
-  const whatsAppHref = buildWhatsAppHref(
-    buildWhatsAppMessage({
-      language,
-      topic: isEasyMode
-        ? language === "en"
-          ? "Senior search results"
-          : language === "es"
-            ? "Resultados senior"
-            : "Resultados senior"
-        : language === "en"
-          ? "Flight search"
-          : language === "es"
-            ? "Busqueda de vuelos"
-            : "Busca de voos",
-      details: [
-        params.origin ? `${language === "en" ? "Origin" : language === "es" ? "Origen" : "Origem"}: ${params.origin}` : null,
-        params.destination ? `${language === "en" ? "Destination" : language === "es" ? "Destino" : "Destino"}: ${params.destination}` : null,
-        params.date ? `${language === "en" ? "Departure" : language === "es" ? "Salida" : "Ida"}: ${params.date}` : null,
-        (params as any).returnDate ? `${language === "en" ? "Return" : language === "es" ? "Vuelta" : "Volta"}: ${(params as any).returnDate}` : null,
-        isEasyMode ? `${language === "en" ? "Priority" : language === "es" ? "Prioridad" : "Prioridade"}: ${seniorPriority}` : null,
-      ],
-    }),
-  );
-  const openAssistant = useCallback(() => {
-    const routeLabel =
-      language === "en"
-        ? `${params.origin} to ${params.destination}`
-        : language === "es"
-          ? `${params.origin} a ${params.destination}`
-          : `${params.origin} para ${params.destination}`;
-    const tripSummary = [
-      routeLabel,
-      params.date,
-      (params as any).returnDate ? `${language === "en" ? "return" : language === "es" ? "vuelta" : "volta"} ${(params as any).returnDate}` : null,
-    ]
-      .filter(Boolean)
-      .join(", ");
-
-    const starter =
-      language === "en"
-        ? `Mia, help me compare the calmest flight options for ${tripSummary}.`
-        : language === "es"
-          ? `Mia, ayúdeme a comparar las opciones de vuelo mas tranquilas para ${tripSummary}.`
-          : `Mia, me ajude a comparar as opcoes de voo mais tranquilas para ${tripSummary}.`;
-
-    openChatbotAssistant({ message: starter, autoSend: true });
-  }, [language, params]);
-
-  const defaultValues = useMemo(() => ({
-    origin: params.origin ?? "",
-    destination: params.destination ?? "",
-    date: params.date ? new Date(params.date) : undefined,
-    returnDate: (params as any).returnDate ? new Date((params as any).returnDate) : undefined,
-    passengers: params.passengers ?? "1",
-    adults: params.adults ?? "1",
-    children: params.children ?? "0",
-    infants: params.infants ?? "0",
-    cabinClass: params.cabinClass ?? "economy",
-    tripType: isMultiCity ? "multi-city" : (params as any).returnDate ? "round-trip" : "one-way",
-  }), [
-    isMultiCity,
-    params.adults,
-    params.cabinClass,
-    params.children,
-    params.date,
-    params.destination,
-    params.infants,
-    params.origin,
-    params.passengers,
-    (params as any).returnDate,
-  ]);
 
   const easyPreferences: SeniorPreferences = {
     priority: ["comfort", "fastest", "balanced", "cheapest"].includes(seniorPriority) ? seniorPriority : "comfort",
@@ -369,6 +302,7 @@ export default function SearchResults() {
     bags: ["checked", "carry", "flexible"].includes(seniorBags) ? seniorBags : "flexible",
     time: ["day", "any"].includes(seniorTime) ? seniorTime : "day",
   };
+
   const initialSortBy: SortOption =
     isEasyMode
       ? seniorPriority === "fastest"
@@ -397,7 +331,7 @@ export default function SearchResults() {
   const isRoundTrip = !!(params as any).returnDate;
 
   const getOutboundKey = useCallback((flight: FlightOffer) => {
-    if (!flight.slices || flight.slices.length < 2) return flight.id;
+    if (!flight.slices || flight.slices.length < 1) return flight.id;
     const s = flight.slices[0];
     return s.segments.map(seg => `${seg.flightNumber}-${seg.departureTime}`).join("|");
   }, []);
@@ -427,22 +361,6 @@ export default function SearchResults() {
     setVisibleOutboundCount(FLIGHTS_PER_PAGE);
     setVisibleReturnCount(FLIGHTS_PER_PAGE);
   }, [sortBy, selectedStops, selectedAirlines, selectedDepartureTimes, selectedReturnTimes, priceRange, FLIGHTS_PER_PAGE]);
-
-  useEffect(() => {
-    if (!isEasyMode) return;
-    setSortBy(initialSortBy);
-  }, [initialSortBy, isEasyMode]);
-
-  const uniqueAirlines = useMemo(() => {
-    if (!flights) return [];
-    return Array.from(new Set(flights.map(f => f.airline))).sort();
-  }, [flights]);
-
-  const priceExtents = useMemo(() => {
-    if (!flights || flights.length === 0) return { min: 0, max: 1000 };
-    const prices = flights.map(f => f.price);
-    return { min: Math.floor(Math.min(...prices)), max: Math.ceil(Math.max(...prices)) };
-  }, [flights]);
 
   const toggleSetItem = useCallback(<T,>(setter: React.Dispatch<React.SetStateAction<Set<T>>>, item: T) => {
     setter(prev => {
