@@ -35,12 +35,19 @@ import { parseMRZ, type MRZResult } from "@/lib/mrz";
 import { preprocessForMRZ, createPreviewUrl, blobToDataUrl } from "@/lib/imagePreprocess";
 import {
   mergeDocumentScanCandidates,
+  mapScannedDocumentTypeToBooking,
+  type BookingDocumentType,
   type DocumentAiCandidate,
   type MergedDocumentScanResult,
 } from "@/lib/documentScan";
+import {
+  generateSessionId,
+  buildScannerLink,
+  listenForScanResult,
+} from "@/lib/scannerBridge";
 import Tesseract from "tesseract.js";
 
-type Step = "select" | "processing" | "review" | "error";
+type Step = "select" | "processing" | "review" | "error" | "remote";
 type TesseractWorker = Awaited<ReturnType<typeof Tesseract.createWorker>>;
 
 interface ScanAnalyzeResponse {
@@ -78,7 +85,7 @@ export function ScanDocumentDialog({
   passengerIndex,
   declaredDocumentType,
 }: ScanDocumentDialogProps) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const warningLabels = createWarningLabels(t);
   const [step, setStep] = useState<Step>("select");
   const [progress, setProgress] = useState(0);
@@ -86,7 +93,11 @@ export function ScanDocumentDialog({
   const [progressHint, setProgressHint] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [editableData, setEditableData] = useState<MergedDocumentScanResult | null>(null);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Remote scanner state
+  const [remoteSessionId, setRemoteSessionId] = useState<string | null>(null);
+  const [remoteQrUrl, setRemoteQrUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const progressRef = useRef(0);
@@ -142,7 +153,7 @@ export function ScanDocumentDialog({
           passportExpiryDate: msg.payload.passportExpiryDate || "",
           nationality: (msg.payload.nationality || msg.payload.passportIssuingCountry || "").toUpperCase(),
           passportIssuingCountry: (msg.payload.passportIssuingCountry || msg.payload.nationality || "").toUpperCase(),
-          documentType: mapScannedDocumentTypeToBooking(msg.payload.documentType || (declaredDocumentType as string) || "passport"),
+          documentType: mapScannedDocumentTypeToBooking(msg.payload.documentType || (declaredDocumentType as string) || "passport") as BookingDocumentType,
           rawDocumentType: msg.payload.documentType || (declaredDocumentType as string) || "passport",
           confidence: msg.payload.confidence ?? 80,
           warnings: msg.payload.warnings || [],
@@ -175,25 +186,43 @@ export function ScanDocumentDialog({
   }, [isMobileBridge, open, step, t]);
 
   const requestMobileScan = () => {
-    if (!isMobileBridge) return false;
-    try {
-      setStep("processing");
-      setProgressValue(5);
-      setProgressLabel(t("scan.step_enhancing"));
-      setProgressHint(t("scan.hint_mobile") || t("scan.hint_hold_still") || null);
-      (window as any).ReactNativeWebView.postMessage(
-        JSON.stringify({
-          type: "OPEN_DOCUMENT_SCANNER",
-          passengerIndex,
-          declaredDocumentType: declaredDocumentType || null,
-        }),
-      );
+    const sessionId = generateSessionId();
+    const url = buildScannerLink({
+      sessionId,
+      lang: language || "pt",
+      callback: window.location.origin + window.location.pathname + "?session=" + sessionId,
+      origin: window.location.origin,
+    });
+
+    // Determine if we should redirect (mobile) or show QR (desktop)
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    if (isMobileBridge || isMobile) {
+      console.log("[SCANNER BRIDGE] Activating mobile module via redirect");
+      window.location.href = url;
       return true;
-    } catch (err) {
-      console.error("Failed to call mobile scanner bridge:", err);
-      return false;
     }
+
+    // Desktop: Show QR Code
+    setRemoteSessionId(sessionId);
+    setRemoteQrUrl(url);
+    setStep("remote");
+    return true;
   };
+
+  // Listen for remote scan results
+  useEffect(() => {
+    if (step !== "remote" || !remoteSessionId) return;
+
+    const cleanup = listenForScanResult(remoteSessionId, (data) => {
+      console.log("[SCANNER BRIDGE] Received remote scan data:", data);
+      setEditableData(data);
+      setStep("review");
+    });
+
+    return cleanup;
+  }, [step, remoteSessionId]);
+
 
   function extractLicenseFields(ocrText: string): DocumentAiCandidate | null {
     if (!ocrText) return null;
@@ -643,16 +672,12 @@ export function ScanDocumentDialog({
                     }}
                     data-testid={`button-scan-camera-${passengerIndex}`}
                   >
-                    <Camera className="h-6 w-6 text-blue-500" />
+                    <Smartphone className="h-6 w-6 text-blue-500" />
                     <span className="text-sm font-medium">
-                      {isMobileBridge
-                        ? t("scan.use_mobile_scanner") || t("scan.use_camera")
-                        : t("scan.use_camera")}
+                      {t("scan.use_mobile_scanner")}
                     </span>
                     <span className="text-[10px] text-gray-400">
-                      {isMobileBridge
-                        ? t("scan.mobile_tip") || t("scan.camera_tip")
-                        : t("scan.camera_tip")}
+                      {t("scan.mobile_tip")}
                     </span>
                   </Button>
 
@@ -708,6 +733,81 @@ export function ScanDocumentDialog({
                   </p>
                 </div>
               </div>
+
+              <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 gap-3">
+                <Button
+                  variant="ghost"
+                  className="h-auto py-2 flex items-center gap-2 text-gray-400 hover:text-blue-500"
+                  onClick={() => cameraInputRef.current?.click()}
+                >
+                  <Camera className="h-4 w-4" />
+                  <span className="text-xs">{t("scan.use_camera")}</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="h-auto py-2 flex items-center gap-2 text-gray-400 hover:text-blue-500"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4" />
+                  <span className="text-xs">{t("scan.upload_photo")}</span>
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {step === "remote" && (
+          <>
+            <DialogHeader className="text-center items-center shrink-0">
+              <div className="mx-auto h-16 w-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-2">
+                <Smartphone className="h-8 w-8 text-blue-500" />
+              </div>
+              <DialogTitle className="text-xl font-display text-gray-900">
+                {t("scan.scan_remote_title")}
+              </DialogTitle>
+              <DialogDescription className="text-gray-500 text-sm">
+                {t("scan.scan_remote_subtitle")}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex-1 flex flex-col items-center justify-center py-6">
+              <div className="bg-white rounded-2xl p-4 border-2 border-blue-100 shadow-sm mb-6">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(remoteQrUrl || "")}&format=svg`}
+                  alt="QR Code"
+                  className="w-48 h-48"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 text-blue-600 animate-pulse">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span className="text-sm font-medium">{t("scan.scan_remote_waiting")}</span>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-8 text-xs text-gray-500 border-gray-200"
+                onClick={() => {
+                  if (remoteQrUrl) {
+                    navigator.clipboard.writeText(remoteQrUrl);
+                    // We don't have toast easy here, so just visual feedback
+                  }
+                }}
+              >
+                <FileText className="h-3.5 w-3.5 mr-2" />
+                {t("scan.scan_remote_copy_link")}
+              </Button>
+            </div>
+
+            <div className="mt-auto pt-4 border-t border-gray-100">
+              <Button
+                variant="ghost"
+                className="w-full text-gray-500"
+                onClick={() => setStep("select")}
+              >
+                {t("scan.back") || "Voltar"}
+              </Button>
             </div>
           </>
         )}
