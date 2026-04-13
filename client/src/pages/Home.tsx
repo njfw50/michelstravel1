@@ -188,9 +188,12 @@ export default function Home() {
                   </div>
                </div>
                
-               <Button className="w-full mt-10 rounded-2xl bg-white text-slate-950 hover:bg-slate-100 h-14 font-black text-xs uppercase tracking-widest">
-                  Ver Ferramentas <ArrowRight className="ml-2 h-4 w-4" />
-               </Button>
+               <Button 
+                  onClick={() => setLocation("/toolbox")}
+                  className="w-full mt-10 rounded-2xl bg-white text-slate-950 hover:bg-slate-100 h-14 font-black text-xs uppercase tracking-widest"
+                >
+                   Ver Ferramentas <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
             </div>
           </div>
         </div>
@@ -287,9 +290,12 @@ export default function Home() {
                   <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">Vistos & Documentação</h3>
                   <p className="text-sm text-slate-500 leading-relaxed font-medium">Assessoria especializada para vistos americanos, brasileiros e europeus (ETIAS). Não viaje com dúvidas.</p>
                </div>
-               <Link href="/visa-support" className="text-[10px] font-black uppercase text-orange-600 tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
+               <button 
+                  onClick={() => setLocation("/visa-support")}
+                  className="text-[10px] font-black uppercase text-orange-600 tracking-widest flex items-center gap-2 hover:gap-3 transition-all"
+               >
                   Checklist Documental <ArrowRight className="h-3 w-3" />
-               </Link>
+               </button>
             </div>
 
             <div className="p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm flex flex-col items-start gap-6">
@@ -300,9 +306,12 @@ export default function Home() {
                   <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">Gestão de Crise 24/7</h3>
                   <p className="text-sm text-slate-500 leading-relaxed font-medium">Voo cancelado ou atrasado? Nossa equipe assume a reacomodação e o suporte imediato para você.</p>
                </div>
-               <span className="text-[10px] font-black uppercase text-emerald-600 tracking-widest flex items-center gap-2">
+               <button 
+                  onClick={() => setLocation("/assistance")}
+                  className="text-[10px] font-black uppercase text-emerald-600 tracking-widest flex items-center gap-2"
+               >
                   Atendimento Prioritário <ArrowRight className="h-3 w-3" />
-               </span>
+               </button>
             </div>
 
             <div className="p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm flex flex-col items-start gap-6">
@@ -326,9 +335,12 @@ export default function Home() {
                   <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight mb-3">Parcelamento Boutique</h3>
                   <p className="text-sm text-slate-500 leading-relaxed font-medium">Condições exclusivas de parcelamento no cartão ou boleto bancário para facilitar sua jornada.</p>
                </div>
-               <span className="text-[10px] font-black uppercase text-slate-950 tracking-widest flex items-center gap-2">
+               <button 
+                  onClick={() => setLocation("/senior")}
+                  className="text-[10px] font-black uppercase text-slate-950 tracking-widest flex items-center gap-2"
+               >
                   Simular Opções <ArrowRight className="h-3 w-3" />
-               </span>
+               </button>
             </div>
 
             <div className="p-8 rounded-[32px] bg-white border border-slate-100 shadow-sm flex flex-col items-start gap-6">
