@@ -143,7 +143,7 @@ export default function FlightBaggageHighlights({
   className,
 }: FlightBaggageHighlightsProps) {
   const { language } = useI18n();
-  const copy = COPY[getDisplayLanguage(language)];
+  const copy = COPY[getDisplayLanguage(language || "pt")];
   const passengers = getRelevantPassengers(flight?.passengers || []);
   const checkedSummary = buildSummary(passengers, "checked", copy);
   const carryOnSummary = buildSummary(passengers, "carry_on", copy);
@@ -155,8 +155,8 @@ export default function FlightBaggageHighlights({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-slate-200 bg-white",
-        compact ? "px-3 py-3" : "px-4 py-4",
+        "bg-transparent flex flex-col gap-2",
+        !compact && "rounded-2xl border border-slate-200 bg-white p-4",
         className,
       )}
       data-testid="flight-baggage-highlights"

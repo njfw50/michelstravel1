@@ -94,9 +94,12 @@ export function LocationSearch({ label, placeholder, value, onChange, className,
       )}>
         <MapPin className={cn("text-blue-500 shrink-0", isLarge ? "h-6 w-6 mr-4" : "h-5 w-5 mr-3")} />
         <Input 
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
           placeholder={placeholder || "City or Airport"} 
           className={cn(
-            "border-none shadow-none focus-visible:ring-0 p-0 h-full w-full bg-transparent text-gray-900 placeholder:text-gray-400",
+            "border-none shadow-none focus-visible:ring-0 p-0 h-full w-full bg-transparent text-gray-900 placeholder:text-gray-400 appearance-none",
             isLarge ? "text-lg md:text-xl font-semibold" : "text-base font-medium",
           )}
           data-testid={`input-${label.toLowerCase()}`}

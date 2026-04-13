@@ -436,7 +436,7 @@ export default function SearchResults() {
         <p className="text-sm font-bold uppercase text-gray-500 mb-4">{easyModeCopy.summaryTitle}</p>
         <div className="space-y-3">
           {[
-            { label: easyModeCopy.summaryPriority, value: easyPreferences.priority === "fastest" ? easyModeCopy.priorityFastest : easyPreferences.priority === "balanced" ? easyModeCopy.priorityBalanced : easyPreferences.priority === "cheapest" ? easyModeCopy.priorityCheapest : easyModeCopy.priorityComfort },
+            { label: easyModeCopy.summaryPriority, value: easyPreferences.priority === "fastest" ? easyModeCopy.priorityFastest : easyPreferences.priority === "balanced" ? easyModeCopy.priorityBalanced : easyPreferences.priority === "cheapest" ? easyModeCopy.priorityCheapest : easyPreferences.priority === "comfort" ? easyModeCopy.priorityComfort : "" },
             { label: easyModeCopy.summaryConnections, value: easyPreferences.connections === "none" ? easyModeCopy.connectionsNone : easyPreferences.connections === "any" ? easyModeCopy.connectionsAny : easyPreferences.connections === "one" ? easyModeCopy.connectionsOne : easyModeCopy.connectionsAny },
             { label: easyModeCopy.summaryBags, value: easyPreferences.bags === "checked" ? easyModeCopy.bagsChecked : easyPreferences.bags === "carry" ? easyModeCopy.bagsCarry : easyModeCopy.bagsFlexible },
             { label: easyModeCopy.summaryTime, value: easyPreferences.time === "day" ? easyModeCopy.timeDay : easyModeCopy.timeAny },

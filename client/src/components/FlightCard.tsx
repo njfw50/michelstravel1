@@ -398,7 +398,7 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
             <SingleFlightTimeline flight={flight} t={t} />
           )}
 
-          <div className="mt-3 space-y-2">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <FlightBaggageHighlights
               flight={flight}
               simplified={simplified}
@@ -453,36 +453,32 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
                 </span>
               )}
             </div>
-          </div>
-
-          <div className="flex w-full items-center justify-between text-left md:block md:w-auto md:text-right">
-            <span className="hidden text-xs font-medium text-gray-500 md:block">
-              {t("flight.total_price")}
-            </span>
-            <span className="text-sm text-gray-500 md:hidden">
-              {t("flight.price_per_adult")}
+                 <div className="flex w-full items-center justify-between text-left md:block md:w-auto md:text-right">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-1">
+              {t("flight.total_price") || "Preço Total"}
             </span>
 
             <div
-              className="font-display text-2xl font-bold text-gray-900 sm:text-3xl"
+              className="font-display text-3xl font-black text-slate-900 leading-none"
               data-testid="text-price"
             >
-              {formatCurrency(flight.price, flight.currency, locale)}
+              <span className="text-sm font-bold mr-1">{flight.currency === "USD" ? "US$" : flight.currency}</span>
+              {typeof flight.price === "number" ? Math.floor(flight.price) : flight.price}
             </div>
 
             {flight.baseAmount && flight.taxAmount && (
-              <div className="mt-0.5 flex flex-col gap-0 text-[10px] text-gray-400 md:items-end">
-                <span>
+              <div className="mt-2 flex flex-col gap-0.5 text-[10px] text-slate-400 font-medium md:items-end">
+                <span className="opacity-70">
                   {t("flight.base_fare") || "Base"}:{" "}
                   {formatCurrency(flight.baseAmount, flight.currency, locale)}
                 </span>
-                <span>
-                  {t("flight.taxes") || "Taxes"}:{" "}
+                <span className="opacity-70">
+                  {t("flight.taxes") || "Taxas"}:{" "}
                   {formatCurrency(flight.taxAmount, flight.currency, locale)}
                 </span>
               </div>
             )}
-          </div>
+          </div>     </div>
 
           <Link href={bookUrl} className="w-full" tabIndex={0} aria-label="Selecionar este voo">
             <Button
