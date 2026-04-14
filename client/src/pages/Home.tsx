@@ -90,7 +90,7 @@ export default function Home() {
             >
               <Badge className="bg-blue-600/20 border border-blue-500/30 text-blue-400 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl shadow-blue-500/10 backdrop-blur-md">
                 <Sparkles className="h-4 w-4 mr-3 animate-pulse" />
-                {t("home.bot.badge")} Premium Experience
+                {t("home.bot.badge")} {t("home.midnight_experience")}
               </Badge>
             </motion.div>
 
@@ -129,10 +129,10 @@ export default function Home() {
         <div className="container mx-auto px-4 max-w-6xl">
            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
               {[
-                { label: "Active Routes", value: "2,400+", icon: Compass },
-                { label: "Premium Partners", value: "45+", icon: Star },
-                { label: "Happy Travelers", value: "120k", icon: Globe2 },
-                { label: "Search Speed", value: "< 2s", icon: Zap }
+                { label: t("home.stats.routes"), value: "2,400+", icon: Compass },
+                { label: t("home.stats.partners"), value: "45+", icon: Star },
+                { label: t("home.stats.travelers"), value: "120k", icon: Globe2 },
+                { label: t("home.stats.speed"), value: "< 2s", icon: Zap }
               ].map((stat, i) => (
                 <div key={i} className="flex flex-col items-center text-center space-y-3 p-6 rounded-[32px] bg-white/5 border border-white/5 backdrop-blur-sm">
                    <stat.icon className="h-6 w-6 text-blue-500 mb-2" />
@@ -153,14 +153,14 @@ export default function Home() {
                <div className="group p-10 rounded-[48px] bg-slate-900/40 border border-white/5 backdrop-blur-3xl hover:border-blue-500/30 transition-all duration-500 shadow-2xl">
                   <div className="flex items-center justify-between mb-8">
                     <TrendingUp className="h-8 w-8 text-blue-500 group-hover:scale-110 transition-transform" />
-                    <Badge className="bg-blue-600/20 text-blue-400 border border-blue-500/20 text-[9px] uppercase font-black px-4 py-1.5 rounded-full">LIVE INSIGHTS</Badge>
+                    <Badge className="bg-blue-600/20 text-blue-400 border border-blue-500/20 text-[9px] uppercase font-black px-4 py-1.5 rounded-full">{t("home.intel.badge")}</Badge>
                   </div>
-                  <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-6">Midnight Inteligência</h3>
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-6">{t("home.intel.title")}</h3>
                   <div className="space-y-6">
                      {[
-                       { icon: CheckCircle2, label: "Rotas para o Brasil com 15% de queda na última semana", color: "text-emerald-400" },
-                       { icon: Info, label: "EWR → GRU: Melhor época de reserva é 45 dias antes", color: "text-blue-400" },
-                       { icon: Navigation, label: "Trending: Voos para Lisboa via Newark em alta", color: "text-coral-500" }
+                       { icon: CheckCircle2, label: t("home.intel.r1"), color: "text-emerald-400" },
+                       { icon: Info, label: t("home.intel.r2"), color: "text-blue-400" },
+                       { icon: Navigation, label: t("home.intel.r3"), color: "text-coral-500" }
                      ].map((item, i) => (
                        <div key={i} className="flex items-start gap-4">
                           <item.icon className={cn("h-5 w-5 mt-0.5 shrink-0", item.color)} />
@@ -173,14 +173,14 @@ export default function Home() {
                <div className="group p-10 rounded-[48px] bg-slate-900/40 border border-white/5 backdrop-blur-3xl hover:border-coral-500/30 transition-all duration-500 shadow-2xl">
                   <div className="flex items-center justify-between mb-8">
                     <Clock className="h-8 w-8 text-coral-500 group-hover:scale-110 transition-transform" />
-                    <Badge className="bg-coral-500/20 text-coral-400 border border-coral-500/20 text-[9px] uppercase font-black px-4 py-1.5 rounded-full">SENIOR CARE</Badge>
+                    <Badge className="bg-coral-500/20 text-coral-400 border border-coral-500/20 text-[9px] uppercase font-black px-4 py-1.5 rounded-full">{t("home.care.badge")}</Badge>
                   </div>
-                  <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-6">Segurança & Conforto</h3>
+                  <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-6">{t("home.care.title")}</h3>
                   <div className="space-y-6">
                      {[
-                       { icon: ShieldAlert, label: "Assistência especial em escalas: Peça com 48h de antecedência", color: "text-coral-500" },
-                       { icon: Plane, label: "Prefira voos diretos para reduzir o cansaço na chegada", color: "text-coral-500" },
-                       { icon: Headphones, label: "Suporte 24h via WhatsApp exclusivo para passageiros", color: "text-emerald-400" }
+                       { icon: ShieldAlert, label: t("home.care.r1"), color: "text-coral-500" },
+                       { icon: Plane, label: t("home.care.r2"), color: "text-coral-500" },
+                       { icon: Headphones, label: t("home.care.r3"), color: "text-emerald-400" }
                      ].map((item, i) => (
                        <div key={i} className="flex items-start gap-4">
                           <item.icon className={cn("h-5 w-5 mt-0.5 shrink-0", item.color)} />
@@ -196,30 +196,30 @@ export default function Home() {
                <div className="absolute top-0 right-0 w-32 h-32 bg-slate-900/5 blur-[40px] rounded-full translate-x-1/2 -translate-y-1/2" />
                
                <div className="relative z-10">
-                  <h3 className="text-3xl font-black uppercase tracking-tight mb-3">Traveler's Toolbox</h3>
-                  <p className="text-slate-500 text-sm mb-12 font-bold uppercase tracking-widest">Informações Dinâmicas</p>
+                  <h3 className="text-3xl font-black uppercase tracking-tight mb-3">{t("home.toolbox.title")}</h3>
+                  <p className="text-slate-500 text-sm mb-12 font-bold uppercase tracking-widest">{t("home.toolbox.subtitle")}</p>
                   
                   <div className="space-y-8">
                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                            <CloudSun className="h-6 w-6 text-blue-600" />
-                           <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Weather (GRU)</span>
+                           <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t("home.toolbox.weather")}</span>
                         </div>
                         <span className="text-2xl font-black tracking-tighter">24°C</span>
                      </div>
                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                            <Banknote className="h-6 w-6 text-emerald-600" />
-                           <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Exchange Rate</span>
+                           <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t("home.toolbox.exchange")}</span>
                         </div>
                         <span className="text-2xl font-black tracking-tighter">1 USD = 5.04 BRL</span>
                      </div>
                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                            <Navigation className="h-6 w-6 text-orange-600" />
-                           <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Flight Status</span>
+                           <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t("home.toolbox.status")}</span>
                         </div>
-                        <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest bg-orange-50 px-3 py-1 rounded-md">Live Monitoring</span>
+                        <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest bg-orange-50 px-3 py-1 rounded-md">{t("home.toolbox.monitoring")}</span>
                      </div>
                   </div>
                </div>
@@ -228,7 +228,7 @@ export default function Home() {
                   onClick={() => setLocation("/toolbox")}
                   className="w-full mt-12 rounded-[24px] bg-slate-950 text-white hover:bg-blue-600 h-16 font-black text-xs uppercase tracking-[0.2em] shadow-2xl transition-all hover:scale-105 active:scale-95"
                 >
-                   Acessar Painel <ArrowRight className="ml-3 h-4 w-4" />
+                   {t("home.toolbox.access")} <ArrowRight className="ml-3 h-4 w-4" />
                 </Button>
             </div>
           </div>
@@ -283,9 +283,9 @@ export default function Home() {
       <section className="py-32 relative z-10">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="text-center mb-20">
-             <Badge variant="outline" className="mb-6 border-white/10 text-slate-500 text-[9px] uppercase font-black tracking-[0.3em] px-5 py-1.5 rounded-full">Global Network</Badge>
-             <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-6">Nossa Rede de Alianças</h2>
-             <p className="text-slate-400 font-medium max-w-xl mx-auto text-lg leading-relaxed">Conexão direta com as maiores alianças aéreas para garantir sua segurança e conforto global.</p>
+             <Badge variant="outline" className="mb-6 border-white/10 text-slate-500 text-[9px] uppercase font-black tracking-[0.3em] px-5 py-1.5 rounded-full">{t("home.stats.network")}</Badge>
+             <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-6">{t("home.stats.alliance_title")}</h2>
+             <p className="text-slate-400 font-medium max-w-xl mx-auto text-lg leading-relaxed">{t("home.stats.alliance_desc")}</p>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10">
@@ -309,7 +309,7 @@ export default function Home() {
       <section className="py-40 relative z-10 overflow-hidden bg-white text-slate-950">
          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/5 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
          <div className="container mx-auto px-4 max-w-6xl relative z-10 text-center">
-            <Badge className="bg-slate-950 text-white rounded-full px-6 py-2 mb-8 text-[10px] uppercase font-black tracking-[0.5em] shadow-xl">Ready for Takeoff</Badge>
+            <Badge className="bg-slate-950 text-white rounded-full px-6 py-2 mb-8 text-[10px] uppercase font-black tracking-[0.5em] shadow-xl">{t("home.stats.ready")}</Badge>
             <h2 className="text-5xl md:text-8xl font-black tracking-tighter uppercase leading-[0.9] mb-12">
               {t("home.cta.title")}
             </h2>

@@ -215,7 +215,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
             <div className="flex items-center gap-4">
                <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/5">
                   <Sparkles className="h-4 w-4 text-coral-500" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">Midnight Search</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">{t("search.midnight_search")}</span>
                </div>
             </div>
           </div>
@@ -233,7 +233,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                     label={isCompact ? "" : t("search.from")}
                     value={origin}
                     onChange={setOrigin}
-                    placeholder={t("search.from") || "Origem"}
+                    placeholder={t("search.from")}
                     isLarge={!isCompact}
                     className="w-full"
                     dark={true}
@@ -263,7 +263,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                   label={isCompact ? "" : t("search.to")}
                   value={destination}
                   onChange={setDestination}
-                  placeholder={t("search.to") || "Destino"}
+                  placeholder={t("search.to")}
                   isLarge={!isCompact}
                   className="w-full"
                   dark={true}
@@ -338,7 +338,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                         label={`${t("search.from")} ${index + 1}`}
                         value={leg.origin}
                         onChange={(val) => updateLeg(index, "origin", val)}
-                        placeholder="Origem"
+                        placeholder={t("search.from")}
                         isLarge={true}
                         dark={true}
                       />
@@ -351,20 +351,20 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                         label={`${t("search.to")} ${index + 1}`}
                         value={leg.destination}
                         onChange={(val) => updateLeg(index, "destination", val)}
-                        placeholder="Destino"
+                        placeholder={t("search.to")}
                         isLarge={true}
                         dark={true}
                       />
                     </div>
                     <div className="md:col-span-3">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block pl-1 mb-2">Data</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block pl-1 mb-2">{t("search.date")}</label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <button type="button" className="h-16 w-full bg-slate-950/40 border border-white/10 rounded-2xl px-5 flex items-center justify-between text-left hover:bg-white/5 hover:border-blue-500/50 transition-all">
                             <div className="flex items-center gap-3 truncate">
                               <CalendarIcon className="text-blue-400 h-5 w-5" />
                               <span className={cn("font-black uppercase tracking-widest text-xs", !leg.date ? "text-slate-600" : "text-white")}>
-                                {leg.date ? format(leg.date, "dd MMM") : "Data de Partida"}
+                                {leg.date ? format(leg.date, "dd MMM") : t("search.departure_date")}
                               </span>
                             </div>
                           </button>
@@ -411,7 +411,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                     className="h-12 rounded-2xl bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest text-blue-400 hover:bg-blue-600 hover:text-white transition-all px-8"
                   >
                     <Plus className="h-4 w-4 mr-3" />
-                    Adicionar Voo
+                    {t("search.multi_city_add")}
                   </Button>
               </div>
             </div>
@@ -426,7 +426,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                     <button type="button" className="h-14 md:h-16 px-6 rounded-2xl bg-slate-950/40 border border-white/10 text-white flex items-center gap-4 hover:border-blue-500/50 hover:bg-white/5 transition-all shadow-xl group">
                       <div className="flex items-center gap-3">
                          <Users className="h-5 w-5 text-blue-400" />
-                         <span className="text-xs font-black uppercase tracking-widest">{totalPassengers} {totalPassengers > 1 ? "Pax" : "Pax"}</span>
+                         <span className="text-xs font-black uppercase tracking-widest">{totalPassengers} {t("search.pax")}</span>
                       </div>
                       <div className="h-4 w-px bg-white/10" />
                       <div className="flex items-center gap-2">
@@ -439,7 +439,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-600 via-coral-500 to-indigo-600" />
                       <div className="space-y-8 relative z-10">
                         <div className="space-y-4">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Classe de Viagem</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t("search.travel_class")}</p>
                           <div className="grid grid-cols-2 gap-3">
                             {["economy", "business"].map(cls => (
                               <button key={cls} type="button" onClick={() => setCabinClass(cls)} className={cn("py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all", cabinClass === cls ? "bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-600/20" : "bg-white/5 border-white/5 text-slate-500 hover:border-blue-500/30")}>
@@ -449,7 +449,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                           </div>
                         </div>
                         <div className="space-y-6">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Selecionar Viajantes</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t("search.select_travelers")}</p>
                           {[
                             { label: t("search.adults"), description: "12+ anos", val: adults, set: setAdults, min: 1 },
                             { label: t("search.children"), description: "2-11 anos", val: children, set: setChildren, min: 0 },

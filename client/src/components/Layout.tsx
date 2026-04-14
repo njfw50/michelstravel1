@@ -4,17 +4,19 @@ import {
   LogOut,
   Menu,
   X,
-  Shield,
   ShieldCheck,
-  Lock,
   Award,
-  Building2,
   Briefcase,
   MessageSquare,
   Globe,
   Check,
-  Mail,
-  ArrowRight,
+  Shield,
+  ChevronDown,
+  Settings,
+  Sparkles,
+  MessageCircle,
+  Headphones,
+  LayoutDashboard,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -57,7 +59,7 @@ function LanguageSwitcher({ variant = "navbar" }: { variant?: "navbar" | "footer
           size="sm"
           disabled={isLoading}
           className={cn(
-            "gap-2 rounded-2xl px-4 text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-xl",
+            "h-11 gap-3 rounded-2xl px-4 text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-xl",
             variant === "navbar"
               ? "bg-white/5 border border-white/5 text-white/80 hover:bg-white/10 hover:text-white"
               : "border border-white/10 bg-slate-900/40 text-white/80 hover:bg-blue-600 hover:text-white",
@@ -65,28 +67,39 @@ function LanguageSwitcher({ variant = "navbar" }: { variant?: "navbar" | "footer
           )}
           data-testid="button-language-switcher"
         >
-          <Globe className={cn("h-3.5 w-3.5 text-blue-400", isLoading && "animate-spin")} />
-          <span>{isLoading ? "..." : current.flag}</span>
+          <Globe className={cn("h-4 w-4 text-blue-400", isLoading && "animate-spin")} />
+          <span className="min-w-[1.5em] text-center">{isLoading ? "..." : current.flag}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align={variant === "footer" ? "start" : "end"}
-        className="min-w-[160px] rounded-[24px] border border-white/10 bg-slate-950 backdrop-blur-3xl p-3 shadow-2xl shadow-black/60"
+        sideOffset={12}
+        className="min-w-[180px] rounded-[28px] border border-white/10 bg-slate-950/95 backdrop-blur-3xl p-3 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)]"
       >
+        <div className="px-4 py-2 mb-1">
+           <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Select Language</span>
+        </div>
         {LANG_OPTIONS.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
             disabled={isLoading}
             onClick={() => setLanguage(lang.code)}
             className={cn(
-              "cursor-pointer gap-3 rounded-xl py-3 px-4 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all hover:bg-white/5 focus:bg-white/5",
-              language === lang.code && "bg-white/5 text-blue-400 font-black",
+              "cursor-pointer gap-4 rounded-xl py-3.5 px-4 text-[10px] font-black uppercase tracking-widest transition-all",
+              language === lang.code 
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30" 
+                : "text-slate-400 hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white",
             )}
             data-testid={`button-switch-lang-${lang.code}`}
           >
-            <span className="w-6 text-[11px] font-black text-slate-600">{lang.flag}</span>
-            <span>{lang.label}</span>
-            {language === lang.code && <Check className="ml-auto h-3.5 w-3.5 text-blue-400" />}
+            <div className={cn(
+              "flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-black",
+              language === lang.code ? "bg-white/20 text-white" : "bg-slate-900 text-slate-500"
+            )}>
+              {lang.flag}
+            </div>
+            <span className="flex-1">{lang.label}</span>
+            {language === lang.code && <Check className="h-4 w-4" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -171,16 +184,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
-    queryKey: ["/api/admin/check"],
-  });
-
   const navLinks = [
     { href: "/", label: t("nav.flights") },
-    { href: "/senior", label: easyModeLabel },
+    { href: "/senior", label: t("results.senior_badge") },
     { href: "/my-trips", label: t("nav.my_trips") || "My Trips" },
     { href: "/about", label: t("footer.about") },
-    { href: "/blog", label: "Insights" },
+    { href: "/blog", label: t("nav.blog") },
   ];
 
   return (
@@ -196,24 +205,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
               scrolled ? "bg-slate-900/90 scale-100" : "bg-slate-900/60 scale-[1.02]",
             )}
           >
-            <div className="flex min-w-0 items-center gap-6 md:gap-10">
-              <Link href="/" className="group flex min-w-0 items-center gap-5">
+            <div className="flex min-w-0 flex-1 items-center gap-8 md:gap-12">
+              <Link href="/" className="group flex shrink-0 items-center gap-5">
                 <div className="brand-mark-shell brand-mark-shell--header shadow-2xl border border-white/20">
                   <img src={brandMark} alt="Michels Travel" className="transition-transform duration-700 group-hover:scale-110" />
                 </div>
-                <div className="hidden min-w-0 lg:block">
+                <div className="hidden min-w-0 xl:block">
                   <span className="block whitespace-nowrap text-lg font-black uppercase tracking-[0.25em] text-white">Michels Travel</span>
                   <span className="block whitespace-nowrap text-[10px] font-black uppercase tracking-[0.3em] text-blue-400/80">{t("nav.sub_brand") || "Opcao eficiente"}</span>
                 </div>
               </Link>
 
-              <nav className="hidden min-w-0 items-center gap-2 lg:flex">
+              <nav className="hidden min-w-0 items-center gap-1.5 lg:flex">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     className={cn(
-                      "relative whitespace-nowrap rounded-2xl px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300",
+                      "relative whitespace-nowrap rounded-2xl px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300",
                       location === link.href
                         ? "bg-blue-600 text-white shadow-xl shadow-blue-600/20"
                         : "text-slate-400 hover:bg-white/5 hover:text-white",
@@ -225,13 +234,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </nav>
             </div>
 
-            <div className="flex min-w-0 items-center gap-3 md:gap-5">
+            <div className="flex shrink-0 items-center gap-4 md:gap-6 border-l border-white/5 pl-6">
               <LanguageSwitcher variant="navbar" />
               <div className="hidden items-center gap-4 md:flex">
                 {user ? (
                   <>
                     <Link href="/messages" data-testid="button-messages-nav">
-                      <Button variant="ghost" size="icon" className="relative h-12 w-12 rounded-2xl bg-white/5 border border-white/5 text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-xl">
+                      <Button variant="ghost" size="icon" className="relative h-11 w-11 rounded-2xl bg-white/5 border border-white/5 text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-xl">
                         <MessageSquare className="h-5 w-5" />
                         <UnreadBadge />
                       </Button>
@@ -240,10 +249,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
-                          className="h-12 gap-3 rounded-2xl border border-white/10 bg-white/5 px-2 pr-5 text-white shadow-xl hover:bg-white/10 transition-all"
+                          className="h-11 gap-3 rounded-2xl border border-white/10 bg-white/5 px-2 pr-5 text-white shadow-xl hover:bg-white/10 transition-all"
                           data-testid="button-user-menu"
                         >
-                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg">
                             <User className="h-4 w-4" />
                           </div>
                           <span className="text-[10px] font-black uppercase tracking-widest">{user.firstName || "User"}</span>
@@ -268,7 +277,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 ) : (
                   <Button
                     onClick={() => openLoginDialog()}
-                    className="h-12 whitespace-nowrap rounded-2xl bg-blue-600 px-8 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-2xl shadow-blue-600/30 hover:bg-blue-500 transition-all hover:scale-105 active:scale-95"
+                    className="h-11 whitespace-nowrap rounded-2xl bg-blue-600 px-8 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-2xl shadow-blue-600/30 hover:bg-blue-500 transition-all hover:scale-105 active:scale-95"
                     data-testid="button-signin"
                   >
                     {t("nav.signin")}
@@ -277,7 +286,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
 
               <button
-                className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-300 transition-all hover:bg-blue-600 hover:text-white shadow-xl lg:hidden"
+                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-300 transition-all hover:bg-blue-600 hover:text-white shadow-xl lg:hidden"
                 onClick={() => setIsMobileMenuOpen((value) => !value)}
                 data-testid="button-mobile-menu"
               >
@@ -338,20 +347,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid grid-cols-1 gap-16 py-24 md:grid-cols-12 md:gap-12">
             <div className="space-y-8 md:col-span-5">
-              <div className="flex items-center gap-6">
-                <div className="brand-mark-shell brand-mark-shell--footer shadow-2xl border border-white/10">
-                  <img src={brandMark} alt="Michels Travel" />
+              <div className="flex flex-col items-center sm:items-start gap-5">
+                  <div className="flex items-center gap-4 group">
+                    <div className="h-10 w-10 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 group-hover:bg-blue-600 group-hover:text-white transition-all duration-500">
+                      <Sparkles className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-black uppercase tracking-[0.35em] text-blue-400/80">{t("footer.premium_partner")}</div>
+                      <div className="text-xl font-black tracking-tight text-white uppercase">{t("footer.elite_travel")}</div>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-xl font-black uppercase tracking-[0.3em] text-white">Michels Travel</div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.35em] text-blue-400/80">Premium Destination Partner</div>
-                </div>
-              </div>
               <p className="max-w-md text-sm leading-relaxed font-bold text-slate-500 uppercase tracking-tight">{t("footer.slogan")}</p>
               <div className="flex flex-wrap gap-3">
                 {[
                   { icon: ShieldCheck, label: t("footer.seal_ssl") },
-                  { icon: Lock, label: t("footer.seal_stripe") },
+                  { icon: Shield, label: t("footer.seal_stripe") },
                   { icon: Award, label: t("footer.seal_iata") },
                 ].map((seal) => (
                   <div key={seal.label} className="inline-flex items-center gap-3 rounded-2xl border border-white/5 bg-white/5 px-5 py-2.5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 shadow-xl transition-all hover:bg-white/10 hover:text-white">
@@ -371,12 +382,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </ul>
             </div>
 
-            <div className="md:col-span-5">
+            <div className="md:col-span-12 lg:col-span-5">
               <h4 className="mb-8 text-[10px] font-black uppercase tracking-[0.4em] text-white/50">{t("footer.contact_title")}</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                  <div className="space-y-3">
-                    <span className="block text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">WhatsApp Support</span>
-                    <a href={footerWhatsAppHref} target="_blank" rel="noreferrer" className="block text-xl font-black text-white hover:text-blue-400 transition-colors tracking-tight">{AGENCY_WHATSAPP_DISPLAY}</a>
+                    <a href={`https://wa.me/19736881200`} target="_blank" rel="noreferrer" className="flex items-center gap-4 group/item">
+                      <div className="h-8 w-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 group-hover/item:bg-emerald-500 group-hover/item:text-white transition-all">
+                        <MessageCircle className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <span className="block text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">{t("footer.whatsapp_support")}</span>
+                        <span className="block text-[11px] font-bold text-slate-300">1 (973) 688-1200</span>
+                      </div>
+                    </a>
                  </div>
                  <div className="space-y-3">
                     <span className="block text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">Secure Email</span>
@@ -384,22 +402,28 @@ export function Layout({ children }: { children: React.ReactNode }) {
                  </div>
               </div>
               <div className="mt-10 p-6 rounded-[32px] bg-white/5 border border-white/5 flex items-center justify-between group cursor-pointer hover:bg-blue-600 transition-all duration-500">
-                 <div className="flex items-center gap-4">
-                    <Globe className="h-6 w-6 text-blue-400 group-hover:text-white transition-colors" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 group-hover:text-white">Regional Support Active</span>
-                 </div>
+                  <div className="flex items-center gap-4 group/item">
+                    <div className="h-8 w-8 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
+                      <ShieldCheck className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 group-hover:text-white">{t("footer.regional_support")}</span>
+                    </div>
+                  </div>
                  <LanguageSwitcher variant="footer" />
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col items-center justify-between gap-8 border-t border-white/5 py-12 text-center md:flex-row md:text-left">
-            <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-700">&copy; {new Date().getFullYear()} Michels Travel &bull; Elite Travel Management</span>
-            <div className="flex items-center gap-6">
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 px-6 py-2 rounded-full border border-white/5 shadow-xl">
-                {t("footer.motto") || "Atendimento claro e suporte humano"}
-              </span>
-            </div>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8 py-10 border-t border-white/5">
+              <div className="flex items-center gap-6">
+                <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-700">&copy; {new Date().getFullYear()} Michels Travel &bull; {t("footer.elite_travel")}</span>
+              </div>
+              <div className="flex items-center gap-6">
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 px-6 py-2 rounded-full border border-white/5 shadow-xl">
+                  {t("footer.motto") || "Atendimento claro e suporte humano"}
+                </span>
+              </div>
           </div>
         </div>
       </footer>

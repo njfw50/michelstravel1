@@ -278,7 +278,7 @@ export default function SearchResults() {
                 </h3>
                 {activeFilterCount > 0 && (
                   <button onClick={() => { setSelectedStops(new Set()); setSelectedAirlines(new Set()); setPriceRange(null); }} className="text-[10px] font-black uppercase tracking-widest text-blue-400 hover:text-white transition-colors">
-                    Reset
+                    {t("results.clear_filters")}
                   </button>
                 )}
               </div>
@@ -286,7 +286,7 @@ export default function SearchResults() {
               <div className="space-y-10">
                 <div className="space-y-6">
                   <div className="flex justify-between items-center">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Price Range</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t("results.price_range")}</p>
                     <Badge variant="outline" className="bg-blue-500/10 border-blue-500/20 text-blue-400 text-[10px] font-black">{formatPrice(priceRange?.[1] || priceExtents.max)}</Badge>
                   </div>
                   <Slider 
@@ -303,7 +303,7 @@ export default function SearchResults() {
                 </div>
 
                 <div className="space-y-6">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Airlines</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t("results.airlines_filter")}</p>
                   <div className="flex flex-col gap-4">
                     {uniqueAirlines.map(airline => (
                       <label key={airline} className="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition-opacity">
@@ -331,17 +331,17 @@ export default function SearchResults() {
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <span className="text-[9px] font-black uppercase tracking-[0.4em] text-blue-400 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full shadow-xl shadow-blue-500/5">
-                    Curated Results
+                    {t("results.senior_badge")}
                   </span>
                   {flights && flights.length > 0 && (
                     <span className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-emerald-400 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
                        <TrendingDown className="h-3 w-3" />
-                       Best Prices Now
+                       {t("results.filter_active")}
                     </span>
                   )}
                 </div>
                 <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-none">
-                  {filteredAndSortedFlights.length} {filteredAndSortedFlights.length === 1 ? "Option" : "Options"} Found
+                  {filteredAndSortedFlights.length} {filteredAndSortedFlights.length === 1 ? t("results.option") : t("results.options")} {t("results.found")}
                 </h1>
               </div>
               
@@ -352,9 +352,9 @@ export default function SearchResults() {
                     onChange={e => setSortBy(e.target.value as SortOption)} 
                     className="h-12 rounded-xl bg-transparent px-6 text-[10px] font-black uppercase tracking-widest text-white focus:outline-none transition-all cursor-pointer min-w-[200px]"
                   >
-                    <option value="cheapest" className="bg-slate-950">Cheapest First</option>
-                    <option value="fastest" className="bg-slate-950">Fastest First</option>
-                    <option value="best" className="bg-slate-950">Best Value</option>
+                    <option value="cheapest" className="bg-slate-950">{t("results.sort_cheapest")}</option>
+                    <option value="fastest" className="bg-slate-950">{t("results.sort_fastest")}</option>
+                    <option value="best" className="bg-slate-950">{t("results.sort_best")}</option>
                   </select>
                 </div>
               )}
@@ -362,11 +362,12 @@ export default function SearchResults() {
 
             <AnimatePresence>
               {isSearching && (
-                <FlightSearchProgress 
-                  origin={params.origin || "---"} 
-                  destination={params.destination || "---"} 
-                  className="bg-transparent border-white/5"
-                />
+                <div className="bg-transparent border-white/5">
+                  <FlightSearchProgress 
+                    origin={params.origin || "---"} 
+                    destination={params.destination || "---"} 
+                  />
+                </div>
               )}
             </AnimatePresence>
 
@@ -379,9 +380,9 @@ export default function SearchResults() {
                          <Info className="h-5 w-5 text-blue-400" />
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 leading-none">Price Transparency Notice</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 leading-none">{t("results.transparency_title")}</p>
                         <p className="text-xs font-medium text-slate-400 leading-relaxed">
-                          All prices displayed include taxes, service fees, and surcharges. Baggage policies vary by airline and brand. Review specific terms during the booking process.
+                          {t("results.transparency_desc")}
                         </p>
                       </div>
                    </div>
@@ -431,10 +432,10 @@ export default function SearchResults() {
                       className="bg-blue-600 p-8 rounded-[40px] shadow-2xl shadow-blue-600/20 text-white flex justify-between items-center"
                     >
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-200">Outbound Flight Selected</p>
-                        <h3 className="text-2xl md:text-3xl font-black mt-2 tracking-tight">Now choose your Return flight</h3>
+                        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-200">{t("results.outbound_selected")}</p>
+                        <h3 className="text-2xl md:text-3xl font-black mt-2 tracking-tight">{t("results.select_return")}</h3>
                       </div>
-                      <Button variant="outline" onClick={() => setSelectedOutboundKey(null)} className="rounded-2xl border-white/20 bg-white/10 text-white hover:bg-white/20 font-black uppercase text-[10px] tracking-widest px-8 h-12 shadow-xl">Change Outbound</Button>
+                      <Button variant="outline" onClick={() => setSelectedOutboundKey(null)} className="rounded-2xl border-white/20 bg-white/10 text-white hover:bg-white/20 font-black uppercase text-[10px] tracking-widest px-8 h-12 shadow-xl">{t("results.change_outbound")}</Button>
                     </motion.div>
                     {filteredAndSortedFlights.filter(f => getOutboundKey(f) === selectedOutboundKey).map(f => (
                       <FlightCard key={f.id} flight={f} />
@@ -447,9 +448,9 @@ export default function SearchResults() {
                 ) : (
                   <Card className="p-24 text-center rounded-[50px] border-dashed border-2 border-white/5 bg-slate-900/20 backdrop-blur-xl">
                     <AlertCircle className="h-16 w-16 text-slate-800 mx-auto mb-6" />
-                    <h3 className="text-2xl font-black text-white uppercase tracking-tight">No flights found</h3>
-                    <p className="text-sm font-medium text-slate-500 mt-2 max-w-sm mx-auto">Try adjusting your filters or changing search dates to find more options.</p>
-                    <Button variant="link" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="mt-8 text-blue-400 font-black uppercase tracking-widest text-[10px] hover:text-white">Adjust Search Parameters</Button>
+                    <h3 className="text-2xl font-black text-white uppercase tracking-tight">{t("results.no_flights")}</h3>
+                    <p className="text-sm font-medium text-slate-500 mt-2 max-w-sm mx-auto">{t("results.no_flights_desc")}</p>
+                    <Button variant="ghost" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="mt-8 text-blue-400 font-black uppercase tracking-widest text-[10px] hover:text-white">{t("results.adjust_search")}</Button>
                   </Card>
                 )}
               </div>

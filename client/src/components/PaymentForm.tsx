@@ -68,8 +68,7 @@ function CheckoutForm({
       if (submitError) {
         setErrorMessage(
           submitError.message ||
-            t("payment.generic_error") ||
-            "Please complete all payment fields.",
+            t("payment.complete_fields")
         );
         setIsProcessing(false);
         return;
@@ -84,7 +83,7 @@ function CheckoutForm({
       });
 
       if (error) {
-        setErrorMessage(error.message || t("payment.generic_error") || "Payment failed. Please try again.");
+        setErrorMessage(error.message || t("payment.failed"));
         setIsProcessing(false);
       } else if (paymentIntent && paymentIntent.status === "succeeded") {
         onSuccess();
@@ -95,10 +94,10 @@ function CheckoutForm({
         setIsProcessing(false);
       }
     } catch (err: any) {
-      const message = err.message || "An unexpected error occurred.";
+      const message = err.message || t("payment.unexpected_error");
       setErrorMessage(message);
       setIsProcessing(false);
-      onError(message || "Payment error");
+      onError(message);
     }
   };
 
@@ -115,7 +114,7 @@ function CheckoutForm({
               </div>
               <div className="space-y-1">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-slate-400">
-                  Midnight Checkout
+                  {t("payment.midnight_checkout")}
                 </p>
                 <h3 className="text-xl font-bold tracking-tight text-white">
                   {t("payment.title") || "Payment Details"}
@@ -162,7 +161,7 @@ function CheckoutForm({
             <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">
-                  Card + Wallets
+                  {t("payment.card_wallets")}
                 </p>
                 <p className="mt-1 text-sm text-slate-300">
                   {t("payment.pay_now") || "Pay"} {formattedAmount}
@@ -247,6 +246,7 @@ export default function PaymentForm({
   onSuccess,
   onError,
 }: PaymentFormProps) {
+  const { t } = useI18n();
   const [stripeReady, setStripeReady] = useState(false);
   const [currentStripePromise, setCurrentStripePromise] = useState<ReturnType<typeof loadStripe> | null>(null);
 
@@ -273,7 +273,7 @@ export default function PaymentForm({
       >
         <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-slate-200">
           <Loader2 className="h-5 w-5 animate-spin text-[#ff9f7d]" />
-          <span>Loading secure checkout...</span>
+          <span>{t("payment.loading")}</span>
         </div>
       </div>
     );

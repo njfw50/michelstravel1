@@ -139,12 +139,7 @@ export function Chatbot() {
   }, [chatMessages.length, createSession, sessionId]);
 
   const getGreeting = () => {
-    const greetings: Record<string, string> = {
-      en: "Hi! I'm Mia, your Midnight travel assistant. How can I illuminate your journey today?",
-      es: "\u00a1Hola! Soy Mia, tu asistente de viajes Midnight. \u00bfC\u00f3mo posso iluminar tu viaje hoy?",
-      pt: "Ol\u00e1! Eu sou a Mia, sua assistente Midnight. Como posso iluminar sua jornada hoje?"
-    };
-    return greetings[language as string] || greetings.pt;
+    return t("chatbot.greeting");
   };
 
   const sendMessage = useCallback(async (overrideContent?: string) => {
@@ -216,7 +211,7 @@ export function Chatbot() {
         }
       }
     } catch (error) {
-      setChatMessages(prev => prev.map(m => m.id === assistantMsgId ? { ...m, content: "Sorry, I encountered an error. Please contact our support." } : m));
+      setChatMessages(prev => prev.map(m => m.id === assistantMsgId ? { ...m, content: t("chatbot.error_message") } : m));
     } finally {
       setIsStreaming(false);
     }
@@ -265,10 +260,10 @@ export function Chatbot() {
                   </div>
                   <div>
                     <h3 className="text-sm font-black text-white uppercase tracking-widest">Mia &bull; Midnight</h3>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-0.5">Online Support</p>
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-0.5">{t("chatbot.status_online")}</p>
                   </div>
                 </div>
-                <Button size="icon" variant="ghost" onClick={() => setIsOpen(false)} className="h-10 w-10 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition-all">
+                <Button size="icon" variant="ghost" onClick={() => setIsOpen(false)} className="h-10 w-10 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition-all" title={t("chatbot.close")}>
                   <X className="h-5 w-5" />
                 </Button>
               </div>
@@ -316,7 +311,7 @@ export function Chatbot() {
                                   <span className="text-sm font-black text-white">{flight.destinationCode}</span>
                                </div>
                                <Button size="sm" onClick={() => navigate(`/book/${flight.id}`)} className="w-full h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-[9px] tracking-[0.2em] shadow-xl">
-                                  Reservar <Plane className="ml-2 h-3.5 w-3.5" />
+                                  {t("chatbot.book_now")} <Plane className="ml-2 h-3.5 w-3.5" />
                                </Button>
                             </div>
                           ))}
@@ -333,13 +328,13 @@ export function Chatbot() {
                  <div className="flex items-center gap-3">
                     <button onClick={handleRequestLiveSession} disabled={requestingLive} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-400 hover:bg-blue-600 hover:text-white transition-all text-[9px] font-black uppercase tracking-widest shadow-xl">
                        {requestingLive ? <Loader2 className="h-4 w-4 animate-spin" /> : <MonitorPlay className="h-4 w-4" />}
-                       Talk to Agent
+                       {t("chatbot.talk_to_agent")}
                     </button>
                     <button onClick={() => setAgentMode(!agentMode)} className={cn("flex-1 flex items-center justify-center gap-2 h-10 rounded-xl border transition-all text-[9px] font-black uppercase tracking-widest shadow-xl", 
                       agentMode ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" : "border-white/5 bg-white/5 text-slate-500 hover:text-white"
                     )}>
                        {agentMode ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
-                       Smart Agent
+                       {t("chatbot.smart_agent")}
                     </button>
                  </div>
 
@@ -348,7 +343,7 @@ export function Chatbot() {
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                      placeholder="Type your journey details..."
+                      placeholder={t("chatbot.placeholder")}
                       className="h-14 bg-white/5 border-white/10 rounded-2xl pl-5 pr-14 text-white placeholder:text-slate-700 focus:border-blue-500/50 transition-all font-bold"
                     />
                     <Button size="icon" onClick={() => sendMessage()} disabled={!input.trim() || isStreaming} className="absolute right-2 top-2 h-10 w-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-xl transition-all">
@@ -358,7 +353,7 @@ export function Chatbot() {
                  
                  <div className="flex items-center justify-center gap-1.5">
                     <ShieldCheck className="h-3 w-3 text-emerald-500" />
-                    <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Midnight Secure &bull; AI Powered</span>
+                    <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{t("chatbot.secure_badge")}</span>
                  </div>
               </div>
             </div>

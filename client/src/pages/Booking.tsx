@@ -65,16 +65,16 @@ const passengerSchema = z.object({
   loyaltyNumber: z.string().optional(),
 });
 
-function createBookingSchema(isDocRequired: boolean) {
+function createBookingSchema(isDocRequired: boolean, t: any) {
   const baseSchema = z.object({
     passengers: z.array(passengerSchema).min(1),
-    contactEmail: z.string().email("Invalid email"),
-    contactPhone: z.string().min(7, "Min 7 digits").max(20),
+    contactEmail: z.string().email(t("booking.invalid_email") || "Invalid email"),
+    contactPhone: z.string().min(7, t("booking.min_digits", { count: 7 }) || "Min 7 digits").max(20),
     audioGuideConfirmed: z.boolean().refine(v => v === true, {
-      message: "Por favor, ative ou confirme o guia de áudio"
+      message: t("booking.audio_guide_confirm")
     }),
     termsAccepted: z.boolean().refine(v => v === true, {
-      message: "Você deve aceitar os termos e condições"
+      message: t("booking.terms_accept")
     }),
   });
 
@@ -85,34 +85,32 @@ function createBookingSchema(isDocRequired: boolean) {
       if (!pax.documentNumber || pax.documentNumber.trim() === "") {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Document number is required",
+          message: t("booking.doc_number_required") || "Document number is required",
           path: ["passengers", i, "documentNumber"],
         });
       }
       if (!pax.documentExpiryDate || pax.documentExpiryDate.trim() === "") {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Document expiry date is required",
+          message: t("booking.doc_expiry_required") || "Document expiry date is required",
           path: ["passengers", i, "documentExpiryDate"],
         });
       }
       if (!pax.documentIssuingCountry || pax.documentIssuingCountry.trim() === "") {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Issuing country is required",
+          message: t("booking.issuing_country_required") || "Issuing country is required",
           path: ["passengers", i, "documentIssuingCountry"],
         });
       }
       if (!pax.nationality || pax.nationality.trim() === "") {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Nationality is required",
+          message: t("booking.nationality_required") || "Nationality is required",
           path: ["passengers", i, "nationality"],
         });
       }
     });
-
-    // Terms and Audio are now handled in the base schema refinement/zod logic
   });
 }
 
@@ -216,32 +214,14 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
   const confirmedFullNameRef = useRef<string | null>(null);
   const paxErrors = errors?.passengers?.[index];
   const typeLabel = passengerType === "child" ? t("booking.child") : passengerType === "infant_without_seat" ? t("booking.infant") : t("booking.adult");
-  const coachCopy = language === "en"
-    ? {
-        title: "Cognitive help for the passenger name",
-        intro: "Write the name exactly as it appears on the document. If I notice extra spaces, symbols, or confusing letters, I stop and ask before changing anything.",
-        pending: "I paused here to review the name with you slowly.",
-        corrected: "Done. I adjusted the field with your permission. Please compare it with the document letter by letter.",
-        review: "No problem. I left the field ready so you can review it calmly in your own way.",
-        confirmed: "Full name reviewed. If it matches the document, you can keep going calmly.",
-      }
-    : language === "es"
-      ? {
-          title: "Ayuda cognitiva para el nombre del pasajero",
-          intro: "Escriba el nombre exactamente como aparece en el documento. Si noto espacios de sobra, símbolos o letras confusas, me detengo y pregunto antes de cambiar algo.",
-          pending: "Me detuve aquí para revisar el nombre con usted, despacio.",
-          corrected: "Listo. Ajusté el campo con su permiso. Compare el nombre con el documento letra por letra.",
-          review: "No hay problema. Dejé el campo listo para que lo revise con calma a su manera.",
-          confirmed: "Nombre completo revisado. Si está igual al documento, puede seguir con calma.",
-        }
-      : {
-          title: "Ajuda cognitiva para o nome do passageiro",
-          intro: "Escreva o nome exatamente como está no documento. Se eu notar espaços sobrando, símbolos ou letras confusas, eu paro e pergunto antes de mudar qualquer coisa.",
-          pending: "Eu parei aqui para revisar o nome com você, devagar.",
-          corrected: "Pronto. Ajustei o campo com sua permissão. Compare com o documento letra por letra.",
-          review: "Sem problema. Deixei o campo pronto para você revisar com calma do seu jeito.",
-          confirmed: "Nome completo revisado. Se estiver igual ao documento, você pode seguir com calma.",
-        };
+  const coachCopy = {
+    title: t("booking.name_coach.title"),
+    intro: t("booking.name_coach.intro"),
+    pending: t("booking.name_coach.pending"),
+    corrected: t("booking.name_coach.corrected"),
+    review: t("booking.name_coach.review"),
+    confirmed: t("booking.name_coach.confirmed"),
+  };
   const fieldLabels: Record<NameCoachField, string> = {
     givenName: t("booking.given_name"),
     familyName: t("booking.family_name"),
@@ -388,7 +368,7 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
                <Badge className="text-[9px] font-black uppercase tracking-widest bg-slate-800 text-slate-400 border-white/5">{typeLabel}</Badge>
             </div>
             {expanded === false && (
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Click to fill details</p>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">{t("booking.pax_fill_details") || "Click to fill details"}</p>
             )}
           </div>
         </div>
@@ -720,7 +700,7 @@ function BookingProcessingOverlay({ step, error, onRetry, onCancel, t }: {
               <div className="h-20 w-20 rounded-[28px] bg-red-500/10 flex items-center justify-center border border-red-500/20">
                 <AlertTriangle className="h-10 w-10 text-red-400" />
               </div>
-              <div className="space-y-2">
+<div className="space-y-2">
                 <h3 className="text-2xl font-black text-white tracking-tight" data-testid="text-booking-processing-error">
                   {t("booking.processing_error_title") || "Ocorreu um erro"}
                 </h3>
@@ -949,16 +929,8 @@ export default function Booking() {
     supported: isVoiceSupported,
   } = useVoiceGuide();
   const audioLang = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
-  const contactAudio = language === "pt"
-    ? "Preencha o e-mail e o telefone para receber o bilhete e avisos. Use um número com WhatsApp se possível."
-    : language === "es"
-      ? "Complete correo y teléfono para recibir su billete y avisos. Use un número con WhatsApp si es posible."
-      : "Fill in email and phone so we can send your ticket and updates. Use a WhatsApp-capable number if possible.";
-  const paymentAudio = language === "pt"
-    ? "Revise o valor total e finalize o pagamento com segurança. Tenha o cartão em mãos; o código de segurança será solicitado."
-    : language === "es"
-      ? "Revise el total y complete el pago con seguridad. Tenga la tarjeta a mano; se pedirá el código de seguridad."
-      : "Review the total and complete payment securely. Keep your card handy; we will ask for the security code.";
+  const contactAudio = t("booking.audio.contact");
+  const paymentAudio = t("booking.audio.payment");
   
   const createBooking = useCreateBooking();
 
@@ -987,32 +959,14 @@ export default function Booking() {
   const numChildren = parseInt(searchParams.get("children") || "0", 10);
   const numInfants = parseInt(searchParams.get("infants") || "0", 10);
   const totalPassengers = numAdults + numChildren + numInfants;
-  const easyModeCopy = language === "en"
-    ? {
-        badge: "Senior support",
-        title: "Mia can stay with you while you finish this booking.",
-        description: `If any field feels confusing, open Mia for calm guidance before paying. WhatsApp at ${AGENCY_WHATSAPP_DISPLAY} stays available if you prefer a human.`,
-        call: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
-        assistant: "Talk to Mia",
-        back: "Back to Senior Support",
-      }
-    : language === "es"
-      ? {
-          badge: "Atencion senior",
-          title: "Mia puede acompanarle mientras termina esta reserva.",
-          description: `Si algun campo parece confuso, abra Mia para recibir ayuda tranquila antes de pagar. WhatsApp al ${AGENCY_WHATSAPP_DISPLAY} sigue disponible si prefiere un humano.`,
-          call: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
-          assistant: "Hablar con Mia",
-          back: "Volver a Atencion Senior",
-        }
-      : {
-          badge: "Atendimento senior",
-          title: "A Mia pode ficar com voce enquanto voce conclui esta reserva.",
-          description: `Se algum campo parecer confuso, abra a Mia para receber ajuda calma antes de pagar. O WhatsApp ${AGENCY_WHATSAPP_DISPLAY} continua disponivel se voce preferir um humano.`,
-          call: `WhatsApp ${AGENCY_WHATSAPP_DISPLAY}`,
-          assistant: "Falar com a Mia",
-          back: "Voltar ao Atendimento Senior",
-        };
+  const easyModeCopy = {
+    badge: t("booking.easy_mode.badge"),
+    title: t("booking.easy_mode.title"),
+    description: t("booking.easy_mode.description", { phone: AGENCY_WHATSAPP_DISPLAY }),
+    call: t("booking.easy_mode.call", { phone: AGENCY_WHATSAPP_DISPLAY }),
+    assistant: t("booking.easy_mode.assistant"),
+    back: t("booking.easy_mode.back"),
+  };
   const whatsAppHref = buildWhatsAppHref(
     buildWhatsAppMessage({
       language: (language || "pt") as any,
@@ -1046,22 +1000,18 @@ export default function Booking() {
     return new SeniorIntegrityManager({
       onWarning: (msg) => {
         toast({
-          title: language === "en" ? "Helpful Note" : language === "es" ? "Nota de ayuda" : "Nota de ajuda",
+          title: t("booking.helpful_note"),
           description: msg,
           variant: "default",
         });
       },
       onStuck: () => {
-        const text = language === "en" 
-          ? "I noticed you stopped for a moment. Need help finishing this part?" 
-          : language === "es" 
-          ? "He notado que se detuvo un momento. ¿Necesita ayuda con esta parte?" 
-          : "Notei que você parou por um momento. Precisa de ajuda para concluir esta parte?";
+        const text = t("booking.stuck_help");
         speak(text);
         openAssistant();
       }
     });
-  }, [isEasyMode, toast, speak, language, openAssistant]);
+  }, [isEasyMode, toast, speak, t, openAssistant]);
 
   // Actual logic for assistant runner
   useEffect(() => {
@@ -1124,7 +1074,7 @@ export default function Booking() {
     return pax;
   };
 
-  const bookingSchema = createBookingSchema(isDocRequired);
+  const bookingSchema = createBookingSchema(isDocRequired, t);
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
@@ -1234,15 +1184,15 @@ export default function Booking() {
       if (refreshData.price && Math.abs(refreshData.price - currentFlight.price) > 0.01) {
         setFlight({ ...currentFlight, price: refreshData.price, currency: refreshData.currency || currentFlight.currency });
         toast({
-          title: t("booking.price_updated") || "Price Updated",
-          description: t("booking.price_updated_desc") || "The flight price has been updated. Please review the new total.",
+          title: t("booking.price_updated"),
+          description: t("booking.price_updated_desc"),
           variant: "default",
         });
       }
     } catch (err) {
       console.warn("Could not validate price on load:", err);
     }
-  }, [t, toast, searchParamsString, setLocation]);
+  }, [t, toast, searchParams, setLocation]);
 
   const fetchFlight = useCallback(async (flightId: string) => {
     setFlightLoading(true);
@@ -1260,7 +1210,6 @@ export default function Booking() {
         setFlight(data);
         setFlightLoading(false);
         
-        // Validate price immediately after loading
         validateFlightPrice(flightId, data);
         return;
       } catch (err: any) {
@@ -1268,7 +1217,6 @@ export default function Booking() {
         if (attempts < maxAttempts) {
           await new Promise((r) => setTimeout(r, 1000 * attempts));
         } else {
-          // Fallback: re-search using URL params and pick a fresh offer
           const origin = searchParams.get("origin");
           const destination = searchParams.get("destination");
           const date = searchParams.get("date");
@@ -1318,12 +1266,12 @@ export default function Booking() {
             }
           }
 
-          setFlightError(err.message || t("booking.flight_unavailable_desc") || "Could not load flight details.");
+          setFlightError(err.message || t("booking.flight_unavailable_desc"));
           setFlightLoading(false);
         }
       }
     }
-  }, [t, searchParamsString, params?.id, setLocation, validateFlightPrice]);
+  }, [t, searchParams, params?.id, setLocation, validateFlightPrice]);
 
   useEffect(() => {
     if (params?.id) {
