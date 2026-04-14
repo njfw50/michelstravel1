@@ -562,16 +562,16 @@ export function AdminOwnerDesk({
 
 function MetricBlock({ label, value, unit, icon }: { label: string; value: string | number; unit?: string; icon: ReactNode }) {
   return (
-    <div className="rounded-[24px] border border-white/5 bg-white/5 p-5 group/metric hover:border-indigo-500/20 transition-all">
-      <div className="flex items-center justify-between mb-3 text-slate-500 group-hover/metric:text-indigo-400 transition-colors">
-        <p className="text-[9px] uppercase tracking-[0.2em] font-black">{label}</p>
-        <div className="h-7 w-7 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+    <div className="rounded-[24px] border border-white/5 bg-white/5 p-4 sm:p-5 group/metric hover:border-indigo-500/20 transition-all min-w-0">
+      <div className="flex items-center justify-between gap-2 mb-3 text-slate-500 group-hover/metric:text-indigo-400 transition-colors">
+        <p className="text-[9px] uppercase tracking-[0.1em] font-black truncate flex-1 min-w-0">{label}</p>
+        <div className="h-7 w-7 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
           {icon}
         </div>
       </div>
-      <div className="flex items-baseline gap-1.5">
-        <p className="text-lg font-bold text-white">{value}</p>
-        {unit && <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{unit}</span>}
+      <div className="flex flex-wrap items-baseline gap-1.5 min-w-0">
+        <p className="text-lg font-bold text-white truncate">{value}</p>
+        {unit && <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider truncate shrink-0">{unit}</span>}
       </div>
     </div>
   );

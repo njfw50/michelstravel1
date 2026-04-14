@@ -155,12 +155,12 @@ function QueueCard({
     <Card className="glass-card border-white/5 hover:border-white/20 transition-all duration-500 group">
       <CardContent className="p-6">
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500 group-hover:text-indigo-400 transition-colors uppercase">{title}</p>
-            <p className="mt-3 text-3xl font-bold text-white font-display tracking-tight">{value}</p>
-            <p className="mt-2 text-xs text-slate-400 font-medium leading-relaxed">{description}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] uppercase tracking-[0.15em] font-bold text-slate-500 group-hover:text-indigo-400 transition-colors uppercase truncate">{title}</p>
+            <p className="mt-3 text-3xl font-bold text-white font-display tracking-tight truncate">{value}</p>
+            <p className="mt-2 text-xs text-slate-400 font-medium leading-relaxed line-clamp-2">{description}</p>
           </div>
-          <div className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${toneStyles} transition-transform group-hover:scale-110`}>
+          <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border ${toneStyles} transition-transform group-hover:scale-110`}>
             {icon}
           </div>
         </div>
