@@ -194,7 +194,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white selection:bg-blue-600/30 selection:text-white flex flex-col">
-      <header className="fixed inset-x-0 top-0 z-[100] transition-all duration-500">
+      <header className="fixed inset-x-0 top-0 z-40 transition-all duration-500">
         <div className={cn(
           "container mx-auto px-4 md:px-6 transition-all duration-500",
           scrolled ? "pt-4 md:pt-4" : "pt-8 md:pt-10"

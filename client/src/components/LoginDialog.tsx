@@ -196,7 +196,7 @@ export function LoginDialog({ open, onOpenChange, authError }: LoginDialogProps)
                   <div className="mx-auto h-20 w-20 rounded-[28px] bg-blue-600/10 border border-blue-500/20 flex items-center justify-center mb-4 shadow-xl">
                     <Sparkles className="h-10 w-10 text-blue-400 animate-pulse" />
                   </div>
-                  <h2 className="text-3xl font-black text-white tracking-tighter uppercase leading-none">
+                  <h2 className="text-3xl font-black text-white tracking-tight uppercase leading-tight">
                     {t("login.title")}
                   </h2>
                   <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-xs mx-auto">
