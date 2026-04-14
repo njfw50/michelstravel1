@@ -503,59 +503,14 @@ export class DatabaseStorage implements IStorage {
       const [newDeal] = await db.insert(featuredDeals).values(deal).returning();
       return newDeal;
     } catch (error: any) {
-      console.error("Failed to create deal with full schema:", error.message);
-      
-      try {
-        // Stage 2: Using Raw SQL to bypass Drizzle schema-auto-inclusion
-        const { stops, duration, departureDate, returnDate, originCity, destinationCity, cabinClass, ...data } = deal as any;
-        const result = await db.execute(sql`
-          INSERT INTO featured_deals (
-            origin, destination, origin_city, destination_city, 
-            price, currency, airline, cabin_class, 
-            headline, description, is_active
-          ) VALUES (
-            ${deal.origin}, ${deal.destination}, ${deal.originCity || null}, ${deal.destinationCity || null},
-            ${deal.price}, ${deal.currency || 'USD'}, ${deal.airline || null}, ${deal.cabinClass || 'economy'},
-            ${deal.headline}, ${deal.description}, true
-          ) RETURNING id
-        `);
-        const insertedId = (result.rows[0] as any).id;
-        return { ...deal, id: insertedId } as any;
-      } catch (err2: any) {
-        console.error("Stage 2 (Raw SQL) failed:", err2.message);
-        
-        try {
-          // Final attempt with absolute minimums using Raw SQL
-          const result = await db.execute(sql`
-            INSERT INTO featured_deals (
-              origin, destination, price, currency, airline, headline, description, is_active
-            ) VALUES (
-              ${deal.origin}, ${deal.destination}, ${deal.price}, ${deal.currency || 'USD'}, 
-              ${deal.airline || null}, ${deal.headline}, ${deal.description}, true
-            ) RETURNING id
-          `);
-          const insertedId = (result.rows[0] as any).id;
-          return { ...deal, id: insertedId, origin: deal.origin, destination: deal.destination } as any;
-        } catch (err3: any) {
-          console.error("Stage 3 (Final Raw SQL) failed:", err3.message);
-          throw new Error(`Critical persistence failure: ${err3.message}`);
-        }
-      }
+      console.error("Critical failure creating featured deal:", error.message);
+      throw new Error(`Failed to create deal: ${error.message}`);
     }
   }
 
   async updateFeaturedDeal(id: number, updates: Partial<InsertFeaturedDeal>): Promise<FeaturedDeal | undefined> {
-    try {
-      const [updated] = await db.update(featuredDeals).set(updates).where(eq(featuredDeals.id, id)).returning();
-      return updated;
-    } catch (error: any) {
-      console.error("Failed to update featured deal with full schema, retrying with basic columns:", error.message);
-      // Remove potentially missing columns and retry
-      const { stops, duration, departureDate, returnDate, ...basicUpdates } = updates as any;
-      const [updated] = await db.update(featuredDeals).set(basicUpdates).where(eq(featuredDeals.id, id)).returning({ id: featuredDeals.id });
-      if (!updated) return undefined;
-      return { ...basicUpdates, id: updated.id } as any;
-    }
+    const [updated] = await db.update(featuredDeals).set(updates).where(eq(featuredDeals.id, id)).returning();
+    return updated;
   }
 
   async deleteFeaturedDeal(id: number): Promise<void> {

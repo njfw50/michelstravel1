@@ -829,7 +829,8 @@ function FeaturedDealsManager() {
   const [form, setForm] = useState({
     origin: '', originCity: '', destination: '', destinationCity: '',
     departureDate: '', returnDate: '', price: '', currency: 'USD',
-    airline: '', cabinClass: 'economy', headline: '', description: '', isActive: true,
+    airline: '', cabinClass: 'economy', headline: '', description: '', 
+    imageUrl: '', isActive: true,
   });
 
   const { data: deals, isLoading } = useQuery<FeaturedDeal[]>({
@@ -887,7 +888,7 @@ function FeaturedDealsManager() {
     setForm({
       origin: '', originCity: '', destination: '', destinationCity: '',
       departureDate: '', returnDate: '', price: '', currency: 'USD',
-      airline: '', cabinClass: 'economy', headline: '', description: '', isActive: true,
+      airline: '', cabinClass: 'economy', headline: '', description: '', imageUrl: '', isActive: true,
     });
   };
 
@@ -898,7 +899,7 @@ function FeaturedDealsManager() {
       destinationCity: deal.destinationCity || '', departureDate: deal.departureDate || '',
       returnDate: deal.returnDate || '', price: deal.price || '', currency: deal.currency || 'USD',
       airline: deal.airline || '', cabinClass: deal.cabinClass || 'economy',
-      headline: deal.headline || '', description: deal.description || '', isActive: deal.isActive ?? true,
+      headline: deal.headline || '', description: deal.description || '', imageUrl: deal.imageUrl || '', isActive: deal.isActive ?? true,
     });
     setShowForm(true);
   };
@@ -1024,11 +1025,18 @@ function FeaturedDealsManager() {
                   value={form.headline} onChange={e => setForm(f => ({ ...f, headline: e.target.value }))} />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Descrição Comercial</Label>
-                <Textarea data-testid="input-deal-description" placeholder="Ex: Reserve agora os melhores voos para sua próxima aventura..."
-                  value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  className="bg-slate-900/50 border-white/10 text-white font-medium min-h-[56px] rounded-2xl focus:ring-indigo-500/50 resize-none" rows={1} />
+                <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">URL da Imagem (Opcional)</Label>
+                <Input data-testid="input-deal-image" placeholder="https://exemplo.com/foto.jpg"
+                  className="bg-slate-900/50 border-white/10 text-white font-bold h-14 rounded-2xl focus:ring-indigo-500/50"
+                  value={form.imageUrl} onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Descrição Comercial</Label>
+              <Textarea data-testid="input-deal-description" placeholder="Ex: Reserve agora os melhores voos para sua próxima aventura..."
+                value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                className="bg-slate-900/50 border-white/10 text-white font-medium min-h-[56px] rounded-2xl focus:ring-indigo-500/50 resize-none" rows={1} />
             </div>
 
             <div className="flex gap-4 pt-4 border-t border-white/5">

@@ -118,6 +118,46 @@ function getMobileAppAvailability(settings?: { testMode?: boolean | null; mobile
  * This function registers the other Stripe routes and API routes that need parsed JSON
  */
 export function registerRoutes(app: Express) {
+  // Database schema self-healing
+  (async () => {
+    try {
+      console.log("[DB] Verificando integridade das tabelas...");
+      
+      // 1. Ensure scanner_sessions exists
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS scanner_sessions (
+          id SERIAL PRIMARY KEY,
+          session_id TEXT NOT NULL UNIQUE,
+          data JSONB,
+          created_at TIMESTAMP DEFAULT NOW(),
+          expires_at TIMESTAMP
+        )
+      `);
+      console.log("[DB] scanner_sessions OK.");
+
+      // 2. Ensure featured_deals has new columns
+      const columns = await db.execute(sql`
+        SELECT column_name FROM information_schema.columns WHERE table_name = 'featured_deals'
+      `);
+      const columnNames = columns.rows.map(r => r.column_name);
+      
+      if (!columnNames.includes('image_url')) {
+        await db.execute(sql`ALTER TABLE featured_deals ADD COLUMN image_url TEXT`);
+        console.log("[DB] image_url OK.");
+      }
+      if (!columnNames.includes('is_automatic')) {
+        await db.execute(sql`ALTER TABLE featured_deals ADD COLUMN is_automatic BOOLEAN DEFAULT FALSE`);
+        console.log("[DB] is_automatic OK.");
+      }
+      if (!columnNames.includes('is_active')) {
+        await db.execute(sql`ALTER TABLE featured_deals ADD COLUMN is_active BOOLEAN DEFAULT TRUE`);
+        console.log("[DB] is_active OK.");
+      }
+    } catch (err) {
+      console.error("[DB] Falha no self-healing do esquema:", err);
+    }
+  })();
+
   // Start the deals automation loop (every 6 hours)
   import('./services/deals-automation').then(mod => {
     mod.runDealsAutomation().catch(console.error);
