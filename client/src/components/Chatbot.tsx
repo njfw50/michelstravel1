@@ -246,7 +246,7 @@ export function Chatbot() {
             initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.95 }}
-            className="fixed bottom-24 right-4 md:right-8 z-[100] w-[380px] max-w-[calc(100vw-2rem)]"
+            className="fixed bottom-24 right-4 md:right-8 z-40 w-[380px] max-w-[calc(100vw-2rem)]"
           >
             <div className="flex flex-col h-[600px] max-h-[80vh] bg-slate-950/90 backdrop-blur-3xl border border-white/10 rounded-[32px] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]">
               {/* Header */}
@@ -363,7 +363,7 @@ export function Chatbot() {
 
       <button
         onClick={handleOpen}
-        className={cn("fixed bottom-6 right-6 z-[100] h-16 w-16 rounded-[24px] flex items-center justify-center shadow-2xl transition-all group active:scale-95", 
+        className={cn("fixed bottom-6 right-6 z-40 h-16 w-16 rounded-[24px] flex items-center justify-center shadow-2xl transition-all group active:scale-95", 
           isOpen ? "bg-slate-900 border border-white/10 text-white rotate-90" : "bg-blue-600 text-white hover:scale-110"
         )}
       >
