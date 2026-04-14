@@ -249,7 +249,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                   onClick={() => { const tmp = origin; setOrigin(destination); setDestination(tmp); }}
                   className={cn(
                     "rounded-2xl border border-white/10 bg-slate-900 shadow-2xl text-blue-400 hover:text-white hover:border-blue-500 hover:bg-blue-600 transition-all active:scale-90 z-20",
-                    isCompact ? "h-11 w-11" : "h-16 w-16"
+                    isCompact ? "h-11 w-11" : "h-16 md:h-20 w-16 md:w-20"
                   )}
                 >
                   <ArrowRightLeft className={cn(isCompact ? "h-5 w-5 mx-auto" : "h-6 w-6 mx-auto")} />
@@ -280,7 +280,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                       <PopoverTrigger asChild>
                         <button type="button" className={cn(
                           "w-full bg-slate-950/40 border border-white/10 rounded-2xl px-5 flex items-center justify-between text-left hover:bg-white/5 hover:border-blue-500/50 transition-all group",
-                          isCompact ? "h-12" : "h-16"
+                          isCompact ? "h-12 md:h-14" : "h-16 md:h-20"
                         )}>
                           <div className="flex items-center gap-3 truncate">
                             <CalendarIcon className={cn("text-blue-400", isCompact ? "h-4 w-4" : "h-5 w-5")} />
@@ -302,7 +302,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                       <PopoverTrigger asChild disabled={tripType === "one-way"}>
                         <button type="button" className={cn(
                           "w-full bg-slate-950/40 border border-white/10 rounded-2xl px-5 flex items-center justify-between text-left transition-all group",
-                          isCompact ? "h-12" : "h-16",
+                          isCompact ? "h-12 md:h-14" : "h-16 md:h-20",
                           tripType === "one-way" ? "opacity-20 cursor-not-allowed" : "hover:bg-white/5 hover:border-blue-500/50"
                         )}>
                           <div className="flex items-center gap-3 truncate">
@@ -361,7 +361,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block pl-1 mb-2">{t("search.date")}</label>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <button type="button" className="h-16 w-full bg-slate-950/40 border border-white/10 rounded-2xl px-5 flex items-center justify-between text-left hover:bg-white/5 hover:border-blue-500/50 transition-all">
+                          <button type="button" className="h-16 md:h-20 w-full bg-slate-950/40 border border-white/10 rounded-2xl px-5 flex items-center justify-between text-left hover:bg-white/5 hover:border-blue-500/50 transition-all">
                             <div className="flex items-center gap-3 truncate">
                               <CalendarIcon className="text-blue-400 h-5 w-5" />
                               <span className={cn("font-black uppercase tracking-widest text-xs", !leg.date ? "text-slate-600" : "text-white")}>
