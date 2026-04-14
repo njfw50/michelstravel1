@@ -11,8 +11,7 @@ import {
   ChevronDown, 
   Trash2,
   MapPin,
-  PlaneTakeoff,
-  PlaneLanding,
+  Plane,
   Sparkles,
   ArrowRight
 } from "lucide-react";
@@ -204,7 +203,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                   <TabsTrigger
                     key={type}
                     value={type}
-                    className="flex-1 md:flex-none whitespace-nowrap rounded-xl px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-xl"
+                    className="flex-1 md:flex-none whitespace-nowrap rounded-xl px-7 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-xl"
                   >
                     {t(`search.${type.replace("-", "_")}`)}
                   </TabsTrigger>
@@ -335,7 +334,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                   >
                     <div className="md:col-span-3">
                       <LocationSearch
-                        label={`${t("search.from")} ${index + 1}`}
+                        label={t("search.from")}
                         value={leg.origin}
                         onChange={(val) => updateLeg(index, "origin", val)}
                         placeholder={t("search.from")}
@@ -344,11 +343,13 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                       />
                     </div>
                     <div className="md:col-span-1 flex items-center justify-center pb-2">
-                       <ArrowRight className="h-5 w-5 text-slate-700 md:rotate-0 rotate-90" />
+                       <div className="h-10 w-10 rounded-full bg-blue-600/10 border border-blue-500/20 flex items-center justify-center">
+                          <Plane className="h-4 w-4 text-blue-400 md:rotate-0 rotate-90" />
+                       </div>
                     </div>
                     <div className="md:col-span-3">
                       <LocationSearch
-                        label={`${t("search.to")} ${index + 1}`}
+                        label={t("search.to")}
                         value={leg.destination}
                         onChange={(val) => updateLeg(index, "destination", val)}
                         placeholder={t("search.to")}
@@ -418,19 +419,20 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
           )}
 
           {/* Passengers & Search Button Row */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end pt-4 border-t border-white/5">
+          <div className="grid grid-cols-1 md:grid-cols-11 gap-6 items-end pt-8 border-t border-white/5">
              {/* Passenger / Class Picker */}
-             <div className="md:col-span-8 flex flex-wrap gap-4">
+             <div className="md:col-span-7">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block pl-1 mb-2">{t("search.pax_class")}</label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button type="button" className="h-14 md:h-16 px-6 rounded-2xl bg-slate-950/40 border border-white/10 text-white flex items-center gap-4 hover:border-blue-500/50 hover:bg-white/5 transition-all shadow-xl group">
+                    <button type="button" className="h-16 w-full px-6 rounded-2xl bg-slate-950/40 border border-white/10 text-white flex items-center gap-4 hover:border-blue-500/50 hover:bg-white/5 transition-all shadow-xl group">
                       <div className="flex items-center gap-3">
                          <Users className="h-5 w-5 text-blue-400" />
                          <span className="text-xs font-black uppercase tracking-widest">{totalPassengers} {t("search.pax")}</span>
                       </div>
                       <div className="h-4 w-px bg-white/10" />
                       <div className="flex items-center gap-2">
-                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-blue-300 transition-colors">{classLabel(cabinClass)}</span>
+                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-blue-300 transition-colors uppercase">{classLabel(cabinClass)}</span>
                          <ChevronDown className="h-4 w-4 text-slate-600" />
                       </div>
                     </button>
@@ -475,15 +477,12 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
 
              <div className="md:col-span-4">
                 <Button 
-                  type="submit" 
+                  onClick={handleSearch}
                   disabled={isSubmitting}
-                  className={cn(
-                    "w-full rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.25em] text-xs shadow-2xl shadow-blue-600/30 transition-all hover:-translate-y-1 active:scale-95 group",
-                    isCompact ? "h-14" : "h-16"
-                  )}
+                  className="w-full h-16 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.2em] text-[11px] shadow-[0_0_30px_rgba(37,99,235,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <Search className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform" />
-                  {t("search.button")}
+                  <Search className="h-5 w-5 mr-3" />
+                  {isSubmitting ? t("results.loading") : t("home.hero.cta")}
                 </Button>
              </div>
           </div>
