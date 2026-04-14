@@ -80,7 +80,7 @@ export default function Home() {
       </div>
 
       {/* Hero Search Section */}
-      <section className="relative pt-20 pb-32 overflow-hidden">
+      <section className="relative pt-32 pb-20 overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-6xl mx-auto flex flex-col items-center text-center">
             <motion.div 
@@ -125,7 +125,7 @@ export default function Home() {
       </section>
 
       {/* Stats / Value Section */}
-      <section className="py-24 relative z-10">
+      <section className="py-12 relative z-10">
         <div className="container mx-auto px-4 max-w-6xl">
            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
               {[
@@ -145,7 +145,7 @@ export default function Home() {
       </section>
 
       {/* Market Insights & Tools */}
-      <section className="py-32 relative z-10">
+      <section className="py-20 relative z-10">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
             
@@ -236,7 +236,7 @@ export default function Home() {
       </section>
 
       {/* Featured Deals Section */}
-      <section className="py-32 relative z-10 overflow-hidden">
+      <section className="py-20 relative z-10 overflow-hidden">
         {/* Decorative mask */}
         <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-3xl -z-10" />
         
@@ -280,7 +280,7 @@ export default function Home() {
       </section>
 
       {/* Airline Partner Network */}
-      <section className="py-32 relative z-10">
+      <section className="py-16 relative z-10">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="text-center mb-20">
              <Badge variant="outline" className="mb-6 border-white/10 text-slate-500 text-[9px] uppercase font-black tracking-[0.3em] px-5 py-1.5 rounded-full">{t("home.stats.network")}</Badge>
@@ -306,7 +306,7 @@ export default function Home() {
       </section>
 
       {/* CTA Final */}
-      <section className="py-40 relative z-10 overflow-hidden bg-white text-slate-950">
+      <section className="py-24 relative z-10 overflow-hidden bg-white text-slate-950">
          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/5 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
          <div className="container mx-auto px-4 max-w-6xl relative z-10 text-center">
             <Badge className="bg-slate-950 text-white rounded-full px-6 py-2 mb-8 text-[10px] uppercase font-black tracking-[0.5em] shadow-xl">{t("home.stats.ready")}</Badge>
