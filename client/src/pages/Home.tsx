@@ -94,23 +94,33 @@ export default function Home() {
               </Badge>
             </motion.div>
 
-            <motion.h1 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="text-5xl md:text-8xl font-black tracking-tighter text-white leading-[0.9] uppercase max-w-5xl mb-10"
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+              className="relative w-full overflow-hidden rounded-[40px] md:rounded-[64px] p-8 md:p-16 mb-12 border border-white/10 shadow-2xl group"
             >
-              {t("home.hero.title")}
-            </motion.h1>
+              {/* Boeing Background Layer */}
+              <div className="absolute inset-0 z-0">
+                <img 
+                  src="https://images.unsplash.com/photo-1544016768-982d1554f0b9?q=80&w=2070&auto=format&fit=crop" 
+                  className="w-full h-full object-cover opacity-25 group-hover:scale-110 transition-transform duration-[10s] ease-linear select-none pointer-events-none"
+                  alt="Boeing Dreamliner"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/60 to-transparent" />
+                <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-[2px]" />
+              </div>
 
-            <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="text-slate-400 font-medium text-lg md:text-xl max-w-2xl leading-relaxed mb-16"
-            >
-              {t("home.hero.desc")}
-            </motion.p>
+              <div className="relative z-10">
+                <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-white leading-[0.9] uppercase max-w-5xl mb-10 drop-shadow-2xl">
+                  {t("home.hero.title")}
+                </h1>
+
+                <p className="text-slate-100 font-medium text-lg md:text-xl max-w-2xl leading-relaxed drop-shadow-lg">
+                  {t("home.hero.desc")}
+                </p>
+              </div>
+            </motion.div>
 
             <motion.div 
               initial={{ opacity: 0, y: 40 }} 
