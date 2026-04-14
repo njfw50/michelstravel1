@@ -46,6 +46,8 @@ export interface PublicFeaturedDeal {
   duration: string;
   headline: string;
   description: string;
+  imageUrl?: string | null;
+  isAutomatic?: boolean;
   booking_url: string;
   created_at: string;
 }

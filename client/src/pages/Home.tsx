@@ -98,7 +98,7 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full overflow-hidden rounded-[40px] md:rounded-[64px] p-8 md:p-16 mb-12 border border-white/10 shadow-2xl group"
+              className="relative w-full overflow-hidden rounded-[32px] md:rounded-[48px] p-6 md:p-12 mb-8 border border-white/10 shadow-2xl group"
             >
               {/* Boeing Background Layer */}
               <div className="absolute inset-0 z-0">
@@ -265,7 +265,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {dealsLoading ? (
               Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-[430px] rounded-[48px] bg-white/5 border border-white/5 animate-pulse" />)
             ) : catalogDeals.length > 0 ? (
@@ -274,9 +274,9 @@ export default function Home() {
                   key={deal.id} 
                   deal={{
                     ...deal,
-                    title: `${deal.origin} → ${deal.destination}`,
-                    description: deal.headline || deal.description,
-                    imageUrl: getDestinationImage(deal.destination)
+                    title: deal.headline || `${deal.origin} → ${deal.destination}`,
+                    description: deal.description || "",
+                    imageUrl: deal.imageUrl || getDestinationImage(deal.destination)
                   }} 
                 />
               ))

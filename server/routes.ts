@@ -118,6 +118,13 @@ function getMobileAppAvailability(settings?: { testMode?: boolean | null; mobile
  * This function registers the other Stripe routes and API routes that need parsed JSON
  */
 export function registerRoutes(app: Express) {
+  // Start the deals automation loop (every 6 hours)
+  import('./services/deals-automation').then(mod => {
+    mod.runDealsAutomation().catch(console.error);
+    setInterval(() => {
+      mod.runDealsAutomation().catch(console.error);
+    }, 1000 * 60 * 60 * 6);
+  });
 
   app.get('/atendimento', (_req, res) => {
     res.redirect(301, '/admin/live-chat');
@@ -4318,29 +4325,51 @@ OUTPUT FORMAT (JSON only):
   // ======= PUBLIC API - Zapier Flight Deals =======
   app.get('/api/public/flight-deals', async (_req, res) => {
     try {
-      const deals = await storage.getFeaturedDeals(true);
-      const siteUrl = 'https://www.michelstravel.agency';
+      const { getBalancedDeals, runDealsAutomation } = await import('./services/deals-automation');
+      
+      let deals = await getBalancedDeals();
+      
+      // If we don't have enough deals, trigger a quick background refresh and retry once
+      if (deals.length < 4) {
+        console.log("[DEALS] Not enough deals found, triggering on-demand automation...");
+        await runDealsAutomation();
+        deals = await getBalancedDeals();
+      }
 
-      const formatted = deals.map(deal => ({
-        id: deal.id,
-        origin: deal.origin,
-        origin_city: deal.originCity || deal.origin,
-        destination: deal.destination,
-        destination_city: deal.destinationCity || deal.destination,
-        departure_date: deal.departureDate || '',
-        return_date: deal.returnDate || '',
-        price: deal.price ? `${deal.currency || 'USD'} ${parseFloat(deal.price).toFixed(2)}` : '',
-        price_value: deal.price ? parseFloat(deal.price) : null,
-        currency: deal.currency || 'USD',
-        airline: deal.airline || '',
-        cabin_class: deal.cabinClass || 'economy',
-        stops: deal.stops || 0,
-        duration: deal.duration || 'Varia',
-        headline: deal.headline || `${deal.originCity || deal.origin} → ${deal.destinationCity || deal.destination}`,
-        description: deal.description || `Voos a partir de ${deal.currency || 'USD'} ${deal.price}. Reserve agora!`,
-        booking_url: `${siteUrl}/?origin=${deal.origin}&destination=${deal.destination}`,
-        created_at: deal.createdAt,
-      }));
+      const siteUrl = 'https://www.michelstravel.agency';
+      const markupRate = await getCommissionRate();
+
+      const formatted = deals.map(deal => {
+        let priceValue = deal.price ? parseFloat(deal.price) : 0;
+        
+        // Apply markup to automatic deals (manual deals usually have final price, but we can verify)
+        if (deal.isAutomatic) {
+          priceValue = parseFloat((priceValue * (1 + markupRate)).toFixed(2));
+        }
+
+        return {
+          id: deal.id,
+          origin: deal.origin,
+          origin_city: deal.originCity || deal.origin,
+          destination: deal.destination,
+          destination_city: deal.destinationCity || deal.destination,
+          departure_date: deal.departureDate || '',
+          return_date: deal.returnDate || '',
+          price: priceValue ? `${deal.currency || 'USD'} ${priceValue.toFixed(2)}` : '',
+          price_value: priceValue,
+          currency: deal.currency || 'USD',
+          airline: deal.airline || '',
+          cabin_class: deal.cabinClass || 'economy',
+          stops: deal.stops || 0,
+          duration: deal.duration || 'Varia',
+          imageUrl: deal.imageUrl || null,
+          isAutomatic: deal.isAutomatic,
+          headline: deal.headline || `${deal.originCity || deal.origin} → ${deal.destinationCity || deal.destination}`,
+          description: deal.description || `Voos a partir de ${deal.currency || 'USD'} ${priceValue.toFixed(2)}. Reserve agora!`,
+          booking_url: `${siteUrl}/?origin=${deal.origin}&destination=${deal.destination}`,
+          created_at: deal.createdAt,
+        };
+      });
 
       res.json({
         deals: formatted,

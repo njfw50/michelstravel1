@@ -189,6 +189,8 @@ export const featuredDeals = pgTable("featured_deals", {
   duration: text("duration"),
   headline: text("headline"),
   description: text("description"),
+  imageUrl: text("image_url"),
+  isAutomatic: boolean("is_automatic").default(false),
   isActive: boolean("is_active").default(true),
   lastPublishedAt: timestamp("last_published_at"),
   createdAt: timestamp("created_at").defaultNow(),
