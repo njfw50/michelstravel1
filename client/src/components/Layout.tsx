@@ -339,7 +339,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <LoginDialog open={loginDialogOpen} onOpenChange={handleLoginDialogChange} authError={authError} />
 
-      <main className="flex-1 relative z-10 pt-32 md:pt-40">
+      <main className="flex-1 relative z-10 pt-20 md:pt-28">
         {children}
       </main>
 

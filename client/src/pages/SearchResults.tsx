@@ -265,12 +265,12 @@ export default function SearchResults() {
         </div>
       </div>
 
-      <div className="relative z-10 container mx-auto max-w-7xl px-4 py-8 md:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <div className="relative z-10 container mx-auto max-w-7xl px-4 py-8 md:py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Filters Sidebar */}
           <aside className="hidden lg:block lg:col-span-3 space-y-8">
-            <div className="sticky top-[180px] bg-slate-900/60 backdrop-blur-3xl rounded-[40px] border border-white/10 p-8 shadow-2xl">
+            <div className="sticky top-[140px] bg-slate-900/60 backdrop-blur-3xl rounded-[32px] border border-white/10 p-6 shadow-2xl">
               <div className="flex items-center justify-between mb-8">
                 <h3 className="text-xs font-black uppercase tracking-[0.3em] text-white flex items-center gap-3">
                   <Filter className="h-4 w-4 text-blue-500" />
@@ -327,7 +327,7 @@ export default function SearchResults() {
 
           {/* Results Main Section */}
           <main className="lg:col-span-9">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <span className="text-[9px] font-black uppercase tracking-[0.4em] text-blue-400 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full shadow-xl shadow-blue-500/5">

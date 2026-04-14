@@ -80,7 +80,7 @@ export default function Home() {
       </div>
 
       {/* Hero Search Section */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
+      <section className="relative pt-12 pb-16 overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-6xl mx-auto flex flex-col items-center text-center">
             <motion.div 
