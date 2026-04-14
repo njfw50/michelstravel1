@@ -1,7 +1,93 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { TSA_ACCEPTED_DOCS, type TsaDocumentType } from "@shared/tsaAcceptedDocs";
 import { useDocumentScanner } from "@/hooks/use-document-scanner";
 import { Button } from "@/components/ui/button";
+import { 
+  Smartphone, 
+  Loader2, 
+  QrCode, 
+  X,
+  ScanLine
+} from "lucide-react";
+import { 
+  generateSessionId, 
+  buildScannerLink, 
+  listenForScanResult 
+} from "@/lib/scannerBridge";
+import { useI18n } from "@/lib/i18n";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+function MobileScannerButton({ onData }: { onData: (data: any) => void }) {
+  const { language, t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [qrUrl, setQrUrl] = useState<string | null>(null);
+
+  const startSession = () => {
+    const sid = generateSessionId();
+    const url = buildScannerLink({
+      sessionId: sid,
+      lang: language || "pt",
+      origin: window.location.origin
+    });
+    setSessionId(sid);
+    setQrUrl(url);
+    setOpen(true);
+  };
+
+  useEffect(() => {
+    if (!open || !sessionId) return;
+    return listenForScanResult(sessionId, (data) => {
+      onData(data);
+      setOpen(false);
+    });
+  }, [open, sessionId, onData]);
+
+  return (
+    <>
+      <Button 
+        variant="outline" 
+        onClick={startSession}
+        className="w-full border-blue-500/20 bg-blue-500/5 text-blue-400 hover:bg-blue-500/10 rounded-xl h-12 font-black uppercase tracking-widest gap-2"
+      >
+        <Smartphone className="h-5 w-5" />
+        Scanner Celular
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-sm bg-slate-900 border-white/10 text-white rounded-[32px]">
+          <DialogHeader className="text-center items-center p-6">
+            <div className="h-16 w-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-4">
+               <ScanLine className="h-8 w-8 text-blue-400" />
+            </div>
+            <DialogTitle className="text-xl font-black uppercase tracking-tight">Scanner Remoto</DialogTitle>
+            <p className="text-xs text-slate-400 font-medium">Escaneie o QR Code abaixo com a câmera do seu celular.</p>
+          </DialogHeader>
+
+          <div className="flex flex-col items-center justify-center p-6 space-y-6">
+            <div className="bg-white p-4 rounded-3xl border-4 border-white/5">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl || "")}&format=svg`} 
+                alt="QR Code" 
+                className="w-40 h-40" 
+              />
+            </div>
+            
+            <div className="flex items-center gap-3 text-blue-400 animate-pulse font-black uppercase tracking-widest text-[10px]">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Aguardando Celular...
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
 
 type Props = {
   onResult?: (result: any) => void;
@@ -65,9 +151,16 @@ export function DocumentScannerForm({ onResult }: Props) {
         {dataUrl && <span className="text-xs text-gray-500">Imagem carregada ({Math.round((dataUrl.length * 3) / 4 / 1024)} KB)</span>}
       </div>
 
-      <Button onClick={handleScan} disabled={!dataUrl || loading} className="w-full sm:w-auto">
-        {loading ? "Lendo documento..." : "Ler documento"}
-      </Button>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Button onClick={handleScan} disabled={!dataUrl || loading} className="w-full bg-blue-600 hover:bg-blue-500 rounded-xl h-12 font-black uppercase tracking-widest">
+          {loading ? "Lendo documento..." : "Ler documento"}
+        </Button>
+        
+        <MobileScannerButton onData={(data) => {
+          setCandidate(data);
+          onResult?.(data);
+        }} />
+      </div>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 

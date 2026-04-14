@@ -37,7 +37,7 @@ import AppSeniorDownload from "@/pages/AppSeniorDownload";
 import AppAdminDownload from "@/pages/AppAdminDownload";
 import AdminApp from "@/pages/AdminApp";
 import TravelExplorer from "@/pages/TravelExplorer";
-
+import ScannerPage from "@/pages/ScannerPage";
 import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import CheckoutCancel from "@/pages/CheckoutCancel";
 import MyTrips from "@/pages/MyTrips";
@@ -124,6 +124,7 @@ function Router() {
       <Route path="/assistance" component={() => <Layout><Assistance /></Layout>} />
       <Route path="/checkout/success" component={CheckoutSuccess} />
       <Route path="/checkout/cancel" component={CheckoutCancel} />
+      <Route path="/scan" component={ScannerPage} />
 
       <Route component={NotFound} />
     </Switch>

@@ -15,7 +15,7 @@ export interface ScannerSession {
 
 const CHANNEL_NAME = "michels-scanner-bridge";
 const STORAGE_KEY_PREFIX = "michels-scan-result-";
-const SCANNER_BASE_URL = "https://scanner.michelstravel.com";
+const SCANNER_BASE_URL = typeof window !== "undefined" ? window.location.origin : "https://www.michelstravel.agency";
 
 // Generate a short session ID
 export function generateSessionId(): string {
@@ -49,6 +49,13 @@ export function listenForScanResult(
   callback: ScanResultCallback
 ): () => void {
   const cleanups: (() => void)[] = [];
+
+  // Register session in backend so phone can upload
+  fetch("/api/scanner/session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sessionId }),
+  }).catch(err => console.error("[SCANNER BRIDGE] Failed to register session:", err));
 
   // Method 1: BroadcastChannel (if scanner is opened in new tab on same device)
   try {
@@ -89,7 +96,23 @@ export function listenForScanResult(
   }, 1200);
   cleanups.push(() => clearInterval(pollInterval));
 
-  // Method 3: Check URL params for callback data (the most common for QR code redirect)
+  // Method 3: Backend polling (Essential for PC -> Phone flow)
+  const backendInterval = setInterval(async () => {
+    try {
+      const response = await fetch(`/api/scanner/session/${sessionId}`);
+      if (response.ok) {
+        const session = await response.json();
+        if (session.data) {
+          callback(session.data);
+        }
+      }
+    } catch {
+       // ignore
+    }
+  }, 2000);
+  cleanups.push(() => clearInterval(backendInterval));
+
+  // Method 4: Check URL params for callback data (the most common for QR code redirect)
   const checkUrl = () => {
     const params = new URLSearchParams(window.location.search);
     const scanDataParam = params.get("scanData");
@@ -116,4 +139,35 @@ export function listenForScanResult(
   cleanups.push(() => window.removeEventListener('popstate', checkUrl));
 
   return () => cleanups.forEach((fn) => fn());
+}
+
+// ─── SENDER (Phone side) ──────────────────────────────────
+
+export async function sendScanResult(
+  sessionId: string,
+  data: MergedDocumentScanResult
+) {
+  // 1. BroadcastChannel (Same device)
+  try {
+    const channel = new BroadcastChannel(CHANNEL_NAME);
+    channel.postMessage({ type: "scan-result", sessionId, data });
+    channel.close();
+  } catch {
+    // ignore
+  }
+
+  // 2. localStorage (Same device fallback)
+  const storageKey = STORAGE_KEY_PREFIX + sessionId;
+  localStorage.setItem(storageKey, JSON.stringify({ data, timestamp: Date.now() }));
+
+  // 3. Backend (Cross device)
+  try {
+    await fetch(`/api/scanner/result/${sessionId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data }),
+    });
+  } catch (err) {
+    console.error("[SCANNER BRIDGE] Failed to upload result to backend:", err);
+  }
 }

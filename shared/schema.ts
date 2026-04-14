@@ -245,6 +245,15 @@ export const knowledgeBase = pgTable("knowledge_base", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// === SCANNER SESSIONS (Cross-device Scanner Bridge) ===
+export const scannerSessions = pgTable("scanner_sessions", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull().unique(),
+  data: jsonb("data"), // The scanned result
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at"),
+});
+
 // === RELATIONS ===
 export const bookingsRelations = relations(bookings, ({ one }) => ({
   user: one(users, {
@@ -270,6 +279,7 @@ export const insertCustomerSchema = createInsertSchema(customers).omit({ id: tru
 export const insertTransactionSchema = createInsertSchema(transactions).omit({ id: true, createdAt: true });
 export const insertBookingLogSchema = createInsertSchema(bookingLogs).omit({ id: true, createdAt: true });
 export const insertKnowledgeBaseSchema = createInsertSchema(knowledgeBase).omit({ id: true, updatedAt: true });
+export const insertScannerSessionSchema = createInsertSchema(scannerSessions).omit({ id: true, createdAt: true });
 
 // === TYPES ===
 export type FlightSearch = typeof flightSearches.$inferSelect;
@@ -316,6 +326,9 @@ export type InsertBookingLog = z.infer<typeof insertBookingLogSchema>;
 
 export type KnowledgeBaseEntry = typeof knowledgeBase.$inferSelect;
 export type InsertKnowledgeBaseEntry = z.infer<typeof insertKnowledgeBaseSchema>;
+
+export type ScannerSessionData = typeof scannerSessions.$inferSelect;
+export type InsertScannerSession = z.infer<typeof insertScannerSessionSchema>;
 
 // === API TYPES ===
 // Search Query Params

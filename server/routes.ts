@@ -4506,4 +4506,39 @@ OUTPUT FORMAT (JSON only):
       res.status(500).json({ error: "Failed to fetch booking logs" });
     }
   });
+
+  // === SCANNER BRIDGE ROUTES ===
+
+  app.post('/api/scanner/session', async (req, res) => {
+    try {
+      const { sessionId } = req.body;
+      if (!sessionId) return res.status(400).json({ error: "sessionId required" });
+      const session = await storage.createScannerSession({ sessionId, data: null });
+      res.json(session);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create scanner session" });
+    }
+  });
+
+  app.get('/api/scanner/session/:sessionId', async (req, res) => {
+    try {
+      const session = await storage.getScannerSession(req.params.sessionId);
+      if (!session) return res.status(404).json({ error: "Session not found or expired" });
+      res.json(session);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get scanner session" });
+    }
+  });
+
+  app.post('/api/scanner/result/:sessionId', async (req, res) => {
+    try {
+      const { data } = req.body;
+      if (!data) return res.status(400).json({ error: "data required" });
+      const session = await storage.updateScannerSession(req.params.sessionId, data);
+      if (!session) return res.status(404).json({ error: "Session not found or expired" });
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to save scan result" });
+    }
+  });
 }
