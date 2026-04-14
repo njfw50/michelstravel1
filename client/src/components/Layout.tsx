@@ -398,7 +398,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                  </div>
                  <div className="space-y-3">
                     <span className="block text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">Secure Email</span>
-                    <a href={`mailto:${AGENCY_EMAIL}`} className="block text-xl font-black text-white hover:text-blue-400 transition-colors tracking-tight">{AGENCY_EMAIL}</a>
+                    <a href={`mailto:${AGENCY_EMAIL}`} className="block text-xs sm:text-sm md:text-base font-black text-white hover:text-blue-400 transition-colors tracking-tight whitespace-nowrap">{AGENCY_EMAIL}</a>
                  </div>
               </div>
               <div className="mt-10 p-6 rounded-[32px] bg-white/5 border border-white/5 flex items-center justify-between group cursor-pointer hover:bg-blue-600 transition-all duration-500">
