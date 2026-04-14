@@ -223,8 +223,8 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
         <form onSubmit={handleSearch} className={cn(isCompact ? "space-y-4" : "space-y-8")}>
           {tripType !== "multi-city" ? (
              <div className={cn(
-              "grid gap-4",
-              isCompact ? "grid-cols-1 md:grid-cols-12 items-center" : "grid-cols-1 md:grid-cols-11"
+              "grid gap-4 items-end",
+              isCompact ? "grid-cols-1 md:grid-cols-12" : "grid-cols-1 md:grid-cols-11"
             )}>
               {/* Departure Location */}
               <div className={cn(isCompact ? "md:col-span-3" : "md:col-span-3")}>
@@ -242,7 +242,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
               {/* Swap Button */}
               <div className={cn(
                 "flex items-center justify-center",
-                isCompact ? "md:col-span-1" : "md:col-span-1 md:pt-6"
+                isCompact ? "md:col-span-1" : "md:col-span-1"
               )}>
                 <button
                   type="button"
