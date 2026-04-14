@@ -114,8 +114,8 @@ export function LocationSearch({
           placeholder={placeholder || "Cidade ou Aeroporto"} 
           className={cn(
             "border-none shadow-none focus-visible:ring-0 p-0 h-full w-full bg-transparent appearance-none",
-            dark ? "text-white placeholder:text-slate-700" : "text-slate-900 placeholder:text-slate-300",
-            isLarge ? "text-lg md:text-xl font-black" : "text-sm font-bold",
+            dark ? "text-white placeholder:text-slate-800" : "text-slate-900 placeholder:text-slate-400",
+            isLarge ? "text-base md:text-lg font-black" : "text-[11px] md:text-sm font-bold",
           )}
           data-testid={`input-${label.toLowerCase()}`}
           value={displayText || query}

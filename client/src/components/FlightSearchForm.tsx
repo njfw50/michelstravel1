@@ -199,12 +199,12 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
         {!isCompact && (
           <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <Tabs value={tripType} onValueChange={setTripType} className="w-full md:w-auto">
-              <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-white/5 p-1 md:w-auto border border-white/5">
+              <TabsList className="flex w-full md:w-auto overflow-x-auto rounded-2xl bg-white/5 p-1 border border-white/5 scrollbar-hide">
                 {["round-trip", "one-way", "multi-city"].map((type) => (
                   <TabsTrigger
                     key={type}
                     value={type}
-                    className="rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-xl"
+                    className="flex-1 md:flex-none whitespace-nowrap rounded-xl px-5 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-xl"
                   >
                     {t(`search.${type.replace("-", "_")}`)}
                   </TabsTrigger>
@@ -249,11 +249,11 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                   type="button"
                   onClick={() => { const tmp = origin; setOrigin(destination); setDestination(tmp); }}
                   className={cn(
-                    "rounded-2xl border border-white/10 bg-white/5 text-slate-400 hover:text-white hover:border-blue-500 hover:bg-blue-600/20 transition-all active:scale-90 shadow-xl",
-                    isCompact ? "h-10 w-10" : "h-14 w-14"
+                    "rounded-2xl border border-white/10 bg-slate-900 shadow-2xl text-blue-400 hover:text-white hover:border-blue-500 hover:bg-blue-600 transition-all active:scale-90 z-20",
+                    isCompact ? "h-11 w-11" : "h-16 w-16"
                   )}
                 >
-                  <ArrowRightLeft className={cn(isCompact ? "h-4 w-4" : "h-5 w-5")} />
+                  <ArrowRightLeft className={cn(isCompact ? "h-5 w-5 mx-auto" : "h-6 w-6 mx-auto")} />
                 </button>
               </div>
 
