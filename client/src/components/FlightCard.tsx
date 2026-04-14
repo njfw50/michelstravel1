@@ -145,10 +145,10 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
         "before:absolute before:inset-0 before:bg-gradient-to-br before:from-blue-600/[0.04] before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity"
       )}
     >
-      <div className="p-5 md:p-8 relative z-10">
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-6 border-b border-white/5 pb-6">
-          <div className="flex items-center gap-5 min-w-[180px]">
-            <div className="h-14 w-14 shrink-0 flex items-center justify-center rounded-[20px] bg-white/5 border border-white/10 p-2.5 shadow-xl transition-all group-hover:scale-105">
+      <div className="p-4 md:p-8 relative z-10">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 mb-4 md:mb-6 border-b border-white/5 pb-4 md:pb-6">
+          <div className="flex items-center gap-4 md:gap-5 min-w-0 md:min-w-[180px]">
+            <div className="h-11 w-11 md:h-14 md:w-14 shrink-0 flex items-center justify-center rounded-[18px] bg-white/5 border border-white/10 p-2 shadow-xl transition-all group-hover:scale-105">
               {flight.logoUrl ? (
                 <img src={flight.logoUrl || ""} alt={flight.airline || ""} className="h-full w-full object-contain" />
               ) : (
@@ -196,13 +196,13 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
         </div>
       </div>
 
-      <div className="relative bg-white/5 backdrop-blur-md border-t md:border-t-0 md:border-l border-white/5 p-8 md:p-10 flex flex-col justify-center items-center md:items-end gap-8 overflow-hidden">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 blur-[100px] rounded-full translate-x-1/3 -translate-y-1/3" />
+      <div className="relative bg-white/5 backdrop-blur-md border-t md:border-t-0 md:border-l border-white/5 p-5 md:p-10 flex flex-col justify-center items-center md:items-end gap-4 md:gap-8 overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 md:w-48 md:h-48 bg-blue-500/10 blur-[80px] rounded-full translate-x-1/3 -translate-y-1/3" />
         
-        <div className="relative z-10 text-center md:text-right space-y-2">
+        <div className="relative z-10 text-center md:text-right space-y-1 md:space-y-2">
           <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-500">Price per Traveler</p>
           <div className="flex flex-col items-center md:items-end gap-1">
-            <span className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-none">
+            <span className="text-3xl md:text-5xl font-black text-white tracking-tighter leading-none">
               {formattedPrice}
             </span>
           </div>
@@ -213,7 +213,7 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
         </div>
 
         <Link href={bookUrl} className="w-full relative z-10">
-          <Button className="w-full h-14 rounded-[20px] bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.25em] text-[10px] shadow-2xl shadow-blue-600/30 transition-all hover:scale-105 active:scale-95 group">
+          <Button className="w-full h-12 md:h-14 rounded-[16px] md:rounded-[20px] bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.25em] text-[10px] shadow-2xl shadow-blue-600/30 transition-all hover:scale-105 active:scale-95 group">
             {t("flight.select")}
             <ArrowRight className="ml-3 h-4 w-4 transition-transform group-hover:translate-x-2" />
           </Button>
