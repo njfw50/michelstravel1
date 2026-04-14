@@ -216,13 +216,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </div>
               </Link>
 
-              <nav className="hidden min-w-0 items-center gap-1.5 lg:flex">
+              <nav className="hidden min-w-0 items-center lg:flex">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     className={cn(
-                      "relative whitespace-nowrap rounded-2xl px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300",
+                      "relative whitespace-nowrap rounded-2xl px-3.5 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-300",
                       location === link.href
                         ? "bg-blue-600 text-white shadow-xl shadow-blue-600/20"
                         : "text-slate-400 hover:bg-white/5 hover:text-white",
@@ -234,7 +234,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </nav>
             </div>
 
-            <div className="flex shrink-0 items-center gap-4 md:gap-6 border-l border-white/5 pl-6">
+            <div className="flex shrink-0 items-center gap-4 md:gap-8 border-l border-white/5 pl-8">
               <LanguageSwitcher variant="navbar" />
               <div className="hidden items-center gap-4 md:flex">
                 {user ? (
@@ -398,7 +398,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                  </div>
                  <div className="space-y-3">
                     <span className="block text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">Secure Email</span>
-                    <a href={`mailto:${AGENCY_EMAIL}`} className="block text-xl font-black text-white hover:text-blue-400 transition-colors tracking-tight truncate">{AGENCY_EMAIL}</a>
+                    <a href={`mailto:${AGENCY_EMAIL}`} className="block text-xl font-black text-white hover:text-blue-400 transition-colors tracking-tight">{AGENCY_EMAIL}</a>
                  </div>
               </div>
               <div className="mt-10 p-6 rounded-[32px] bg-white/5 border border-white/5 flex items-center justify-between group cursor-pointer hover:bg-blue-600 transition-all duration-500">
