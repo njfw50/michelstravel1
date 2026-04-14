@@ -198,7 +198,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
         {!isCompact && (
           <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <Tabs value={tripType} onValueChange={setTripType} className="w-full md:w-auto">
-              <TabsList className="flex w-full md:w-auto overflow-x-auto rounded-2xl bg-white/5 p-1 border border-white/5 scrollbar-hide">
+              <TabsList className="flex h-14 w-full md:w-auto overflow-x-auto items-center rounded-2xl bg-white/5 p-1.5 border border-white/5 scrollbar-hide">
                 {["round-trip", "one-way", "multi-city"].map((type) => (
                   <TabsTrigger
                     key={type}
@@ -443,8 +443,8 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                         <div className="space-y-4">
                           <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t("search.travel_class")}</p>
                           <div className="grid grid-cols-2 gap-3">
-                            {["economy", "business"].map(cls => (
-                              <button key={cls} type="button" onClick={() => setCabinClass(cls)} className={cn("py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all", cabinClass === cls ? "bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-600/20" : "bg-white/5 border-white/5 text-slate-500 hover:border-blue-500/30")}>
+                            {["economy", "premium_economy", "business", "first"].map(cls => (
+                              <button key={cls} type="button" onClick={() => setCabinClass(cls)} className={cn("py-3 px-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all", cabinClass === cls ? "bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-600/20" : "bg-white/5 border-white/5 text-slate-500 hover:border-blue-500/30")}>
                                 {classLabel(cls)}
                               </button>
                             ))}
