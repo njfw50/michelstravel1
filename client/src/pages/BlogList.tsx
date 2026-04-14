@@ -18,11 +18,12 @@ import {
   Map as MapIcon,
   Sparkles
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 import { SEO } from "@/components/SEO";
 import { useDestinationHighlights } from "@/hooks/use-destinations";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -32,7 +33,7 @@ function estimateReadTime(content: string | null | undefined): number {
   return Math.max(2, Math.ceil(words / 200));
 }
 
-const DESTINATIONS = [
+const HIGHLIGHT_DESTINATIONS = [
   { city: "Orlando", country: "us", label: "Orlando", accent: "from-blue-500 to-cyan-400" },
   { city: "Miami", country: "us", label: "Miami", accent: "from-pink-500 to-rose-400" },
   { city: "New York", country: "us", label: "Nova York", accent: "from-slate-500 to-slate-400" },
@@ -41,11 +42,61 @@ const DESTINATIONS = [
   { city: "São Paulo", country: "br", label: "São Paulo", accent: "from-slate-700 to-slate-500" },
 ];
 
+const PULSE_CITIES = [
+  { id: 'lisbon', name: 'Lisbon', display: 'Lisboa', active: 242, trend: '+12%' },
+  { id: 'new-york', name: 'New York', display: 'Nova York', active: 512, trend: '+8%' },
+  { id: 'paris', name: 'Paris', display: 'Paris', active: 385, trend: '+15%' },
+  { id: 'sao-paulo', name: 'Sao Paulo', display: 'São Paulo', active: 624, trend: '+22%' },
+];
+
 export default function BlogList() {
   const { data: posts, isLoading } = useBlogPosts();
   const { t, language } = useI18n();
-  const [selectedDest, setSelectedDest] = useState(DESTINATIONS[0]);
+  const [selectedDest, setSelectedDest] = useState(HIGHLIGHT_DESTINATIONS[0]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState('lisbon');
+  const [pulseData, setPulseData] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    const fetchPulse = async () => {
+      const newData: Record<string, any> = {};
+      
+      await Promise.all(PULSE_CITIES.map(async (dest) => {
+        try {
+          const res = await fetch(`/api/external/weather/${dest.id}`);
+          if (res.ok) {
+            const weather = await res.json();
+            newData[dest.id] = { ...dest, weather: `${weather.temp}°C`, condition: weather.condition };
+          }
+        } catch (e) {
+          console.error("Failed to fetch weather for", dest.id);
+        }
+      }));
+
+      try {
+        const flightRes = await fetch('/api/flight-board');
+        if (flightRes.ok) {
+          const flights = await flightRes.json();
+          PULSE_CITIES.forEach(dest => {
+            const flight = flights.find((f: any) => 
+              f.destinationCity?.toLowerCase().includes(dest.id.replace('-', ' ')) ||
+              f.destinationCity?.toLowerCase().includes(dest.display.toLowerCase())
+            );
+            if (flight && newData[dest.id]) {
+              newData[dest.id].price = flight.price;
+              newData[dest.id].currency = flight.currency;
+            }
+          });
+        }
+      } catch (e) { }
+
+      setPulseData(newData);
+    };
+
+    fetchPulse();
+  }, []);
+
+  const activeDest = pulseData[activeTab] || PULSE_CITIES.find(d => d.id === activeTab) || PULSE_CITIES[0];
 
   const { data: highlights, isLoading: loadingHighlights } = useDestinationHighlights({
     city: selectedDest.city,
@@ -69,7 +120,7 @@ export default function BlogList() {
         path="/blog" 
       />
 
-      {/* Hero Section - The Revolution */}
+      {/* Hero Section */}
       <section className="relative h-[60vh] md:h-[70vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/40 via-[#020617]/80 to-[#020617] z-10" />
@@ -90,7 +141,7 @@ export default function BlogList() {
                {t("blog.elite_experience")}
             </Badge>
             <h1 className="text-5xl md:text-8xl font-black font-display tracking-tighter mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/40 leading-none">
-              {t("blog.explore_unexplained").split('.')[0]}.
+              Explore o Inexplicável.
             </h1>
             <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed mb-10">
               {t("blog.curated_destinations")}
@@ -115,22 +166,9 @@ export default function BlogList() {
             </div>
           </motion.div>
         </div>
-
-        {/* Floating Elements */}
-        <div className="absolute bottom-10 left-10 hidden lg:block animate-bounce-slow">
-           <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-4 rounded-3xl flex items-center gap-4">
-              <div className="h-10 w-10 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                 <TrendingUp className="h-5 w-5" />
-              </div>
-              <div>
-                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t("blog.trending_now")}</p>
-                 <p className="text-xs font-bold text-white">Lisboa +240%</p>
-              </div>
-           </div>
-        </div>
       </section>
 
-      {/* Destination Pulse - Interactive Explorer */}
+      {/* Destination Pulse */}
       <section className="container mx-auto px-4 py-20">
         <div className="flex flex-col md:flex-row items-end justify-between gap-6 mb-12">
           <div className="max-w-xl">
@@ -143,82 +181,135 @@ export default function BlogList() {
           </div>
           
           <div className="flex gap-2 p-1.5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[28px] overflow-x-auto no-scrollbar">
-            {DESTINATIONS.map((d) => (
+            {PULSE_CITIES.map((city) => (
               <button
-                key={d.city}
-                onClick={() => setSelectedDest(d)}
-                className={`whitespace-nowrap px-6 py-3 rounded-[20px] text-xs font-black uppercase tracking-widest transition-all duration-300 ${
-                  selectedDest.city === d.city 
-                    ? `bg-gradient-to-br ${d.accent} text-white shadow-lg` 
-                    : 'text-slate-400 hover:text-white hover:bg-white/5'
-                }`}
+                key={city.id}
+                onClick={() => setActiveTab(city.id)}
+                className={cn(
+                  "px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap",
+                  activeTab === city.id 
+                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30" 
+                    : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
+                )}
               >
-                {d.label}
+                {city.display}
               </button>
             ))}
           </div>
         </div>
 
-        <motion.div 
-          layout
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          <AnimatePresence mode="wait">
-            {loadingHighlights ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-[200px] rounded-[32px] bg-white/5 animate-pulse border border-white/5" />
-              ))
-            ) : highlights?.items?.map((place, idx) => (
-              <motion.div
-                key={place.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.3, delay: idx * 0.05 }}
-              >
-                <Card className="group h-full bg-slate-900/40 backdrop-blur-md border-white/5 rounded-[32px] p-6 hover:border-indigo-500/30 transition-all duration-500 relative overflow-hidden">
-                  <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${selectedDest.accent} blur-[60px] opacity-10 group-hover:opacity-20 transition-opacity`} />
-                  
-                  <div className="flex flex-col h-full relative z-10">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${selectedDest.accent} flex items-center justify-center text-white shadow-lg`}>
-                        <MapPin className="h-6 w-6" />
-                      </div>
-                      {place.distance_m && (
-                         <span className="text-[10px] font-black text-slate-500 tracking-widest uppercase bg-white/5 px-2 py-1 rounded-lg">
-                           {Math.round(place.distance_m)}m de raio
-                         </span>
-                      )}
+        <Card className="bg-slate-900/40 border-white/5 rounded-[48px] p-8 md:p-14 relative overflow-hidden group mb-12">
+           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/5 blur-[120px] -mr-64 -mt-64 group-hover:bg-indigo-600/10 transition-all duration-1000" />
+           
+           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
+              <div className="flex-1 flex items-center gap-12">
+                 <div className="flex flex-col gap-1">
+                    <p className="text-6xl md:text-8xl font-black font-display tracking-tighter text-white">{activeDest.weather || "--°C"}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">{activeDest.condition || "Carregando..."}</p>
+                 </div>
+                 
+                 <div className="h-20 w-px bg-white/10 hidden md:block" />
+                 
+                 <div>
+                    <h3 className="text-4xl md:text-5xl font-black font-display tracking-tighter mb-2">{activeDest.display}</h3>
+                    <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-widest">
+                       <Navigation2 className="h-4 w-4 text-indigo-500" />
+                       {activeDest.active} viajantes ativos agora
                     </div>
-                    
-                    <h3 className="text-xl font-black text-white mb-2 line-clamp-1 group-hover:text-indigo-400 transition-colors">
-                      {place.name}
-                    </h3>
-                    <p className="text-sm text-slate-400 line-clamp-2 mb-6 font-medium">
-                      {place.address || 'Ponto histórico com arquitetura única e atmosfera local envolvente.'}
+                 </div>
+              </div>
+
+              <div className="flex items-center gap-8 w-full md:w-auto">
+                 <div className="flex flex-col gap-1 items-end">
+                    <p className="text-2xl font-black text-white">
+                      {activeDest.price ? `${activeDest.price} ${activeDest.currency}` : "---"}
                     </p>
-                    
-                    <div className="mt-auto flex items-center justify-between border-t border-white/5 pt-4">
-                       <div className="flex gap-2">
-                          {place.website && (
-                             <a href={place.website} target="_blank" rel="noreferrer" className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-indigo-600 transition-all">
-                                <Globe2 className="h-4 w-4" />
-                             </a>
-                          )}
-                          <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-indigo-600 transition-all cursor-pointer">
-                             <Navigation2 className="h-4 w-4" />
-                          </div>
-                       </div>
-                       <Button variant="ghost" className="text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:text-indigo-300 gap-2">
-                          {t("blog.details")} <ArrowUpRight className="h-3 w-3" />
-                       </Button>
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Melhor Tarifa</p>
+                 </div>
+              </div>
+           </div>
+        </Card>
+
+        {/* Highlights from Destinations tab */}
+        <div className="mb-12">
+          <div className="flex gap-2 p-1.5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[28px] overflow-x-auto no-scrollbar mb-8">
+            {HIGHLIGHT_DESTINATIONS.map((d) => (
+              <button
+                key={d.city}
+                onClick={() => setSelectedDest(d)}
+                className={cn(
+                  "whitespace-nowrap px-6 py-3 rounded-[20px] text-xs font-black uppercase tracking-widest transition-all duration-300",
+                  selectedDest.city === d.city 
+                    ? `bg-gradient-to-br ${d.accent} text-white shadow-lg` 
+                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                )}
+              >
+                {d.label}
+              </button>
             ))}
-          </AnimatePresence>
-        </motion.div>
+          </div>
+
+          <motion.div 
+            layout
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            <AnimatePresence mode="wait">
+              {loadingHighlights ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-[200px] rounded-[32px] bg-white/5 animate-pulse border border-white/5" />
+                ))
+              ) : highlights?.items?.map((place, idx) => (
+                <motion.div
+                  key={place.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3, delay: idx * 0.05 }}
+                >
+                  <Card className="group h-full bg-slate-900/40 backdrop-blur-md border-white/5 rounded-[32px] p-6 hover:border-indigo-500/30 transition-all duration-500 relative overflow-hidden">
+                    <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${selectedDest.accent} blur-[60px] opacity-10 group-hover:opacity-20 transition-opacity`} />
+                    
+                    <div className="flex flex-col h-full relative z-10">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className={cn("h-12 w-12 rounded-2xl bg-gradient-to-br flex items-center justify-center text-white shadow-lg", selectedDest.accent)}>
+                          <MapPin className="h-6 w-6" />
+                        </div>
+                        {place.distance_m && (
+                           <span className="text-[10px] font-black text-slate-500 tracking-widest uppercase bg-white/5 px-2 py-1 rounded-lg">
+                             {Math.round(place.distance_m)}m de raio
+                           </span>
+                        )}
+                      </div>
+                      
+                      <h3 className="text-xl font-black text-white mb-2 line-clamp-1 group-hover:text-indigo-400 transition-colors">
+                        {place.name}
+                      </h3>
+                      <p className="text-sm text-slate-400 line-clamp-2 mb-6 font-medium">
+                        {place.address || 'Ponto histórico com arquitetura única e atmosfera local envolvente.'}
+                      </p>
+                      
+                      <div className="mt-auto flex items-center justify-between border-t border-white/5 pt-4">
+                         <div className="flex gap-2">
+                            {place.website && (
+                               <a href={place.website} target="_blank" rel="noreferrer" className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-indigo-600 transition-all">
+                                  <Globe2 className="h-4 w-4" />
+                               </a>
+                            )}
+                            <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-indigo-600 transition-all cursor-pointer">
+                               <Navigation2 className="h-4 w-4" />
+                            </div>
+                         </div>
+                         <Button variant="ghost" className="text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:text-indigo-300 gap-2">
+                            {t("blog.details")} <ArrowUpRight className="h-3 w-3" />
+                         </Button>
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        </div>
       </section>
 
       {/* The Magazine - Blog Section */}
@@ -275,28 +366,19 @@ export default function BlogList() {
                       <p className="text-slate-300 text-lg md:text-xl line-clamp-2 max-w-2xl font-medium mb-8">
                         {featuredPost.excerpt}
                       </p>
-                      <div className="flex items-center gap-4">
-                         <div className="h-12 w-12 rounded-full border-2 border-white/20 p-1">
-                            <img src="https://i.pravatar.cc/100?u=michel" className="w-full h-full rounded-full object-cover" />
-                         </div>
-                         <div className="text-left">
-                            <p className="text-xs font-black text-white uppercase tracking-widest">Michels Travel</p>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">Curador Chefe</p>
-                         </div>
-                      </div>
                     </div>
                   </motion.div>
                 </Link>
               )}
             </div>
 
-            {/* Side Column - Trending / Smart Tips */}
+            {/* Side Column */}
             <div className="lg:col-span-4 space-y-6">
                <Card className="bg-gradient-to-br from-indigo-600 to-indigo-900 border-0 rounded-[32px] p-8 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 blur-[50px] -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700" />
                   <Sparkles className="h-10 w-10 text-white/30 mb-6" />
-                  <h4 className="text-xl font-black text-white mb-4 leading-tight">{t("blog.mia_guide_prompt")}</h4>
-                  <p className="text-indigo-100/70 text-sm font-medium mb-8 leading-relaxed">
+                  <h4 className="text-xl font-black text-white mb-4 leading-tight text-left">{t("blog.mia_guide_prompt")}</h4>
+                  <p className="text-indigo-100/70 text-sm font-medium mb-8 leading-relaxed text-left">
                     {t("blog.mia_guide_desc")}
                   </p>
                   <Button 
@@ -306,84 +388,47 @@ export default function BlogList() {
                     {t("blog.talk_to_mia")}
                   </Button>
                </Card>
-               
-               <div className="bg-white/5 border border-white/10 rounded-[32px] p-8">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400 mb-6 flex items-center gap-2">
-                    <Navigation2 className="h-3 w-3" /> Flash Tips
-                  </h4>
-                  <div className="space-y-6">
-                     {[
-                       "Como evitar filas em Orlando (Abr-Mai)",
-                       "Novo terminal em Newark: o que mudou?",
-                       "Onde comer em Lisboa sem gastar muito"
-                     ].map((tip, i) => (
-                       <div key={i} className="flex gap-4 group cursor-pointer">
-                          <div className="h-10 w-10 shrink-0 rounded-xl bg-white/5 flex items-center justify-center text-slate-500 group-hover:bg-indigo-600/20 group-hover:text-indigo-400 transition-all font-black">
-                             0{i+1}
-                          </div>
-                          <p className="text-sm font-bold text-slate-300 group-hover:text-white transition-colors">{tip}</p>
-                       </div>
-                     ))}
-                  </div>
-               </div>
             </div>
           </div>
 
-          {/* Regular Posts Grid */}
-          <div className="mt-20">
-             <div className="flex items-center gap-4 mb-12">
-               <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 whitespace-nowrap">Explore o Arquivo</h3>
-               <div className="h-px bg-white/10 flex-1" />
-             </div>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-               {isLoading ? (
-                  Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="h-[400px] rounded-[32px] bg-white/5 animate-pulse" />
-                  ))
-               ) : remainingPosts.map((post) => (
-                 <Link key={post.slug} href={`/blog/${post.slug}`}>
-                   <motion.div 
-                     whileHover={{ y: -8 }}
-                     className="group cursor-pointer flex flex-col h-full"
-                   >
-                     <div className="h-64 rounded-[40px] overflow-hidden mb-6 relative">
-                       {post.coverImage ? (
-                         <img 
-                           src={post.coverImage} 
-                           alt={post.title}
-                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                         />
-                       ) : (
-                         <div className="w-full h-full bg-slate-800 flex items-center justify-center">
-                            <BookOpen className="h-10 w-10 text-slate-600" />
-                         </div>
-                       )}
-                       <div className="absolute inset-0 bg-gradient-to-t from-[#020617]/80 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end p-6">
-                          <span className="text-[10px] font-black text-white uppercase tracking-widest bg-indigo-600 px-3 py-1 rounded-lg">
-                             Ler Agora
-                          </span>
-                       </div>
-                     </div>
-                     <div className="flex items-center gap-3 mb-3">
-                        <span className="text-[10px] font-black text-indigo-400 uppercase tracking-tighter">
-                          {format(new Date(post.createdAt || new Date()), "dd MMM yyyy")}
-                        </span>
-                        <div className="h-1 w-1 rounded-full bg-slate-700" />
-                        <span className="text-[10px] font-bold text-slate-500 uppercase">
-                          {estimateReadTime(post.content)} min
-                        </span>
-                     </div>
-                     <h4 className="text-xl font-black text-white mb-2 leading-tight group-hover:text-indigo-400 transition-colors line-clamp-2">
-                       {post.title}
-                     </h4>
-                     <p className="text-sm text-slate-400 line-clamp-2 font-medium">
-                       {post.excerpt}
-                     </p>
-                   </motion.div>
-                 </Link>
-               ))}
-             </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mt-12">
+            {remainingPosts.map((post) => (
+              <Link key={post.slug} href={`/blog/${post.slug}`}>
+                <motion.div 
+                  whileHover={{ y: -8 }}
+                  className="group cursor-pointer flex flex-col h-full"
+                >
+                  <div className="h-64 rounded-[40px] overflow-hidden mb-6 relative border border-white/5">
+                    {post.coverImage ? (
+                      <img 
+                        src={post.coverImage} 
+                        alt={post.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+                         <BookOpen className="h-10 w-10 text-slate-600" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 mb-3">
+                     <span className="text-[10px] font-black text-indigo-400 uppercase">
+                       {format(new Date(post.createdAt || new Date()), "dd MMM yyyy")}
+                     </span>
+                     <div className="h-1 w-1 rounded-full bg-slate-700" />
+                     <span className="text-[10px] font-bold text-slate-500 uppercase">
+                       {estimateReadTime(post.content)} min
+                     </span>
+                  </div>
+                  <h4 className="text-xl font-black text-white mb-2 group-hover:text-indigo-400 transition-colors line-clamp-2">
+                    {post.title}
+                  </h4>
+                  <p className="text-sm text-slate-400 line-clamp-2 font-medium">
+                    {post.excerpt}
+                  </p>
+                </motion.div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
@@ -403,9 +448,6 @@ export default function BlogList() {
                      <Navigation2 className="mr-3 h-6 w-6" /> {t("blog.start_adventure")}
                   </Button>
                </Link>
-               <Button variant="outline" className="w-full sm:w-auto border-white/10 text-white hover:bg-white/5 rounded-[24px] px-10 h-16 font-black uppercase tracking-widest text-lg transition-all">
-                  Explorar Hotéis
-               </Button>
             </div>
          </div>
       </section>
@@ -417,13 +459,6 @@ export default function BlogList() {
         }
         .animate-slow-zoom {
           animation: slow-zoom 20s ease-in-out infinite alternate;
-        }
-        .animate-bounce-slow {
-          animation: bounce 3s ease-in-out infinite;
-        }
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
         }
         .no-scrollbar::-webkit-scrollbar {
           display: none;

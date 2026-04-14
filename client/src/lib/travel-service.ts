@@ -19,6 +19,11 @@ export interface CityHighlights {
     title: string;
     content: string;
   }[];
+  weather?: {
+    temp: string;
+    condition: string;
+    humidity: string;
+  };
 }
 
 const WIKIVOYAGE_API = "https://pt.wikivoyage.org/w/api.php";
@@ -89,6 +94,17 @@ export async function fetchCityDetails(cityName: string, lang: "pt" | "es" = "pt
 
     let description = page.extract || "";
     
+    // 3. Get Weather from our backend proxy
+    let weather = null;
+    try {
+      const weatherRes = await fetch(`/api/external/weather/${encodeURIComponent(cityName)}`);
+      if (weatherRes.ok) {
+        weather = await weatherRes.json();
+      }
+    } catch (e) {
+      console.warn("Weather fetch failed for", cityName);
+    }
+    
     return {
       name: cityName,
       fullName: firstResult.matching_full_name,
@@ -96,7 +112,12 @@ export async function fetchCityDetails(cityName: string, lang: "pt" | "es" = "pt
       description,
       scores: scores.slice(0, 5), // Top 5 relevant metrics
       summary: summary.replace(/<[^>]*>/g, ""), // Clean HTML
-      sections: [] // We can expand this for full guides
+      sections: [], // We can expand this for full guides
+      weather: weather ? {
+        temp: weather.temp,
+        condition: weather.condition,
+        humidity: weather.humidity
+      } : undefined
     };
   } catch (error) {
     console.error("Failed to fetch city details:", error);

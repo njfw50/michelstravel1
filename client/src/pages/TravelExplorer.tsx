@@ -174,6 +174,20 @@ export default function TravelExplorer() {
                 <h2 className="text-6xl md:text-7xl font-black font-display tracking-[ -0.05em] mb-10 text-white leading-none">{selectedCity.name}</h2>
                 
                 <div className="space-y-12">
+                  {selectedCity.weather && (
+                    <div className="flex items-center gap-10 p-8 rounded-[40px] bg-indigo-500/10 border border-indigo-500/20 mb-8 backdrop-blur-xl group hover:bg-indigo-500/20 transition-all">
+                       <div className="flex flex-col">
+                          <span className="text-6xl font-black text-white font-display tracking-tighter">{selectedCity.weather.temp}°C</span>
+                          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400 mt-2">{selectedCity.weather.condition}</span>
+                       </div>
+                       <div className="h-12 w-px bg-indigo-500/20" />
+                       <div className="flex flex-col">
+                          <span className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Humidade</span>
+                          <span className="text-xl font-black text-white">{selectedCity.weather.humidity}%</span>
+                       </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {selectedCity.scores.map(s => (
                       <div key={s.name} className="p-6 rounded-[32px] bg-white/5 border border-white/5 group hover:border-indigo-500/30 transition-colors">
