@@ -138,6 +138,7 @@ export function Chatbot() {
     return id;
   }, [chatMessages.length, createSession, sessionId]);
 
+
   const getGreeting = () => {
     return t("chatbot.greeting");
   };
@@ -216,6 +217,17 @@ export function Chatbot() {
       setIsStreaming(false);
     }
   }, [input, isStreaming, sessionId, createSession, agentMode, requestContext.serviceMode]);
+
+  useEffect(() => {
+    const handleOpenExternal = (e: any) => {
+      handleOpen();
+      if (e.detail?.message) {
+        sendMessage(e.detail.message);
+      }
+    };
+    window.addEventListener("open-chatbot", handleOpenExternal);
+    return () => window.removeEventListener("open-chatbot", handleOpenExternal);
+  }, [handleOpen, sendMessage]);
 
   const handleRequestLiveSession = async () => {
     setRequestingLive(true);
