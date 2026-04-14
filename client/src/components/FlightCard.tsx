@@ -87,7 +87,7 @@ function SliceTimeline({ slice, index, t, totalSlices }: { slice: FlightSliceLik
       <div className="flex items-center justify-between gap-8">
         <div className="flex-1 flex items-center gap-8">
           <div className="text-left">
-            <div className="text-2xl md:text-3xl font-black text-white leading-none tracking-tighter">
+            <div className="text-xl md:text-2xl font-black text-white leading-none tracking-tighter">
               {safeFormatTime(firstSegment.departureTime)}
             </div>
             <div className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 pl-0.5">
@@ -109,7 +109,7 @@ function SliceTimeline({ slice, index, t, totalSlices }: { slice: FlightSliceLik
           </div>
 
           <div className="text-right">
-            <div className="text-2xl md:text-3xl font-black text-white leading-none tracking-tighter">
+            <div className="text-xl md:text-2xl font-black text-white leading-none tracking-tighter">
               {safeFormatTime(lastSegment.arrivalTime)}
             </div>
             <div className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 pr-0.5">
@@ -141,14 +141,14 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       className={cn(
-        "group relative grid grid-cols-1 md:grid-cols-[1fr_280px] overflow-hidden rounded-[40px] border border-white/5 bg-slate-900/40 backdrop-blur-3xl shadow-2xl transition-all duration-500 hover:bg-slate-900/60 hover:shadow-blue-500/5",
+        "group relative grid grid-cols-1 md:grid-cols-[1fr_240px] overflow-hidden rounded-[32px] border border-white/5 bg-slate-900/40 backdrop-blur-3xl shadow-2xl transition-all duration-500 hover:bg-slate-900/60 hover:shadow-blue-500/5",
         "before:absolute before:inset-0 before:bg-gradient-to-br before:from-blue-600/[0.04] before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity"
       )}
     >
-      <div className="p-6 md:p-10 relative z-10">
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-8 mb-8 border-b border-white/5 pb-8">
-          <div className="flex items-center gap-6 min-w-[200px]">
-            <div className="h-16 w-16 shrink-0 flex items-center justify-center rounded-[24px] bg-white/5 border border-white/10 p-3 shadow-xl transition-all group-hover:scale-105">
+      <div className="p-5 md:p-8 relative z-10">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-6 border-b border-white/5 pb-6">
+          <div className="flex items-center gap-5 min-w-[180px]">
+            <div className="h-14 w-14 shrink-0 flex items-center justify-center rounded-[20px] bg-white/5 border border-white/10 p-2.5 shadow-xl transition-all group-hover:scale-105">
               {flight.logoUrl ? (
                 <img src={flight.logoUrl || ""} alt={flight.airline || ""} className="h-full w-full object-contain" />
               ) : (
@@ -199,10 +199,10 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
       <div className="relative bg-white/5 backdrop-blur-md border-t md:border-t-0 md:border-l border-white/5 p-8 md:p-10 flex flex-col justify-center items-center md:items-end gap-8 overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 blur-[100px] rounded-full translate-x-1/3 -translate-y-1/3" />
         
-        <div className="relative z-10 text-center md:text-right space-y-3">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Price per Traveler</p>
+        <div className="relative z-10 text-center md:text-right space-y-2">
+          <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-500">Price per Traveler</p>
           <div className="flex flex-col items-center md:items-end gap-1">
-            <span className="text-5xl md:text-6xl font-black text-white tracking-tighter leading-none">
+            <span className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-none">
               {formattedPrice}
             </span>
           </div>
@@ -213,7 +213,7 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
         </div>
 
         <Link href={bookUrl} className="w-full relative z-10">
-          <Button className="w-full h-16 rounded-[24px] bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.25em] text-[10px] shadow-2xl shadow-blue-600/30 transition-all hover:scale-105 active:scale-95 group">
+          <Button className="w-full h-14 rounded-[20px] bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.25em] text-[10px] shadow-2xl shadow-blue-600/30 transition-all hover:scale-105 active:scale-95 group">
             {t("flight.select")}
             <ArrowRight className="ml-3 h-4 w-4 transition-transform group-hover:translate-x-2" />
           </Button>

@@ -60,14 +60,14 @@ export default function FlightSearchProgress({ origin, destination }: FlightSear
 
       <div className="relative z-10 w-full max-w-5xl flex flex-col items-center">
         {/* Route Header */}
-        <div className="w-full flex flex-col md:flex-row items-center justify-between gap-12 mb-24">
+        <div className="w-full flex flex-col md:flex-row items-center justify-between gap-8 mb-16">
           <motion.div 
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             className="flex flex-col items-center md:items-start text-center md:text-left"
           >
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 mb-4 px-4 py-1.5 border border-white/10 rounded-full">Partida Imediata</span>
-            <h2 className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-none">{origin}</h2>
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 mb-3 px-4 py-1.5 border border-white/10 rounded-full">Partida Imediata</span>
+            <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-none">{origin}</h2>
           </motion.div>
 
           <div className="flex-1 w-full max-w-[300px] flex flex-col items-center gap-4">
@@ -93,26 +93,26 @@ export default function FlightSearchProgress({ origin, destination }: FlightSear
             transition={{ delay: 0.2 }}
             className="flex flex-col items-center md:items-end text-center md:text-right"
           >
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 mb-4 px-4 py-1.5 border border-white/10 rounded-full">Destino Curado</span>
-            <h2 className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-none">{destination}</h2>
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 mb-3 px-4 py-1.5 border border-white/10 rounded-full">Destino Curado</span>
+            <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-none">{destination}</h2>
           </motion.div>
         </div>
 
         {/* Central Intelligence Panel */}
         <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
            <div className="bg-white/[0.03] border border-white/5 backdrop-blur-3xl rounded-[40px] p-8 md:p-12 shadow-2xl flex flex-col justify-center">
-              <div className="flex items-center gap-6 mb-12">
-                 <div className="h-16 w-16 rounded-[24px] bg-blue-600 flex items-center justify-center shadow-[0_0_40px_rgba(37,99,235,0.4)]">
+              <div className="flex items-center gap-6 mb-8">
+                 <div className="h-14 w-14 rounded-[20px] bg-blue-600 flex items-center justify-center shadow-[0_0_40px_rgba(37,99,235,0.4)]">
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
                     >
-                      <Globe className="h-8 w-8 text-white" />
+                      <Globe className="h-6 w-6 text-white" />
                     </motion.div>
                  </div>
                  <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400">Motor de Busca Michels Travel</p>
-                    <h3 className="text-3xl font-black text-white tracking-tight">{SEARCH_STEPS[currentStep].label}</h3>
+                    <h3 className="text-2xl font-black text-white tracking-tight">{SEARCH_STEPS[currentStep].label}</h3>
                  </div>
               </div>
 
