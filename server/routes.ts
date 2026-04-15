@@ -153,6 +153,14 @@ export function registerRoutes(app: Express) {
         await db.execute(sql`ALTER TABLE featured_deals ADD COLUMN is_active BOOLEAN DEFAULT TRUE`);
         console.log("[DB] is_active OK.");
       }
+      if (!columnNames.includes('stops')) {
+        await db.execute(sql`ALTER TABLE featured_deals ADD COLUMN stops INTEGER DEFAULT 0`);
+        console.log("[DB] stops OK.");
+      }
+      if (!columnNames.includes('duration')) {
+        await db.execute(sql`ALTER TABLE featured_deals ADD COLUMN duration TEXT`);
+        console.log("[DB] duration OK.");
+      }
     } catch (err) {
       console.error("[DB] Falha no self-healing do esquema:", err);
     }
