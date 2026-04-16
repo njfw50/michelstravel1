@@ -61,3 +61,12 @@ This also runs [publish-android-release.ps1](C:/Users/njfw2/michelstravel1/scrip
 cd C:\Users\njfw2\michelstravel1
 powershell -ExecutionPolicy Bypass -File .\script\render-deploy.ps1
 ```
+
+## 6. Infrastructure Safeguards (Law 16)
+
+To prevent deployment failures on Render/Linux, always adhere to these rules:
+
+- **Build Tool Parity**: If a tool is required by `script/build.ts` (e.g., `esbuild`, `vite`, `tsx`), it MUST be in the `dependencies` object, not `devDependencies`.
+- **Cross-Platform Paths**: Never use `import.meta.dirname` in configuration files. Use `fileURLToPath(import.meta.url)` to ensure compatibility with all Node 20+ environments.
+- **Vite Environment**: Use `import.meta.env.PROD` instead of `process.env.NODE_ENV` in client-side code to comply with Vite's strict bundling rules.
+- **Render Startup**: Ensure `cross-env` is available in `dependencies` for the `npm start` command.

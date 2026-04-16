@@ -22,6 +22,9 @@
 
 ## 🚢 Deployment Status
 - **Build Integrity**: Success. 0 TypeScript errors.
+- **Deployment Hardening**:
+    - **Dependency Consolidation**: Moved `tsx`, `typescript`, `vite`, `esbuild`, `cross-env`, and `@vitejs/plugin-react` to production dependencies.
+    - **Path Compatibility**: Standardized `vite.config.ts` using `fileURLToPath` for Linux/Windows parity.
 - **Optimization**: All non-productive external dependencies audited and refactored.
 - **Ready for Final Production Deploy.**
 

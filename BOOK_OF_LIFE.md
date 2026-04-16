@@ -44,12 +44,19 @@ graph TD
 
 ## 📜 EVENT LOG (CHRONOLOGY)
 
-### [2026-04-16] — Infrastructure Saneamento & Promulgation of Law 16
+### [2026-04-16] — Infrastructure Crisis Resolution (Post-Mortem)
 **Author:** Antigravity AI & Michel's Travel Engineering
-**Foundation:** Deployment Civil Code
-- **Build Parity Fix:** Migration of build tools to `dependencies`.
-- **Universal Compatibility:** Refactoring of dynamic paths in `vite.config.ts`.
-- **I18n Synchronization:** Full alignment of translation keys (PT, EN, ES).
+**Status:** RESOLVED
+**Foundation:** Law 16 (Infrastructure Civil Code)
+
+#### 📝 Root Cause Analysis
+Successive deployment failures on Render were triggered by a "Dependency Gap." The project migrated to a TypeScript-based build script (`build.ts`) that required several tools (`tsx`, `esbuild`, `vite`, `cross-env`) to be available during the production build phase. However, these were initially categorized as `devDependencies`, which are ignored by cloud providers in production mode.
+
+#### 🛠️ Resolution & Hardening
+- **Consolidated Dependencies:** Moved all architectural build tools to the core `dependencies` list.
+- **Cross-Platform Pathing:** Eliminated `import.meta.dirname` in favor of `fileURLToPath` to ensure Linux compatibility.
+- **Vite/Process Safeguard:** Refactored client-side environment checks to use `import.meta.env`, preventing `ReferenceError` during bundling.
+- **Linguistic Alignment:** Synchronized PT, EN, and ES translations to ensure UI stability across all regions.
 
 ### [2026-04-15] — I18n Infrastructure Upgrade
 **Author:** Antigravity AI
