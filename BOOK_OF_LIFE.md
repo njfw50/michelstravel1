@@ -54,9 +54,9 @@ Successive deployment failures on Render were triggered by a "Dependency Gap" an
 
 #### 🛠️ Corrective Actions & Hardening
 - **Consolidated Dependencies:** Moved `tsx`, `esbuild`, `vite`, and `cross-env` to the core `dependencies` list.
+- **Fault-Tolerant Asset Sync**: Refactored `script/build.ts` to gracefully skip mobile metadata sync if `mobile-client` source or manifest files are missing, preventing total build failure.
 - **Orchestration Sovereignty (Docker Mode)**: Discovered that `render.yaml` was bypassing the `Dockerfile` by using the default Node runtime. Shifted orchestration to `env: docker` to enforce our optimized build environment.
-- **Architectural Shift (Debian Slim)**: Migrated from Alpine Linux to Debian-slim in Docker to provide `glibc` compatibility, ensuring all native binaries (`esbuild`, `pg`, `bcrypt`) function correctly in production.
-- **OS Parity Isolation**: Created a strict `.dockerignore` to prevent local Windows `node_modules` and binaries from corrupting the Linux container environment.
+- **Architectural Shift (Node 20 Full)**: Migrated to the full `node:20` image (Debian) to ensure 100% availability of system libraries (`glibc`/`musl` parity).
 - **Memory Optimization**: Increased Node heap limit to 4096MB and standardized execution via `ENV NODE_OPTIONS` to prevent silent OOM crashes.
 - **Diagnostic Instrumentation**: Added `[BUILD]` step logging and fault-tolerant manifest syncing to identify the exact point of failure.
 - **Cross-Platform Pathing:** Eliminated `import.meta.dirname` in favor of `fileURLToPath` for Linux compatibility.
