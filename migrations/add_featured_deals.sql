@@ -15,7 +15,11 @@ CREATE TABLE IF NOT EXISTS featured_deals (
   cabin_class TEXT DEFAULT 'economy',
   headline TEXT,
   description TEXT,
+  image_url TEXT,
+  is_automatic BOOLEAN DEFAULT FALSE,
   is_active BOOLEAN DEFAULT TRUE,
+  stops INTEGER DEFAULT 0,
+  duration TEXT,
   last_published_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW()
 );

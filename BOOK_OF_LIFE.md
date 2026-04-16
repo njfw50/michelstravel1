@@ -26,3 +26,18 @@ A manutenção de um código corrompido viola a **Lei 06 (Coerência)**. A reesc
 - **Estabilização de Tipos (Lei 06)**: Resolução de lints críticos relacionados ao parsing de datas da URL para o formulário de busca.
 
 ---
+
+## [2026-04-15] — Upgrade de Infraestrutura i18n
+**Autor:** Antigravity AI & User
+**Classificação (Lei 02):** Evolução / Robustez
+**Fundamento:** Lei 06 (Tipagem Estrita), Lei 09 (Performance)
+
+### 1. Descrição
+Refatoração do sistema de internacionalização para suportar tipagem automática baseada na estrutura do JSON (`locales/pt.json`).
+
+### 2. Melhorias Implementadas
+- **Type Safety:** Chaves de tradução agora são validadas em tempo de compilação via utilitário `Leaves<T>`.
+- **Performance:** Memoização de funções via `useCallback` e otimização de substituição de variáveis com Regex única.
+- **Resiliência:** Implementação de detecção automática de idioma do navegador e fallback seguro para `pt`.
+
+---
