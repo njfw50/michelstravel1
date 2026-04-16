@@ -11,6 +11,8 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Install ALL dependencies
 COPY package*.json ./
+# Force fresh resolution for Linux to avoid Windows binary locks
+RUN rm -f package-lock.json
 RUN npm install --legacy-peer-deps
 
 # Copy source code (Protected by .dockerignore)
