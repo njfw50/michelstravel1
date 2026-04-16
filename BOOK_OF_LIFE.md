@@ -46,31 +46,28 @@ graph TD
 
 ### [2026-04-16] — Infrastructure Crisis Resolution (Post-Mortem)
 **Author:** Antigravity AI & Michel's Travel Engineering
-**Status:** RESOLVED
+**Status:** IN PROGRESS / HARDENING
 **Foundation:** Law 16 (Infrastructure Civil Code)
 
 #### 📝 Root Cause Analysis
-Successive deployment failures on Render were triggered by a "Dependency Gap." The project migrated to a TypeScript-based build script (`build.ts`) that required several tools (`tsx`, `esbuild`, `vite`, `cross-env`) to be available during the production build phase. However, these were initially categorized as `devDependencies`, which are ignored by cloud providers in production mode.
+Successive deployment failures on Render were triggered by a "Dependency Gap" and potential Resource Exhaustion (OOM). The project's build script required tools that were missing in production and hit memory limits of the cloud environment.
 
-#### 🛠️ Resolution & Hardening
-- **Consolidated Dependencies:** Moved all architectural build tools to the core `dependencies` list.
-- **Cross-Platform Pathing:** Eliminated `import.meta.dirname` in favor of `fileURLToPath` to ensure Linux compatibility.
-- **Vite/Process Safeguard:** Refactored client-side environment checks to use `import.meta.env`, preventing `ReferenceError` during bundling.
-- **Linguistic Alignment:** Synchronized PT, EN, and ES translations to ensure UI stability across all regions.
+#### 🛠️ Corrective Actions & Hardening
+- **Consolidated Dependencies:** Moved `tsx`, `esbuild`, `vite`, and `cross-env` to the core `dependencies` list.
+- **Memory Optimization:** Increased Node heap limit to 4096MB in build scripts to prevent silent OOM crashes.
+- **Diagnostic Instrumentation:** Added `[BUILD]` step logging and fault-tolerant manifest syncing to identify the exact point of failure.
+- **Cross-Platform Pathing:** Eliminated `import.meta.dirname` in favor of `fileURLToPath` for Linux compatibility.
+- **Protocol Enactment:** Formally established the **Deployment Civil Code** as a safeguard against future architectural regression.
 
 ### [2026-04-15] — I18n Infrastructure Upgrade
 **Author:** Antigravity AI
 - **Type Safety:** Translation keys validated at compile-time.
 - **Performance:** Function memoization via `useCallback`.
 
-### [2026-04-13] — Critical Event: Canonical Restoration of SearchResults.tsx
-- **Structural Reset:** Sanitation of duplications and scope errors.
-- **Contrast Sanitation:** Absolute legibility (Law 15).
-
 ---
 
 ## 🏗️ APPENDIX: Deployment Civil Code (Conduct Norms)
 1. **Runtime Sovereignty:** Build must be universal (Windows/Linux).
 2. **Front-end Resilience:** Use of `import.meta.env` for bundler compliance.
-3. **Key Scanning:** Mandatory synchronization across all supported languages.
+3. **Internal Oversight:** All build scripts must include diagnostic logging and memory management.
 4. **Dependency Integrity:** `tsx`, `vite`, and `typescript` are core build-time requirements and must reside in production dependencies for cloud environments.

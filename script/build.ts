@@ -142,36 +142,49 @@ async function syncMobileReleaseAssets() {
 
   await writeFile(metadataPath, `${JSON.stringify(metadata, null, 2)}\n`);
 
-  const existingManifest = JSON.parse(await readFile(manifestPath, "utf-8")) as Record<string, any>;
-  existingManifest.senior = {
-    appName: "Michels Travel",
-    installPagePath: "/apps/michels-travel",
-    android: {
-      ...(existingManifest.senior?.android || {}),
-      status: "ready",
-      version,
-      directDownloadUrl: `/downloads/michels-travel-latest.apk?v=${encodeURIComponent(version)}`,
-      archivedDownloadUrl: existingManifest.senior?.android?.archivedDownloadUrl || null,
-      playStoreUrl: existingManifest.senior?.android?.playStoreUrl || null,
-      packageName,
-      minAndroid: "8.0+",
-      sizeLabel,
-      releasedAt,
-      sha256,
-      installNotes: metadata.installNotes,
-    },
-  };
+  console.log("[BUILD] Initializing Mobile Asset Sync...");
+  const manifestPath = "client/public/app-release.json";
+  
+  try {
+    const rawManifest = await readFile(manifestPath, "utf-8");
+    const existingManifest = JSON.parse(rawManifest) as Record<string, any>;
+    
+    existingManifest.senior = {
+      appName: "Michels Travel",
+      installPagePath: "/apps/michels-travel",
+      android: {
+        ...(existingManifest.senior?.android || {}),
+        status: "ready",
+        version,
+        directDownloadUrl: `/downloads/michels-travel-latest.apk?v=${encodeURIComponent(version)}`,
+        archivedDownloadUrl: existingManifest.senior?.android?.archivedDownloadUrl || null,
+        playStoreUrl: existingManifest.senior?.android?.playStoreUrl || null,
+        packageName,
+        minAndroid: "8.0+",
+        sizeLabel,
+        releasedAt,
+        sha256,
+        installNotes: metadata.installNotes,
+      },
+    };
 
-  await writeFile(manifestPath, `${JSON.stringify(existingManifest, null, 2)}\n`);
+    await writeFile(manifestPath, `${JSON.stringify(existingManifest, null, 2)}\n`);
+    console.log("[BUILD] Mobile Manifest Sync Completed.");
+  } catch (manifestErr) {
+    console.warn("[BUILD] Skipping Manifest Sync: manifest file not found or invalid.");
+  }
 
   try {
     await writeFile(aliasApkPath, apkBuffer);
   } catch {
-    // Ignore alias write failures locally; the primary APK is enough for release publication.
+    // Ignore alias write failures
   }
 }
 
-buildAll().catch((err) => {
-  console.error(err);
+console.log("[BUILD] Starting Global Build Process...");
+buildAll().then(() => {
+  console.log("[BUILD] Global Build Completed Successfully.");
+}).catch((err) => {
+  console.error("[BUILD] CRITICAL FAILURE:", err);
   process.exit(1);
 });
