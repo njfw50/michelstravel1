@@ -1,0 +1,15 @@
+node_modules
+dist
+.git
+.gemini
+.replit
+replit.nix
+*.apk
+*.log
+tmp
+built_mobile_assets
+.env
+.env.production
+.env.local
+.DS_Store
+Thumbs.db

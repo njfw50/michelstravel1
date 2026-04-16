@@ -54,8 +54,9 @@ Successive deployment failures on Render were triggered by a "Dependency Gap" an
 
 #### 🛠️ Corrective Actions & Hardening
 - **Consolidated Dependencies:** Moved `tsx`, `esbuild`, `vite`, and `cross-env` to the core `dependencies` list.
-- **Memory Optimization:** Increased Node heap limit to 4096MB in build scripts to prevent silent OOM crashes.
-- **Diagnostic Instrumentation:** Added `[BUILD]` step logging and fault-tolerant manifest syncing to identify the exact point of failure.
+- **OS Parity Isolation**: Created a strict `.dockerignore` to prevent local Windows `node_modules` and binaries from corrupting the Linux container environment.
+- **Memory Optimization**: Increased Node heap limit to 4096MB and standardized execution via `NODE_OPTIONS` to prevent silent OOM crashes.
+- **Diagnostic Instrumentation**: Added `[BUILD]` step logging and fault-tolerant manifest syncing to identify the exact point of failure.
 - **Cross-Platform Pathing:** Eliminated `import.meta.dirname` in favor of `fileURLToPath` for Linux compatibility.
 - **Protocol Enactment:** Formally established the **Deployment Civil Code** as a safeguard against future architectural regression.
 

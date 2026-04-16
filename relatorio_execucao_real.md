@@ -24,6 +24,7 @@
 - **Build Integrity**: Success. 0 TypeScript errors.
 - **Deployment Hardening**:
     - **Dependency Consolidation**: Moved `tsx`, `typescript`, `vite`, `esbuild`, `cross-env`, and `@vitejs/plugin-react` to production dependencies.
+    - **OS Parity Isolation**: Implemented a comprehensive `.dockerignore` to prevent architectural corruption (Windows binaries in Linux containers).
     - **Path Compatibility**: Standardized `vite.config.ts` using `fileURLToPath` for Linux/Windows parity.
 - **Optimization**: All non-productive external dependencies audited and refactored.
 - **Ready for Final Production Deploy.**
