@@ -8,14 +8,13 @@ import es from "../locales/es.json";
 type Language = "pt" | "en" | "es";
 const translations: Record<Language, any> = { pt, en, es };
 
-// Utilitário para inferir os caminhos do JSON (ex: "home.title")
-type Leaves<T> = T extends object ? { [K in keyof T]: `${Exclude<K, symbol>}${Leaves<T[K]> extends never ? "" : `.${Leaves<T[K]>}`}` }[keyof T] : never;
-type TranslationKeys = Leaves<typeof pt>;
+// Simplificado para evitar estouro de recursividade no build de produção
+type TranslationKeys = string;
 
 interface I18nContextType {
-  language: Language; // Removido o null para evitar verificações constantes
+  language: Language; 
   setLanguage: (lang: Language) => void;
-  t: (key: TranslationKeys | string, params?: Record<string, string | number>) => string;
+  t: (key: TranslationKeys, params?: Record<string, string | number>) => string;
   isLoading: boolean;
 }
 
