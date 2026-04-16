@@ -140,22 +140,22 @@ export default function BlogList() {
             <Badge className="mb-6 px-4 py-1.5 bg-indigo-500/10 text-indigo-400 border-indigo-500/20 rounded-full text-xs font-black uppercase tracking-[0.3em] backdrop-blur-md">
                {t("blog.elite_experience")}
             </Badge>
-            <h1 className="text-5xl md:text-8xl font-black font-display tracking-tighter mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/40 leading-none">
+            <h1 className="text-3xl md:text-8xl font-black font-display tracking-tighter mb-4 bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/40 leading-tight md:leading-none">
               Explore o Inexplicável.
             </h1>
             <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed mb-10">
               {t("blog.curated_destinations")}
             </p>
 
-            <div className="max-w-xl mx-auto relative group">
-              <div className="absolute inset-0 bg-indigo-500/20 blur-2xl group-hover:bg-indigo-500/30 transition-all duration-500 -z-10" />
-              <div className="relative bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[32px] p-2 flex items-center shadow-2xl">
-                <div className="pl-6 text-slate-400">
-                  <Search className="h-5 w-5" />
+            <div className="max-w-xl mx-auto relative group px-2 md:px-0">
+              <div className="absolute inset-0 bg-indigo-500/10 blur-xl group-hover:bg-indigo-500/20 transition-all duration-500 -z-10" />
+              <div className="relative bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl md:rounded-[32px] p-1 md:p-2 flex items-center shadow-2xl">
+                <div className="pl-4 md:pl-6 text-slate-400">
+                  <Search className="h-4 w-4 md:h-5 md:w-5" />
                 </div>
                 <Input 
                   placeholder={t("blog.search_placeholder")}
-                  className="bg-transparent border-0 focus-visible:ring-0 text-white placeholder:text-slate-500 h-14 font-medium text-lg"
+                  className="bg-transparent border-0 focus-visible:ring-0 text-white placeholder:text-slate-500 h-10 md:h-14 font-medium text-sm md:text-lg"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -201,27 +201,26 @@ export default function BlogList() {
         <Card className="bg-slate-900/40 border-white/5 rounded-[48px] p-8 md:p-14 relative overflow-hidden group mb-12">
            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/5 blur-[120px] -mr-64 -mt-64 group-hover:bg-indigo-600/10 transition-all duration-1000" />
            
-           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
-              <div className="flex-1 flex items-center gap-12">
-                 <div className="flex flex-col gap-1">
-                    <p className="text-6xl md:text-8xl font-black font-display tracking-tighter text-white">{activeDest.weather || "--°C"}</p>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">{activeDest.condition || "Carregando..."}</p>
+              <div className="flex-1 flex flex-col md:flex-row items-center md:items-center gap-6 md:gap-12">
+                 <div className="flex flex-col items-center md:items-start gap-1">
+                    <p className="text-5xl md:text-8xl font-black font-display tracking-tighter text-white">{activeDest.weather || "--°C"}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">{activeDest.condition || "Carregando..."}</p>
                  </div>
                  
-                 <div className="h-20 w-px bg-white/10 hidden md:block" />
+                 <div className="h-px w-20 md:h-20 md:w-px bg-white/10" />
                  
-                 <div>
-                    <h3 className="text-4xl md:text-5xl font-black font-display tracking-tighter mb-2">{activeDest.display}</h3>
-                    <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-widest">
-                       <Navigation2 className="h-4 w-4 text-indigo-500" />
-                       {activeDest.active} viajantes ativos agora
+                 <div className="text-center md:text-left">
+                    <h3 className="text-3xl md:text-5xl font-black font-display tracking-tighter mb-2">{activeDest.display}</h3>
+                    <div className="flex items-center justify-center md:justify-start gap-2 text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+                       <Navigation2 className="h-3 w-3 text-indigo-500" />
+                       {activeDest.active} viajantes ativos
                     </div>
                  </div>
               </div>
 
-              <div className="flex items-center gap-8 w-full md:w-auto">
-                 <div className="flex flex-col gap-1 items-end">
-                    <p className="text-2xl font-black text-white">
+              <div className="flex items-center justify-center md:justify-end gap-8 w-full md:w-auto border-t border-white/5 md:border-t-0 pt-6 md:pt-0">
+                 <div className="flex flex-col gap-1 items-center md:items-end">
+                    <p className="text-xl md:text-2xl font-black text-white">
                       {activeDest.price ? `${activeDest.price} ${activeDest.currency}` : "---"}
                     </p>
                     <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Melhor Tarifa</p>
