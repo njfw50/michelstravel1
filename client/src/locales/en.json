@@ -605,5 +605,16 @@
     "saved_desc": "Your information has been saved successfully.",
     "error_title": "Error",
     "error_desc": "Could not update your profile. Please try again."
+  },
+  "chatbot": {
+    "greeting": "Hello! I am Mia, your Midnight assistant. How can I illuminate your journey today?",
+    "status_online": "Online & Ready",
+    "placeholder": "Type your message...",
+    "book_now": "Book Now",
+    "talk_to_agent": "Talk to an Agent",
+    "smart_agent": "Smart Agent",
+    "secure_badge": "Shielded & Encrypted Session",
+    "error_message": "Oops, something went wrong with the connection. Please try again.",
+    "close": "Close Chat"
   }
 }

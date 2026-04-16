@@ -544,5 +544,16 @@
     "saving": "Guardando...",
     "success": "Perfil actualizado con éxito!",
     "error": "Error al actualizar perfil."
+  },
+  "chatbot": {
+    "greeting": "¡Hola! Soy Mia, tu asistente Midnight. ¿Cómo posso iluminar tu viaje hoy?",
+    "status_online": "Online y Lista",
+    "placeholder": "Escribe tu mensaje...",
+    "book_now": "Reservar Ahora",
+    "talk_to_agent": "Hablar con Agente",
+    "smart_agent": "Agente Inteligente",
+    "secure_badge": "Sesión Blindada y Criptografada",
+    "error_message": "Ops, algo saiu mal en la conexión. Intenta de nuevo.",
+    "close": "Cerrar Chat"
   }
 }
