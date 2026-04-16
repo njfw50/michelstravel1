@@ -1,37 +1,39 @@
 # ── Stage 1: Build ──────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
+
+# Install build essentials for native modules (Needed for bcrypt, pg, etc.)
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Install ALL dependencies (including dev for build)
+# Set memory limit globally for Node during the build phase (Stops OOM crashes)
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
+# Install ALL dependencies (including tsx, vite, esbuild)
 COPY package*.json ./
 RUN npm install --legacy-peer-deps
 
-# Copy source code
+# Copy source code (Protected by .dockerignore to avoid OS mismatch)
 COPY . .
 
 # Build the project (frontend + backend)
-# dist/public = client build (served as static files)
-# dist/index.mjs = server bundle
 RUN npm run build
 
 # ── Stage 2: Production ──────────────────────────────────────
-FROM node:20-alpine AS production
+FROM node:20-slim AS production
 
 WORKDIR /app
 
-# Install production dependencies + vite (needed at runtime for server/vite.ts import)
+# Install production dependencies only (including vite as it's now in dependencies)
 COPY package*.json ./
-RUN npm install --legacy-peer-deps --omit=dev && \
-    npm install --legacy-peer-deps vite @vitejs/plugin-react
+RUN npm install --legacy-peer-deps --omit=dev
 
-# Copy built artifacts from builder stage
-# dist/ contains index.mjs (server) and public/ (client assets)
+# Copy built artifacts and migrations from builder
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/migrations ./migrations
 
 # Expose the default application port
 EXPOSE 5000
 
-# Start the server
+# Start the server (using cross-env which is also in dependencies)
 CMD ["npm", "run", "start"]
