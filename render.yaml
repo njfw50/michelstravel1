@@ -4,9 +4,9 @@ previews:
 services:
   - type: web
     name: michelstravel
-    runtime: node
-    buildCommand: npm install --legacy-peer-deps && npm run build
-    startCommand: npm run start
+    env: docker
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
     autoDeploy: true
     domains:

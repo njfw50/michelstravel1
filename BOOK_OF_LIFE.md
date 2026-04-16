@@ -54,6 +54,7 @@ Successive deployment failures on Render were triggered by a "Dependency Gap" an
 
 #### 🛠️ Corrective Actions & Hardening
 - **Consolidated Dependencies:** Moved `tsx`, `esbuild`, `vite`, and `cross-env` to the core `dependencies` list.
+- **Orchestration Sovereignty (Docker Mode)**: Discovered that `render.yaml` was bypassing the `Dockerfile` by using the default Node runtime. Shifted orchestration to `env: docker` to enforce our optimized build environment.
 - **Architectural Shift (Debian Slim)**: Migrated from Alpine Linux to Debian-slim in Docker to provide `glibc` compatibility, ensuring all native binaries (`esbuild`, `pg`, `bcrypt`) function correctly in production.
 - **OS Parity Isolation**: Created a strict `.dockerignore` to prevent local Windows `node_modules` and binaries from corrupting the Linux container environment.
 - **Memory Optimization**: Increased Node heap limit to 4096MB and standardized execution via `ENV NODE_OPTIONS` to prevent silent OOM crashes.
