@@ -66,7 +66,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     const value = getNestedValue(translations[language], key);
 
     if (typeof value !== "string") {
-      if (process.env.NODE_ENV !== "production") {
+      if (import.meta.env && !import.meta.env.PROD) {
         console.warn(`[I18n Integrity] Key "${key}" not found or not a string in [${language}]`);
       }
       return key; // Retorna a chave em vez de vazio para não quebrar o layout
