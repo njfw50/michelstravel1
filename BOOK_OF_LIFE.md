@@ -1,52 +1,69 @@
-# Livro da Vida — Michel's Travel 1
-### Registro Permanente de Eventos do Sistema (Lei 05)
+# 🏛️ Livro da Vida — Michel's Travel 1
+### Protocolo de Governança e Registro Permanente (Lei 05)
+
+> "O código que não é governado pelo rigor está destinado à entropia. A Engenharia Canônica é a nossa defesa contra o caos."
 
 ---
 
-## [📜 Leis Suplementares do Protocolo Canônico]
-
-- **Lei 15 (UX & Identidade):** Toda interface deve passar no "Teste do Uau". Se o usuário não se sentir em um ambiente premium de elite, a tarefa não está concluída.
-- **Lei 16 (Código Civil de Infraestrutura):** Garante a "Produtibilidade" do software. Nenhuma mudança deve quebrar o build em produção. Ferramentas de construção (Vite, TSX, TSC) são consideradas dependências de runtime de build e devem estar no core do projeto (dependencies).
+## 🛡️ DASHBOARD DE INTEGRIDADE CANÔNICA
+| Pilar Normativo | Status | Nível de Conformidade | Evidência Técnica |
+| :--- | :---: | :---: | :--- |
+| **L01: Autoridade** | 🛡️ | **PLENO** | Livro da Vida Ativo |
+| **L06: Robustez** | 🏗️ | **ELITE** | Tipagem Estrita & I18n |
+| **L15: UX (WOW)** | 💎 | **PREMIUM** | Midnight Dashboard v2 |
+| **L16: Infra (Civil)** | 🚢 | **OPERALIONAL** | Código Civil de Deploy |
 
 ---
 
-## [2026-04-16] — Saneamento de Infraestrutura & Código Civil de Deploy
+## 📖 SEÇÃO APOLOGÉTICA: O Fundamento do Método
+*Uma defesa da Engenharia Canônica contra a mediocridade técnica.*
+
+Este projeto não é apenas uma aplicação de viagens; é um **testemunho de ordem**. A Seção Apologética justifica as nossas Leis como os únicos meios de garantir:
+
+1. **Imutabilidade do Propósito:** As Leis impedem que o software se degrade em um "espaguete de código". Cada linha deve prestar contas ao Protocolo.
+2. **Resiliência Transcendente:** O software deve sobreviver a mudanças de ambiente (Windows, Linux, Cloud) sem perder sua alma técnica. O **Código Civil de Deploy** é a nossa ferramenta de soberania infraestrutural.
+3. **Beleza como Obrigação:** Diferente de MVPs simplórios, aqui a estética (Lei 15) é tratada com o mesmo rigor que a segurança do banco de dados. Um software feio é um software desrespeitoso com o usuário.
+
+---
+
+## 🗺️ DIAGRAMA DE ARQUITETURA CANÔNICA (Oversight MIA)
+
+```mermaid
+graph TD
+    UI[Front-end: Midnight SaaS / Lei 15] -->|Validação de Tipos| I18N[Módulo I18N: Lei 06]
+    I18N -->|Soberania de Build| INFRA[Código Civil: Lei 16]
+    INFRA -->|Acesso de Dados| DB[(Banco de Dados: Lei 10)]
+    DB -->|Registro de Atos| BOL[Livro da Vida: Lei 05]
+    
+    style UI fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#fff
+    style BOL fill:#450a0a,stroke:#f87171,stroke-width:2px,color:#fff
+    style INFRA fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#fff
+```
+
+---
+
+## 📜 REGISTRO DE EVENTOS (CRONOLOGIA)
+
+### [2026-04-16] — Saneamento de Infraestrutura & Promulgação da Lei 16
 **Autor:** Antigravity AI & Engenharia Michel's Travel
-**Classificação:** Crítico / Infraestrutura
-**Fundamento:** Lei 16 (Código Civil de Infraestrutura)
+**Fundamento:** Código Civil de Deploy
+- **Correção de "Paridade de Build":** Movimentação de ferramentas de build para `dependencies`.
+- **Compatibilidade Universal:** Refatoração de caminhos dinâmicos no `vite.config.ts`.
+- **Sincronização i18n:** Alinhamento total de chaves (PT, EN, ES).
 
-### 1. Descrição do Evento
-Identificada falha crítica no ciclo de Deploy (Render.com) causada pela ausência de ferramentas de build (`tsx`, `vite`) no ambiente de produção e incompatibilidade de caminhos Node (`import.meta.dirname`).
+### [2026-04-15] — Upgrade de Infraestrutura i18n
+**Autor:** Antigravity AI
+- **Type Safety:** Chaves de tradução validadas em tempo de compilação.
+- **Performance:** Memoização de funções via `useCallback`.
 
-### 2. Ações de Governança
-- **Estabilização de Bundler:** Migração de ferramentas de build de `devDependencies` para `dependencies`.
-- **Compatibilidade Universal:** Refatoração do `vite.config.ts` para usar `fileURLToPath`, garantindo execução idêntica em Windows (Local) e Linux (Render).
-- **Sincronização i18n:** Alinhamento das chaves de tradução (EN, ES) com a base (PT) para evitar lacunas de UI.
-
----
-
-## 🏗️ Apêndice A: Código Civil de Deploy (Normas de Conduta)
-Para evitar corrupção do ambiente de produção, este Código estabelece:
-1. **Soberania de Runtime:** O comando `npm run build` deve ser autossuficiente e universal.
-2. **Resiliência do Front:** Uso obrigatório de `import.meta.env` para evitar quebras por ausência de `process`.
-3. **Escaneamento de Chaves:** Nenhum componente novo de tradução deve ser injetado sem sua respectiva chave em todos os idiomas suportados.
+### [2026-04-13] — Evento Crítico: Restauração Canônica de SearchResults.tsx
+- **Reset Estrutural:** Saneamento de duplicações e erros de escopo.
+- **Saneamento de Contraste:** Legibilidade absoluta (Lei 15).
 
 ---
 
-## [2026-04-15] — Upgrade de Infraestrutura i18n
-**Autor:** Antigravity AI & User
-**Classificação (Lei 02):** Evolução / Robustez
-**Fundamento:** Lei 06 (Tipagem Estrita), Lei 09 (Performance)
-
-### 1. Descrição
-Refatoração do sistema de internacionalização para suportar tipagem automática baseada na estrutura do JSON (`locales/pt.json`).
-
-### 2. Melhorias Implementadas
-- **Type Safety:** Chaves de tradução agora são validadas em tempo de compilação.
-- **Performance:** Memoização de funções via `useCallback` e otimização de substituição de variáveis com Regex única.
-- **Resiliência:** Implementação de detecção automática de idioma do navegador e fallback seguro para `pt`.
-
----
-
-## [2026-04-13] — Evento Crítico: Restauração Canônica de SearchResults.tsx
-... [continua registro histórico]
+## 🏗️ APÊNDICE: Código Civil de Deploy (Normas de Conduta)
+1. **Soberania de Runtime:** Build deve ser universal (Windows/Linux).
+2. **Resiliência do Front:** Uso de `import.meta.env` para conformidade com o bundler.
+3. **Escaneamento de Chaves:** Sincronização obrigatória de idiomas.
+4. **Vermin de Dependências:** `tsx`, `vite` e `typescript` não podem ser meros dev-deps em ambientes de nuvem.
