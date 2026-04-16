@@ -1,188 +1,128 @@
-# Michels Travel - Flight Commission Hub
+# 🏛️ Michels Travel - Flight Commission Hub
+### Senior Travel Intelligence & Booking Governance Platform
 
-Sistema de gestão de reservas e comissões de voos desenvolvido com React, TypeScript, Node.js e integração com Stripe.
+A high-performance booking and commission management system for elite travel agencies, built with React, TypeScript, Node.js, and Stripe integration. Governed by the **Canonical Engineering Protocol**.
 
-## 🚀 Tecnologias
+---
 
-- **Frontend**: React + TypeScript + Vite + TailwindCSS
+## 🚀 Technology Stack
+
+- **Frontend**: React 18 + TypeScript + Vite + TailwindCSS 3.4
 - **Backend**: Node.js + Express + TypeScript
-- **Banco de Dados**: PostgreSQL (compatível com TiDB)
-- **ORM**: Drizzle
-- **Pagamentos**: Stripe
-- **IA**: OpenAI API (para chat, imagens e áudio)
-- **Autenticação**: Email/senha + GitHub OAuth com sessões em PostgreSQL
+- **Database**: PostgreSQL (TiDB Compatible)
+- **ORM**: Drizzle ORM
+- **Payments**: Stripe (Live & Test Modes)
+- **AI Engine**: OpenAI API (Support for Chat, Image Generation, and MRZ OCR Analysis)
+- **Security**: GitHub OAuth + Session-based Authentication via PostgreSQL
 
-## 📋 Pré-requisitos
+---
 
-- Node.js 20.x ou superior
-- PostgreSQL 16 ou TiDB
-- Conta Stripe (com chaves de API)
-- Conta OpenAI (opcional, para funcionalidades de IA)
+## 📋 Prerequisites
 
-## 🔧 Configuração
+- **Node.js**: 20.x or higher
+- **Database**: PostgreSQL 16 or TiDB
+- **Stripe**: Account with API keys
+- **OpenAI**: Account (Optional, for AI components like "Mia")
 
-### 1. Clone o repositório
+---
 
+## 🔧 Local Configuration
+
+### 1. Clone the Repository
 ```bash
 git clone <repository-url>
 cd michels-travel
 ```
 
-### 2. Instale as dependências
-
+### 2. Install Project Dependencies
 ```bash
 npm install
 ```
 
-### 3. Configure as variáveis de ambiente
-
-Copie o arquivo `.env.example` para `.env`:
-
+### 3. Environment Variables
+Copy the `.env.example` template to a new `.env` file:
 ```bash
 cp .env.example .env
 ```
+Fill in your credentials in the `.env` file following the template instructions.
 
-Edite o arquivo `.env` e preencha com suas credenciais:
-
-```env
-# Database Configuration
-DATABASE_URL=postgresql://user:password@host:port/database
-
-# Stripe Configuration (Test Mode)
-STRIPE_TEST_SECRET_KEY=sk_test_...
-STRIPE_TEST_PUBLISHABLE_KEY=pk_test_...
-
-# Stripe Configuration (Live Mode)
-STRIPE_LIVE_SECRET_KEY=sk_live_...
-STRIPE_LIVE_PUBLISHABLE_KEY=pk_live_...
-
-# OpenAI / AI Integrations
-AI_INTEGRATIONS_OPENAI_API_KEY=sk-...
-AI_INTEGRATIONS_OPENAI_BASE_URL=https://api.openai.com/v1
-
-# Authentication & Security
-SESSION_SECRET=<gere_um_segredo_aleatorio_com_minimo_32_caracteres>
-ADMIN_PASSWORD=<sua_senha_admin_segura>
-
-# Server Configuration
-PORT=5000
-```
-
-### 4. Configure o banco de dados
-
-Execute as migrações do Drizzle:
-
+### 4. Database Initialization
+Run Drizzle migrations to set up the schema:
 ```bash
 npm run db:push
 ```
 
-### 5. Inicie o servidor de desenvolvimento
-
+### 5. Launch Development Environment
 ```bash
 npm run dev
 ```
+The application will be available at `http://localhost:5000`
 
-O aplicativo estará disponível em `http://localhost:5000`
+---
 
-## 🔐 Segurança
+## 🔐 Security & Governance
 
-⚠️ **IMPORTANTE**: Nunca commite o arquivo `.env` no Git. Ele contém credenciais sensíveis.
+⚠️ **IMPORTANT**: Never commit the `.env` file to version control. It contains sensitive credentials.
 
-### Gerando um SESSION_SECRET seguro
-
-Use o Node.js para gerar um segredo aleatório:
-
+### Secure Session Generation
+Generate a robust `SESSION_SECRET` using Node.js:
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-### Obtendo credenciais Stripe
+### Project Governance (The Book of Life)
+This project follows the **Canonical Engineering Protocol**. All architectural changes, infrastructure decisions, and critical events are recorded in [BOOK_OF_LIFE.md](./BOOK_OF_LIFE.md). Developers must adhere to the **Deployment Civil Code** for production-ready code.
 
-1. Acesse [Stripe Dashboard](https://dashboard.stripe.com/)
-2. Vá em **Developers** → **API keys**
-3. Copie as chaves de teste (para desenvolvimento) e produção (para deploy)
+---
 
-### Obtendo credenciais OpenAI
+## 📦 Available Scripts
 
-1. Acesse [OpenAI Platform](https://platform.openai.com/)
-2. Vá em **API keys**
-3. Crie uma nova chave de API
+- `npm run dev` - Start development server
+- `npm run build` - Compile project for production (Vite + Esbuild)
+- `npm run start` - Run production server
+- `npm run db:push` - Synchronize database schema
 
-## 📦 Scripts Disponíveis
+---
 
-- `npm run dev` - Inicia o servidor de desenvolvimento
-- `npm run build` - Compila o projeto para produção
-- `npm run start` - Inicia o servidor em modo produção
-- `npm run db:push` - Aplica as migrações do banco de dados
-
-## 🏗️ Estrutura do Projeto
+## 🏗️ Project Architecture
 
 ```
 michels-travel/
-├── client/              # Frontend React
+├── client/              # React Frontend Entry
 │   ├── src/
-│   │   ├── components/  # Componentes React
-│   │   ├── pages/       # Páginas da aplicação
-│   │   └── lib/         # Utilitários
-├── server/              # Backend Node.js
-│   ├── db.ts           # Configuração do banco de dados
-│   ├── routes.ts       # Rotas da API
-│   ├── storage.ts      # Camada de acesso a dados
-│   ├── stripeClient.ts # Cliente Stripe
-│   ├── stripeService.ts # Serviços Stripe
-│   └── replit_integrations/ # Integrações Replit
-├── shared/             # Código compartilhado (schemas, tipos)
-├── .env.example        # Template de variáveis de ambiente
-├── .gitignore          # Arquivos ignorados pelo Git
-└── package.json        # Dependências e scripts
+│   │   ├── components/  # Atomic UI Components
+│   │   ├── pages/       # Route-level Components
+│   │   └── lib/         # Shared Logic (i18n, utils)
+├── server/              # Node.js Backend Entry
+│   ├── db.ts           # DB Driver Configuration
+│   ├── routes.ts       # API Route Definitions
+│   ├── storage.ts      # Data Access Layer (DAL)
+│   ├── stripeClient.ts # Stripe SDK Wrapper
+│   └── replit_integrations/ # Platform Helpers
+├── shared/             # Cross-platform Logic (Schemas, Types)
+├── BOOK_OF_LIFE.md     # Governance & Laws
+└── DEPLOY_AUTOMATION.md # CI/CD Documentation
 ```
 
-## 🌐 Deploy
+---
 
-### Deploy na Render
+## 🌐 Production Deployment (Render)
 
-O repositório já inclui [`render.yaml`](./render.yaml) para criar o Web Service na Render com:
+The repository includes a [`render.yaml`](./render.yaml) specification file for automated builds:
 
-- `buildCommand`: `npm install --legacy-peer-deps && npm run build`
-- `startCommand`: `npm run start`
-- `healthCheckPath`: `/api/health`
-- domínio principal: `www.michelstravel.agency`
+- **Build Command**: `npm install --legacy-peer-deps && npm run build`
+- **Start Command**: `npm run start`
+- **Health Check**: `/api/health`
+- **Primary Domain**: `www.michelstravel.agency`
 
-#### Variáveis obrigatórias na Render
+### Required Environment Variables
+Ensure the following are configured in your Render Web Service:
+`DATABASE_URL`, `SESSION_SECRET`, `ADMIN_PASSWORD`, `STRIPE_LIVE_SECRET_KEY`, `DUFFEL_LIVE_TOKEN`, `AI_INTEGRATIONS_OPENAI_API_KEY`.
 
-Configure no serviço da Render:
+---
 
-- `DATABASE_URL`
-- `SESSION_SECRET`
-- `ADMIN_PASSWORD`
-- `GITHUB_CLIENT_ID`
-- `GITHUB_CLIENT_SECRET`
-- `STRIPE_LIVE_SECRET_KEY`
-- `STRIPE_LIVE_PUBLISHABLE_KEY`
-- `DUFFEL_LIVE_TOKEN`
-- `AI_INTEGRATIONS_OPENAI_API_KEY`
+## 📄 Licensing
+This project is private and proprietary. All rights reserved.
 
-Use [`.env.render`](./.env.render) como checklist. O arquivo [`.env.example`](./.env.example) continua sendo o template para desenvolvimento local.
-
-#### Domínio customizado
-
-Defina estes valores em produção:
-
-- `APP_URL=https://www.michelstravel.agency`
-- `GITHUB_CALLBACK_URL=https://www.michelstravel.agency/api/auth/github/callback`
-
-Depois conecte `www.michelstravel.agency` em **Render > Settings > Custom Domains** e crie os registros DNS pedidos pela própria Render no provedor do domínio.
-
-### Notas de produção
-
-- O aplicativo aplica automaticamente os arquivos SQL da pasta `migrations/` no startup.
-- Para desenvolvimento local, continue usando `npm run dev`.
-- Em produção, a Render fornece `PORT` automaticamente; não defina essa variável manualmente no serviço.
-
-## 📄 Licença
-
-Este projeto é privado e proprietário.
-
-## 🤝 Suporte
-
-Para suporte, entre em contato através do email ou abra uma issue no repositório.
+## 🤝 Support
+For technical support or inquiries, please contact the engineering team via repository issues or direct email.

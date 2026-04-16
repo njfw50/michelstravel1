@@ -1,11 +1,15 @@
-# Relatório do que foi pedido pelo usuário
+# Product Update Report: User Requirements Analysis
+### Strategic Requirement Tracking & Full-Stack Implementation
 
-1. Corrigir para que a foto do idoso apareça no card principal/topo da tela de resultados sênior (web), não só no card de detalhes.
-2. Corrigir problema de textos de tradução (ex: results.senior_title, results.senior_description) aparecendo ao invés dos textos traduzidos para idosos.
-3. Garantir que a imagem do idoso também apareça no card de detalhes (já estava no app, precisava no site).
-4. Corrigir erros de build/deploy para que as alterações fiquem disponíveis em produção.
-5. Unificar e Localizar Terminal Sênior (PT, EN, ES) com suporte completo a tradução global.
-6. Implementar Mia (Voz): Guia por áudio (TTS) e comandos de voz (STT) totalmente integrados.
-7. Corrigir Mix de Idiomas (Espanhol): Garantir que o áudio em espanhol não use textos em português.
-8. Implementar IA Complementar: Mia agora usa Groq/Gemini como segunda camada para entender linguagem natural (Complementary AI).
-9. Gerar um relatório do que foi pedido e do que foi realmente feito, e commitar junto ao código.
+---
+
+## 📋 Strategic Objectives (Backlog Items)
+1. **Visual Identity Optimization**: Ensure Senior-themed imagery is prioritized in the primary header của Senior Results view (Web interface), extending beyond mere detail cards.
+2. **I18n Synchronization Fix**: Resolve issues where raw translation keys (e.g., `results.senior_title`, `results.senior_description`) were occasionally exposed instead of localized strings for senior users.
+3. **Cross-Platform Component Parity**: Implement senior-focused visual markers in Web detail cards to match established Mobile App designs.
+4. **CI/CD Reliability**: Resolve build/deployment blockers to ensure feature availability in the production environment.
+5. **Unified Global Terminal**: Internationalization of the *Senior Terminal* (PT, EN, ES) with a centralized global state support.
+6. **Multimodal Mia Integration (Voice)**: Implementation of Audio Guidance (TTS) and Voice Commands (STT) as a fully integrated UX layer.
+7. **Linguistic Purity (Spanish Support)**: Eliminate language mixing; ensure Spanish audio engines strictly consume Spanish localized datasets.
+8. **Complementary AI Implementation**: Integration of Groq/Gemini as a secondary reasoning layer (Deep Intelligence) to process natural language steering via Mia.
+9. **Documentation & Traceability**: Generation of comprehensive "Requested vs. Delivered" reports, committed as permanent project artifacts.

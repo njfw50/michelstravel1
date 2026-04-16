@@ -1,39 +1,39 @@
-# 🏛️ Livro da Vida — Michel's Travel 1
-### Protocolo de Governança e Registro Permanente (Lei 05)
+# 🏛️ Book of Life — Michel's Travel 1
+### Permanent System Event Log (Law 05)
 
-> "O código que não é governado pelo rigor está destinado à entropia. A Engenharia Canônica é a nossa defesa contra o caos."
+> "Code that is not governed by rigor is destined for entropy. Canonical Engineering is our defense against chaos."
 
 ---
 
-## 🛡️ DASHBOARD DE INTEGRIDADE CANÔNICA
-| Pilar Normativo | Status | Nível de Conformidade | Evidência Técnica |
+## 🛡️ CANONICAL INTEGRITY DASHBOARD
+| Normative Pillar | Status | Compliance Level | Technical Evidence |
 | :--- | :---: | :---: | :--- |
-| **L01: Autoridade** | 🛡️ | **PLENO** | Livro da Vida Ativo |
-| **L06: Robustez** | 🏗️ | **ELITE** | Tipagem Estrita & I18n |
-| **L15: UX (WOW)** | 💎 | **PREMIUM** | Midnight Dashboard v2 |
-| **L16: Infra (Civil)** | 🚢 | **OPERALIONAL** | Código Civil de Deploy |
+| **L01: Authority** | 🛡️ | **FULL** | Book of Life Active |
+| **L06: Robustness** | 🏗️ | **ELITE** | Strict Typing & I18n |
+| **L15: UX (WOW Factor)** | 💎 | **PREMIUM** | Midnight Dashboard v2 |
+| **L16: Infra (Civil Code)** | 🚢 | **OPERATIONAL** | Deployment Civil Code |
 
 ---
 
-## 📖 SEÇÃO APOLOGÉTICA: O Fundamento do Método
-*Uma defesa da Engenharia Canônica contra a mediocridade técnica.*
+## 📖 APOLOGETIC SECTION: The Foundation of the Method
+*A defense of Canonical Engineering against technical mediocrity.*
 
-Este projeto não é apenas uma aplicação de viagens; é um **testemunho de ordem**. A Seção Apologética justifica as nossas Leis como os únicos meios de garantir:
+This project is not merely a travel application; it is a **testimony of order**. The Apologetic Section justifies our Laws as the only means to ensure:
 
-1. **Imutabilidade do Propósito:** As Leis impedem que o software se degrade em um "espaguete de código". Cada linha deve prestar contas ao Protocolo.
-2. **Resiliência Transcendente:** O software deve sobreviver a mudanças de ambiente (Windows, Linux, Cloud) sem perder sua alma técnica. O **Código Civil de Deploy** é a nossa ferramenta de soberania infraestrutural.
-3. **Beleza como Obrigação:** Diferente de MVPs simplórios, aqui a estética (Lei 15) é tratada com o mesmo rigor que a segurança do banco de dados. Um software feio é um software desrespeitoso com o usuário.
+1. **Immutability of Purpose:** Our Laws prevent software from degrading into "spaghetti code." Every line must be accountable to the Protocol.
+2. **Transcendent Resilience:** Software must survive environmental changes (Windows, Linux, Cloud) without losing its technical soul. The **Deployment Civil Code** is our tool for infrastructural sovereignty.
+3. **Beauty as an Obligation:** Unlike simplistic MVPs, here aesthetics (Law 15) are treated with the same rigor as database security. Ugly software is disrespectful to the user.
 
 ---
 
-## 🗺️ DIAGRAMA DE ARQUITETURA CANÔNICA (Oversight MIA)
+## 🗺️ CANONICAL ARCHITECTURE DIAGRAM (MIA Oversight)
 
 ```mermaid
 graph TD
-    UI[Front-end: Midnight SaaS / Lei 15] -->|Validação de Tipos| I18N[Módulo I18N: Lei 06]
-    I18N -->|Soberania de Build| INFRA[Código Civil: Lei 16]
-    INFRA -->|Acesso de Dados| DB[(Banco de Dados: Lei 10)]
-    DB -->|Registro de Atos| BOL[Livro da Vida: Lei 05]
+    UI[Front-end: Midnight SaaS / Law 15] -->|Type Validation| I18N[I18N Module: Law 06]
+    I18N -->|Build Sovereignty| INFRA[Civil Code: Law 16]
+    INFRA -->|Data Access| DB[(Database: Law 10)]
+    DB -->|Act Registration| BOL[Book of Life: Law 05]
     
     style UI fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#fff
     style BOL fill:#450a0a,stroke:#f87171,stroke-width:2px,color:#fff
@@ -42,28 +42,28 @@ graph TD
 
 ---
 
-## 📜 REGISTRO DE EVENTOS (CRONOLOGIA)
+## 📜 EVENT LOG (CHRONOLOGY)
 
-### [2026-04-16] — Saneamento de Infraestrutura & Promulgação da Lei 16
-**Autor:** Antigravity AI & Engenharia Michel's Travel
-**Fundamento:** Código Civil de Deploy
-- **Correção de "Paridade de Build":** Movimentação de ferramentas de build para `dependencies`.
-- **Compatibilidade Universal:** Refatoração de caminhos dinâmicos no `vite.config.ts`.
-- **Sincronização i18n:** Alinhamento total de chaves (PT, EN, ES).
+### [2026-04-16] — Infrastructure Saneamento & Promulgation of Law 16
+**Author:** Antigravity AI & Michel's Travel Engineering
+**Foundation:** Deployment Civil Code
+- **Build Parity Fix:** Migration of build tools to `dependencies`.
+- **Universal Compatibility:** Refactoring of dynamic paths in `vite.config.ts`.
+- **I18n Synchronization:** Full alignment of translation keys (PT, EN, ES).
 
-### [2026-04-15] — Upgrade de Infraestrutura i18n
-**Autor:** Antigravity AI
-- **Type Safety:** Chaves de tradução validadas em tempo de compilação.
-- **Performance:** Memoização de funções via `useCallback`.
+### [2026-04-15] — I18n Infrastructure Upgrade
+**Author:** Antigravity AI
+- **Type Safety:** Translation keys validated at compile-time.
+- **Performance:** Function memoization via `useCallback`.
 
-### [2026-04-13] — Evento Crítico: Restauração Canônica de SearchResults.tsx
-- **Reset Estrutural:** Saneamento de duplicações e erros de escopo.
-- **Saneamento de Contraste:** Legibilidade absoluta (Lei 15).
+### [2026-04-13] — Critical Event: Canonical Restoration of SearchResults.tsx
+- **Structural Reset:** Sanitation of duplications and scope errors.
+- **Contrast Sanitation:** Absolute legibility (Law 15).
 
 ---
 
-## 🏗️ APÊNDICE: Código Civil de Deploy (Normas de Conduta)
-1. **Soberania de Runtime:** Build deve ser universal (Windows/Linux).
-2. **Resiliência do Front:** Uso de `import.meta.env` para conformidade com o bundler.
-3. **Escaneamento de Chaves:** Sincronização obrigatória de idiomas.
-4. **Vermin de Dependências:** `tsx`, `vite` e `typescript` não podem ser meros dev-deps em ambientes de nuvem.
+## 🏗️ APPENDIX: Deployment Civil Code (Conduct Norms)
+1. **Runtime Sovereignty:** Build must be universal (Windows/Linux).
+2. **Front-end Resilience:** Use of `import.meta.env` for bundler compliance.
+3. **Key Scanning:** Mandatory synchronization across all supported languages.
+4. **Dependency Integrity:** `tsx`, `vite`, and `typescript` are core build-time requirements and must reside in production dependencies for cloud environments.

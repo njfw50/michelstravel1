@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 
-// 1. Tipagem Automática: O TS lê seu JSON para saber quais chaves existem
+// 1. Automatic Typing: TS reads your JSON to determine available keys
 import pt from "../locales/pt.json";
 import en from "../locales/en.json";
 import es from "../locales/es.json";
@@ -8,7 +8,7 @@ import es from "../locales/es.json";
 type Language = "pt" | "en" | "es";
 const translations: Record<Language, any> = { pt, en, es };
 
-// Simplificado para evitar estouro de recursividade no build de produção
+// Simplified to avoid recursion overflows in production builds
 type TranslationKeys = string;
 
 interface I18nContextType {
@@ -21,7 +21,7 @@ interface I18nContextType {
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  // Inicialização segura para SSR e Navegador
+  // Safe initialization for SSR and Browser
   const [language, setLanguageState] = useState<Language>(() => {
     if (typeof window === "undefined") return "pt";
     const saved = localStorage.getItem("michels-travel-lang") as Language;
@@ -56,7 +56,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     setTimeout(() => setIsLoading(false), 300);
   }, []);
 
-  // 2. Função de tradução otimizada com Memo e busca eficiente
+  // 2. Optimized translation function with Memo and efficient lookup
   const t = useCallback((key: TranslationKeys | string, params?: Record<string, string | number>) => {
     const getNestedValue = (obj: any, path: string) => {
       if (obj && obj[path]) return obj[path];
@@ -69,10 +69,10 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       if (import.meta.env && !import.meta.env.PROD) {
         console.warn(`[I18n Integrity] Key "${key}" not found or not a string in [${language}]`);
       }
-      return key; // Retorna a chave em vez de vazio para não quebrar o layout
+      return key; // Return the key instead of empty string to avoid layout shifts
     }
 
-    // 3. Substituição de variáveis sem criar instâncias de RegExp em loop (Performance)
+    // 3. Variable replacement without creating RegExp instances in a loop (Performance)
     if (params) {
       return value.replace(/{(\w+)}/g, (_: string, k: string) => {
         return params[k]?.toString() ?? `{${k}}`;
@@ -98,6 +98,6 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
 export function useI18n() {
   const ctx = useContext(I18nContext);
-  if (!ctx) throw new Error("useI18n deve ser usado dentro de um I18nProvider");
+  if (!ctx) throw new Error("useI18n must be used within an I18nProvider");
   return ctx;
 }

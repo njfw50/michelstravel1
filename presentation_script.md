@@ -1,55 +1,65 @@
-# Script de Apresentação: Michels Travel - Sua Jornada Começa Aqui
+# Presentation Script: Michels Travel — Your Journey Begins Here
+### Executive Pitch & Visual Narrative
 
-## Slide 1: Título
+---
 
-**Visual:** Logo Michels Travel (azul degradê) em destaque, com a frase "Sua Jornada Começa Aqui" em um estilo elegante. Fundo azul degradê.
+## Slide 1: Title & Vision
+**Visual:** Michels Travel Logo (Gradient Blue) in focus, with the tagline "Your Journey Begins Here" in an elegant serif typeface. Immersive gradient background.
 
-**Narrador:** "Bom dia a todos. É com grande entusiasmo que apresentamos a nova era do Michels Travel, o seu companheiro definitivo para viagens aéreas. Redesenhado do zero, nosso aplicativo agora oferece uma experiência de reserva de voos sem igual, combinando elegância visual com a mais alta tecnologia."
+**Narrator:** "Good morning, everyone. It is with great enthusiasm that we unveil the new era of Michels Travel: your definitive companion for air travel. Redesigned from the ground up, our platform now offers an unparalleled booking experience, merging visual elegance with state-of-the-art technology."
 
-## Slide 2: A Evolução do Michels Travel
+---
 
-**Visual:** Transição suave do logo antigo para o novo. Pequenos ícones de avião, mapa e cartão de crédito. Fundo azul degradê.
+## Slide 2: The Strategic Evolution
+**Visual:** Smooth transition from the legacy logo to the new brand identity. Minimalist icons representing aviation, global maps, and secure transactions.
 
-**Narrador:** "Ouvimos nossos usuários e entendemos a necessidade de um foco mais apurado. Por isso, o Michels Travel evoluiu. Deixamos de lado as complexidades de hotéis e aluguel de carros para nos dedicarmos exclusivamente ao que fazemos de melhor: conectar você aos seus destinos com os melhores voos."
+**Narrator:** "We listened to our users and identified the need for a singular, razor-sharp focus. Consequently, Michels Travel has evolved. We have stripped away the complexities of hotel and car rentals to dedicate ourselves exclusively to what we do best: connecting you to global destinations through the most optimized flight paths."
 
-## Slide 3: Design Imersivo e Intuitivo
+---
 
-**Visual:** Captura de tela da Splash Screen e da Home Search Screen (checkout_flow_1.png). Destaque para o fundo azul degradê e os elementos em coral. Estilo 'glassmorphism' nos cartões.
+## Slide 3: Immersive & Intuitive Design (The WOW Factor)
+**Visual:** Screenshots of the Splash Screen and Home Search Screen. Emphasis on the immersive gradient background and coral accents. 'Glassmorphism' effects on interface cards.
 
-**Narrador:** "Nosso novo design não é apenas bonito; é uma extensão da sua jornada. Inspirado no nosso logo, o aplicativo agora apresenta um fundo azul degradê imersivo, que transmite tranquilidade e profissionalismo. Os elementos em coral guiam sua atenção, enquanto o estilo 'glassmorphism' oferece uma experiência visual moderna e intuitiva. Cada detalhe foi pensado para tornar a navegação fluida e agradável."
+**Narrator:** "Our new design is not merely aesthetic; it is an extension of the traveler’s journey. Inspired by our brand identity, the application features an immersive gradient backdrop that conveys tranquility and professionalism. Coral strategic accents guide the user’s eye, while glassmorphism elements provide a modern, intuitive experience. Every pixel was engineered for fluid navigation."
 
-## Slide 4: Busca de Voos Simplificada e Poderosa
+---
 
-**Visual:** Captura de tela da Home Search Screen (checkout_flow_1.png) com foco nos campos de busca. Ícones de ida, ida e volta, multi-destino.
+## Slide 4: Simplified yet Powerful Search Engine
+**Visual:** Search Screen interface focusing on the flight query engine: One-way, Round-trip, and Multi-city options.
 
-**Narrador:** "Encontrar o voo perfeito nunca foi tão fácil. Com uma interface limpa e direta, você pode pesquisar voos de ida, ida e volta ou até mesmo multi-destino. Nossos filtros avançados permitem que você refine sua busca por classe de cabine, número de passageiros e muito mais, garantindo que você encontre exatamente o que procura."
+**Narrator:** "Discovering the perfect itinerary has never been more seamless. With a clean, direct interface, users can execute complex searches across various travel types. Our advanced filtering logic allows for refinement by cabin class, passenger count, and specific airline preferences, ensuring the user finds exactly what they need with minimal friction."
 
-## Slide 5: Detalhes do Voo e Informações de Passageiros
+---
 
-**Visual:** Captura de tela da tela de detalhes do voo (checkout_flow_1.png) e da tela de informações de passageiros (checkout_flow_2.png). Destaque para os campos de preenchimento.
+## Slide 5: Data Integrity & Passenger Logistics
+**Visual:** Flight Details and Passenger Information screens. Clear typography and secure input fields.
 
-**Narrador:** "Uma vez que você seleciona seu voo, o Michels Travel guia você através de um processo de preenchimento de dados de passageiros otimizado. Coletamos todas as informações necessárias – desde dados pessoais até documentos de identidade – de forma clara e segura, garantindo que sua reserva esteja em total conformidade com as exigências das companhias aéreas e regulamentações internacionais."
+**Narrator:** "Once an itinerary is selected, Michels Travel guides the user through an optimized passenger data entry process. We collect all critical information—from personal details to identity documents—in a secure, transparent manner. This ensures every booking is in full compliance with airline requirements and international aviation regulations."
 
-## Slide 6: Integração Robusta com APIs de Voo (Duffel)
+---
 
-**Visual:** Diagrama simplificado mostrando a conexão do app com a API Duffel. Ícone da Duffel. Fundo azul degradê.
+## Slide 6: Robust Engineering (Duffel API Integration)
+**Visual:** Technical diagram illustrating the connection between the app architecture and the Duffel API. High-tech blue gradient background.
 
-**Narrador:** "Por trás da interface elegante, reside uma engenharia robusta. Utilizamos a API Duffel, líder no setor de viagens, para acessar uma vasta gama de ofertas de voos em tempo real. Isso significa que você sempre terá acesso às opções mais atualizadas e competitivas, com informações precisas sobre disponibilidade, preços e detalhes de voo."
+**Narrator:** "Beyond the elegant interface lies robust engineering. We leverage the Duffel API, an industry leader in travel technology, to access a vast array of real-time flight offers. For the user, this translates to immediate access to the most competitive rates and accurate availability data, backed by a world-class infrastructure."
 
-## Slide 7: Pagamento Seguro e Descomplicado (Stripe)
+---
 
-**Visual:** Captura de tela da tela de pagamento (checkout_flow_3.png). Ícone do Stripe. Fundo azul degradê.
+## Slide 7: Secure, Frictionless Payments (Stripe)
+**Visual:** Payment screen focus with the Stripe Secure Badge. Verified encryption indicators.
 
-**Narrador:** "A segurança da sua transação é nossa prioridade máxima. Integrado com o Stripe, um dos processadores de pagamento mais confiáveis do mundo, o Michels Travel oferece um checkout seguro e descomplicado. Seus dados de pagamento são protegidos com criptografia de ponta, e o processo é intuitivo, permitindo que você finalize sua reserva com total confiança."
+**Narrator:** "Transaction security is our paramount priority. Integrated with Stripe—one of the world's most trusted payment processors—Michels Travel offers a secure and streamlined checkout experience. Payment data is shielded by end-to-end encryption, allowing users to finalize their global travel plans with absolute confidence."
 
-## Slide 8: Michels Travel: Seu Parceiro de Viagem
+---
 
-**Visual:** Logo Michels Travel em destaque. Frase "Conectando você ao mundo, com estilo e segurança.". Fundo azul degradê.
+## Slide 8: Michels Travel: Your Global Travel Partner
+**Visual:** Michels Travel Logo with the slogan: "Connecting you to the world, with style and security." 
 
-**Narrador:** "O novo Michels Travel é mais do que um aplicativo de reserva de voos; é o seu parceiro de viagem. Com um design que encanta, uma funcionalidade que impressiona e uma segurança que tranquiliza, estamos prontos para levar você aonde quer que seus sonhos o levem. Baixe o Michels Travel hoje e comece a planejar sua próxima aventura."
+**Narrator:** "The new Michels Travel is more than a booking app; it is a strategic travel partner. With a design that captivates, functionality that impresses, and security that reassures, we are ready to take you wherever your dreams lead. Download Michels Travel today and commence your next adventure."
 
-## Slide 9: Perguntas e Respostas
+---
 
-**Visual:** Fundo azul degradê com o logo Michels Travel sutil. "Perguntas?" em destaque.
+## Slide 9: Q&A / Closing
+**Visual:** Minimalist gradient background with high-contrast "Questions?" text.
 
-**Narrador:** "Agradecemos a atenção. Estamos à disposição para quaisquer perguntas."
+**Narrator:** "Thank you for your time. We are now open for any questions regarding technical implementation or market strategy."
