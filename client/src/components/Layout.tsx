@@ -36,6 +36,7 @@ import { closeLoginDialog, getLoginDialogEventName, openLoginDialog } from "@/li
 import {
   AGENCY_EMAIL,
   AGENCY_WHATSAPP_DISPLAY,
+  AGENCY_WHATSAPP_NUMBER,
   buildWhatsAppHref,
   buildWhatsAppMessage,
 } from "@/lib/contact";
@@ -386,13 +387,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <h4 className="mb-8 text-[10px] font-black uppercase tracking-[0.4em] text-white/50">{t("footer.contact_title")}</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                  <div className="space-y-3">
-                    <a href={`https://wa.me/19736881200`} target="_blank" rel="noreferrer" className="flex items-center gap-4 group/item">
+                    <a href={`https://wa.me/${AGENCY_WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="flex items-center gap-4 group/item">
                       <div className="h-8 w-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 group-hover/item:bg-emerald-500 group-hover/item:text-white transition-all">
                         <MessageCircle className="h-4 w-4" />
                       </div>
                       <div>
                         <span className="block text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">{t("footer.whatsapp_support")}</span>
-                        <span className="block text-[11px] font-bold text-slate-300">1 (973) 688-1200</span>
+                        <span className="block text-[11px] font-bold text-slate-300">{AGENCY_WHATSAPP_DISPLAY}</span>
                       </div>
                     </a>
                  </div>
