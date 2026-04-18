@@ -1,7 +1,6 @@
 # ── Stage 1: Build ──────────────────────────────────────────
-FROM node:20-bookworm AS builder
+FROM node:20-slim AS builder
 
-# Install build essentials for native modules (Debian compatibility)
 RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -24,7 +23,7 @@ ENV CI=true
 RUN npm run build
 
 # ── Stage 2: Production ──────────────────────────────────────
-FROM node:20-bookworm AS production
+FROM node:20-slim AS production
 
 WORKDIR /app
 ENV NODE_ENV=production
