@@ -24,16 +24,16 @@ ENV CI=true
 RUN npm run build
 
 # ── Stage 2: Production ──────────────────────────────────────
-FROM node:20-bookworm-slim AS production
+FROM node:20-bookworm AS production
 
 WORKDIR /app
 ENV NODE_ENV=production
 ENV CI=true
 ENV NODE_OPTIONS="--max-old-space-size=1536"
 
-# Hardened dependency installation
+# Hardened dependency installation (using install instead of ci for better peer-dep handling)
 COPY package*.json ./
-RUN npm ci --omit=dev --prefer-offline --no-audit --legacy-peer-deps
+RUN npm install --omit=dev --prefer-offline --no-audit --legacy-peer-deps
 
 # Copy built artifacts and migrations from builder
 COPY --from=builder /app/dist ./dist
