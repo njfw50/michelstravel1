@@ -31,7 +31,13 @@ function requireDatabaseUrl() {
 
 export function getPool() {
   if (!pool) {
-    pool = new Pool({ connectionString: requireDatabaseUrl() });
+    const connectionString = requireDatabaseUrl();
+    const isLocal = connectionString?.includes("localhost") || connectionString?.includes("127.0.0.1");
+    
+    pool = new Pool({ 
+      connectionString,
+      ssl: isLocal ? false : { rejectUnauthorized: false }
+    });
   }
 
   return pool;
