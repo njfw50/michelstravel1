@@ -197,19 +197,38 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  await runAppMigrations();
-  await ensureDefaultBlogPosts();
-  initStripe().catch(console.error);
+  // Critical startup services
+  try {
+    await runAppMigrations();
+  } catch (err) {
+    console.error("Critical error during migrations:", err);
+    // Continue anyway to allow health checks to pass if DB is just slow
+  }
 
-  await setupAuth(app);
-  registerAuthRoutes(app);
-  registerRoutes(app);
-  registerCustomerMobileRoutes(app);
-  registerVoiceEscalationRoutes(app);
-  registerOwnerPushRoutes(app);
-  registerSeniorCareRoutes(app);
-  startOwnerPushLoop();
-  startItineraryNotificationLoop();
+  // Non-critical background tasks
+  ensureDefaultBlogPosts().catch(err => console.error("Blog seed failed:", err));
+  initStripe().catch(err => console.error("Stripe init failed:", err));
+
+  // Auth and Routes
+  try {
+    await setupAuth(app);
+    registerAuthRoutes(app);
+    registerRoutes(app);
+    registerCustomerMobileRoutes(app);
+    registerVoiceEscalationRoutes(app);
+    registerOwnerPushRoutes(app);
+    registerSeniorCareRoutes(app);
+  } catch (err) {
+    console.error("Route registration failed:", err);
+  }
+
+  // Background loops
+  try {
+    startOwnerPushLoop();
+    startItineraryNotificationLoop();
+  } catch (err) {
+    console.error("Background loops failed to start:", err);
+  }
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

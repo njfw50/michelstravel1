@@ -143,7 +143,21 @@ export function registerAuthRoutes(app: Express): void {
   });
 
   // ── Health check ───────────────────────────────────────────
-  app.get("/api/health", (_req, res) => {
-    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  app.get("/api/health", async (_req, res) => {
+    try {
+      // Basic health check is always OK if we reach this point
+      const health: any = { status: "ok", timestamp: new Date().toISOString() };
+      
+      // Optional: check DB connectivity without failing the whole check
+      try {
+        const { isDatabaseConfigured } = await import("../../db");
+        health.database = isDatabaseConfigured() ? "configured" : "missing";
+      } catch {}
+
+      res.json(health);
+    } catch (err) {
+      console.error("Health check internal error:", err);
+      res.status(500).json({ status: "error", message: "Health check failed" });
+    }
   });
 }

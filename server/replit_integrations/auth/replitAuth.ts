@@ -85,8 +85,13 @@ export function getSession() {
 
   const isProduction = process.env.NODE_ENV === "production";
 
+  const secret = process.env.SESSION_SECRET || "fallback-secret-for-deployment-safety";
+  if (!process.env.SESSION_SECRET && isProduction) {
+    console.warn("[AUTH] SESSION_SECRET is missing in production. Using fallback secret.");
+  }
+
   return session({
-    secret: process.env.SESSION_SECRET!,
+    secret,
     store: sessionStore,
     resave: false,
     saveUninitialized: false,

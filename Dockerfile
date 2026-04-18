@@ -12,13 +12,13 @@ ENV CI=true
 
 # Hardened dependency installation
 COPY package*.json ./
-RUN npm ci --include=dev --prefer-offline --no-audit --legacy-peer-deps
+# Clean install with dev dependencies for build
+RUN npm install --include=dev --prefer-offline --no-audit --legacy-peer-deps
 
 # Copy source code (Protected by .dockerignore)
 COPY . .
 
-# Build the project (frontend + backend) with verbose failure tracking
-# CI=true ensures Vite/tools run in non-interactive mode
+# Build the project (frontend + backend) with memory-efficient settings
 ENV CI=true
 RUN npm run build
 
@@ -30,9 +30,9 @@ ENV NODE_ENV=production
 ENV CI=true
 ENV NODE_OPTIONS="--max-old-space-size=1536"
 
-# Hardened dependency installation (using install instead of ci for better peer-dep handling)
+# Hardened dependency installation for production
 COPY package*.json ./
-RUN npm install --omit=dev --prefer-offline --no-audit --legacy-peer-deps
+RUN npm install --omit=dev --prefer-offline --no-audit --legacy-peer-deps && npm cache clean --force
 
 # Copy built artifacts and migrations from builder
 COPY --from=builder /app/dist ./dist
