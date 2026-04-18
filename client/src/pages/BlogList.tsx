@@ -226,7 +226,6 @@ export default function BlogList() {
                     <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Melhor Tarifa</p>
                  </div>
               </div>
-           </div>
         </Card>
 
         {/* Highlights from Destinations tab */}
