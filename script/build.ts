@@ -20,7 +20,16 @@ async function run() {
 
     console.log("[BUILD] Step 2: Building Frontend (Vite)...");
     try {
-      await viteBuild();
+      // Disable sourcemaps to save memory on Render
+      await viteBuild({
+        build: {
+          sourcemap: false,
+          minify: 'esbuild',
+          rollupOptions: {
+            maxParallelFileOps: 2, // Reduce parallel operations to save memory
+          }
+        }
+      });
       console.log("[BUILD] Frontend completed successfully.");
     } catch (viteErr) {
       console.error("[BUILD] ERROR in Step 2 (Frontend/Vite):", viteErr);
@@ -44,8 +53,10 @@ async function run() {
         },
         define: { "process.env.NODE_ENV": '"production"' },
         minify: true,
+        treeShaking: true,
+        logLevel: "error",
+        logLimit: 20,
         external: externals,
-        logLevel: "info",
       });
 
       await writeFile("dist/index.cjs", 'import("./index.mjs");\n');

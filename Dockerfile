@@ -7,13 +7,13 @@ RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt
 WORKDIR /app
 
 # Set memory limit and production flag during build
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV NODE_OPTIONS="--max-old-space-size=1536"
 ENV NODE_ENV=production
+ENV CI=true
 
-# Install ALL dependencies
+# Hardened dependency installation
 COPY package*.json ./
-# Note: We keep package-lock.json if it exists to ensure build reproducibility
-RUN npm install --legacy-peer-deps
+RUN npm ci --include=dev --prefer-offline --no-audit --legacy-peer-deps
 
 # Copy source code (Protected by .dockerignore)
 COPY . .
@@ -28,10 +28,12 @@ FROM node:20-bookworm-slim AS production
 
 WORKDIR /app
 ENV NODE_ENV=production
+ENV CI=true
+ENV NODE_OPTIONS="--max-old-space-size=1536"
 
-# Install production dependencies only
+# Hardened dependency installation
 COPY package*.json ./
-RUN npm install --legacy-peer-deps --omit=dev
+RUN npm ci --omit=dev --prefer-offline --no-audit --legacy-peer-deps
 
 # Copy built artifacts and migrations from builder
 COPY --from=builder /app/dist ./dist
