@@ -4,6 +4,11 @@ import * as schema from "@shared/schema";
 
 const { Pool } = pg;
 
+// Force bypass for self-signed certificates in production (Supabase/Render)
+if (process.env.NODE_ENV === "production") {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+}
+
 type Database = NodePgDatabase<typeof schema>;
 
 let pool: pg.Pool | null = null;
@@ -34,9 +39,19 @@ export function getPool() {
     const connectionString = requireDatabaseUrl();
     const isLocal = connectionString?.includes("localhost") || connectionString?.includes("127.0.0.1");
     
+    // Explicitly set SSL for cloud environments to handle self-signed certs (Supabase)
+    const sslConfig = isLocal ? false : { 
+      rejectUnauthorized: false
+    };
+
+    console.log(`[Database] Initializing pool with SSL: ${!isLocal}`);
+    
     pool = new Pool({ 
       connectionString,
-      ssl: isLocal ? false : { rejectUnauthorized: false }
+      ssl: sslConfig,
+      max: 10, // Limit connections for Pooler compatibility
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
     });
   }
 
