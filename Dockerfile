@@ -19,6 +19,8 @@ RUN npm install --legacy-peer-deps
 COPY . .
 
 # Build the project (frontend + backend) with verbose failure tracking
+# CI=true ensures Vite/tools run in non-interactive mode
+ENV CI=true
 RUN npm run build
 
 # ── Stage 2: Production ──────────────────────────────────────

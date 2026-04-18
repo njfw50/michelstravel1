@@ -11,6 +11,7 @@ interface LocationSearchProps {
   placeholder?: string;
   className?: string;
   isLarge?: boolean;
+  size?: string;
   dark?: boolean;
 }
 
@@ -29,9 +30,11 @@ export function LocationSearch({
   onChange,
   placeholder,
   className,
-  isLarge,
+  isLarge: isLargeProp,
+  size,
   dark = false
 }: LocationSearchProps) {
+  const isLarge = isLargeProp || size === "large";
   const [query, setQuery] = useState(value);
   const [displayText, setDisplayText] = useState("");
   const debouncedQuery = useDebounce(query, 500);

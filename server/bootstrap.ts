@@ -1,3 +1,4 @@
+export {};
 const processWithEnvLoader = process as typeof process & {
   loadEnvFile?: (path?: string) => void;
 };

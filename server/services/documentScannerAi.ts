@@ -114,17 +114,9 @@ async function recognizeMrzWithTesseract(imageDataUrl: string, timeoutMs = 8000)
     const base64 = imageDataUrl.split(",")[1] || "";
     const buffer = Buffer.from(base64, "base64");
     const { createWorker } = await import("tesseract.js");
-    const worker = await createWorker({ logger: () => undefined });
+    const worker = await createWorker("ocrb");
     const timeout = setTimeout(() => worker.terminate(), timeoutMs);
     try {
-      await worker.load();
-      try {
-        await worker.loadLanguage("ocrb");
-        await worker.initialize("ocrb");
-      } catch {
-        await worker.loadLanguage("eng");
-        await worker.initialize("eng");
-      }
       await worker.setParameters({
         tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<",
       });

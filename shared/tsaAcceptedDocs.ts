@@ -41,7 +41,7 @@ export const TSA_ACCEPTED_DOCS: Record<TsaDocumentType, TsaDocMeta> = {
 
 const MRZ_DOC_MAP: Record<string, TsaDocumentType> = {
   P: "passport",
-  A: "diplomatic_passport" as any, // will normalize to passport
+  A: "passport",
   C: "passport_card",
   I: "state_id",
   V: "visa",
@@ -50,10 +50,7 @@ const MRZ_DOC_MAP: Record<string, TsaDocumentType> = {
 
 export function docTypeFromMrzCode(code: string | undefined): TsaDocumentType {
   if (!code) return "other";
-  const normalized = MRZ_DOC_MAP[code.toUpperCase()];
-  if (normalized === "diplomatic_passport") return "passport";
-  // no longer needed as MRZ_DOC_MAP now uses state_id directly
-  return normalized || "other";
+  return MRZ_DOC_MAP[code.toUpperCase()] || "other";
 }
 
 export function normalizeDocumentType(input: string | null | undefined): TsaDocumentType {
