@@ -1,0 +1,25 @@
+name: Harvard Project Auto-Add
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  add-to-project:
+    name: Add issue to Harvard Project
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Project Data
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          ORGANIZATION: njfw50
+          PROJECT_NUMBER: 1 # Ajuste este número após rodar o setup_harvard_project.py pela primeira vez
+        run: |
+          # Este workflow adiciona automaticamente novas issues ao projeto
+          # Ele usa a ação oficial do GitHub para simplificar o processo
+          
+      - uses: actions/add-to-project@v1.0.1
+        with:
+          project-url: https://github.com/users/njfw50/projects/1 # O script setup_harvard_project.py informará o número correto
+          github-token: ${{ secrets.GH_TOKEN }}
+          labeled: "Phase: Research, Phase: Development, Phase: Peer Review, Phase: Publication" # Opcional: só adiciona se tiver uma dessas labels
