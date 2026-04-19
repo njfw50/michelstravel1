@@ -74,3 +74,12 @@ Successive deployment failures on Render were triggered by a "Dependency Gap" an
 2. **Front-end Resilience:** Use of `import.meta.env` for bundler compliance.
 3. **Internal Oversight:** All build scripts must include diagnostic logging and memory management.
 4. **Dependency Integrity:** `tsx`, `vite`, and `typescript` are core build-time requirements and must reside in production dependencies for cloud environments.
+
+## [2026-04-19] Harvard Project Governance Update
+O projeto foi reorganizado seguindo a estrutura de gestão de Harvard, focada em rigor acadêmico e fases bem definidas:
+- **Phase I: Research** - Auditoria de UI e arquitetura base.
+- **Phase II: Development** - Implementação do Scanner e Mobile Client.
+- **Phase III: Peer Review** - Auditoria de segurança e revisão de código.
+- **Phase IV: Publication** - Lançamento e monitoramento.
+
+Acompanhe o progresso através dos Milestones e Issues categorizadas.
