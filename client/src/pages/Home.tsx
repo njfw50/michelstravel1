@@ -251,8 +251,8 @@ export default function Home() {
         <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-3xl -z-10" />
         
         <div className="container mx-auto px-4 max-w-6xl">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-12 mb-20">
-            <div className="max-w-2xl">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-12 mb-20 relative">
+            <div className="max-w-2xl relative z-10">
               <Badge className="bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-full px-6 py-2 mb-8 text-[10px] uppercase font-black tracking-[0.4em]">
                 <Globe2 className="h-4 w-4 mr-3" />
                 {t("home.deals.badge")}
@@ -262,6 +262,17 @@ export default function Home() {
                 <span className="text-blue-500">{t("results.filter_active")}</span>
               </h2>
               <p className="text-slate-400 font-medium text-lg leading-relaxed">{t("home.deals.desc")}</p>
+            </div>
+
+            {/* Decorative Header Image */}
+            <div className="absolute right-[-4rem] top-[-4rem] bottom-[-4rem] w-[50%] pointer-events-none hidden md:block select-none opacity-40 mix-blend-screen">
+               <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/20 to-transparent z-10" />
+               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950 z-10" />
+               <img 
+                 src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=1200&auto=format&fit=crop" 
+                 className="w-full h-full object-cover rounded-l-full grayscale" 
+                 alt="" 
+               />
             </div>
           </div>
 
