@@ -619,8 +619,26 @@ async function consumeOutstandingBiometricChallenges(deviceId: string) {
     );
 }
 
+const mobileLoginAttempts = new Map<string, { count: number; lastAttempt: number }>();
+
 export function registerCustomerMobileRoutes(app: Express) {
   app.post("/api/mobile/customer/auth/login", async (req, res) => {
+    const clientIp = req.ip || req.socket.remoteAddress || "unknown";
+    const attempts = mobileLoginAttempts.get(clientIp);
+    const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
+
+    if (attempts && attempts.count >= 5) {
+      const timeRemaining = Date.now() - attempts.lastAttempt;
+      if (timeRemaining < LOCKOUT_TIME) {
+        return res.status(429).json({ 
+          error: "Too many login attempts. Try again in 15 minutes.",
+          retryAfter: Math.ceil((LOCKOUT_TIME - timeRemaining) / 1000)
+        });
+      } else {
+        mobileLoginAttempts.delete(clientIp);
+      }
+    }
+
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ error: "Invalid login payload", details: parsed.error.flatten() });
@@ -633,14 +651,19 @@ export function registerCustomerMobileRoutes(app: Express) {
       : await findUserByPhone(identifier);
 
     if (!user || !user.passwordHash) {
+      const current = mobileLoginAttempts.get(clientIp) || { count: 0, lastAttempt: 0 };
+      mobileLoginAttempts.set(clientIp, { count: current.count + 1, lastAttempt: Date.now() });
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
     const validPassword = await bcrypt.compare(password, user.passwordHash);
     if (!validPassword) {
+      const current = mobileLoginAttempts.get(clientIp) || { count: 0, lastAttempt: 0 };
+      mobileLoginAttempts.set(clientIp, { count: current.count + 1, lastAttempt: Date.now() });
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
+    mobileLoginAttempts.delete(clientIp);
     const mobileDevice = await upsertDeviceForUser(user.id, device);
     const profile = await ensureCustomerProfile(user.id, buildProfileSeedFromVariant(device.appVariant));
     const session = await issueSession(user, mobileDevice);

@@ -2355,8 +2355,19 @@ export function registerRoutes(app: Express) {
     const clientIp = req.ip || req.socket.remoteAddress || "unknown";
 
     const attempts = adminWebLoginAttempts.get(clientIp);
-    if (attempts && attempts.count >= 5 && Date.now() - attempts.lastAttempt < 15 * 60 * 1000) {
-      return res.status(429).json({ error: "Too many login attempts. Try again in 15 minutes." });
+    const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
+
+    if (attempts && attempts.count >= 5) {
+      const timeRemaining = Date.now() - attempts.lastAttempt;
+      if (timeRemaining < LOCKOUT_TIME) {
+        return res.status(429).json({ 
+          error: "Too many login attempts. Try again in 15 minutes.",
+          retryAfter: Math.ceil((LOCKOUT_TIME - timeRemaining) / 1000)
+        });
+      } else {
+        // Reset attempts after lockout period has passed
+        adminWebLoginAttempts.delete(clientIp);
+      }
     }
 
     if (!adminPassword) {
@@ -2412,8 +2423,19 @@ export function registerRoutes(app: Express) {
     const clientIp = req.ip || req.socket.remoteAddress || "unknown";
 
     const attempts = adminLoginAttempts.get(clientIp);
-    if (attempts && attempts.count >= 5 && Date.now() - attempts.lastAttempt < 15 * 60 * 1000) {
-      return res.status(429).json({ error: "Too many login attempts. Try again in 15 minutes." });
+    const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
+
+    if (attempts && attempts.count >= 5) {
+      const timeRemaining = Date.now() - attempts.lastAttempt;
+      if (timeRemaining < LOCKOUT_TIME) {
+        return res.status(429).json({ 
+          error: "Too many login attempts. Try again in 15 minutes.",
+          retryAfter: Math.ceil((LOCKOUT_TIME - timeRemaining) / 1000)
+        });
+      } else {
+        // Reset attempts after lockout period has passed
+        adminLoginAttempts.delete(clientIp);
+      }
     }
 
     if (!adminPassword) {

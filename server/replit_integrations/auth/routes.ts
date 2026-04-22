@@ -7,6 +7,8 @@ import { db } from "../../db";
 import { users } from "@shared/models/auth";
 import { eq } from "drizzle-orm";
 
+const userLoginAttempts = new Map<string, { count: number; lastAttempt: number }>();
+
 export function registerAuthRoutes(app: Express): void {
   const loginRedirect = (authError?: string) => {
     const params = new URLSearchParams();
@@ -70,11 +72,31 @@ export function registerAuthRoutes(app: Express): void {
 
   // ── POST /api/login ────────────────────────────────────────
   app.post("/api/login", (req, res, next) => {
+    const clientIp = req.ip || req.socket.remoteAddress || "unknown";
+    const attempts = userLoginAttempts.get(clientIp);
+    const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
+
+    if (attempts && attempts.count >= 5) {
+      const timeRemaining = Date.now() - attempts.lastAttempt;
+      if (timeRemaining < LOCKOUT_TIME) {
+        return res.status(429).json({ 
+          message: `Muitas tentativas de login. Tente novamente em ${Math.ceil((LOCKOUT_TIME - timeRemaining) / 60000)} minutos.`,
+          retryAfter: Math.ceil((LOCKOUT_TIME - timeRemaining) / 1000)
+        });
+      } else {
+        userLoginAttempts.delete(clientIp);
+      }
+    }
+
     passport.authenticate("local", (err: any, user: any, info: any) => {
       if (err) return next(err);
       if (!user) {
+        const current = userLoginAttempts.get(clientIp) || { count: 0, lastAttempt: 0 };
+        userLoginAttempts.set(clientIp, { count: current.count + 1, lastAttempt: Date.now() });
         return res.status(401).json({ message: info?.message || "Credenciais inválidas." });
       }
+      
+      userLoginAttempts.delete(clientIp);
       req.login(user, (loginErr) => {
         if (loginErr) return next(loginErr);
         return res.json(user);
