@@ -1,0 +1,12 @@
+{
+  "appName": "Michels Travel",
+  "installPagePath": "/apps/michels-travel",
+  "version": "1.3.0",
+  "packageName": "agency.michelstravel.app",
+  "minAndroid": "8.0+",
+  "installNotes": {
+    "pt": "Baixe o APK no Android e conclua a instalacao no seu celular.",
+    "en": "Download the APK on Android and finish the installation on your phone.",
+    "es": "Descargue el APK en Android y termine la instalacion en su telefono."
+  }
+}
