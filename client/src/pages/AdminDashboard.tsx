@@ -1356,7 +1356,7 @@ export default function AdminDashboard() {
   return (
     <div className="flex h-screen overflow-hidden bg-slate-950 font-sans selection:bg-indigo-500/30">
       {/* Sidebar Area - Floating Glass Panel */}
-      <aside className="hidden md:flex w-72 flex-col bg-slate-900/40 backdrop-blur-xl border-r border-white/5 z-20">
+      <aside className="hidden md:flex w-64 lg:w-72 flex-col bg-slate-900/40 backdrop-blur-xl border-r border-white/5 z-20">
         <div className="p-8 border-b border-white/5 flex flex-col items-start relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <div className="h-12 w-12 bg-indigo-500/20 rounded-2xl border border-indigo-500/30 flex items-center justify-center mb-5 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
@@ -1503,7 +1503,7 @@ export default function AdminDashboard() {
 
         {/* Scrollable Document Area */}
         <div className="flex-1 overflow-y-auto p-6 md:p-10 scrollbar-none">
-          <div className="mx-auto max-w-[1600px] animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20">
+          <div className="mx-auto w-full max-w-[1920px] animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20">
 
             {activeTab === "command" && (
               <div className="animate-in fade-in duration-300">
