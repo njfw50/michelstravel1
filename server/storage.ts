@@ -408,7 +408,7 @@ export class DatabaseStorage implements IStorage {
 
   async getAllInternalThreads(): Promise<(InternalThread & { userName?: string; userEmail?: string; unreadCount?: number })[]> {
     const result = await db.execute(sql`
-      SELECT t.*, u.first_name || ' ' || u.last_name AS user_name, u.email AS user_email,
+      SELECT t.*, u.display_name AS user_name, u.email AS user_email,
         (SELECT COUNT(*) FROM internal_messages m WHERE m.thread_id = t.id AND m.read_by_admin = false) AS unread_count
       FROM internal_threads t
       LEFT JOIN users u ON t.user_id = u.id
