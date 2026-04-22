@@ -172,6 +172,13 @@
     "secure_email": "E-mail Seguro"
   },
   "home": {
+    "hero": {
+      "title": "Descubra o novo padrão em viagens. Mais do que reservas, oferecemos resultados.",
+      "desc": "Acesso rápido e seguro para o Brasil e Europa. Compare centenas de voos e fale diretamente com nossos diretores via WhatsApp ou Chat Inteligente.",
+      "cta": "Buscar Voos",
+      "whatsapp_topic": "Consultoria Premium",
+      "whatsapp_details": "Gostaria de agendar uma consultoria exclusiva com atendimento em português."
+    },
     "trending": "Destinos em Alta",
     "midnight_experience": "Experiência Premium",
     "toolbox": {
@@ -376,6 +383,9 @@
     "multi_city": "Múltiplos Destinos",
     "origin": "Origem",
     "destination": "Destino",
+    "from": "Origem",
+    "to": "Destino",
+    "midnight_search": "Busca Inteligente",
     "city_placeholder": "Cidade ou Aeroporto",
     "departure": "Data de Ida",
     "return": "Data de Volta",
@@ -395,7 +405,9 @@
     "children_desc": "Crianças de 2 a 11 anos",
     "infants": "Bebês",
     "infants_desc": "Menores de 2 anos",
-    "button": "Buscar Voos"
+    "button": "Buscar Voos",
+    "travel_class": "Classe de Viagem",
+    "select_travelers": "Selecione os Passageiros"
   },
   "class": {
     "economy": "Classe Econômica",
