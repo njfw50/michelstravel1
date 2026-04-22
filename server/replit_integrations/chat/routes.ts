@@ -7,9 +7,9 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
-function parseRouteId(value: string | string[] | undefined): number {
+function parseRouteId(value: string | string[] | undefined): string {
   const normalizedValue = Array.isArray(value) ? value[0] : value;
-  return Number.parseInt(normalizedValue ?? "", 10);
+  return normalizedValue ?? "";
 }
 
 export function registerChatRoutes(app: Express): void {

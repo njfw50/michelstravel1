@@ -178,8 +178,7 @@ if (isGitHubAuthConfigured()) {
                 email: existingByGitHubId.email || email,
                 githubUsername,
                 profileImageUrl: existingByGitHubId.profileImageUrl || profileImageUrl,
-                firstName: existingByGitHubId.firstName || firstName,
-                lastName: existingByGitHubId.lastName || lastName,
+                displayName: existingByGitHubId.displayName || `${firstName || ''} ${lastName || ''}`.trim(),
                 updatedAt: new Date(),
               })
               .where(eq(users.id, existingByGitHubId.id))
@@ -200,8 +199,7 @@ if (isGitHubAuthConfigured()) {
                 githubId,
                 githubUsername,
                 profileImageUrl: existingByEmail.profileImageUrl || profileImageUrl,
-                firstName: existingByEmail.firstName || firstName,
-                lastName: existingByEmail.lastName || lastName,
+                displayName: existingByEmail.displayName || `${firstName || ''} ${lastName || ''}`.trim(),
                 updatedAt: new Date(),
               })
               .where(eq(users.id, existingByEmail.id))
@@ -214,8 +212,7 @@ if (isGitHubAuthConfigured()) {
             .insert(users)
             .values({
               email,
-              firstName,
-              lastName,
+              displayName: `${firstName || ''} ${lastName || ''}`.trim(),
               profileImageUrl,
               githubId,
               githubUsername,

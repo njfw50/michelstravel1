@@ -36,12 +36,7 @@ import { openChatbotAssistant } from "@/lib/chatbot";
 function FAQItem({ question, answer }: { question: string; answer: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <button
-      onClick={() => setOpen(!open)}
-      aria-expanded={open}
-      className="w-full text-left border-b border-white/5 last:border-0"
-      data-testid={`faq-item-${question.substring(0, 20).replace(/\s/g, "-").toLowerCase()}`}
-    >
+    <button onClick={() => setOpen(!open)} aria-expanded={open} className="w-full text-left border-b border-white/5 last:border-0" data-testid={`faq-item-${question.substring(0, 20).replace(/\s/g, "-").toLowerCase()}`}>
       <div className="flex items-center justify-between gap-3 py-4 px-1">
         <span className="text-sm font-medium text-white flex-1">{question}</span>
         {open ? (
@@ -143,10 +138,10 @@ export default function HelpCenter() {
 
   const filteredFaqs = searchQuery.trim()
     ? allFaqs.filter(
-        (faq) =>
-          faq.q.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          faq.a.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      (faq) =>
+        faq.q.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        faq.a.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : [];
 
   const selectedCategory = activeCategory
@@ -156,30 +151,30 @@ export default function HelpCenter() {
   const chatbotCopy =
     language === "en"
       ? {
-          eyebrow: "AI travel desk",
-          title: "Chat with Mia inside Help",
-          description:
-            "Use Mia here to search flights, check a booking, or ask for guided help before payment.",
-          primaryCta: "Open Mia",
-          secondaryCta: "Check my booking",
-        }
+        eyebrow: "AI travel desk",
+        title: "Chat with Mia inside Help",
+        description:
+          "Use Mia here to search flights, check a booking, or ask for guided help before payment.",
+        primaryCta: "Open Mia",
+        secondaryCta: "Check my booking",
+      }
       : language === "es"
         ? {
-            eyebrow: "Asistente de viajes con IA",
-            title: "Hable con Mia dentro de Ayuda",
-            description:
-              "Use Mia aquí para buscar vuelos, consultar una reserva o recibir ayuda guiada antes del pago.",
-            primaryCta: "Abrir Mia",
-            secondaryCta: "Consultar mi reserva",
-          }
+          eyebrow: "Asistente de viajes con IA",
+          title: "Hable con Mia dentro de Ayuda",
+          description:
+            "Use Mia aquí para buscar vuelos, consultar una reserva o recibir ayuda guiada antes del pago.",
+          primaryCta: "Abrir Mia",
+          secondaryCta: "Consultar mi reserva",
+        }
         : {
-            eyebrow: "Assistente de viagem com IA",
-            title: "Fale com a Mia dentro da Ajuda",
-            description:
-              "Use a Mia aqui para buscar voos, consultar uma reserva ou receber ajuda guiada antes do pagamento.",
-            primaryCta: "Abrir Mia",
-            secondaryCta: "Consultar minha reserva",
-          };
+          eyebrow: "Assistente de viagem com IA",
+          title: "Fale com a Mia dentro da Ajuda",
+          description:
+            "Use a Mia aqui para buscar voos, consultar uma reserva ou receber ajuda guiada antes do pagamento.",
+          primaryCta: "Abrir Mia",
+          secondaryCta: "Consultar minha reserva",
+        };
 
   const faqStructuredData = {
     "@context": "https://schema.org",
@@ -432,5 +427,5 @@ export default function HelpCenter() {
 }
 
 const ArrowLeft = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></svg>
 );

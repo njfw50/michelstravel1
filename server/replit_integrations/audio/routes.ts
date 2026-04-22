@@ -5,9 +5,9 @@ import { openai, speechToText, ensureCompatibleFormat } from "./client";
 // Body parser with 50MB limit for audio payloads
 const audioBodyParser = express.json({ limit: "50mb" });
 
-function parseRouteId(value: string | string[] | undefined): number {
+function parseRouteId(value: string | string[] | undefined): string {
   const normalizedValue = Array.isArray(value) ? value[0] : value;
-  return Number.parseInt(normalizedValue ?? "", 10);
+  return normalizedValue ?? "";
 }
 
 export function registerAudioRoutes(app: Express): void {

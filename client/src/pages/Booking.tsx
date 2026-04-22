@@ -655,7 +655,6 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
               setNameCoachDialog(null);
             }
           }}
-          language={language}
           mode={nameCoachDialog.mode as SeniorNameCoachMode}
           fieldLabel={nameCoachDialog.mode === "suggest" ? nameCoachDialog.fieldLabel : undefined}
           typedValue={nameCoachDialog.mode === "suggest" ? nameCoachDialog.typedValue : undefined}
@@ -1049,8 +1048,8 @@ export default function Booking() {
     for (let i = 0; i < numAdults; i++) {
       pax.push({
         title: "mr" as const,
-        givenName: i === 0 ? (user?.firstName || "") : "",
-        familyName: i === 0 ? (user?.lastName || "") : "",
+        givenName: i === 0 ? ((user?.displayName || "").split(" ")[0] || "") : "",
+        familyName: i === 0 ? ((user?.displayName || "").split(" ").slice(1).join(" ") || "") : "",
         bornOn: "",
         gender: "" as any,
         email: i === 0 ? (user?.email || "") : "",

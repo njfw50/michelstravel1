@@ -269,6 +269,7 @@
       "desc": "Discover the new standard in travel. More than just bookings, we offer intelligent curation and a concierge service focused on those who demand the best.",
       "btn_explore": "Explore Destinations",
       "btn_consulting": "Private Consulting",
+      "cta": "Search Flights",
       "perks": {
         "1": "Live fares",
         "2": "Support in Portuguese, English, and Spanish",
@@ -378,6 +379,8 @@
     "people": "People",
     "class": "Class",
     "passengers": "Passengers",
+    "pax": "Pax",
+    "pax_class": "Travelers & Class",
     "adults": "Adults",
     "adults_desc": "12+ years",
     "children": "Children",

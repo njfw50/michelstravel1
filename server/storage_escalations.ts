@@ -2,7 +2,7 @@
 // This should be merged into the main storage.ts file
 
 export interface VoiceEscalation {
-  id: number;
+  id: string;
   type: 'voice' | 'chat';
   reason: string;
   customerPhone?: string;
@@ -42,7 +42,7 @@ async getAllEscalations(): Promise<VoiceEscalation[]> {
   }));
 }
 
-async updateEscalation(id: number, data: Partial<VoiceEscalation>): Promise<VoiceEscalation> {
+async updateEscalation(id: string, data: Partial<VoiceEscalation>): Promise<VoiceEscalation> {
   const updates: string[] = [];
   const values: any[] = [];
   

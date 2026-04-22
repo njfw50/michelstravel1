@@ -854,7 +854,7 @@ function FeaturedDealsManager() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) =>
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
       apiRequest('PATCH', `/api/admin/featured-deals/${id}`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['/api/admin/featured-deals'] });
@@ -865,7 +865,7 @@ function FeaturedDealsManager() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiRequest('DELETE', `/api/admin/featured-deals/${id}`),
+    mutationFn: (id: string) => apiRequest('DELETE', `/api/admin/featured-deals/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['/api/admin/featured-deals'] });
       toast({ title: 'Oferta removida' });
@@ -874,7 +874,7 @@ function FeaturedDealsManager() {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
       apiRequest('PATCH', `/api/admin/featured-deals/${id}`, { isActive }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['/api/admin/featured-deals'] });
@@ -1261,7 +1261,7 @@ export default function AdminDashboard() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [expandedBookingId, setExpandedBookingId] = useState<number | null>(null);
+  const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"command" | "overview" | "bookings" | "settings" | "senior" | "crm" | "kb">("command");
 
   const { data: adminCheck, isLoading: adminCheckLoading } = useQuery<{ isAdmin: boolean }>({
@@ -1297,7 +1297,7 @@ export default function AdminDashboard() {
     queryClient.invalidateQueries({ queryKey: ["/api/admin/check"] });
   };
 
-  const openBookingsView = (options?: { status?: string; search?: string; bookingId?: number }) => {
+  const openBookingsView = (options?: { status?: string; search?: string; bookingId?: string }) => {
     setActiveTab("bookings");
     setStatusFilter(options?.status ?? "all");
     setSearchQuery(options?.search ?? "");

@@ -106,8 +106,8 @@ export function registerSeniorCareRoutes(app: Express) {
   // PATCH /api/admin/senior-alerts/:id — resolve or update an alert
   app.patch('/api/admin/senior-alerts/:id', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) return res.status(400).json({ error: 'Invalid alert ID' });
+      const id = req.params.id;
+      if (!id) return res.status(400).json({ error: 'Invalid alert ID' });
       const { status, notes, message } = req.body;
       const updated = await storage.updateSeniorAlert(id, { status, message: notes || message });
       if (!updated) return res.status(404).json({ error: 'Alert not found' });

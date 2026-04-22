@@ -256,7 +256,7 @@ export async function sendBookingConfirmationEmail(booking: BookingEmailData): P
   }
 }
 
-export async function sendChatEscalationEmail(sessionId: number, chatLog: string): Promise<boolean> {
+export async function sendChatEscalationEmail(sessionId: string, chatLog: string): Promise<boolean> {
   const transporter = getTransporter();
   
   const subject = `[URGENTE] Cliente solicitou atendimento humano - Chat #${sessionId}`;

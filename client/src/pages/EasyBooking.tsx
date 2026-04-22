@@ -644,7 +644,7 @@ export default function EasyBooking() {
                         disabled={!audioSupported}
                         onClick={() => {
                           if (speaking) stop();
-                          else speak(stepAudio, audioLang);
+                          else speak(stepAudio, { lang: audioLang });
                         }}
                       >
                         {speaking

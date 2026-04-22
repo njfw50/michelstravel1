@@ -16,7 +16,7 @@ import type { InternalThread, InternalMessage } from "@shared/schema";
 export default function Messenger() {
   const { user } = useAuth();
   const { t } = useI18n();
-  const [selectedThreadId, setSelectedThreadId] = useState<number | null>(null);
+  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
   const [showNewThread, setShowNewThread] = useState(false);
   const [newSubject, setNewSubject] = useState("");
   const [newMessage, setNewMessage] = useState("");

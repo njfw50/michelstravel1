@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb, decimal } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, decimal, uuid } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -14,7 +14,7 @@ import { conversations } from "./models/chat";
 
 // === FLIGHT SEARCH CACHE (For SEO & History) ===
 export const flightSearches = pgTable("flight_searches", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   origin: text("origin").notNull(),
   destination: text("destination").notNull(),
   departureDate: text("departure_date").notNull(), // YYYY-MM-DD
@@ -30,22 +30,27 @@ export const flightSearches = pgTable("flight_searches", {
 
 // === BOOKINGS (Commission Tracking) ===
 export const bookings = pgTable("bookings", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   referenceCode: text("reference_code").unique(),
-  userId: text("user_id").references(() => users.id),
+  userId: uuid("user_id").references(() => users.id),
+  featuredDealId: uuid("featured_deal_id").references(() => featuredDeals.id),
+  bookingType: text("booking_type").notNull().default("travel"),
   flightData: jsonb("flight_data").notNull(),
   passengerDetails: jsonb("passenger_details").notNull(),
-  totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  totalPrice: decimal("total_price", { precision: 12, scale: 2 }).notNull(),
   currency: text("currency").default("USD"),
+  status: text("status").default("pending"), // pending, confirmed, cancelled, completed
   commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).default("0.085"),
-  commissionAmount: decimal("commission_amount", { precision: 10, scale: 2 }),
-  status: text("status").default("pending"),
+  commissionAmount: decimal("commission_amount", { precision: 12, scale: 2 }),
   stripePaymentIntentId: text("stripe_payment_intent_id"),
   stripePaymentStatus: text("stripe_payment_status").default("pending"),
   stripeReceiptUrl: text("stripe_receipt_url"),
   confirmationEmailSent: boolean("confirmation_email_sent").default(false),
   contactEmail: text("contact_email").notNull(),
   contactPhone: text("contact_phone"),
+  destination: text("destination"),
+  departureDate: text("departure_date"),
+  returnDate: text("return_date"),
   duffelOrderId: text("duffel_order_id"),
   duffelBookingReference: text("duffel_booking_reference"),
   ticketStatus: text("ticket_status").default("pending"),
@@ -53,6 +58,7 @@ export const bookings = pgTable("bookings", {
   airlineInitiatedChanges: jsonb("airline_initiated_changes"),
   lastDuffelWebhookAt: timestamp("last_duffel_webhook_at"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // === SITE SETTINGS (Admin Control) ===
@@ -85,9 +91,9 @@ export const blogPosts = pgTable("blog_posts", {
 
 // === LIVE SESSIONS (Agent-Client Real-time Sales) ===
 export const liveSessions = pgTable("live_sessions", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   accessToken: text("access_token").notNull(),
-  conversationId: integer("conversation_id").references(() => conversations.id),
+  conversationId: uuid("conversation_id").references(() => conversations.id),
   visitorId: text("visitor_id"),
   language: text("language").default("pt"),
   serviceMode: text("service_mode").default("standard"),
@@ -97,7 +103,7 @@ export const liveSessions = pgTable("live_sessions", {
   whatsappLink: text("whatsapp_link"),
   approvedOfferId: text("approved_offer_id"),
   approvedFlightData: jsonb("approved_flight_data"),
-  bookingId: integer("booking_id"),
+  bookingId: uuid("booking_id"),
   bookingStatus: text("booking_status"), // null, approved, documents_requested, documents_submitted, booking_created, payment_pending, confirmed
   customerName: text("customer_name"),
   customerEmail: text("customer_email"),
@@ -108,8 +114,8 @@ export const liveSessions = pgTable("live_sessions", {
 });
 
 export const liveSessionBlocks = pgTable("live_session_blocks", {
-  id: serial("id").primaryKey(),
-  sessionId: integer("session_id").notNull().references(() => liveSessions.id, { onDelete: "cascade" }),
+  id: uuid("id").primaryKey().defaultRandom(),
+  sessionId: uuid("session_id").notNull().references(() => liveSessions.id, { onDelete: "cascade" }),
   blockType: text("block_type").notNull(), // search_results, offer_detail, pricing, baggage, custom_note
   payload: jsonb("payload").notNull(),
   shared: boolean("shared").default(false).notNull(),
@@ -118,8 +124,8 @@ export const liveSessionBlocks = pgTable("live_session_blocks", {
 });
 
 export const liveSessionMessages = pgTable("live_session_messages", {
-  id: serial("id").primaryKey(),
-  sessionId: integer("session_id").notNull().references(() => liveSessions.id, { onDelete: "cascade" }),
+  id: uuid("id").primaryKey().defaultRandom(),
+  sessionId: uuid("session_id").notNull().references(() => liveSessions.id, { onDelete: "cascade" }),
   role: text("role").notNull(), // admin, client
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -127,8 +133,8 @@ export const liveSessionMessages = pgTable("live_session_messages", {
 
 // === INTERNAL MESSENGER ===
 export const internalThreads = pgTable("internal_threads", {
-  id: serial("id").primaryKey(),
-  userId: text("user_id").notNull().references(() => users.id),
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id),
   subject: text("subject").notNull(),
   status: text("status").default("open").notNull(),
   lastMessageAt: timestamp("last_message_at").defaultNow(),
@@ -136,8 +142,8 @@ export const internalThreads = pgTable("internal_threads", {
 });
 
 export const internalMessages = pgTable("internal_messages", {
-  id: serial("id").primaryKey(),
-  threadId: integer("thread_id").notNull().references(() => internalThreads.id, { onDelete: "cascade" }),
+  id: uuid("id").primaryKey().defaultRandom(),
+  threadId: uuid("thread_id").notNull().references(() => internalThreads.id, { onDelete: "cascade" }),
   senderRole: text("sender_role").notNull(),
   senderName: text("sender_name"),
   content: text("content").notNull(),
@@ -148,7 +154,7 @@ export const internalMessages = pgTable("internal_messages", {
 
 // === VOICE ESCALATIONS (Phone Assistant) ===
 export const voiceEscalations = pgTable("voice_escalations", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   type: text("type").notNull(), // 'voice' or 'chat'
   reason: text("reason").notNull(),
   customerPhone: text("customer_phone"),
@@ -162,9 +168,9 @@ export const voiceEscalations = pgTable("voice_escalations", {
 
 // === SENIOR ALERTS (Assistência Sênior) ===
 export const seniorAlerts = pgTable("senior_alerts", {
-  id: serial("id").primaryKey(),
-  userId: text("user_id").references(() => users.id),
-  bookingId: integer("booking_id").references(() => bookings.id),
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id),
+  bookingId: uuid("booking_id").references(() => bookings.id),
   type: text("type").notNull(), // 'panic_button', 'confusion_detected', 'connection_risk', 'gate_change'
   status: text("status").default("pending").notNull(), // pending, in_progress, resolved
   message: text("message"), // e.g: "Passageiro solicitou ajuda humana."
@@ -174,14 +180,14 @@ export const seniorAlerts = pgTable("senior_alerts", {
 
 // === FEATURED DEALS (Zapier/Social Media Promotions) ===
 export const featuredDeals = pgTable("featured_deals", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   origin: text("origin").notNull(),
   originCity: text("origin_city"),
   destination: text("destination").notNull(),
   destinationCity: text("destination_city"),
   departureDate: text("departure_date"),
   returnDate: text("return_date"),
-  price: decimal("price", { precision: 10, scale: 2 }),
+  price: decimal("price", { precision: 12, scale: 2 }),
   currency: text("currency").default("USD"),
   airline: text("airline"),
   cabinClass: text("cabin_class").default("economy"),
@@ -194,12 +200,13 @@ export const featuredDeals = pgTable("featured_deals", {
   isActive: boolean("is_active").default(true),
   lastPublishedAt: timestamp("last_published_at"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // === CUSTOMER CRM (Customer 360) ===
 export const customers = pgTable("customers", {
-  id: serial("id").primaryKey(),
-  userId: text("user_id").references(() => users.id),
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id),
   visitorId: text("visitor_id").unique(), // For linking anonymous visitors
   fullName: text("full_name"),
   email: text("email"),
@@ -213,11 +220,11 @@ export const customers = pgTable("customers", {
 
 // === FINANCIAL TRANSACTIONS ===
 export const transactions = pgTable("transactions", {
-  id: serial("id").primaryKey(),
-  bookingId: integer("booking_id").notNull().references(() => bookings.id, { onDelete: "cascade" }),
+  id: uuid("id").primaryKey().defaultRandom(),
+  bookingId: uuid("booking_id").notNull().references(() => bookings.id, { onDelete: "cascade" }),
   paymentIntentId: text("payment_intent_id"),
   type: text("type").notNull(), // 'payment', 'refund', 'commission_payout'
-  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
   currency: text("currency").default("USD").notNull(),
   status: text("status").notNull(), // 'pending', 'succeeded', 'failed', 'refunded'
   metadata: jsonb("metadata"), // Raw gateway response or details
@@ -226,8 +233,8 @@ export const transactions = pgTable("transactions", {
 
 // === BOOKING LOGS (Trip Timeline) ===
 export const bookingLogs = pgTable("booking_logs", {
-  id: serial("id").primaryKey(),
-  bookingId: integer("booking_id").notNull().references(() => bookings.id, { onDelete: "cascade" }),
+  id: uuid("id").primaryKey().defaultRandom(),
+  bookingId: uuid("booking_id").notNull().references(() => bookings.id, { onDelete: "cascade" }),
   event: text("event").notNull(), // 'created', 'confirmed', 'docs_requested', 'gate_change_notified', etc.
   message: text("message"),
   metadata: jsonb("metadata"),
@@ -236,7 +243,7 @@ export const bookingLogs = pgTable("booking_logs", {
 
 // === KNOWLEDGE BASE (Admin Training for Mia) ===
 export const knowledgeBase = pgTable("knowledge_base", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   category: text("category").notNull(), // 'senior', 'flights', 'policy', 'safety'
   question: text("question").notNull(),
   answer: text("answer").notNull(),
@@ -247,7 +254,7 @@ export const knowledgeBase = pgTable("knowledge_base", {
 
 // === SCANNER SESSIONS (Cross-device Scanner Bridge) ===
 export const scannerSessions = pgTable("scanner_sessions", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   sessionId: text("session_id").notNull().unique(),
   data: jsonb("data"), // The scanned result
   createdAt: timestamp("created_at").defaultNow(),

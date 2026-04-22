@@ -37,9 +37,9 @@ export interface IStorage extends IAuthStorage {
 
   // Bookings
   createBooking(booking: StorageInsertBooking): Promise<Booking>;
-  updateBooking(id: number, updates: Partial<StorageInsertBooking>): Promise<Booking | undefined>;
+  updateBooking(id: string, updates: Partial<StorageInsertBooking>): Promise<Booking | undefined>;
   getBookings(userId?: string): Promise<Booking[]>;
-  getBooking(id: number): Promise<Booking | undefined>;
+  getBooking(id: string): Promise<Booking | undefined>;
   getBookingByReference(referenceCode: string): Promise<Booking | undefined>;
   getBookingByReferenceAndEmail(referenceCode: string, email: string): Promise<Booking | undefined>;
 
@@ -57,46 +57,46 @@ export interface IStorage extends IAuthStorage {
 
   // Live Sessions
   createLiveSession(session: InsertLiveSession): Promise<LiveSession>;
-  getLiveSession(id: number): Promise<LiveSession | undefined>;
+  getLiveSession(id: string): Promise<LiveSession | undefined>;
   getLiveSessionByVisitor(visitorId: string): Promise<LiveSession | undefined>;
   getLiveSessionRequests(): Promise<LiveSession[]>;
   getActiveLiveSessions(): Promise<LiveSession[]>;
-  updateLiveSessionStatus(id: number, status: string): Promise<LiveSession | undefined>;
-  updateLiveSession(id: number, updates: Record<string, any>): Promise<LiveSession | undefined>;
+  updateLiveSessionStatus(id: string, status: string): Promise<LiveSession | undefined>;
+  updateLiveSession(id: string, updates: Record<string, any>): Promise<LiveSession | undefined>;
   createLiveSessionBlock(block: InsertLiveSessionBlock): Promise<LiveSessionBlock>;
-  updateLiveSessionBlock(id: number, updates: Partial<InsertLiveSessionBlock>): Promise<LiveSessionBlock | undefined>;
-  getLiveSessionBlocks(sessionId: number, sharedOnly?: boolean): Promise<LiveSessionBlock[]>;
-  deleteLiveSessionBlock(id: number): Promise<void>;
+  updateLiveSessionBlock(id: string, updates: Partial<InsertLiveSessionBlock>): Promise<LiveSessionBlock | undefined>;
+  getLiveSessionBlocks(sessionId: string, sharedOnly?: boolean): Promise<LiveSessionBlock[]>;
+  deleteLiveSessionBlock(id: string): Promise<void>;
   createLiveSessionMessage(msg: InsertLiveSessionMessage): Promise<LiveSessionMessage>;
-  getLiveSessionMessages(sessionId: number): Promise<LiveSessionMessage[]>;
+  getLiveSessionMessages(sessionId: string): Promise<LiveSessionMessage[]>;
 
   // Internal Messenger
   createInternalThread(thread: InsertInternalThread): Promise<InternalThread>;
   getInternalThreadsByUser(userId: string): Promise<InternalThread[]>;
   getAllInternalThreads(): Promise<(InternalThread & { userName?: string; userEmail?: string; unreadCount?: number })[]>;
-  getInternalThread(id: number): Promise<InternalThread | undefined>;
+  getInternalThread(id: string): Promise<InternalThread | undefined>;
   createInternalMessage(msg: InsertInternalMessage): Promise<InternalMessage>;
-  getInternalMessages(threadId: number): Promise<InternalMessage[]>;
-  markMessagesRead(threadId: number, role: "admin" | "user"): Promise<void>;
+  getInternalMessages(threadId: string): Promise<InternalMessage[]>;
+  markMessagesRead(threadId: string, role: "admin" | "user"): Promise<void>;
   getUnreadCountForUser(userId: string): Promise<number>;
   getUnreadCountForAdmin(): Promise<number>;
 
   // Voice Escalations
   createVoiceEscalation(escalation: InsertVoiceEscalation): Promise<VoiceEscalation>;
   getAllVoiceEscalations(): Promise<VoiceEscalation[]>;
-  updateVoiceEscalation(id: number, updates: Partial<InsertVoiceEscalation>): Promise<VoiceEscalation | undefined>;
+  updateVoiceEscalation(id: string, updates: Partial<InsertVoiceEscalation>): Promise<VoiceEscalation | undefined>;
 
   // Featured Deals (Zapier)
   getFeaturedDeals(activeOnly?: boolean): Promise<FeaturedDeal[]>;
-  getFeaturedDeal(id: number): Promise<FeaturedDeal | undefined>;
+  getFeaturedDeal(id: string): Promise<FeaturedDeal | undefined>;
   createFeaturedDeal(deal: InsertFeaturedDeal): Promise<FeaturedDeal>;
-  updateFeaturedDeal(id: number, updates: Partial<InsertFeaturedDeal>): Promise<FeaturedDeal | undefined>;
-  deleteFeaturedDeal(id: number): Promise<void>;
+  updateFeaturedDeal(id: string, updates: Partial<InsertFeaturedDeal>): Promise<FeaturedDeal | undefined>;
+  deleteFeaturedDeal(id: string): Promise<void>;
 
   // Senior Alerts
   getSeniorAlerts(statusFilter?: string): Promise<SeniorAlert[]>;
   createSeniorAlert(alert: InsertSeniorAlert): Promise<SeniorAlert>;
-  updateSeniorAlert(id: number, updates: Partial<InsertSeniorAlert>): Promise<SeniorAlert | undefined>;
+  updateSeniorAlert(id: string, updates: Partial<InsertSeniorAlert>): Promise<SeniorAlert | undefined>;
 
   // Stripe
   getProduct(productId: string): Promise<any>;
@@ -111,20 +111,20 @@ export interface IStorage extends IAuthStorage {
   // Customer CRM
   createCustomer(customer: InsertCustomer): Promise<Customer>;
   getCustomerByVisitor(visitorId: string): Promise<Customer | undefined>;
-  updateCustomer(id: number, updates: Partial<InsertCustomer>): Promise<Customer | undefined>;
+  updateCustomer(id: string, updates: Partial<InsertCustomer>): Promise<Customer | undefined>;
 
   // Transactions
   createTransaction(tx: InsertTransaction): Promise<Transaction>;
-  getTransactionsByBooking(bookingId: number): Promise<Transaction[]>;
+  getTransactionsByBooking(bookingId: string): Promise<Transaction[]>;
 
   // Booking Logs
   createBookingLog(log: InsertBookingLog): Promise<BookingLog>;
-  getBookingLogs(bookingId: number): Promise<BookingLog[]>;
+  getBookingLogs(bookingId: string): Promise<BookingLog[]>;
 
   // Knowledge Base
   getKnowledgeBaseEntries(category?: string, language?: string): Promise<KnowledgeBaseEntry[]>;
   createKnowledgeBaseEntry(entry: InsertKnowledgeBaseEntry): Promise<KnowledgeBaseEntry>;
-  deleteKnowledgeBaseEntry(id: number): Promise<void>;
+  deleteKnowledgeBaseEntry(id: string): Promise<void>;
 
   // Scanner Bridge
   createScannerSession(session: InsertScannerSession): Promise<ScannerSessionData>;
@@ -159,7 +159,7 @@ export class DatabaseStorage implements IStorage {
     return newBooking;
   }
 
-  async updateBooking(id: number, updates: Partial<StorageInsertBooking>): Promise<Booking | undefined> {
+  async updateBooking(id: string, updates: Partial<StorageInsertBooking>): Promise<Booking | undefined> {
     const [b] = await db.update(bookings).set(updates).where(eq(bookings.id, id)).returning();
     return b;
   }
@@ -171,7 +171,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(bookings).orderBy(desc(bookings.createdAt));
   }
 
-  async getBooking(id: number): Promise<Booking | undefined> {
+  async getBooking(id: string): Promise<Booking | undefined> {
     const [booking] = await db.select().from(bookings).where(eq(bookings.id, id));
     return booking;
   }
@@ -328,7 +328,7 @@ export class DatabaseStorage implements IStorage {
     return s;
   }
 
-  async getLiveSession(id: number): Promise<LiveSession | undefined> {
+  async getLiveSession(id: string): Promise<LiveSession | undefined> {
     const [s] = await db.select().from(liveSessions).where(eq(liveSessions.id, id));
     return s;
   }
@@ -352,14 +352,14 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(liveSessions).where(eq(liveSessions.status, "active")).orderBy(desc(liveSessions.createdAt));
   }
 
-  async updateLiveSessionStatus(id: number, status: string): Promise<LiveSession | undefined> {
+  async updateLiveSessionStatus(id: string, status: string): Promise<LiveSession | undefined> {
     const updates: any = { status };
     if (status === "closed") updates.closedAt = new Date();
     const [s] = await db.update(liveSessions).set(updates).where(eq(liveSessions.id, id)).returning();
     return s;
   }
 
-  async updateLiveSession(id: number, updates: Record<string, any>): Promise<LiveSession | undefined> {
+  async updateLiveSession(id: string, updates: Record<string, any>): Promise<LiveSession | undefined> {
     const [s] = await db.update(liveSessions).set(updates).where(eq(liveSessions.id, id)).returning();
     return s;
   }
@@ -369,12 +369,12 @@ export class DatabaseStorage implements IStorage {
     return b;
   }
 
-  async updateLiveSessionBlock(id: number, updates: Partial<InsertLiveSessionBlock>): Promise<LiveSessionBlock | undefined> {
+  async updateLiveSessionBlock(id: string, updates: Partial<InsertLiveSessionBlock>): Promise<LiveSessionBlock | undefined> {
     const [b] = await db.update(liveSessionBlocks).set({ ...updates, updatedAt: new Date() } as any).where(eq(liveSessionBlocks.id, id)).returning();
     return b;
   }
 
-  async getLiveSessionBlocks(sessionId: number, sharedOnly?: boolean): Promise<LiveSessionBlock[]> {
+  async getLiveSessionBlocks(sessionId: string, sharedOnly?: boolean): Promise<LiveSessionBlock[]> {
     if (sharedOnly) {
       return await db.select().from(liveSessionBlocks).where(
         and(eq(liveSessionBlocks.sessionId, sessionId), eq(liveSessionBlocks.shared, true))
@@ -383,7 +383,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(liveSessionBlocks).where(eq(liveSessionBlocks.sessionId, sessionId)).orderBy(liveSessionBlocks.sortOrder);
   }
 
-  async deleteLiveSessionBlock(id: number): Promise<void> {
+  async deleteLiveSessionBlock(id: string): Promise<void> {
     await db.delete(liveSessionBlocks).where(eq(liveSessionBlocks.id, id));
   }
 
@@ -392,7 +392,7 @@ export class DatabaseStorage implements IStorage {
     return m;
   }
 
-  async getLiveSessionMessages(sessionId: number): Promise<LiveSessionMessage[]> {
+  async getLiveSessionMessages(sessionId: string): Promise<LiveSessionMessage[]> {
     return await db.select().from(liveSessionMessages).where(eq(liveSessionMessages.sessionId, sessionId)).orderBy(liveSessionMessages.createdAt);
   }
 
@@ -417,7 +417,7 @@ export class DatabaseStorage implements IStorage {
     return result.rows as any;
   }
 
-  async getInternalThread(id: number): Promise<InternalThread | undefined> {
+  async getInternalThread(id: string): Promise<InternalThread | undefined> {
     const [t] = await db.select().from(internalThreads).where(eq(internalThreads.id, id));
     return t;
   }
@@ -428,11 +428,11 @@ export class DatabaseStorage implements IStorage {
     return m;
   }
 
-  async getInternalMessages(threadId: number): Promise<InternalMessage[]> {
+  async getInternalMessages(threadId: string): Promise<InternalMessage[]> {
     return await db.select().from(internalMessages).where(eq(internalMessages.threadId, threadId)).orderBy(internalMessages.createdAt);
   }
 
-  async markMessagesRead(threadId: number, role: "admin" | "user"): Promise<void> {
+  async markMessagesRead(threadId: string, role: "admin" | "user"): Promise<void> {
     if (role === "admin") {
       await db.update(internalMessages).set({ readByAdmin: true }).where(eq(internalMessages.threadId, threadId));
     } else {
@@ -467,7 +467,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(voiceEscalations).orderBy(desc(voiceEscalations.createdAt));
   }
 
-  async updateVoiceEscalation(id: number, updates: Partial<InsertVoiceEscalation>): Promise<VoiceEscalation | undefined> {
+  async updateVoiceEscalation(id: string, updates: Partial<InsertVoiceEscalation>): Promise<VoiceEscalation | undefined> {
     const [updated] = await db.update(voiceEscalations).set(updates).where(eq(voiceEscalations.id, id)).returning();
     return updated;
   }
@@ -493,7 +493,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getFeaturedDeal(id: number): Promise<FeaturedDeal | undefined> {
+  async getFeaturedDeal(id: string): Promise<FeaturedDeal | undefined> {
     const [deal] = await db.select().from(featuredDeals).where(eq(featuredDeals.id, id));
     return deal;
   }
@@ -508,12 +508,12 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async updateFeaturedDeal(id: number, updates: Partial<InsertFeaturedDeal>): Promise<FeaturedDeal | undefined> {
+  async updateFeaturedDeal(id: string, updates: Partial<InsertFeaturedDeal>): Promise<FeaturedDeal | undefined> {
     const [updated] = await db.update(featuredDeals).set(updates).where(eq(featuredDeals.id, id)).returning();
     return updated;
   }
 
-  async deleteFeaturedDeal(id: number): Promise<void> {
+  async deleteFeaturedDeal(id: string): Promise<void> {
     await db.delete(featuredDeals).where(eq(featuredDeals.id, id));
   }
 
@@ -530,7 +530,7 @@ export class DatabaseStorage implements IStorage {
     return newAlert;
   }
 
-  async updateSeniorAlert(id: number, updates: Partial<InsertSeniorAlert>): Promise<SeniorAlert | undefined> {
+  async updateSeniorAlert(id: string, updates: Partial<InsertSeniorAlert>): Promise<SeniorAlert | undefined> {
     const payload: any = { ...updates };
     if (updates.status === 'resolved') payload.resolvedAt = new Date();
     const [updated] = await db.update(seniorAlerts).set(payload).where(eq(seniorAlerts.id, id)).returning();
@@ -548,7 +548,7 @@ export class DatabaseStorage implements IStorage {
     return c;
   }
 
-  async updateCustomer(id: number, updates: Partial<InsertCustomer>): Promise<Customer | undefined> {
+  async updateCustomer(id: string, updates: Partial<InsertCustomer>): Promise<Customer | undefined> {
     const [c] = await db.update(customers).set({ ...updates, updatedAt: new Date() } as any).where(eq(customers.id, id)).returning();
     return c;
   }
@@ -559,7 +559,7 @@ export class DatabaseStorage implements IStorage {
     return t;
   }
 
-  async getTransactionsByBooking(bookingId: number): Promise<Transaction[]> {
+  async getTransactionsByBooking(bookingId: string): Promise<Transaction[]> {
     return await db.select().from(transactions).where(eq(transactions.bookingId, bookingId)).orderBy(desc(transactions.createdAt));
   }
 
@@ -569,7 +569,7 @@ export class DatabaseStorage implements IStorage {
     return l;
   }
 
-  async getBookingLogs(bookingId: number): Promise<BookingLog[]> {
+  async getBookingLogs(bookingId: string): Promise<BookingLog[]> {
     return await db.select().from(bookingLogs).where(eq(bookingLogs.bookingId, bookingId)).orderBy(desc(bookingLogs.createdAt));
   }
 
@@ -608,7 +608,7 @@ export class DatabaseStorage implements IStorage {
     return await baseQuery.orderBy(desc(knowledgeBase.updatedAt));
   }
 
-  async deleteKnowledgeBaseEntry(id: number): Promise<void> {
+  async deleteKnowledgeBaseEntry(id: string): Promise<void> {
     await db.delete(knowledgeBase).where(eq(knowledgeBase.id, id));
   }
 

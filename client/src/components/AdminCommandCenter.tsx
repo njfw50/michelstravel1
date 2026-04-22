@@ -28,8 +28,8 @@ import { formatBytes } from "@/lib/formatBytes";
 const EXPO_ADMIN_BUILD_URL = "https://expo.dev/accounts/njfw23/projects/michels-travel-admin/builds?token=GgvD0zgdlx6ARx_OdBgblAuTZEPJqAMpJ6TzMbfH";
 
 interface AdminCommandCenterProps {
-  onOpenLiveDesk: (options?: { sessionId?: number }) => void;
-  onOpenBookings: (options?: { status?: string; search?: string; bookingId?: number }) => void;
+  onOpenLiveDesk: (options?: { sessionId?: string }) => void;
+  onOpenBookings: (options?: { status?: string; search?: string; bookingId?: string }) => void;
   onOpenSettings: () => void;
 }
 
@@ -361,7 +361,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
   };
 
   const syncBookingMutation = useMutation({
-    mutationFn: async (bookingId: number) => {
+    mutationFn: async (bookingId: string) => {
       const response = await apiRequest("POST", `/api/bookings/${bookingId}/sync`);
       return response.json();
     },
@@ -382,7 +382,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
   });
 
   const acceptLiveMutation = useMutation({
-    mutationFn: async (sessionId: number) => {
+    mutationFn: async (sessionId: string) => {
       const response = await apiRequest("POST", `/api/live-sessions/admin/${sessionId}/accept`, {});
       return response.json();
     },
@@ -403,7 +403,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
   });
 
   const resolveEscalationMutation = useMutation({
-    mutationFn: async (escalationId: number) => {
+    mutationFn: async (escalationId: string) => {
       const response = await apiRequest("PATCH", `/api/voice/escalations/${escalationId}`, { status: "resolved" });
       return response.json();
     },
@@ -596,11 +596,11 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
   ) => {
     switch (action) {
       case "open-live-desk":
-        onOpenLiveDesk(ownerCase.liveSessionId ? { sessionId: ownerCase.liveSessionId } : undefined);
+        onOpenLiveDesk(ownerCase.liveSessionId ? { sessionId: String(ownerCase.liveSessionId) } : undefined);
         break;
       case "open-bookings":
         onOpenBookings({
-          bookingId: ownerCase.bookingId || undefined,
+          bookingId: ownerCase.bookingId ? String(ownerCase.bookingId) : undefined,
           status: ownerCase.pendingBookings > 0 ? "pending" : undefined,
           search: ownerCase.customerEmail || ownerCase.customerPhone || undefined,
         });
@@ -1015,7 +1015,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                         onClick={() => onOpenBookings({
                           status: booking.status === "payment_pending" ? "pending" : "all",
                           search: booking.referenceCode || booking.contactEmail,
-                          bookingId: booking.id,
+                          bookingId: String(booking.id),
                         })}
                       >
                         <ExternalLink className="mr-2 h-3.5 w-3.5 text-indigo-400" />
@@ -1026,7 +1026,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                         variant="secondary"
                         className="h-10 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-300 hover:bg-indigo-500/10 hover:text-indigo-400 transition-all"
                         disabled={syncBookingMutation.isPending}
-                        onClick={() => syncBookingMutation.mutate(booking.id)}
+                        onClick={() => syncBookingMutation.mutate(String(booking.id))}
                       >
                         <RefreshCw className={`mr-2 h-3.5 w-3.5 ${syncBookingMutation.isPending ? "animate-spin" : ""}`} />
                         Sync Provid.
@@ -1225,7 +1225,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                             variant="secondary"
                             className="h-9 px-4 rounded-xl border border-indigo-500/20 bg-indigo-500/10 text-[9px] font-black uppercase tracking-widest text-indigo-300 hover:bg-indigo-500/20"
                             disabled={acceptLiveMutation.isPending}
-                            onClick={() => acceptLiveMutation.mutate(session.id)}
+                            onClick={() => acceptLiveMutation.mutate(String(session.id))}
                           >
                             {acceptLiveMutation.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-2 h-3.5 w-3.5" />}
                             Accept
@@ -1234,7 +1234,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                             size="sm"
                             variant="secondary"
                             className="h-9 w-9 p-0 rounded-xl border border-white/5 text-slate-400 hover:text-white hover:bg-white/10"
-                            onClick={() => onOpenLiveDesk({ sessionId: session.id })}
+                            onClick={() => onOpenLiveDesk({ sessionId: String(session.id) })}
                           >
                             <ExternalLink className="h-3.5 w-3.5" />
                           </Button>
@@ -1279,7 +1279,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                             variant="secondary"
                             className="h-9 px-4 rounded-xl border border-rose-500/10 bg-rose-500/10 text-[9px] font-black uppercase tracking-widest text-rose-300 hover:bg-rose-500/20"
                             disabled={resolveEscalationMutation.isPending}
-                            onClick={() => resolveEscalationMutation.mutate(escalation.id)}
+                            onClick={() => resolveEscalationMutation.mutate(String(escalation.id))}
                           >
                             {resolveEscalationMutation.isPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="mr-2 h-3.5 w-3.5" />}
                             Resolve

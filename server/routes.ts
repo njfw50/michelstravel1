@@ -52,9 +52,9 @@ import { buildRedactedDocumentPayload } from "./services/passengerPrivacy";
 import { analyzeDocumentScanWithAi } from "./services/documentScannerAi";
 import { ensureCustomerProfile, resolveCustomerMobileAuth } from "./routes/customer_mobile";
 
-function parseNumericRouteParam(value: string | string[] | undefined): number {
+function parseIdRouteParam(value: string | string[] | undefined): string {
   const normalizedValue = Array.isArray(value) ? value[0] : value;
-  return Number.parseInt(normalizedValue ?? "", 10);
+  return normalizedValue ?? "";
 }
 
 async function getCommissionRate(): Promise<number> {
@@ -818,12 +818,12 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  const emailSentCache = new Set<number>();
+  const emailSentCache = new Set<string>();
 
   app.post('/api/bookings/:id/send-confirmation', async (req, res) => {
     try {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+      const id = req.params.id as string;
+      if (!id) return res.status(400).json({ error: "Invalid booking ID" });
 
       if (emailSentCache.has(id)) {
         return res.json({ sent: false, message: "Confirmation email already sent for this booking" });
@@ -864,8 +864,8 @@ export function registerRoutes(app: Express) {
   // Get booking logs (public, for customers to see alerts)
   app.get('/api/bookings/:id/logs', async (req, res) => {
     try {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+      const id = req.params.id as string;
+      if (!id) return res.status(400).json({ error: "Invalid booking ID" });
       
       const logs = await storage.getBookingLogs(id);
       res.json(logs);
@@ -879,8 +879,8 @@ export function registerRoutes(app: Express) {
   // Get booking by ID (for confirmation page)
   app.get('/api/bookings/:id', async (req, res) => {
     try {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) {
+      const id = req.params.id as string;
+      if (!id) {
         return res.status(400).json({ error: "Invalid booking ID" });
       }
       const booking = await storage.getBooking(id);
@@ -1074,8 +1074,8 @@ export function registerRoutes(app: Express) {
 
   app.post('/api/bookings/:id/cancel', async (req, res) => {
     try {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+      const id = req.params.id as string;
+      if (!id) return res.status(400).json({ error: "Invalid booking ID" });
 
       const booking = await storage.getBooking(id);
       if (!booking) return res.status(404).json({ error: "Booking not found" });
@@ -1118,8 +1118,8 @@ export function registerRoutes(app: Express) {
 
   app.get('/api/bookings/:id/refund-quote', async (req, res) => {
     try {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+      const id = req.params.id as string;
+      if (!id) return res.status(400).json({ error: "Invalid booking ID" });
 
       const booking = await storage.getBooking(id);
       if (!booking) return res.status(404).json({ error: "Booking not found" });
@@ -1153,8 +1153,8 @@ export function registerRoutes(app: Express) {
 
   app.post('/api/bookings/:id/sync', async (req, res) => {
     try {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+      const id = req.params.id as string;
+      if (!id) return res.status(400).json({ error: "Invalid booking ID" });
 
       const booking = await storage.getBooking(id);
       if (!booking) return res.status(404).json({ error: "Booking not found" });
@@ -1234,8 +1234,8 @@ export function registerRoutes(app: Express) {
       const user = (req as any).user;
       if (!user) return res.status(401).json({ error: "Unauthorized" });
 
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+      const id = req.params.id as string;
+      if (!id) return res.status(400).json({ error: "Invalid booking ID" });
 
       const booking = await storage.getBooking(id);
       if (!booking) return res.status(404).json({ error: "Booking not found" });
@@ -1278,8 +1278,8 @@ export function registerRoutes(app: Express) {
       const user = (req as any).user;
       if (!user) return res.status(401).json({ error: "Unauthorized" });
 
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+      const id = req.params.id as string;
+      if (!id) return res.status(400).json({ error: "Invalid booking ID" });
 
       const booking = await storage.getBooking(id);
       if (!booking) return res.status(404).json({ error: "Booking not found" });
@@ -1336,8 +1336,8 @@ export function registerRoutes(app: Express) {
       res.json({
         id: fullUser.id,
         email: fullUser.email,
-        firstName: fullUser.firstName,
-        lastName: fullUser.lastName,
+        firstName: (fullUser.displayName || '').split(' ')[0] || '',
+        lastName: (fullUser.displayName || '').split(' ').slice(1).join(' ') || '',
         phone: fullUser.phone,
         profileImageUrl: fullUser.profileImageUrl,
         createdAt: fullUser.createdAt,
@@ -1370,8 +1370,8 @@ export function registerRoutes(app: Express) {
       res.json({
         id: updated.id,
         email: updated.email,
-        firstName: updated.firstName,
-        lastName: updated.lastName,
+        firstName: (updated.displayName || '').split(' ')[0] || '',
+        lastName: (updated.displayName || '').split(' ').slice(1).join(' ') || '',
         phone: updated.phone,
         profileImageUrl: updated.profileImageUrl,
         createdAt: updated.createdAt,
@@ -1397,8 +1397,8 @@ export function registerRoutes(app: Express) {
 
   app.post('/api/bookings/:id/verify-payment', async (req, res) => {
     try {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+      const id = req.params.id as string;
+      if (!id) return res.status(400).json({ error: "Invalid booking ID" });
 
       const booking = await storage.getBooking(id);
       if (!booking) return res.status(404).json({ error: "Booking not found" });
@@ -1525,8 +1525,8 @@ export function registerRoutes(app: Express) {
 
   app.get('/api/bookings/:id/receipt', async (req, res) => {
     try {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) return res.status(400).json({ error: "Invalid booking ID" });
+      const id = req.params.id as string;
+      if (!id) return res.status(400).json({ error: "Invalid booking ID" });
 
       const booking = await storage.getBooking(id);
       if (!booking) return res.status(404).json({ error: "Booking not found" });
@@ -1950,7 +1950,7 @@ export function registerRoutes(app: Express) {
           id: thread.id,
           subject: thread.subject,
           status: thread.status,
-          userName: thread.userName || null,
+          userName: (thread.userName || thread.userName || 'Unknown'),
           userEmail: thread.userEmail || null,
           unreadCount: Number(thread.unreadCount || 0),
           lastMessageAt: thread.lastMessageAt,
@@ -2589,7 +2589,7 @@ Sitemap: ${SITE_URL}/sitemap.xml
     }
   };
 
-  const getConversationLanguage = async (sessionId: number) => {
+  const getConversationLanguage = async (sessionId: string) => {
     const [conversation] = await db
       .select({ language: conversations.language })
       .from(conversations)
@@ -2599,7 +2599,7 @@ Sitemap: ${SITE_URL}/sitemap.xml
     return normalizeChatLanguage(conversation?.language);
   };
 
-  const markConversationEscalated = async (sessionId: number) => {
+  const markConversationEscalated = async (sessionId: string) => {
     await db
       .update(conversations)
       .set({ escalated: true, escalatedAt: new Date() })
@@ -2869,7 +2869,7 @@ FORM FILLING RULES:
     return history;
   };
 
-  const persistAssistantMessage = async (sessionId: number, content: string) => {
+  const persistAssistantMessage = async (sessionId: string, content: string) => {
     await db.insert(messages).values({
       conversationId: sessionId,
       role: "assistant",
@@ -2988,7 +2988,7 @@ FORM FILLING RULES:
 
   const handleFlightSearchResult = async (
     res: Response,
-    sessionId: number,
+    sessionId: string,
     languageInput: string | null | undefined,
     args: Record<string, unknown>,
   ) => {
@@ -3049,7 +3049,7 @@ ${summary}`);
 
   const handleBookingLookupResult = async (
     res: Response,
-    sessionId: number,
+    sessionId: string,
     languageInput: string | null | undefined,
     args: Record<string, unknown>,
   ) => {
@@ -3104,7 +3104,7 @@ ${summary}` : summary);
 
   const handleBookingFormPrefill = async (
     res: Response,
-    sessionId: number,
+    sessionId: string,
     languageInput: string | null | undefined,
     args: Record<string, unknown>,
     context?: ChatbotRequestContext | null,
@@ -3141,7 +3141,7 @@ ${confirmation}`);
 
   const handleAgentFallbackRequest = async (
     res: Response,
-    sessionId: number,
+    sessionId: string,
     content: string,
     languageInput?: string | null,
     context?: ChatbotRequestContext | null,
@@ -3531,7 +3531,7 @@ OUTPUT FORMAT (JSON only):
 
   app.post('/api/admin/chatbot/escalations/:id/resolve', requireAdmin, async (req, res) => {
     try {
-      const id = parseNumericRouteParam(req.params.id);
+      const id = parseIdRouteParam(req.params.id);
       await db.update(conversations)
         .set({ resolved: true })
         .where(eq(conversations.id, id));
@@ -3564,15 +3564,15 @@ OUTPUT FORMAT (JSON only):
 
   app.get('/api/chatbot/poll/:sessionId', async (req, res) => {
     try {
-      const sessionId = parseInt(req.params.sessionId);
-      const afterId = parseInt(req.query.afterId as string) || 0;
+      const sessionId = req.params.sessionId;
+      const afterId = req.query.afterId as string || '';
 
       const newMessages = await db.select().from(messages)
         .where(
           and(
             eq(messages.conversationId, sessionId),
             eq(messages.role, "admin"),
-            afterId > 0 ? gt(messages.id, afterId) : undefined
+            afterId ? gt(messages.id, afterId) : undefined
           )
         )
         .orderBy(messages.createdAt);
@@ -3607,7 +3607,7 @@ OUTPUT FORMAT (JSON only):
 
   app.get('/api/admin/chatbot/conversations/:id/messages', requireAdmin, async (req, res) => {
     try {
-      const id = parseNumericRouteParam(req.params.id);
+      const id = parseIdRouteParam(req.params.id);
       const msgs = await db.select().from(messages)
         .where(eq(messages.conversationId, id))
         .orderBy(messages.createdAt);
@@ -3661,7 +3661,7 @@ OUTPUT FORMAT (JSON only):
     const user = req.user as any;
     if (!user?.claims?.sub) return res.status(401).json({ error: "Login required" });
     try {
-      const threadId = parseNumericRouteParam(req.params.id);
+      const threadId = parseIdRouteParam(req.params.id);
       const thread = await storage.getInternalThread(threadId);
       if (!thread || thread.userId !== user.claims.sub) return res.status(404).json({ error: "Thread not found" });
       await storage.markMessagesRead(threadId, "user");
@@ -3677,7 +3677,7 @@ OUTPUT FORMAT (JSON only):
     const user = req.user as any;
     if (!user?.claims?.sub) return res.status(401).json({ error: "Login required" });
     try {
-      const threadId = parseNumericRouteParam(req.params.id);
+      const threadId = parseIdRouteParam(req.params.id);
       const thread = await storage.getInternalThread(threadId);
       if (!thread || thread.userId !== user.claims.sub) return res.status(404).json({ error: "Thread not found" });
       const { content } = req.body;
@@ -3724,7 +3724,7 @@ OUTPUT FORMAT (JSON only):
 
   app.get('/api/admin/messenger/threads/:id/messages', requireAdmin, async (req, res) => {
     try {
-      const threadId = parseNumericRouteParam(req.params.id);
+      const threadId = parseIdRouteParam(req.params.id);
       await storage.markMessagesRead(threadId, "admin");
       const msgs = await storage.getInternalMessages(threadId);
       res.json(msgs);
@@ -3736,7 +3736,7 @@ OUTPUT FORMAT (JSON only):
 
   app.post('/api/admin/messenger/threads/:id/messages', requireAdmin, async (req, res) => {
     try {
-      const threadId = parseNumericRouteParam(req.params.id);
+      const threadId = parseIdRouteParam(req.params.id);
       const { content } = req.body;
       if (!content?.trim()) return res.status(400).json({ error: "Message content required" });
       const msg = await storage.createInternalMessage({
@@ -3766,9 +3766,9 @@ OUTPUT FORMAT (JSON only):
   // ============ LIVE SESSION ROUTES ============
 
   // SSE connections map for real-time updates
-  const liveSessionClients = new Map<number, Set<Response>>();
+  const liveSessionClients = new Map<string, Set<Response>>();
 
-  function notifyLiveSessionClients(sessionId: number, event: string, data: any) {
+  function notifyLiveSessionClients(sessionId: string, event: string, data: any) {
     const clients = liveSessionClients.get(sessionId);
     if (clients) {
       const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
@@ -3835,7 +3835,7 @@ OUTPUT FORMAT (JSON only):
   // Client gets their session status and shared blocks (requires access token)
   app.get('/api/live-sessions/:id', async (req, res) => {
     try {
-      const id = parseNumericRouteParam(req.params.id);
+      const id = parseIdRouteParam(req.params.id);
       const token = req.query.token as string;
       if (!token) return res.status(401).json({ error: "Access token required" });
 
@@ -3861,7 +3861,7 @@ OUTPUT FORMAT (JSON only):
 
   // Client SSE stream for real-time updates (requires access token)
   app.get('/api/live-sessions/:id/stream', async (req, res) => {
-    const id = parseNumericRouteParam(req.params.id);
+    const id = parseIdRouteParam(req.params.id);
     const token = req.query.token as string;
     if (!token) { res.status(401).json({ error: "Access token required" }); return; }
     const session = await storage.getLiveSession(id);
@@ -3891,7 +3891,7 @@ OUTPUT FORMAT (JSON only):
   // Client sends chat message (requires access token)
   app.post('/api/live-sessions/:id/messages', async (req, res) => {
     try {
-      const id = parseNumericRouteParam(req.params.id);
+      const id = parseIdRouteParam(req.params.id);
       const { content, role, token } = req.body;
       if (!content) return res.status(400).json({ error: "content required" });
       if (!token) return res.status(401).json({ error: "Access token required" });
@@ -4002,7 +4002,7 @@ OUTPUT FORMAT (JSON only):
   // Admin gets full session detail (all blocks, not just shared)
   app.get('/api/live-sessions/admin/:id', requireAdmin, async (req, res) => {
     try {
-      const id = parseNumericRouteParam(req.params.id);
+      const id = parseIdRouteParam(req.params.id);
       const session = await storage.getLiveSession(id);
       if (!session) return res.status(404).json({ error: "Session not found" });
 
@@ -4024,7 +4024,7 @@ OUTPUT FORMAT (JSON only):
   // Admin accepts a session request
   app.post('/api/live-sessions/admin/:id/accept', requireAdmin, async (req, res) => {
     try {
-      const id = parseNumericRouteParam(req.params.id);
+      const id = parseIdRouteParam(req.params.id);
       const session = await storage.updateLiveSessionStatus(id, "active");
       if (!session) return res.status(404).json({ error: "Session not found" });
       notifyLiveSessionClients(id, "session_update", { status: "active" });
@@ -4037,7 +4037,7 @@ OUTPUT FORMAT (JSON only):
   // Admin closes a session
   app.post('/api/live-sessions/admin/:id/close', requireAdmin, async (req, res) => {
     try {
-      const id = parseNumericRouteParam(req.params.id);
+      const id = parseIdRouteParam(req.params.id);
       const session = await storage.updateLiveSessionStatus(id, "closed");
       if (!session) return res.status(404).json({ error: "Session not found" });
       notifyLiveSessionClients(id, "session_update", { status: "closed" });
@@ -4050,7 +4050,7 @@ OUTPUT FORMAT (JSON only):
   // Admin creates/updates a block
   app.post('/api/live-sessions/admin/:id/blocks', requireAdmin, async (req, res) => {
     try {
-      const sessionId = parseNumericRouteParam(req.params.id);
+      const sessionId = parseIdRouteParam(req.params.id);
       const { blockType, payload, shared, sortOrder } = req.body;
       if (!blockType || !payload) return res.status(400).json({ error: "blockType and payload required" });
 
@@ -4073,7 +4073,7 @@ OUTPUT FORMAT (JSON only):
   // Admin toggles block visibility (share/unshare)
   app.patch('/api/live-sessions/admin/blocks/:blockId', requireAdmin, async (req, res) => {
     try {
-      const blockId = parseNumericRouteParam(req.params.blockId);
+      const blockId = parseIdRouteParam(req.params.blockId);
       const { shared, payload } = req.body;
       const updates: any = {};
       if (shared !== undefined) updates.shared = shared;
@@ -4092,7 +4092,7 @@ OUTPUT FORMAT (JSON only):
   // Admin deletes a block
   app.delete('/api/live-sessions/admin/blocks/:blockId', requireAdmin, async (req, res) => {
     try {
-      const blockId = parseNumericRouteParam(req.params.blockId);
+      const blockId = parseIdRouteParam(req.params.blockId);
       await storage.deleteLiveSessionBlock(blockId);
       res.json({ success: true });
     } catch (error) {
@@ -4103,7 +4103,7 @@ OUTPUT FORMAT (JSON only):
   // Admin sends a chat message
   app.post('/api/live-sessions/admin/:id/messages', requireAdmin, async (req, res) => {
     try {
-      const id = parseNumericRouteParam(req.params.id);
+      const id = parseIdRouteParam(req.params.id);
       const { content } = req.body;
       if (!content) return res.status(400).json({ error: "content required" });
 
@@ -4124,7 +4124,7 @@ OUTPUT FORMAT (JSON only):
   // Admin approves a flight for booking (sets the offer to proceed with)
   app.post('/api/live-sessions/admin/:id/approve-flight', requireAdmin, async (req, res) => {
     try {
-      const id = parseNumericRouteParam(req.params.id);
+      const id = parseIdRouteParam(req.params.id);
       const { offerId, flightData } = req.body;
       if (!offerId || !flightData) return res.status(400).json({ error: "offerId and flightData required" });
 
@@ -4148,7 +4148,7 @@ OUTPUT FORMAT (JSON only):
   // Admin requests documents from customer
   app.post('/api/live-sessions/admin/:id/request-documents', requireAdmin, async (req, res) => {
     try {
-      const id = parseNumericRouteParam(req.params.id);
+      const id = parseIdRouteParam(req.params.id);
       const session = await storage.updateLiveSession(id, {
         bookingStatus: "documents_requested",
       });
@@ -4167,7 +4167,7 @@ OUTPUT FORMAT (JSON only):
   // Customer submits documents (name, email, phone, passenger info)
   app.post('/api/live-sessions/:id/submit-documents', async (req, res) => {
     try {
-      const id = parseNumericRouteParam(req.params.id);
+      const id = parseIdRouteParam(req.params.id);
       const token = req.query.token as string;
       if (!token) return res.status(401).json({ error: "Access token required" });
 
@@ -4218,7 +4218,7 @@ OUTPUT FORMAT (JSON only):
   // Admin creates the booking on behalf of the customer
   app.post('/api/live-sessions/admin/:id/create-booking', requireAdmin, async (req, res) => {
     try {
-      const id = parseNumericRouteParam(req.params.id);
+      const id = parseIdRouteParam(req.params.id);
       const session = await storage.getLiveSession(id);
       if (!session) return res.status(404).json({ error: "Session not found" });
       if (session.bookingStatus !== "documents_submitted") {
@@ -4275,7 +4275,7 @@ OUTPUT FORMAT (JSON only):
   // Admin marks booking as payment pending (manual/external payment)
   app.post('/api/live-sessions/admin/:id/payment-status', requireAdmin, async (req, res) => {
     try {
-      const id = parseNumericRouteParam(req.params.id);
+      const id = parseIdRouteParam(req.params.id);
       const { status } = req.body;
       if (!["payment_pending", "confirmed"].includes(status)) {
         return res.status(400).json({ error: "Invalid status" });
@@ -4320,7 +4320,7 @@ OUTPUT FORMAT (JSON only):
 
   app.post('/api/live-sessions/admin/:id/reset-booking', requireAdmin, async (req, res) => {
     try {
-      const id = parseNumericRouteParam(req.params.id);
+      const id = parseIdRouteParam(req.params.id);
       const session = await storage.getLiveSession(id);
       if (!session) return res.status(404).json({ error: "Session not found" });
 
@@ -4347,7 +4347,7 @@ OUTPUT FORMAT (JSON only):
   // Get booking status for client side
   app.get('/api/live-sessions/:id/booking-status', async (req, res) => {
     try {
-      const id = parseNumericRouteParam(req.params.id);
+      const id = parseIdRouteParam(req.params.id);
       const token = req.query.token as string;
       if (!token) return res.status(401).json({ error: "Access token required" });
 
@@ -4460,7 +4460,7 @@ OUTPUT FORMAT (JSON only):
 
   app.patch('/api/admin/featured-deals/:id', requireAdmin, async (req, res) => {
     try {
-      const id = parseNumericRouteParam(req.params.id);
+      const id = parseIdRouteParam(req.params.id);
       const partial = insertFeaturedDealSchema.partial().safeParse(req.body);
       if (!partial.success) {
         return res.status(400).json({ error: 'Invalid data', details: partial.error.flatten() });
@@ -4475,7 +4475,7 @@ OUTPUT FORMAT (JSON only):
 
   app.delete('/api/admin/featured-deals/:id', requireAdmin, async (req, res) => {
     try {
-      const id = parseNumericRouteParam(req.params.id);
+      const id = parseIdRouteParam(req.params.id);
       await storage.deleteFeaturedDeal(id);
       res.json({ success: true });
     } catch (error) {
@@ -4518,7 +4518,7 @@ OUTPUT FORMAT (JSON only):
 
   app.delete('/api/admin/knowledge-base/:id', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id as string);
+      const id = req.params.id as string;
       await storage.deleteKnowledgeBaseEntry(id);
       res.json({ success: true });
     } catch (error) {
@@ -4550,7 +4550,7 @@ OUTPUT FORMAT (JSON only):
   // Operational - Booking Logs
   app.get('/api/admin/bookings/:id/logs', requireAdmin, async (req, res) => {
     try {
-      const id = parseInt(req.params.id as string);
+      const id = req.params.id as string;
       const logs = await storage.getBookingLogs(id);
       res.json(logs);
     } catch (error) {

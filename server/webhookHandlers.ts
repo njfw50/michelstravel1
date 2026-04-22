@@ -43,7 +43,7 @@ function mapPassengersToDuffelFormat(passengerDetails: any[], contactEmail: stri
   }));
 }
 
-async function redactBookingPassengerDetails(bookingId: number, passengerDetails: any[]) {
+async function redactBookingPassengerDetails(bookingId: string, passengerDetails: any[]) {
   const retainedPassengers = sanitizePassengersForRetention(passengerDetails);
 
   await db.update(bookings)
@@ -78,8 +78,8 @@ export class WebhookHandlers {
         const bookingId = session.metadata?.bookingId || session.client_reference_id;
 
         if (bookingId) {
-          const id = parseInt(bookingId, 10);
-          if (!isNaN(id)) {
+          const id = bookingId;
+            if (id) {
             const piId = session.payment_intent || session.id;
             const receiptUrl = (piId && piId.startsWith('pi_')) ? await fetchReceiptUrl(piId) : null;
 
@@ -195,8 +195,8 @@ export class WebhookHandlers {
         const bookingId = paymentIntent.metadata?.bookingId;
 
         if (bookingId) {
-          const id = parseInt(bookingId, 10);
-          if (!isNaN(id)) {
+          const id = bookingId;
+            if (id) {
             const [existing] = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
             if (existing && existing.status !== 'confirmed') {
               const latestCharge = paymentIntent.latest_charge;
@@ -311,8 +311,8 @@ export class WebhookHandlers {
         const bookingId = session.metadata?.bookingId || session.client_reference_id;
 
         if (bookingId) {
-          const id = parseInt(bookingId, 10);
-          if (!isNaN(id)) {
+          const id = bookingId;
+            if (id) {
             await db.update(bookings)
               .set({ status: 'expired', stripePaymentStatus: 'expired' })
               .where(eq(bookings.id, id));

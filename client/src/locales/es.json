@@ -269,6 +269,7 @@
       "desc": "Descubra el nuevo estándar en viajes. Más que reservas, ofrecemos una curaduría inteligente y un servicio de concierge enfocado en quienes exigen lo mejor.",
       "btn_explore": "Explorar Destinos",
       "btn_consulting": "Consultoría Privada",
+      "cta": "Buscar Vuelos",
       "perks": {
         "1": "Tarifas al vivo",
         "2": "Atención en portugués, inglés y español",
@@ -378,6 +379,8 @@
     "people": "Personas",
     "class": "Clase",
     "passengers": "Pasajeros",
+    "pax": "Pax",
+    "pax_class": "Pasajeros & Clase",
     "adults": "Adultos",
     "adults_desc": "12 años o más",
     "children": "Niños",

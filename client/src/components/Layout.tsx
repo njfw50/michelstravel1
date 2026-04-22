@@ -256,7 +256,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg">
                             <User className="h-4 w-4" />
                           </div>
-                          <span className="text-[10px] font-black uppercase tracking-widest">{user.firstName || "User"}</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest">{(user.displayName || '').split(' ')[0] || "User"}</span>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-64 rounded-[32px] border border-white/10 bg-slate-950 backdrop-blur-3xl p-3 shadow-2xl shadow-black/80">

@@ -210,15 +210,15 @@ function AdminLocationInput({
 }
 
 interface Message {
-  id: number;
-  conversationId: number;
+  id: string;
+  conversationId: string;
   role: string;
   content: string;
   createdAt: string;
 }
 
 interface Conversation {
-  id: number;
+  id: string;
   title: string;
   visitorId: string | null;
   language: string | null;
@@ -230,8 +230,8 @@ interface Conversation {
 }
 
 interface LiveSessionRequest {
-  id: number;
-  conversationId: number | null;
+  id: string;
+  conversationId: string | null;
   visitorId: string | null;
   language: string | null;
   serviceMode?: string | null;
@@ -242,8 +242,8 @@ interface LiveSessionRequest {
 }
 
 interface LiveSessionActive {
-  id: number;
-  conversationId: number | null;
+  id: string;
+  conversationId: string | null;
   visitorId: string | null;
   language: string | null;
   serviceMode?: string | null;
@@ -254,8 +254,8 @@ interface LiveSessionActive {
 }
 
 interface LiveMessage {
-  id: number;
-  sessionId: number;
+  id: string;
+  sessionId: string;
   role: string;
   content: string;
   createdAt: string;
@@ -263,7 +263,7 @@ interface LiveMessage {
 
 interface LiveSessionDetail {
   session: {
-    id: number;
+    id: string;
     visitorId: string | null;
     language: string | null;
     serviceMode?: string | null;
@@ -273,7 +273,7 @@ interface LiveSessionDetail {
     referenceCode?: string | null;
     createdAt?: string;
   };
-  id: number;
+  id: string;
   status: string;
   visitorId: string | null;
   messages: LiveMessage[];
@@ -281,8 +281,8 @@ interface LiveSessionDetail {
 }
 
 interface LiveBlock {
-  id: number;
-  sessionId: number;
+  id: string;
+  sessionId: string;
   blockType: string;
   payload: unknown;
   shared: boolean;
@@ -348,7 +348,7 @@ function getTripTypeLabel(tripType: "round_trip" | "one_way" | "multi_city") {
 function LiveSalesPanel() {
   const [requests, setRequests] = useState<LiveSessionRequest[]>([]);
   const [activeSessions, setActiveSessions] = useState<LiveSessionActive[]>([]);
-  const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [sessionDetail, setSessionDetail] = useState<LiveSessionDetail | null>(null);
   const [loadingList, setLoadingList] = useState(true);
   const [sessionsPanelOpen, setSessionsPanelOpen] = useState(true);
@@ -388,7 +388,7 @@ function LiveSalesPanel() {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const liveMsgEndRef = useRef<HTMLDivElement>(null);
-  const prefilledSessionRef = useRef<number | null>(null);
+  const prefilledSessionRef = useRef<string | null>(null);
   const { t } = useI18n();
 
   // Media States
@@ -573,8 +573,8 @@ function LiveSalesPanel() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const requestedSession = Number.parseInt(new URLSearchParams(window.location.search).get("session") || "", 10);
-    if (!Number.isFinite(requestedSession) || requestedSession <= 0) return;
+    const requestedSession = new URLSearchParams(window.location.search).get("session");
+    if (!requestedSession) return;
     setSelectedSessionId(requestedSession);
   }, []);
 
@@ -613,7 +613,7 @@ function LiveSalesPanel() {
     liveMsgEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [sessionDetail?.messages]);
 
-  const handleAcceptSession = async (id: number) => {
+  const handleAcceptSession = async (id: string) => {
     try {
       const res = await adminFetch(`/api/live-sessions/admin/${id}/accept`, {
         method: "POST",
@@ -835,15 +835,16 @@ function LiveSalesPanel() {
     }
   };
 
-  const handleSendLiveMessage = async () => {
-    if (!liveMessage.trim() || !selectedSessionId || sendingMessage) return;
+  const handleSendLiveMessage = async (content?: string) => {
+    const messageText = content || liveMessage.trim();
+    if (!messageText || !selectedSessionId || sendingMessage) return;
     setSendingMessage(true);
     try {
       await adminFetch(`/api/live-sessions/admin/${selectedSessionId}/messages`, {
         method: "POST",
-        body: JSON.stringify({ content: liveMessage.trim() }),
+        body: JSON.stringify({ content: messageText }),
       });
-      setLiveMessage("");
+      if (!content) setLiveMessage("");
       await fetchSessionDetail();
     } catch {} finally {
       setSendingMessage(false);
@@ -1273,7 +1274,7 @@ function LiveSalesPanel() {
                 ) : flightResults.length > 0 ? (
                   <div className="space-y-4">
                      {orderedFlightResults.map((flight) => {
-                       const isShared = (sessionDetail?.sharedFlights || []).some(sf => sf.id === flight.id);
+                       const isShared = !!sharedBlockMap[flight.id];
                        const recommendation = recommendationMap.get(flight.id);
                        const currentPrice = getFlightPrice(flight);
                        
@@ -1485,7 +1486,7 @@ function LiveSalesPanel() {
                             placeholder={t("admin.live_chat.your_message_placeholder")}
                             className="glass bg-white/10 border-white/10 h-9 rounded-xl text-xs"
                           />
-                          <Button size="icon" className="h-9 w-9 rounded-xl bg-primary" onClick={handleSendLiveMessage}>
+                          <Button size="icon" className="h-9 w-9 rounded-xl bg-primary" onClick={() => handleSendLiveMessage()}>
                             <Send className="h-3.5 w-3.5" />
                           </Button>
                        </div>
@@ -1521,7 +1522,7 @@ function LiveSalesPanel() {
 export default function AdminLiveChat() {
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<"chat" | "vendas">("chat");
-  const [selectedConvId, setSelectedConvId] = useState<number | null>(null);
+  const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
   const [reply, setReply] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -1602,7 +1603,7 @@ export default function AdminLiveChat() {
   });
 
   const resolveConv = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       await apiRequest("POST", `/api/admin/chatbot/escalations/${id}/resolve`, {});
     },
     onSuccess: () => {

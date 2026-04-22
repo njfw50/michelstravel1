@@ -1,9 +1,9 @@
 import type { Express, Request, Response } from "express";
 import { storage } from "../storage";
 
-function parseRouteId(value: string | string[] | undefined): number {
+function parseRouteId(value: string | string[] | undefined): string {
   const normalizedValue = Array.isArray(value) ? value[0] : value;
-  return Number.parseInt(normalizedValue ?? "", 10);
+  return normalizedValue ?? "";
 }
 
 export function registerVoiceEscalationRoutes(app: Express) {
@@ -32,7 +32,7 @@ export function registerVoiceEscalationRoutes(app: Express) {
       // This will be implemented in the next phase
       try {
         await sendFacebookNotification({
-          escalationId: escalation.id,
+          escalationid: escalation.id,
           reason,
           customerPhone,
           summary
@@ -44,7 +44,7 @@ export function registerVoiceEscalationRoutes(app: Express) {
       
       res.json({
         success: true,
-        escalationId: escalation.id,
+        escalationid: escalation.id,
         message: 'Escalation recorded successfully'
       });
       
@@ -95,7 +95,7 @@ export function registerVoiceEscalationRoutes(app: Express) {
 }
 
 async function sendFacebookNotification(data: {
-  escalationId: number;
+  escalationid: string;
   reason: string;
   customerPhone?: string;
   summary?: string;
@@ -114,7 +114,7 @@ async function sendFacebookNotification(data: {
 ${data.customerPhone ? `*Telefone do Cliente:* ${data.customerPhone}` : ''}
 ${data.summary ? `\n*Resumo:*\n${data.summary}` : ''}
 
-*ID da Escalação:* #${data.escalationId}
+*ID da Escalação:* #${data.escalationid}
 
 Por favor, entre em contato com o cliente o mais rápido possível.`;
   

@@ -277,6 +277,7 @@
       "desc": "Descubra o novo padrão em viagens. Mais do que reservas, oferecemos uma curadoria inteligente e um serviço de concierge focado em quem exige o melhor. Cuidamos de cada detalhe para que sua única preocupação seja aproveitar o destino.",
       "btn_explore": "Explorar Destinos",
       "btn_consulting": "Consultoria Privada",
+      "cta": "Buscar Voos",
       "perks": {
         "1": "Tarifas ao vivo",
         "2": "Atendimento em português, inglês e espanhol",
@@ -386,6 +387,8 @@
     "people": "Pessoas",
     "class": "Classe",
     "passengers": "Passageiros",
+    "pax": "Pax",
+    "pax_class": "Passageiros & Classe",
     "adults": "Adultos",
     "adults_desc": "12 anos ou mais",
     "children": "Crianças",

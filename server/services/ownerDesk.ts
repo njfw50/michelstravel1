@@ -54,10 +54,10 @@ export interface OwnerDeskCase {
   appLinked: boolean;
   deviceCount: number;
   scannerHandoffEnabled: boolean;
-  bookingId: number | null;
-  threadId: number | null;
-  liveSessionId: number | null;
-  escalationId: number | null;
+  bookingId: string | null;
+  threadId: string | null;
+  liveSessionId: string | null;
+  escalationId: string | null;
   timeline: OwnerDeskTimelineItem[];
 }
 
@@ -100,9 +100,9 @@ export interface OwnerDeskAlert {
   actionUrl: string;
   customerPhone: string | null;
   customerEmail: string | null;
-  liveSessionId: number | null;
-  bookingId: number | null;
-  threadId: number | null;
+  liveSessionId: string | null;
+  bookingId: string | null;
+  threadId: string | null;
 }
 
 export interface OwnerDeskFollowUp {
@@ -119,9 +119,9 @@ export interface OwnerDeskFollowUp {
   actionUrl: string;
   customerPhone: string | null;
   customerEmail: string | null;
-  liveSessionId: number | null;
-  bookingId: number | null;
-  threadId: number | null;
+  liveSessionId: string | null;
+  bookingId: string | null;
+  threadId: string | null;
 }
 
 interface CaseAccumulator {
@@ -147,13 +147,13 @@ interface CaseAccumulator {
   appLinked: boolean;
   deviceCount: number;
   scannerHandoffEnabled: boolean;
-  bookingId: number | null;
+  bookingId: string | null;
   bookingUpdatedAt: number;
-  threadId: number | null;
+  threadId: string | null;
   threadUpdatedAt: number;
-  liveSessionId: number | null;
+  liveSessionId: string | null;
   liveUpdatedAt: number;
-  escalationId: number | null;
+  escalationId: string | null;
   escalationUpdatedAt: number;
   lastTouchAt: number;
   latestSummary: string | null;
@@ -198,8 +198,8 @@ function extractPassengerName(passengerDetails: unknown) {
   const firstPassenger = passengerDetails[0] as Record<string, unknown>;
   return (
     buildDisplayName(
-      asNonEmptyText(firstPassenger?.givenName) || asNonEmptyText(firstPassenger?.firstName),
-      asNonEmptyText(firstPassenger?.familyName) || asNonEmptyText(firstPassenger?.lastName),
+      asNonEmptyText(firstPassenger?.givenName) || asNonEmptyText(firstPassenger?.displayName),
+      asNonEmptyText(firstPassenger?.familyName) || asNonEmptyText(firstPassenger?.displayName),
     ) ||
     asNonEmptyText(firstPassenger?.fullName)
   );
@@ -566,7 +566,7 @@ export async function buildOwnerDeskSnapshot(): Promise<OwnerDeskSnapshot> {
   const userById = new Map(allUsers.map((user) => [user.id, user]));
   const profileByUserId = new Map(profiles.map((profile) => [profile.userId, profile]));
   const devicesByUserId = new Map<string, Array<typeof deviceRows[number]>>();
-  const latestMessageByThreadId = new Map<number, typeof messageRows[number]>();
+  const latestMessageByThreadId = new Map<string, typeof messageRows[number]>();
 
   for (const device of deviceRows) {
     if (device.revokedAt) continue;
@@ -625,8 +625,8 @@ export async function buildOwnerDeskSnapshot(): Promise<OwnerDeskSnapshot> {
     if (user?.email) registerKey(caseRef, `email:${normalizeEmail(user.email)}`);
     if (user?.phone) registerKey(caseRef, `phone:${normalizePhone(user.phone)}`);
 
-    if (shouldReplaceName(caseRef.customerName, buildDisplayName(user?.firstName, user?.lastName))) {
-      caseRef.customerName = buildDisplayName(user?.firstName, user?.lastName);
+    if (shouldReplaceName(caseRef.customerName, buildDisplayName(user?.displayName, user?.displayName))) {
+      caseRef.customerName = buildDisplayName(user?.displayName, user?.displayName);
     }
 
     if (!caseRef.customerEmail && user?.email) {
