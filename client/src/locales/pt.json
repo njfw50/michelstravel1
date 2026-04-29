@@ -942,5 +942,14 @@
     "secure_badge": "Sessão Blindada & Criptografada",
     "error_message": "Ops, algo deu errado na conexão. Tente novamente.",
     "close": "Fechar Chat"
+  },
+  "trips": {
+    "title": "Minhas Viagens",
+    "subtitle": "Acompanhe e gerencie todas as suas reservas em um só lugar.",
+    "lookup_button": "Consultar Reserva",
+    "reference_placeholder": "MT-XXXXXX",
+    "email_placeholder": "Email da reserva",
+    "not_found": "Reserva não encontrada",
+    "not_found_desc": "Verifique o código e o email informados e tente novamente."
   }
 }

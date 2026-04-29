@@ -4,10 +4,8 @@ import * as schema from "@shared/schema";
 
 const { Pool } = pg;
 
-// Force bypass for self-signed certificates in production (Supabase/Render)
-if (process.env.NODE_ENV === "production") {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-}
+// Force bypass for self-signed certificates in all environments (handles local proxy/antivirus and Supabase SSL strictness)
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 type Database = NodePgDatabase<typeof schema>;
 

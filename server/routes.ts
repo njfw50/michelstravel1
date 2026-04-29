@@ -50,6 +50,7 @@ import {
 import { buildOwnerDeskSnapshot } from "./services/ownerDesk";
 import { buildRedactedDocumentPayload } from "./services/passengerPrivacy";
 import { analyzeDocumentScanWithAi } from "./services/documentScannerAi";
+import { getBalancedDeals, runDealsAutomation } from "./services/deals-automation";
 import { ensureCustomerProfile, resolveCustomerMobileAuth } from "./routes/customer_mobile";
 
 function parseIdRouteParam(value: string | string[] | undefined): string {
@@ -4376,8 +4377,6 @@ OUTPUT FORMAT (JSON only):
   // ======= PUBLIC API - Zapier Flight Deals =======
   app.get('/api/public/flight-deals', async (_req, res) => {
     try {
-      const { getBalancedDeals, runDealsAutomation } = await import('./services/deals-automation');
-      
       let deals = await getBalancedDeals();
       
       // If we don't have enough deals, trigger a quick background refresh and retry once

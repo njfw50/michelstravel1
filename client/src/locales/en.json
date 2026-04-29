@@ -619,5 +619,14 @@
     "secure_badge": "Shielded & Encrypted Session",
     "error_message": "Oops, something went wrong with the connection. Please try again.",
     "close": "Close Chat"
+  },
+  "trips": {
+    "title": "My Trips",
+    "subtitle": "Track and manage all your bookings in one place.",
+    "lookup_button": "Look up booking",
+    "reference_placeholder": "MT-XXXXXX",
+    "email_placeholder": "Booking email",
+    "not_found": "Booking not found",
+    "not_found_desc": "Check the code and email provided and try again."
   }
 }
