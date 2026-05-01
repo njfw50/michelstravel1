@@ -585,5 +585,38 @@
   "confirm": {
     "whatsapp_help_topic": "Ayuda después de la reserva",
     "whatsapp_help_details": "Página: Confirmación de Reserva"
+  },
+  "trips": {
+    "title": "Mis Viajes",
+    "subtitle": "Rastree sus reservas, tarjetas de embarque e historial de viajes.",
+    "lookup_title": "Buscar una Reserva",
+    "lookup_desc": "Ingrese su código y correo electrónico para encontrar su reserva",
+    "lookup_ref_placeholder": "Código (Ej: MT-ABC123)",
+    "lookup_email_placeholder": "Correo electrónico",
+    "lookup_button": "Buscar",
+    "lookup_searching": "Buscando...",
+    "lookup_not_found": "Reserva no encontrada",
+    "lookup_not_found_desc": "Por favor revise su código y correo electrónico.",
+    "login_title": "Inicie sesión para acceso completo",
+    "login_desc": "Inicie sesión para ver todas sus reservas, descargar e-tickets y gestionar equipaje.",
+    "no_trips": "Sin viajes aún",
+    "no_trips_desc": "Cuando reserve un vuelo, aparecerá aquí.",
+    "search_flights": "Buscar Vuelos",
+    "your_bookings": "Sus Reservas",
+    "booked_on": "Reservado el",
+    "ticket_issued": "Boleto Emitido",
+    "schedule_changed": "Horario Cambiado por la Aerolínea",
+    "ticket_cancelled": "Boleto Cancelado",
+    "ticket_failed": "Fallo en Emisión",
+    "airline_ref": "Referencia de Aerolínea (PNR)",
+    "ticket_number": "Número de E-Ticket",
+    "schedule_changed_desc": "La aerolínea ha realizado cambios en el horario de su vuelo. Revise los detalles.",
+    "ticket_failed_desc": "Hubo un problema al emitir su boleto. Nuestro equipo ha sido notificado.",
+    "cancelled_success": "Reserva cancelada con éxito",
+    "refund_amount": "Reembolso",
+    "cancel_confirm": "¿Está seguro de que desea cancelar esta reserva?",
+    "yes_cancel": "Sí, Cancelar",
+    "cancel_booking": "Cancelar Viaje",
+    "contact_note": "Para cambios, cancelaciones o equipaje, contáctenos al menos 24 horas antes del vuelo."
   }
 }
