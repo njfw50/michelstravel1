@@ -287,7 +287,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
 
               <button
-                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-300 transition-all hover:bg-blue-600 hover:text-white shadow-xl lg:hidden"
+                className="hidden h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-300 transition-all hover:bg-blue-600 hover:text-white shadow-xl lg:hidden"
                 onClick={() => setIsMobileMenuOpen((value) => !value)}
                 data-testid="button-mobile-menu"
               >
@@ -340,7 +340,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <LoginDialog open={loginDialogOpen} onOpenChange={handleLoginDialogChange} authError={authError} />
 
-      <main className="flex-1 relative z-10 pt-20 md:pt-28">
+      <main className="flex-1 relative z-10 pt-20 md:pt-28 pb-24 md:pb-0">
         {children}
       </main>
 
@@ -420,7 +420,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="flex items-center gap-6">
                 <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-700">&copy; {new Date().getFullYear()} Michels Travel &bull; {t("footer.elite_travel")}</span>
               </div>
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-6 pb-20 md:pb-0">
                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 px-6 py-2 rounded-full border border-white/5 shadow-xl">
                   {t("footer.motto") || "Atendimento claro e suporte humano"}
                 </span>
@@ -428,6 +428,35 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </footer>
+
+      {/* Premium Mobile Bottom Navigation Bar */}
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-slate-950/90 backdrop-blur-2xl border-t border-white/10 pb-safe pt-1 shadow-[0_-20px_40px_rgba(0,0,0,0.8)]">
+        <div className="flex items-center justify-around px-2 py-3">
+          <Link href="/" className={cn("flex flex-col items-center gap-1.5 transition-all", isHome ? "text-blue-500 scale-110" : "text-slate-500 hover:text-slate-300")}>
+             <Globe className="h-5 w-5" />
+             <span className="text-[8px] font-black uppercase tracking-widest">Voos</span>
+          </Link>
+          <Link href="/my-trips" className={cn("flex flex-col items-center gap-1.5 transition-all", location === "/my-trips" ? "text-blue-500 scale-110" : "text-slate-500 hover:text-slate-300")}>
+             <Briefcase className="h-5 w-5" />
+             <span className="text-[8px] font-black uppercase tracking-widest">Viagens</span>
+          </Link>
+          <Link href="/messages" className={cn("flex flex-col items-center gap-1.5 relative transition-all", location === "/messages" ? "text-blue-500 scale-110" : "text-slate-500 hover:text-slate-300")}>
+             <MessageSquare className="h-5 w-5" />
+             <UnreadBadge />
+             <span className="text-[8px] font-black uppercase tracking-widest">Chat</span>
+          </Link>
+          {user && (
+            <Link href={user.isAdmin ? "/admin" : "/profile"} className={cn("flex flex-col items-center gap-1.5 transition-all", location === "/admin" || location === "/profile" ? "text-blue-500 scale-110" : "text-slate-500 hover:text-slate-300")}>
+               {user.isAdmin ? <LayoutDashboard className="h-5 w-5" /> : <User className="h-5 w-5" />}
+               <span className="text-[8px] font-black uppercase tracking-widest">{user.isAdmin ? "Admin" : "Perfil"}</span>
+            </Link>
+          )}
+          <button onClick={() => setIsMobileMenuOpen(true)} className="flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all">
+             <Menu className="h-5 w-5" />
+             <span className="text-[8px] font-black uppercase tracking-widest">Menu</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

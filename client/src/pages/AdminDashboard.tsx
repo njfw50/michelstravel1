@@ -118,7 +118,7 @@ function TestModeControl() {
   if (isLoading) {
     return (
       <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardContent className="p-6 flex items-center justify-center">
+        <CardContent className="p-4 md:p-6 flex items-center justify-center">
           <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
         </CardContent>
       </Card>
@@ -136,9 +136,9 @@ function TestModeControl() {
         {/* Ambient status background glow */}
         <div className={`absolute top-0 right-0 w-32 h-32 blur-[60px] pointer-events-none -mr-16 -mt-16 transition-colors duration-700 ${currentTestMode ? 'bg-indigo-500/20' : 'bg-emerald-500/20'}`} />
         
-        <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-6 relative z-10 border-b border-white/5">
+        <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 space-y-0 pb-6 relative z-10 border-b border-white/5">
           <div className="flex items-center gap-4">
-            <div className={`h-14 w-14 rounded-2xl border flex items-center justify-center shadow-2xl transition-all duration-500 ${
+            <div className={`h-12 md:h-14 w-14 rounded-2xl border flex items-center justify-center shadow-2xl transition-all duration-500 ${
               currentTestMode 
                 ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30 shadow-indigo-500/10' 
                 : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30 shadow-emerald-500/10'
@@ -166,7 +166,7 @@ function TestModeControl() {
           </Badge>
         </CardHeader>
 
-        <CardContent className="p-8 space-y-8 relative z-10">
+        <CardContent className="p-4 md:p-8 space-y-8 relative z-10">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all group/item">
               <div className="flex items-center gap-3">
@@ -384,7 +384,7 @@ function CommissionControl() {
   if (isLoading) {
     return (
       <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardContent className="p-6 flex items-center justify-center">
+        <CardContent className="p-4 md:p-6 flex items-center justify-center">
           <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
         </CardContent>
       </Card>
@@ -395,9 +395,9 @@ function CommissionControl() {
     <Card className="glass-card border-white/5 relative group overflow-hidden">
       <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/5 blur-[40px] -mr-12 -mt-12" />
       
-      <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-6 border-b border-white/5 relative z-10">
+      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 space-y-0 pb-6 border-b border-white/5 relative z-10">
         <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl border border-teal-500/20 bg-teal-500/10 flex items-center justify-center text-teal-400 shadow-lg shadow-teal-500/5">
+          <div className="h-12 md:h-14 w-14 rounded-2xl border border-teal-500/20 bg-teal-500/10 flex items-center justify-center text-teal-400 shadow-lg shadow-teal-500/5">
             <Percent className="h-7 w-7" />
           </div>
           <div>
@@ -407,7 +407,7 @@ function CommissionControl() {
         </div>
       </CardHeader>
 
-      <CardContent className="p-8 pt-6 space-y-6 relative z-10">
+      <CardContent className="p-4 md:p-8 pt-6 space-y-6 relative z-10">
         <div className="flex flex-col gap-4 p-6 rounded-2xl bg-white/5 border border-white/5 group-hover:border-white/10 transition-all duration-500">
           <Label htmlFor="commission-rate" className="text-xs font-bold text-slate-300 uppercase tracking-widest">
             {t("admin.commission_label")}
@@ -426,7 +426,7 @@ function CommissionControl() {
                   setCommissionValue(e.target.value);
                   setHasChanges(true);
                 }}
-                className="bg-slate-950/50 border-white/10 text-white font-bold h-14 rounded-2xl focus:ring-indigo-500/50 text-lg px-6"
+                className="bg-slate-950/50 border-white/10 text-white font-bold h-12 md:h-14 rounded-2xl focus:ring-indigo-500/50 text-lg px-6"
               />
               <span className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-xl">%</span>
             </div>
@@ -434,7 +434,7 @@ function CommissionControl() {
               data-testid="button-save-commission"
               onClick={handleSave}
               disabled={!hasChanges || updateSettings.isPending}
-              className={`h-14 px-8 rounded-2xl font-bold gap-3 transition-all duration-500 transform hover:scale-[1.02] active:scale-[0.98] ${
+              className={`h-12 md:h-14 px-8 rounded-2xl font-bold gap-3 transition-all duration-500 transform hover:scale-[1.02] active:scale-[0.98] ${
                 hasChanges 
                   ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-xl shadow-indigo-500/20' 
                   : 'bg-white/5 text-slate-500'
@@ -501,7 +501,7 @@ function MobileAppChannelControl() {
   if (isLoading) {
     return (
       <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardContent className="p-6 flex items-center justify-center">
+        <CardContent className="p-4 md:p-6 flex items-center justify-center">
           <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
         </CardContent>
       </Card>
@@ -512,9 +512,9 @@ function MobileAppChannelControl() {
     <Card className="glass-card border-white/5 relative group overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-[50px] -mr-16 -mt-16" />
       
-      <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-6 border-b border-white/5 relative z-10">
+      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 space-y-0 pb-6 border-b border-white/5 relative z-10">
         <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl border border-indigo-500/20 bg-indigo-500/10 flex items-center justify-center text-indigo-400 shadow-lg shadow-indigo-500/5">
+          <div className="h-12 md:h-14 w-14 rounded-2xl border border-indigo-500/20 bg-indigo-500/10 flex items-center justify-center text-indigo-400 shadow-lg shadow-indigo-500/5">
             <Smartphone className="h-7 w-7" />
           </div>
           <div>
@@ -533,11 +533,11 @@ function MobileAppChannelControl() {
         </Badge>
       </CardHeader>
 
-      <CardContent className="p-8 space-y-8 relative z-10">
+      <CardContent className="p-4 md:p-8 space-y-8 relative z-10">
         <div className="grid gap-6 md:grid-cols-2">
           <div className="rounded-[24px] border border-white/5 bg-white/5 p-6 hover:border-white/10 transition-all group/item overflow-hidden relative">
             <div className={`absolute top-0 right-0 w-16 h-16 blur-[30px] -mr-8 -mt-8 transition-colors ${ (settings?.mobileAppTestEnabled ?? true) ? 'bg-indigo-500/10' : 'bg-slate-500/10' }`} />
-            <div className="flex items-center justify-between gap-4 relative z-10">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
               <div>
                 <p className="text-sm font-black text-white uppercase tracking-tight">App em Sandbox</p>
                 <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-widest leading-relaxed">Permitir acesso quando o backend estiver em modo teste.</p>
@@ -560,7 +560,7 @@ function MobileAppChannelControl() {
 
           <div className="rounded-[24px] border border-white/5 bg-white/5 p-6 hover:border-white/10 transition-all group/item overflow-hidden relative">
              <div className={`absolute top-0 right-0 w-16 h-16 blur-[30px] -mr-8 -mt-8 transition-colors ${ (settings?.mobileAppProductionEnabled ?? true) ? 'bg-emerald-500/10' : 'bg-slate-500/10' }`} />
-            <div className="flex items-center justify-between gap-4 relative z-10">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
               <div>
                 <p className="text-sm font-black text-white uppercase tracking-tight">App em Produção</p>
                 <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-widest leading-relaxed">Permitir acesso quando o backend estiver em modo real.</p>
@@ -703,9 +703,9 @@ function MobileAppReleaseControl() {
     <Card className="glass-card border-white/5 overflow-hidden group relative">
        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-[50px] -mr-16 -mt-16" />
        
-      <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-6 border-b border-white/5 relative z-10">
+      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 space-y-0 pb-6 border-b border-white/5 relative z-10">
         <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl border border-indigo-500/20 bg-indigo-500/10 flex items-center justify-center text-indigo-400 shadow-lg shadow-indigo-500/5">
+          <div className="h-12 md:h-14 w-14 rounded-2xl border border-indigo-500/20 bg-indigo-500/10 flex items-center justify-center text-indigo-400 shadow-lg shadow-indigo-500/5">
             <Smartphone className="h-7 w-7" />
           </div>
           <div>
@@ -720,7 +720,7 @@ function MobileAppReleaseControl() {
         </Badge>
       </CardHeader>
 
-      <CardContent className="p-8 space-y-8 relative z-10">
+      <CardContent className="p-4 md:p-8 space-y-8 relative z-10">
         <div className="grid gap-6 md:grid-cols-2">
           <div className="rounded-[24px] border border-white/5 bg-white/5 p-6 space-y-4 hover:border-white/10 transition-all">
             <p className="text-[10px] uppercase tracking-[0.25em] text-slate-400 font-black">Build em Produção</p>
@@ -771,7 +771,7 @@ function MobileAppReleaseControl() {
                 placeholder="ex.: fd247ea"
                 value={commitHash}
                 onChange={(event) => setCommitHash(event.target.value.trim())}
-                className="bg-slate-900/50 border-white/10 text-white font-mono h-14 rounded-2xl px-6 lg:w-48"
+                className="bg-slate-900/50 border-white/10 text-white font-mono h-12 md:h-14 rounded-2xl px-6 lg:w-48"
               />
               <div className="flex gap-4 flex-1">
                 <Button
@@ -779,7 +779,7 @@ function MobileAppReleaseControl() {
                   variant="ghost"
                   onClick={() => verifyMutation.mutate(commitHash)}
                   disabled={commitHash.length < 7 || verifyMutation.isPending}
-                  className="h-14 flex-1 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-white/5 hover:bg-white/5 hover:border-white/20 gap-3"
+                  className="h-12 md:h-14 flex-1 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-white/5 hover:bg-white/5 hover:border-white/20 gap-3"
                 >
                   {verifyMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
                   Verificar GitHub
@@ -788,7 +788,7 @@ function MobileAppReleaseControl() {
                   type="button"
                   onClick={() => publishMutation.mutate(commitHash)}
                   disabled={commitHash.length < 7 || publishMutation.isPending || !releaseStatus?.artifact}
-                  className="h-14 flex-1 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-xl shadow-indigo-500/20 gap-3 transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="h-12 md:h-14 flex-1 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-xl shadow-indigo-500/20 gap-3 transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {publishMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <RefreshCw className="h-5 w-5" />}
                   Publicar Release
@@ -925,9 +925,9 @@ function FeaturedDealsManager() {
     <Card className="glass-card border-white/5 relative group overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 blur-[50px] -mr-16 -mt-16" />
       
-      <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap pb-6 border-b border-white/5 relative z-10">
+      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 flex-wrap pb-6 border-b border-white/5 relative z-10">
         <div className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shadow-lg shadow-purple-500/5 transition-transform group-hover:scale-105 duration-500">
+          <div className="h-12 md:h-14 w-14 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shadow-lg shadow-purple-500/5 transition-transform group-hover:scale-105 duration-500">
             <Megaphone className="h-7 w-7 text-purple-400" />
           </div>
           <div>
@@ -945,7 +945,7 @@ function FeaturedDealsManager() {
         </Button>
       </CardHeader>
 
-      <CardContent className="p-8 space-y-8 relative z-10">
+      <CardContent className="p-4 md:p-8 space-y-8 relative z-10">
         <div className="flex items-center gap-4 p-5 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 group-hover:border-indigo-500/40 transition-all duration-500">
           <ExternalLink className="h-5 w-5 text-indigo-400 shrink-0" />
           <div className="flex-1 min-w-0">
@@ -958,7 +958,7 @@ function FeaturedDealsManager() {
         </div>
 
         {showForm && (
-          <div className="p-8 rounded-[32px] border border-white/10 bg-slate-950/40 space-y-8 animate-in fade-in slide-in-from-top-6 duration-700">
+          <div className="p-4 md:p-8 rounded-[32px] border border-white/10 bg-slate-950/40 space-y-8 animate-in fade-in slide-in-from-top-6 duration-700">
             <div className="flex items-center justify-between border-b border-white/5 pb-6">
               <h4 className="text-lg font-bold text-white font-display tracking-tight uppercase tracking-widest text-xs">
                 {editingDeal ? 'Configurar Edição' : 'Novos Parâmetros de Oferta'}
@@ -1021,13 +1021,13 @@ function FeaturedDealsManager() {
               <div className="space-y-2">
                 <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Título (Headline de Alta Conversão)</Label>
                 <Input data-testid="input-deal-headline" placeholder="Ex: Voos para Lisboa a partir de $599!"
-                  className="bg-slate-900/50 border-white/10 text-white font-bold h-14 rounded-2xl focus:ring-indigo-500/50 lg:text-lg"
+                  className="bg-slate-900/50 border-white/10 text-white font-bold h-12 md:h-14 rounded-2xl focus:ring-indigo-500/50 lg:text-lg"
                   value={form.headline} onChange={e => setForm(f => ({ ...f, headline: e.target.value }))} />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">URL da Imagem (Opcional)</Label>
                 <Input data-testid="input-deal-image" placeholder="https://exemplo.com/foto.jpg"
-                  className="bg-slate-900/50 border-white/10 text-white font-bold h-14 rounded-2xl focus:ring-indigo-500/50"
+                  className="bg-slate-900/50 border-white/10 text-white font-bold h-12 md:h-14 rounded-2xl focus:ring-indigo-500/50"
                   value={form.imageUrl} onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} />
               </div>
             </div>
@@ -1063,7 +1063,7 @@ function FeaturedDealsManager() {
         ) : (
           <div className="grid gap-4">
             {deals.map(deal => (
-              <div key={deal.id} className="flex items-center justify-between gap-4 p-5 rounded-[24px] bg-white/5 border border-white/5 hover:border-white/15 transition-all group/deal relative overflow-hidden">
+              <div key={deal.id} className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-5 rounded-[24px] bg-white/5 border border-white/5 hover:border-white/15 transition-all group/deal relative overflow-hidden">
                 <div className={`absolute left-0 top-0 bottom-0 w-1 ${deal.isActive ? 'bg-indigo-500' : 'bg-slate-700'}`} />
                 <div className="flex-1 min-w-0 flex items-center gap-6">
                   <div className={`h-12 w-12 rounded-xl border flex items-center justify-center shrink-0 ${deal.isActive ? 'border-indigo-500/30 bg-indigo-500/10 text-indigo-400' : 'border-slate-700 bg-slate-800/40 text-slate-500'}`}>
@@ -1357,7 +1357,7 @@ export default function AdminDashboard() {
     <div className="flex h-screen overflow-hidden bg-slate-950 font-sans selection:bg-indigo-500/30">
       {/* Sidebar Area - Floating Glass Panel */}
       <aside className="hidden md:flex w-64 lg:w-72 flex-col bg-slate-900/40 backdrop-blur-xl border-r border-white/5 z-20">
-        <div className="p-8 border-b border-white/5 flex flex-col items-start relative overflow-hidden group">
+        <div className="p-4 md:p-8 border-b border-white/5 flex flex-col items-start relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <div className="h-12 w-12 bg-indigo-500/20 rounded-2xl border border-indigo-500/30 flex items-center justify-center mb-5 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
             <LayoutDashboard className="h-6 w-6 text-indigo-400" />
@@ -1434,7 +1434,7 @@ export default function AdminDashboard() {
           </Button>
         </nav>
         
-        <div className="p-6 border-t border-white/5">
+        <div className="p-4 md:p-6 border-t border-white/5">
           <Button 
             variant="ghost" 
             onClick={handleLogout} 
@@ -1547,7 +1547,7 @@ export default function AdminDashboard() {
                     { label: "Vazão de Buscas", value: (stats as any)?.searchesToday ?? 0, today: `Live: ${(stats as any)?.recentSearches ?? 0}`, icon: Search, color: "amber", accent: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", glow: "bg-amber-500/5", tid: "text-stat-searches" }
                   ].map((stat) => (
                     <Card key={stat.label} className="glass-card border-white/5 shadow-2xl overflow-hidden group transition-all duration-500 hover:border-white/10">
-                      <CardContent className="p-8 flex items-center justify-between gap-5 relative z-10">
+                      <CardContent className="p-4 md:p-8 flex items-center justify-between gap-5 relative z-10">
                         <div className={`absolute top-0 right-0 w-24 h-24 ${stat.glow} blur-[40px] -mr-12 -mt-12 transition-opacity group-hover:opacity-100 opacity-50`} />
                         <div className="flex-1">
                           <p className="text-[10px] uppercase tracking-[0.25em] font-black text-slate-500 mb-4 group-hover:text-white transition-colors">{stat.label}</p>
@@ -1559,7 +1559,7 @@ export default function AdminDashboard() {
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{stat.today}</span>
                           </div>
                         </div>
-                        <div className={`h-14 w-14 rounded-2xl border ${stat.border} ${stat.bg} flex items-center justify-center ${stat.accent} shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3`}>
+                        <div className={`h-12 md:h-14 w-14 rounded-2xl border ${stat.border} ${stat.bg} flex items-center justify-center ${stat.accent} shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3`}>
                           <stat.icon className="h-7 w-7" />
                         </div>
                       </CardContent>
@@ -1686,7 +1686,7 @@ export default function AdminDashboard() {
                         return (
                           <div 
                             key={booking.id} 
-                            className="flex items-center justify-between gap-4 p-6 border-b border-white/5 hover:bg-white/[0.02] transition-colors cursor-pointer" 
+                            className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 border-b border-white/5 hover:bg-white/[0.02] transition-colors cursor-pointer" 
                             data-testid={`card-recent-booking-${booking.id}`}
                             onClick={() => openBookingsView({ bookingId: booking.id })}
                           >
@@ -1743,11 +1743,11 @@ export default function AdminDashboard() {
               <div className="animate-in fade-in duration-300 space-y-8">
                 <Card className="glass-card border-white/5 overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-[50px] -mr-16 -mt-16 pointer-events-none" />
-                  <CardHeader className="p-8 border-b border-white/5">
+                  <CardHeader className="p-4 md:p-8 border-b border-white/5">
                     <CardTitle className="text-xl font-bold text-white font-display tracking-tight">Gerenciamento de Reservas</CardTitle>
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Arquivo Central de Operações</p>
                   </CardHeader>
-                  <CardContent className="p-8 space-y-8">
+                  <CardContent className="p-4 md:p-8 space-y-8">
                     <div className="flex flex-col lg:flex-row gap-6">
                       <div className="relative flex-1 group">
                         <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
@@ -1756,7 +1756,7 @@ export default function AdminDashboard() {
                           placeholder="Localizar por ID, Email ou Localizador..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="h-14 pl-14 bg-slate-950/40 border-white/5 text-white font-medium rounded-2xl focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-600"
+                          className="h-12 md:h-14 pl-14 bg-slate-950/40 border-white/5 text-white font-medium rounded-2xl focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all placeholder:text-slate-600"
                         />
                       </div>
                       <div className="flex items-center gap-3 bg-slate-950/40 p-1.5 rounded-[20px] border border-white/5">
@@ -1787,12 +1787,12 @@ export default function AdminDashboard() {
                       <Table>
                         <TableHeader className="bg-slate-950/40 border-b border-white/5">
                           <TableRow className="border-0 hover:bg-transparent">
-                            <TableHead className="w-[80px] text-[10px] h-14 uppercase tracking-widest font-black text-slate-500 px-8">REF ID</TableHead>
-                            <TableHead className="text-[10px] h-14 uppercase tracking-widest font-black text-slate-500">Curadoria / Cliente</TableHead>
-                            <TableHead className="text-[10px] h-14 uppercase tracking-widest font-black text-slate-500">Rota Estratégica</TableHead>
-                            <TableHead className="text-right text-[10px] h-14 uppercase tracking-widest font-black text-slate-500">Investment</TableHead>
-                            <TableHead className="text-[10px] h-14 uppercase tracking-widest font-black text-slate-500 text-center">Status</TableHead>
-                            <TableHead className="w-[120px] text-[10px] h-14 uppercase tracking-widest font-black text-slate-500 text-right px-8">Ações</TableHead>
+                            <TableHead className="w-[80px] text-[10px] h-12 md:h-14 uppercase tracking-widest font-black text-slate-500 px-8">REF ID</TableHead>
+                            <TableHead className="text-[10px] h-12 md:h-14 uppercase tracking-widest font-black text-slate-500">Curadoria / Cliente</TableHead>
+                            <TableHead className="text-[10px] h-12 md:h-14 uppercase tracking-widest font-black text-slate-500">Rota Estratégica</TableHead>
+                            <TableHead className="text-right text-[10px] h-12 md:h-14 uppercase tracking-widest font-black text-slate-500">Investment</TableHead>
+                            <TableHead className="text-[10px] h-12 md:h-14 uppercase tracking-widest font-black text-slate-500 text-center">Status</TableHead>
+                            <TableHead className="w-[120px] text-[10px] h-12 md:h-14 uppercase tracking-widest font-black text-slate-500 text-right px-8">Ações</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1947,7 +1947,7 @@ export default function AdminDashboard() {
                 </CardTitle>
                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Validação de Documentos e Biometria Digital</p>
               </CardHeader>
-              <CardContent className="p-8 space-y-6">
+              <CardContent className="p-4 md:p-8 space-y-6">
                 <div className="bg-white/5 border border-white/5 p-5 rounded-2xl">
                    <p className="text-xs text-slate-400 leading-relaxed font-medium">
                     Utilize o motor de visão Mia para realizar OCR e validação de autenticidade em documentos de viagem. Esta ferramenta simula o processamento realizado no Terminal Sênior.
