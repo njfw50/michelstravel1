@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Cookie, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/lib/i18n";
+import { Link } from "wouter";
 
 const COOKIE_CONSENT_KEY = "michels-travel-cookie-consent";
 
@@ -50,14 +51,14 @@ export function CookieConsent() {
                     <p className="text-sm text-muted-foreground leading-relaxed" data-testid="text-cookie-message">
                       {t("cookie.message")}
                     </p>
-                    <a
-                      href="#"
+                    <Link
+                      href="/privacy"
                       className="inline-flex items-center gap-1 text-xs text-blue-500 dark:text-blue-400 font-medium mt-1.5 transition-colors"
                       data-testid="link-cookie-privacy"
                     >
                       <Shield className="h-3 w-3" />
                       {t("cookie.privacy")}
-                    </a>
+                    </Link>
                   </div>
                 </div>
 
