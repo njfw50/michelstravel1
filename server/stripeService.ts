@@ -131,6 +131,7 @@ export class StripeService {
         ].filter(Boolean).join('\n'),
         statement_descriptor: 'MICHELS TRAVEL',
         statement_descriptor_suffix: (metadata.referenceCode || '').substring(0, 22),
+        capture_method: 'manual',
         metadata: {
           bookingId: String(metadata.bookingId),
           referenceCode: metadata.referenceCode || '',
@@ -175,6 +176,17 @@ export class StripeService {
 
   async getSubscription(subscriptionId: string) {
     return await storage.getSubscription(subscriptionId);
+  }
+}
+
+  async capturePayment(paymentIntentId: string) {
+    const stripe = await getUncachableStripeClient();
+    return await stripe.paymentIntents.capture(paymentIntentId);
+  }
+
+  async cancelPayment(paymentIntentId: string, cancellationReason: "duplicate" | "fraudulent" | "requested_by_customer" | "abandoned" = "abandoned") {
+    const stripe = await getUncachableStripeClient();
+    return await stripe.paymentIntents.cancel(paymentIntentId, { cancellation_reason: cancellationReason });
   }
 }
 
