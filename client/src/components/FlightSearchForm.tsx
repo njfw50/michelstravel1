@@ -226,47 +226,47 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
               "grid gap-4 items-end",
               isCompact ? "grid-cols-1 md:grid-cols-12" : "grid-cols-1 md:grid-cols-11"
             )}>
-              {/* Departure Location */}
-              <div className={cn(isCompact ? "md:col-span-3" : "md:col-span-3")}>
+              {/* Origin & Destination Group */}
+              <div className={cn("relative grid gap-2 md:gap-4", isCompact ? "md:col-span-7 md:grid-cols-[1fr_auto_1fr]" : "md:col-span-7 md:grid-cols-[1fr_auto_1fr]")}>
+                {/* Departure Location */}
+                <div className="relative">
+                    <LocationSearch
+                      label={isCompact ? "" : t("search.from")}
+                      value={origin}
+                      onChange={setOrigin}
+                      placeholder={t("search.from")}
+                      isLarge={!isCompact}
+                      className="w-full"
+                      dark={true}
+                    />
+                </div>
+
+                {/* Swap Button (Overlapping on Mobile, Centered on Desktop) */}
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 md:relative md:right-auto md:top-auto md:translate-y-0 flex items-center justify-center z-20">
+                  <button
+                    type="button"
+                    onClick={() => { const tmp = origin; setOrigin(destination); setDestination(tmp); }}
+                    className={cn(
+                      "rounded-full border border-white/10 bg-slate-800 shadow-[0_0_20px_rgba(0,0,0,0.5)] text-blue-400 hover:text-white hover:border-blue-500 hover:bg-blue-600 transition-all active:scale-90 md:rounded-2xl",
+                      isCompact ? "h-10 w-10 md:h-11 md:w-11" : "h-12 w-12 md:h-16 md:w-16"
+                    )}
+                  >
+                    <ArrowRightLeft className="h-5 w-5 mx-auto rotate-90 md:rotate-0" />
+                  </button>
+                </div>
+
+                {/* Arrival Location */}
+                <div className="relative mt-2 md:mt-0">
                   <LocationSearch
-                    label={isCompact ? "" : t("search.from")}
-                    value={origin}
-                    onChange={setOrigin}
-                    placeholder={t("search.from")}
+                    label={isCompact ? "" : t("search.to")}
+                    value={destination}
+                    onChange={setDestination}
+                    placeholder={t("search.to")}
                     isLarge={!isCompact}
                     className="w-full"
                     dark={true}
                   />
-              </div>
-
-              {/* Swap Button */}
-              <div className={cn(
-                "flex items-center justify-center",
-                isCompact ? "md:col-span-1" : "md:col-span-1"
-              )}>
-                <button
-                  type="button"
-                  onClick={() => { const tmp = origin; setOrigin(destination); setDestination(tmp); }}
-                  className={cn(
-                    "rounded-2xl border border-white/10 bg-slate-900 shadow-2xl text-blue-400 hover:text-white hover:border-blue-500 hover:bg-blue-600 transition-all active:scale-90 z-20",
-                    isCompact ? "h-11 w-11" : "h-14 md:h-20 w-14 md:w-20"
-                  )}
-                >
-                  <ArrowRightLeft className={cn(isCompact ? "h-5 w-5 mx-auto" : "h-6 w-6 mx-auto")} />
-                </button>
-              </div>
-
-              {/* Arrival Location */}
-              <div className={cn(isCompact ? "md:col-span-3" : "md:col-span-3")}>
-                <LocationSearch
-                  label={isCompact ? "" : t("search.to")}
-                  value={destination}
-                  onChange={setDestination}
-                  placeholder={t("search.to")}
-                  isLarge={!isCompact}
-                  className="w-full"
-                  dark={true}
-                />
+                </div>
               </div>
 
               {/* Dates */}
