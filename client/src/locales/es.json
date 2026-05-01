@@ -190,18 +190,18 @@
       "r3": "Soporte 24h vía WhatsApp exclusivo para pasajeros"
     },
     "stats": {
-       "routes": "Rutas Activas",
-       "partners": "Socios Premium",
-       "travelers": "Viajeros Felices",
-       "speed": "Velocidad de Búsqueda",
-       "network": "Red Global",
-       "alliance_title": "Nuestra Red de Alianzas",
-       "alliance_desc": "Conexión directa con las alianzas aéreas más grandes para garantizar su seguridad y confort global.",
-       "ready": "Listo para despegar",
-       "airlines": "Aerolíneas",
-       "destinations": "Destinos",
-       "support": "Soporte",
-       "secure": "Seguridad Garantizada"
+      "routes": "Rutas Activas",
+      "partners": "Socios Premium",
+      "travelers": "Viajeros Felices",
+      "speed": "Velocidad de Búsqueda",
+      "network": "Red Global",
+      "alliance_title": "Nuestra Red de Alianzas",
+      "alliance_desc": "Conexión directa con las alianzas aéreas más grandes para garantizar su seguridad y confort global.",
+      "ready": "Listo para despegar",
+      "airlines": "Aerolíneas",
+      "destinations": "Destinos",
+      "support": "Soporte",
+      "secure": "Seguridad Garantizada"
     },
     "board": {
       "title": "Panel de Vuelos",
@@ -474,7 +474,24 @@
     "flight_unavailable_desc": "Vuelva a buscar o explore otras opciones.",
     "back_search": "Buscar de nuevo",
     "retry": "Reintentar",
-    "loading": "Cargando detalles..."
+    "loading": "Cargando detalles...",
+    "invalid_email": "Correo electrónico no válido",
+    "min_digits": "Mínimo 7 dígitos",
+    "audio_guide_confirm": "Por favor, confirme que ha escuchado la guía de audio.",
+    "terms_accept": "Debe aceptar los términos.",
+    "doc_number_required": "El número de documento es obligatorio.",
+    "doc_expiry_required": "La fecha de vencimiento es obligatoria.",
+    "issuing_country_required": "El país emisor es obligatorio.",
+    "nationality_required": "La nacionalidad es obligatoria.",
+    "pax_fill_details": "Haga clic para rellenar los datos",
+    "name_coach": {
+      "title": "Consultoría de Nombres",
+      "intro": "Identificamos una posible mejora en el formato de su nombre para asegurar que el billete se emita perfectamente.",
+      "pending": "Esperando confirmación...",
+      "corrected": "Nombre corregido correctamente.",
+      "review": "Por favor, revise el nombre ingresado.",
+      "confirmed": "Nombre confirmado."
+    }
   },
   "payment": {
     "title": "Detalles de Pago",
@@ -487,7 +504,13 @@
     "error": "Error de Pago",
     "secure_ssl": "Pago seguro con cifrado SSL de 256 bits",
     "pci_compliant": "Cumplimiento con estándares PCI",
-    "stripe_powered": "Pago procesado por Stripe"
+    "stripe_powered": "Pago procesado por Stripe",
+    "complete_fields": "Por favor, complete todos los campos de pago.",
+    "failed": "El pago falló.",
+    "unexpected_error": "Ocurrió un error inesperado.",
+    "midnight_checkout": "Checkout Premium",
+    "card_wallets": "Tarjetas y Carteras Digitales",
+    "loading": "Cargando sistema de pago..."
   },
   "baggage": {
     "title": "Equipaje",
@@ -558,5 +581,9 @@
     "secure_badge": "Sesión Blindada y Criptografada",
     "error_message": "Ops, algo saiu mal en la conexión. Intenta de nuevo.",
     "close": "Cerrar Chat"
+  },
+  "confirm": {
+    "whatsapp_help_topic": "Ayuda después de la reserva",
+    "whatsapp_help_details": "Página: Confirmación de Reserva"
   }
 }

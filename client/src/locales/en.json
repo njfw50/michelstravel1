@@ -190,18 +190,18 @@
       "r3": "24h Support via WhatsApp exclusive for passengers"
     },
     "stats": {
-       "routes": "Active Routes",
-       "partners": "Premium Partners",
-       "travelers": "Happy Travelers",
-       "speed": "Search Speed",
-       "network": "Global Network",
-       "alliance_title": "Our Alliance Network",
-       "alliance_desc": "Direct connection with the world's largest airline alliances to ensure your global safety and comfort.",
-       "ready": "Ready for Takeoff",
-       "airlines": "Airlines",
-       "destinations": "Destinations",
-       "support": "Support",
-       "secure": "Secure"
+      "routes": "Active Routes",
+      "partners": "Premium Partners",
+      "travelers": "Happy Travelers",
+      "speed": "Search Speed",
+      "network": "Global Network",
+      "alliance_title": "Our Alliance Network",
+      "alliance_desc": "Direct connection with the world's largest airline alliances to ensure your global safety and comfort.",
+      "ready": "Ready for Takeoff",
+      "airlines": "Airlines",
+      "destinations": "Destinations",
+      "support": "Support",
+      "secure": "Secure"
     },
     "board": {
       "title": "Flight Board",
@@ -474,7 +474,24 @@
     "flight_unavailable_desc": "This flight may no longer be available. Please try again or search for new flights.",
     "back_search": "Search Again",
     "retry": "Retry",
-    "loading": "Loading flight details..."
+    "loading": "Loading flight details...",
+    "invalid_email": "Invalid email",
+    "min_digits": "Min 7 digits",
+    "audio_guide_confirm": "Please confirm you have listened to the audio guide.",
+    "terms_accept": "You must accept the terms.",
+    "doc_number_required": "Document number is required.",
+    "doc_expiry_required": "Document expiry date is required.",
+    "issuing_country_required": "Issuing country is required.",
+    "nationality_required": "Nationality is required.",
+    "pax_fill_details": "Click to fill details",
+    "name_coach": {
+      "title": "Name Coach",
+      "intro": "We identified a possible improvement in your name formatting to ensure the ticket is issued perfectly.",
+      "pending": "Awaiting confirmation...",
+      "corrected": "Name corrected successfully.",
+      "review": "Please review the entered name.",
+      "confirmed": "Name confirmed."
+    }
   },
   "payment": {
     "title": "Payment Details",
@@ -487,7 +504,13 @@
     "error": "Payment Error",
     "secure_ssl": "Secured with 256-bit SSL encryption",
     "pci_compliant": "PCI standards compliance",
-    "stripe_powered": "Powered by Stripe"
+    "stripe_powered": "Powered by Stripe",
+    "complete_fields": "Please complete all payment fields.",
+    "failed": "Payment failed.",
+    "unexpected_error": "An unexpected error occurred.",
+    "midnight_checkout": "Premium Checkout",
+    "card_wallets": "Cards & Digital Wallets",
+    "loading": "Loading payment system..."
   },
   "baggage": {
     "title": "Baggage",
@@ -628,5 +651,9 @@
     "email_placeholder": "Booking email",
     "not_found": "Booking not found",
     "not_found_desc": "Check the code and email provided and try again."
+  },
+  "confirm": {
+    "whatsapp_help_topic": "Help after booking",
+    "whatsapp_help_details": "Page: Booking Confirmation"
   }
 }

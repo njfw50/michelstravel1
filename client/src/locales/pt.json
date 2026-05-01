@@ -173,11 +173,25 @@
   },
   "home": {
     "hero": {
-      "title": "Descubra o novo padrão em viagens. Mais do que reservas, oferecemos resultados.",
-      "desc": "Acesso rápido e seguro para o Brasil e Europa. Compare centenas de voos e fale diretamente com nossos diretores via WhatsApp ou Chat Inteligente.",
+      "badge": "Curadoria de Viagens & Concierge Exclusivo",
+      "title": "A Arte de Viajar Bem: Excelência, Conforto e Suporte Exclusivo.",
+      "desc": "Descubra o novo padrão em viagens. Mais do que reservas, oferecemos uma curadoria inteligente e um serviço de concierge focado em quem exige o melhor. Cuidamos de cada detalhe para que sua única preocupação seja aproveitar o destino.",
+      "btn_explore": "Explorar Destinos",
+      "btn_consulting": "Consultoria Privada",
       "cta": "Buscar Voos",
-      "whatsapp_topic": "Consultoria Premium",
-      "whatsapp_details": "Gostaria de agendar uma consultoria exclusiva com atendimento em português."
+      "perks": {
+        "1": "Tarifas ao vivo",
+        "2": "Atendimento em português, inglês e espanhol",
+        "3": "Fluxo de compra com acompanhamento real"
+      },
+      "box": {
+        "badge": "Concierge 24h",
+        "sub": "Experiência Sob Medida",
+        "title": "Assessoramos cada passo da sua jornada com uma presença invisível e contínua.",
+        "desc": "Tranquilidade em todo o processo: desde a curadoria impecável da rota até nosso suporte proativo, antecipando imprevistos e ajustando planos antes que eles o afetem.",
+        "whatsapp_topic": "Consulta de Passagem Premium",
+        "whatsapp_details": "Cheguei pelo novo Hero VIP"
+      }
     },
     "trending": "Destinos em Alta",
     "midnight_experience": "Experiência Premium",
@@ -205,18 +219,18 @@
       "r3": "Suporte 24h via WhatsApp exclusivo para passageiros"
     },
     "stats": {
-       "routes": "Rotas Ativas",
-       "partners": "Parceiros Premium",
-       "travelers": "Viajantes Felizes",
-       "speed": "Velocidade de Busca",
-       "network": "Rede Global",
-       "alliance_title": "Nossa Rede de Alianças",
-       "alliance_desc": "Conexão direta com as maiores alianças aéreas para garantir sua segurança e conforto global.",
-       "ready": "Pronto para decolar",
-       "airlines": "Companhias Aéreas",
-       "destinations": "Destinos",
-       "support": "Suporte",
-       "secure": "Segurança Garantida"
+      "routes": "Rotas Ativas",
+      "partners": "Parceiros Premium",
+      "travelers": "Viajantes Felizes",
+      "speed": "Velocidade de Busca",
+      "network": "Rede Global",
+      "alliance_title": "Nossa Rede de Alianças",
+      "alliance_desc": "Conexão direta com as maiores alianças aéreas para garantir sua segurança e conforto global.",
+      "ready": "Pronto para decolar",
+      "airlines": "Companhias Aéreas",
+      "destinations": "Destinos",
+      "support": "Suporte",
+      "secure": "Segurança Garantida"
     },
     "board": {
       "title": "Painel de Voos",
@@ -277,27 +291,6 @@
       "chat_user": "Quero viajar para Miami",
       "chat_reply": "Encontrei voos a partir de $680! Deseja que eu busque as melhores ofertas para você?",
       "chat_placeholder": "Digite sua mensagem aqui..."
-    },
-    "hero": {
-      "badge": "Curadoria de Viagens & Concierge Exclusivo",
-      "title": "A Arte de Viajar Bem: Excelência, Conforto e Suporte Exclusivo.",
-      "desc": "Descubra o novo padrão em viagens. Mais do que reservas, oferecemos uma curadoria inteligente e um serviço de concierge focado em quem exige o melhor. Cuidamos de cada detalhe para que sua única preocupação seja aproveitar o destino.",
-      "btn_explore": "Explorar Destinos",
-      "btn_consulting": "Consultoria Privada",
-      "cta": "Buscar Voos",
-      "perks": {
-        "1": "Tarifas ao vivo",
-        "2": "Atendimento em português, inglês e espanhol",
-        "3": "Fluxo de compra com acompanhamento real"
-      },
-      "box": {
-        "badge": "Concierge 24h",
-        "sub": "Experiência Sob Medida",
-        "title": "Assessoramos cada passo da sua jornada com uma presença invisível e contínua.",
-        "desc": "Tranquilidade em todo o processo: desde a curadoria impecável da rota até nosso suporte proativo, antecipando imprevistos e ajustando planos antes que eles o afetem.",
-        "whatsapp_topic": "Consulta de Passagem Premium",
-        "whatsapp_details": "Cheguei pelo novo Hero VIP"
-      }
     },
     "search": {
       "badge": "Buscar voos ao vivo",
@@ -516,7 +509,24 @@
     "price_updated": "Preço Atualizado",
     "price_updated_desc": "O valor do voo foi alterado. Confira o novo total antes de continuar.",
     "error": "Erro",
-    "error_desc": "Não conseguimos recuperar os detalhes deste voo."
+    "error_desc": "Não conseguimos recuperar os detalhes deste voo.",
+    "invalid_email": "Email inválido",
+    "min_digits": "Mínimo 7 dígitos",
+    "audio_guide_confirm": "Por favor, confirme que escutou o guia de áudio.",
+    "terms_accept": "Você deve aceitar os termos.",
+    "doc_number_required": "O número do documento é obrigatório.",
+    "doc_expiry_required": "A data de validade é obrigatória.",
+    "issuing_country_required": "O país emissor é obrigatório.",
+    "nationality_required": "A nacionalidade é obrigatória.",
+    "pax_fill_details": "Clique para preencher os dados",
+    "name_coach": {
+      "title": "Consultoria de Nomes",
+      "intro": "Identificamos uma possível melhoria na formatação do seu nome para garantir que o bilhete seja emitido perfeitamente.",
+      "pending": "Aguardando confirmação...",
+      "corrected": "Nome corrigido com sucesso.",
+      "review": "Por favor, revise o nome digitado.",
+      "confirmed": "Nome confirmado."
+    }
   },
   "payment": {
     "title": "Detalhes de Pagamento",
@@ -529,7 +539,13 @@
     "error": "Erro no Pagamento",
     "secure_ssl": "Pagamento seguro com criptografia SSL de 256 bits",
     "pci_compliant": "Conformidade com os padrões PCI",
-    "stripe_powered": "Pagamento processado pela Stripe"
+    "stripe_powered": "Pagamento processado pela Stripe",
+    "complete_fields": "Por favor, preencha todos os campos do pagamento.",
+    "failed": "O pagamento falhou.",
+    "unexpected_error": "Ocorreu um erro inesperado.",
+    "midnight_checkout": "Checkout Premium",
+    "card_wallets": "Cartões e Carteiras Digitais",
+    "loading": "Carregando sistema de pagamento..."
   },
   "baggage": {
     "title": "Bagagem",
@@ -705,7 +721,9 @@
     "receipt_unavailable": "Recibo ainda não disponível",
     "receipt_unavailable_desc": "O recibo estará pronto em instantes. Tente em alguns minutos.",
     "receipt_error": "Erro no Recibo",
-    "receipt_error_desc": "Não foi possível carregar o recibo."
+    "receipt_error_desc": "Não foi possível carregar o recibo.",
+    "whatsapp_help_topic": "Ajuda após a reserva",
+    "whatsapp_help_details": "Página: Confirmação de Reserva"
   },
   "scan": {
     "title": "Escaneie seu Documento",

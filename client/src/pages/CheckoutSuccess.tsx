@@ -227,8 +227,8 @@ export default function CheckoutSuccess() {
   const { toast } = useToast();
   const whatsAppHref = buildWhatsAppHref(
     buildWhatsAppMessage({
-      topic: "Ajuda apos a reserva",
-      details: ["Pagina: Checkout success"],
+      topic: t("confirm.whatsapp_help_topic") || "Ajuda apos a reserva",
+      details: [t("confirm.whatsapp_help_details") || "Pagina: Checkout success"],
     }),
   );
   const [copied, setCopied] = useState(false);
