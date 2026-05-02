@@ -1152,6 +1152,102 @@ export async function getSeatMaps(offerId: string): Promise<SeatMap[]> {
   }
 }
 
+export async function getOrderSeatMaps(orderId: string): Promise<SeatMap[]> {
+  try {
+    const token = getActiveToken();
+    if (!token) return [];
+
+    const response = await fetch(
+      `${DUFFEL_BASE}/air/seat_maps?order_id=${encodeURIComponent(orderId)}`,
+      { headers: headers() }
+    );
+
+    if (!response.ok) {
+      const body = await response.text();
+      console.error(`Duffel Order Seat Maps API error: ${response.status}`, body);
+      return [];
+    }
+
+    const result = await response.json();
+
+    return (result.data || []).map((seatMap: any) => {
+      const segmentId = seatMap.segment_id || '';
+
+      const cabins: SeatMapCabin[] = (seatMap.cabins || []).map((cabin: any) => ({
+        cabinClass: cabin.cabin_class || 'economy',
+        aisles: cabin.aisles_count || 1,
+        wings: cabin.wings ? {
+          firstRowIndex: cabin.wings.first_row_index,
+          lastRowIndex: cabin.wings.last_row_index,
+        } : null,
+        rows: (cabin.rows || []).map((row: any) => ({
+          sections: (row.sections || []).map((section: any) => ({
+            elements: (section.elements || []).map((el: any) => {
+              const element: any = {
+                type: el.type || 'empty',
+              };
+              if (el.type === 'seat') {
+                element.designator = el.designator || '';
+                element.name = el.name || undefined;
+                element.disclosures = el.disclosures || [];
+                if (el.available_services && el.available_services.length > 0) {
+                  const svc = el.available_services[0];
+                  element.available = true;
+                  element.totalAmount = svc.total_amount || '0';
+                  element.totalCurrency = svc.total_currency || 'USD';
+                  element.serviceId = svc.id || undefined;
+                } else {
+                  element.available = false;
+                }
+              }
+              return element;
+            }),
+          })),
+        })),
+      }));
+
+      return { segmentId, cabins };
+    });
+  } catch (error: any) {
+    console.error("Duffel getOrderSeatMaps Error:", error?.errors || error?.message || error);
+    return [];
+  }
+}
+
+export async function addOrderServices(orderId: string, services: Array<{ id: string; quantity: number }>): Promise<boolean> {
+  try {
+    const token = getActiveToken();
+    if (!token) return false;
+
+    const response = await fetch(`${DUFFEL_BASE}/air/orders/${orderId}/services`, {
+      method: 'POST',
+      headers: {
+        ...headers(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        data: {
+          services: services.map(s => ({
+            id: s.id,
+            quantity: s.quantity,
+          })),
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      console.error(`Duffel Add Services Error: ${response.status}`, body);
+      return false;
+    }
+
+    return true;
+  } catch (error: any) {
+    console.error("Duffel addOrderServices Error:", error?.errors || error?.message || error);
+    return false;
+  }
+}
+
 export async function createOrderChangeRequest(
   orderId: string,
   slicesToRemove: string[],

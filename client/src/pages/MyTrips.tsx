@@ -41,6 +41,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import type { Booking, BookingLog } from "@shared/schema";
 import { SEO } from "@/components/SEO";
+import { SeatMapDialog } from "@/components/SeatMapDialog";
 import { openLoginDialog } from "@/lib/auth-utils";
 import {
   AGENCY_EMAIL,
@@ -84,6 +85,7 @@ function StandardTripCard({ booking, defaultExpanded = false }: { booking: Booki
   const [, setLocation] = useLocation();
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [cancelResult, setCancelResult] = useState<{ success: boolean; message?: string; refundAmount?: string } | null>(null);
+  const [showSeatMap, setShowSeatMap] = useState(false);
 
   const cancelMutation = useMutation({
     mutationFn: async () => {
@@ -143,7 +145,7 @@ function StandardTripCard({ booking, defaultExpanded = false }: { booking: Booki
                 <Button size="sm" variant="outline" className="gap-2 border-gray-200 text-gray-600" onClick={() => toast({ title: "Check-in Nativo", description: "O fluxo consumirá a API da Duffel." })}>
                   <CheckCircle className="h-3.5 w-3.5" /> Fazer Check-in
                 </Button>
-                <Button size="sm" variant="outline" className="gap-2 border-gray-200 text-gray-600" onClick={() => toast({ title: "Serviços", description: "Consumindo /seat_maps e /services da Duffel." })}>
+                <Button size="sm" variant="outline" className="gap-2 border-gray-200 text-gray-600" onClick={() => setShowSeatMap(true)}>
                   <Luggage className="h-3.5 w-3.5" /> Assentos & Malas
                 </Button>
                 <Button size="sm" variant="outline" className="border-amber-200 text-amber-700 bg-amber-50" onClick={(e) => {
@@ -202,6 +204,14 @@ function StandardTripCard({ booking, defaultExpanded = false }: { booking: Booki
           </div>
         )}
       </Card>
+      
+      <SeatMapDialog
+        open={showSeatMap}
+        onOpenChange={setShowSeatMap}
+        bookingId={booking.id.toString()}
+        referenceCode={booking.referenceCode}
+        contactEmail={booking.contactEmail}
+      />
     </motion.div>
   );
 }

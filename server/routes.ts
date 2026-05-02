@@ -970,6 +970,85 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Booking-specific Seat Map & Services
+  app.get('/api/bookings/:id/seat-map', async (req, res) => {
+    try {
+      const booking = await storage.getBooking(req.params.id);
+      if (!booking || !booking.orderId) {
+        return res.status(404).json({ error: "Booking or Duffel order not found" });
+      }
+
+      const { getOrderSeatMaps } = await import('./services/duffel');
+      const seatMaps = await getOrderSeatMaps(booking.orderId);
+      
+      const seatMarkupRate = await getCommissionRate();
+      const processed = seatMaps.map((sm: any) => ({
+        segmentId: sm.segmentId,
+        cabins: (sm.cabins || []).map((cabin: any) => ({
+          cabinClass: cabin.cabinClass || 'economy',
+          aisles: cabin.aisles || 1,
+          wings: cabin.wings || null,
+          rows: (cabin.rows || []).map((row: any) => ({
+            sections: (row.sections || []).map((section: any) => ({
+              elements: (section.elements || []).map((el: any) => {
+                if (el.type === 'seat') {
+                  const rawPrice = el.totalAmount || null;
+                  return {
+                    type: 'seat',
+                    designator: el.designator || '',
+                    name: el.name || undefined,
+                    available: el.available ?? false,
+                    disclosures: el.disclosures || [],
+                    price: rawPrice && el.available ? parseFloat((parseFloat(rawPrice) * (1 + seatMarkupRate)).toFixed(2)).toString() : null,
+                    currency: el.totalCurrency || null,
+                    serviceId: el.serviceId || null,
+                  };
+                }
+                return { type: el.type };
+              }),
+            })),
+          })),
+        })),
+      }));
+
+      res.json({ available: true, seatMaps: processed });
+    } catch (error) {
+      console.error("Booking seat map error:", error);
+      res.json({ available: false, seatMaps: [] });
+    }
+  });
+
+  app.post('/api/bookings/:id/services', async (req, res) => {
+    try {
+      const { services, referenceCode, contactEmail } = req.body;
+      const booking = await storage.getBooking(req.params.id);
+      
+      if (!booking || !booking.orderId) {
+        return res.status(404).json({ error: "Booking or Duffel order not found" });
+      }
+
+      // Security check
+      const user = (req as any).user;
+      const hasValidRef = referenceCode && contactEmail && booking.referenceCode === referenceCode && booking.contactEmail === contactEmail;
+      const hasValidUser = user && booking.userId && user.id === booking.userId;
+      if (booking.userId && !hasValidUser && !hasValidRef) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const { addOrderServices } = await import('./services/duffel');
+      const success = await addOrderServices(booking.orderId, services);
+      
+      if (success) {
+        res.json({ success: true });
+      } else {
+        res.status(500).json({ error: "Failed to add services via Duffel" });
+      }
+    } catch (error) {
+      console.error("Add services error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // === DESTINATION HIGHLIGHTS (Geoapify) ===
   const GEOAPIFY_API_KEY = process.env.GEOAPIFY_API_KEY || process.env.VITE_GEOAPIFY_API_KEY || "";
 
