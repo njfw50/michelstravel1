@@ -280,7 +280,6 @@ function SeniorTripCard({ booking, defaultExpanded = false }: { booking: Booking
       </Card>
     </motion.div>
   );
-});
 }
 
 function BookingLookupSection() {
