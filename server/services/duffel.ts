@@ -1352,6 +1352,46 @@ export async function confirmOrderChange(orderChangeOfferId: string): Promise<bo
   }
 }
 
+export async function updateOrderPassengers(orderId: string, passengers: any[]): Promise<boolean> {
+  try {
+    const token = getActiveToken();
+    if (!token) return false;
+
+    const response = await fetch(`${DUFFEL_BASE}/air/orders/${orderId}`, {
+      method: 'PATCH',
+      headers: {
+        ...headers(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        data: {
+          passengers: passengers.map(pax => ({
+            id: pax.id,
+            given_name: pax.givenName,
+            family_name: pax.familyName,
+            email: pax.email,
+            phone_number: pax.phoneNumber,
+            born_on: pax.bornOn,
+            gender: pax.gender,
+            identity_documents: pax.identityDocuments,
+          })),
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      console.error(`Duffel Update Order Error: ${response.status}`, body);
+      return false;
+    }
+
+    return true;
+  } catch (error: any) {
+    console.error("Duffel updateOrderPassengers Error:", error?.errors || error?.message || error);
+    return false;
+  }
+}
+
 export async function getDuffelOrder(orderId: string): Promise<any | null> {
   try {
     const token = getActiveToken();

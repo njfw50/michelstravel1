@@ -42,6 +42,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Booking, BookingLog } from "@shared/schema";
 import { SEO } from "@/components/SEO";
 import { SeatMapDialog } from "@/components/SeatMapDialog";
+import { CheckInDialog } from "@/components/CheckInDialog";
 import { openLoginDialog } from "@/lib/auth-utils";
 import {
   AGENCY_EMAIL,
@@ -86,6 +87,7 @@ function StandardTripCard({ booking, defaultExpanded = false }: { booking: Booki
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [cancelResult, setCancelResult] = useState<{ success: boolean; message?: string; refundAmount?: string } | null>(null);
   const [showSeatMap, setShowSeatMap] = useState(false);
+  const [showCheckIn, setShowCheckIn] = useState(false);
 
   const cancelMutation = useMutation({
     mutationFn: async () => {
@@ -142,7 +144,7 @@ function StandardTripCard({ booking, defaultExpanded = false }: { booking: Booki
                 <span className="font-mono font-bold text-blue-600 text-lg">{(booking as any).duffelBookingReference || booking.referenceCode}</span>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <Button size="sm" variant="outline" className="gap-2 border-gray-200 text-gray-600" onClick={() => toast({ title: "Check-in Nativo", description: "O fluxo consumirá a API da Duffel." })}>
+                <Button size="sm" variant="outline" className="gap-2 border-gray-200 text-gray-600" onClick={() => setShowCheckIn(true)}>
                   <CheckCircle className="h-3.5 w-3.5" /> Fazer Check-in
                 </Button>
                 <Button size="sm" variant="outline" className="gap-2 border-gray-200 text-gray-600" onClick={() => setShowSeatMap(true)}>
@@ -211,6 +213,12 @@ function StandardTripCard({ booking, defaultExpanded = false }: { booking: Booki
         bookingId={booking.id.toString()}
         referenceCode={booking.referenceCode}
         contactEmail={booking.contactEmail}
+      />
+      
+      <CheckInDialog
+        open={showCheckIn}
+        onOpenChange={setShowCheckIn}
+        booking={booking}
       />
     </motion.div>
   );

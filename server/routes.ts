@@ -1049,6 +1049,42 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  app.post('/api/bookings/:id/check-in', async (req, res) => {
+    try {
+      const { passengers, referenceCode, contactEmail } = req.body;
+      const booking = await storage.getBooking(req.params.id);
+      
+      if (!booking || !booking.orderId) {
+        return res.status(404).json({ error: "Booking or Duffel order not found" });
+      }
+
+      // Security check
+      const user = (req as any).user;
+      const hasValidRef = referenceCode && contactEmail && booking.referenceCode === referenceCode && booking.contactEmail === contactEmail;
+      const hasValidUser = user && booking.userId && user.id === booking.userId;
+      if (booking.userId && !hasValidUser && !hasValidRef) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const { updateOrderPassengers } = await import('./services/duffel');
+      const success = await updateOrderPassengers(booking.orderId, passengers);
+      
+      if (success) {
+        // Update local booking status if needed
+        await storage.updateBooking(booking.id, {
+          passengerDetails: passengers,
+        });
+
+        res.json({ success: true, message: "Check-in realizado com sucesso!" });
+      } else {
+        res.status(500).json({ error: "Falha ao realizar check-in via Duffel" });
+      }
+    } catch (error) {
+      console.error("Check-in error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // === DESTINATION HIGHLIGHTS (Geoapify) ===
   const GEOAPIFY_API_KEY = process.env.GEOAPIFY_API_KEY || process.env.VITE_GEOAPIFY_API_KEY || "";
 
