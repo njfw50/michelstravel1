@@ -41,6 +41,7 @@ import ScannerPage from "@/pages/ScannerPage";
 import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import CheckoutCancel from "@/pages/CheckoutCancel";
 import MyTrips from "@/pages/MyTrips";
+import ETicket from "@/pages/ETicket";
 import Profile from "@/pages/Profile";
 import AdminLiveChat from "@/pages/AdminLiveChat";
 import LiveSessionClient from "@/pages/LiveSessionClient";
@@ -109,6 +110,7 @@ function Router() {
       <Route path="/blog/:slug" component={() => <Layout><BlogPost /></Layout>} />
       
       <Route path="/my-trips" component={() => <Layout><MyTrips /></Layout>} />
+      <Route path="/eticket/:reference" component={ETicket} />
       <Route path="/help" component={() => <Layout><HelpCenter /></Layout>} />
       <Route path="/terms" component={() => <Layout><TermsOfService /></Layout>} />
       <Route path="/privacy" component={() => <Layout><PrivacyPolicy /></Layout>} />

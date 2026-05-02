@@ -146,7 +146,11 @@ function StandardTripCard({ booking, defaultExpanded = false }: { booking: Booki
                 <Button size="sm" variant="outline" className="gap-2 border-gray-200 text-gray-600" onClick={() => toast({ title: "Serviços", description: "Consumindo /seat_maps e /services da Duffel." })}>
                   <Luggage className="h-3.5 w-3.5" /> Assentos & Malas
                 </Button>
-                <Button size="sm" variant="outline" className="gap-2 border-gray-200 text-gray-600" onClick={() => setLocation(`/checkout/success?bookingId=${booking.id}`)}>
+                <Button size="sm" variant="outline" className="border-amber-200 text-amber-700 bg-amber-50" onClick={(e) => {
+                  e.stopPropagation();
+                  const url = `/eticket/${booking.referenceCode}?email=${encodeURIComponent(booking.contactEmail)}`;
+                  window.open(url, "_blank");
+                }}>
                   <Receipt className="h-3.5 w-3.5" /> E-Ticket / PDF
                 </Button>
               </div>
