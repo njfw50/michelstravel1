@@ -82,16 +82,8 @@ function TestModeBanner() {
 function Router() {
   return (
     <Switch>
-      <Route path="/admin">
-        <Layout>
-          <AdminDashboard />
-        </Layout>
-      </Route>
-      <Route path="/admin/live-chat">
-        <Layout>
-          <AdminLiveChat />
-        </Layout>
-      </Route>
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/live-chat" component={AdminLiveChat} />
       <Route path="/admin-app" component={AdminApp} />
 
       <Route path="/" component={() => <Layout><Home /></Layout>} />
