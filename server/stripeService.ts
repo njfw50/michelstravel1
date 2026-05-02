@@ -177,7 +177,6 @@ export class StripeService {
   async getSubscription(subscriptionId: string) {
     return await storage.getSubscription(subscriptionId);
   }
-}
 
   async capturePayment(paymentIntentId: string) {
     const stripe = await getUncachableStripeClient();
