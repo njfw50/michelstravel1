@@ -18,6 +18,7 @@ import { SeniorCareDesk } from "@/components/SeniorCareDesk";
 import { useI18n } from "@/lib/i18n";
 import { AdminKnowledgeHub } from "@/components/AdminKnowledgeHub";
 import { AdminCustomerInsights } from "@/components/AdminCustomerInsights";
+import { MobileConfigurator } from "@/components/MobileConfigurator";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState, useEffect, Fragment } from "react";
@@ -1262,7 +1263,7 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"command" | "overview" | "bookings" | "settings" | "senior" | "crm" | "kb">("command");
+  const [activeTab, setActiveTab] = useState<"command" | "overview" | "bookings" | "settings" | "senior" | "crm" | "kb" | "mobile">("command");
 
   const { data: adminCheck, isLoading: adminCheckLoading } = useQuery<{ isAdmin: boolean }>({
     queryKey: ["/api/admin/check"],
@@ -1351,7 +1352,9 @@ export default function AdminDashboard() {
               ? "Central de Conhecimento (Treinar Mia)"
               : activeTab === "bookings"
                 ? "Controle de Viagens Premium"
-                : "Configurações Operacionais da Agência";
+                : activeTab === "mobile"
+                  ? "Configurador de Experiência Mobile (Samsung Preview)"
+                  : "Configurações Operacionais da Agência";
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-950 font-sans selection:bg-indigo-500/30">
@@ -1422,6 +1425,15 @@ export default function AdminDashboard() {
           >
             <BookOpen className={`h-4.5 w-4.5 transition-transform duration-300 ${activeTab === "kb" ? "scale-110 text-indigo-400" : "group-hover:translate-x-1"}`} />
             <span className="font-semibold text-sm tracking-wide">Treinamento (IA)</span>
+          </Button>
+
+          <Button 
+            variant="ghost" 
+            className={`w-full justify-start gap-3.5 rounded-2xl transition-all duration-300 group px-4 py-6 ${activeTab === "mobile" ? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/20 shadow-[0_0_25px_rgba(99,102,241,0.1)]" : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent"}`} 
+            onClick={() => setActiveTab("mobile")}
+          >
+            <Smartphone className={`h-4.5 w-4.5 transition-transform duration-300 ${activeTab === "mobile" ? "scale-110 text-indigo-400" : "group-hover:translate-x-1"}`} />
+            <span className="font-semibold text-sm tracking-wide">Canais do App Mobile</span>
           </Button>
 
           <Button 
@@ -1532,6 +1544,12 @@ export default function AdminDashboard() {
             {activeTab === "kb" && (
               <div className="animate-in fade-in duration-300">
                 <AdminKnowledgeHub />
+              </div>
+            )}
+
+            {activeTab === "mobile" && (
+              <div className="animate-in fade-in duration-300">
+                <MobileConfigurator />
               </div>
             )}
 
