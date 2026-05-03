@@ -6,6 +6,7 @@ import { useAirlines, useFeaturedAirports } from "@/hooks/use-flights";
 import { FlightSearchForm } from "@/components/FlightSearchForm";
 import { DealCard } from "@/components/DealCard";
 import { SEO } from "@/components/SEO";
+import { usePublicSettings } from "@/hooks/use-public-settings";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
@@ -58,7 +59,17 @@ export default function Home() {
   const { data: airlines } = useAirlines(30);
   const { t, language } = useI18n();
   const { data: catalogDeals = [], isLoading: dealsLoading } = useFeaturedDeals(language);
+  const { data: settings } = usePublicSettings();
   const [, setLocation] = useLocation();
+
+  const activeLayout = settings?.mobileLayout || [
+    { id: "hero", enabled: true },
+    { id: "stats", enabled: true },
+    { id: "insights", enabled: true },
+    { id: "deals", enabled: true },
+    { id: "partners", enabled: true },
+    { id: "cta", enabled: true }
+  ];
 
   const contactWhatsAppHref = buildWhatsAppHref(
     buildWhatsAppMessage({
@@ -79,276 +90,268 @@ export default function Home() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(2,6,23,0.8)_100%)]" />
       </div>
 
-      {/* Hero Search Section */}
-      <section className="relative pt-12 pb-16 overflow-hidden">
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-6xl mx-auto flex flex-col items-center text-center">
-            <motion.div 
-               initial={{ opacity: 0, y: -20 }} 
-               animate={{ opacity: 1, y: 0 }}
-               className="mb-8"
-            >
-              <Badge className="bg-blue-600/20 border border-blue-500/30 text-blue-400 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl shadow-blue-500/10 backdrop-blur-md">
-                <Sparkles className="h-4 w-4 mr-3 animate-pulse" />
-                {t("home.bot.badge")} {t("home.midnight_experience")}
-              </Badge>
-            </motion.div>
+      {activeLayout.map((section: any) => {
+        if (!section.enabled) return null;
 
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full overflow-hidden rounded-[32px] md:rounded-[48px] p-6 md:p-12 mb-8 border border-white/10 shadow-2xl group"
-            >
-              {/* Boeing Background Layer */}
-              <div className="absolute inset-0 z-0">
-                <img 
-                  src="https://images.unsplash.com/photo-1544016768-982d1554f0b9?q=80&w=2070&auto=format&fit=crop" 
-                  className="w-full h-full object-cover opacity-25 group-hover:scale-110 transition-transform duration-[10s] ease-linear select-none pointer-events-none"
-                  alt="Boeing Dreamliner"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/60 to-transparent" />
-                <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-[2px]" />
-              </div>
+        switch (section.id) {
+          case "hero":
+            return (
+              <section key="hero" className="relative pt-12 pb-16 overflow-hidden">
+                <div className="container mx-auto px-4 relative z-10">
+                  <div className="max-w-6xl mx-auto flex flex-col items-center text-center">
+                    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+                      <Badge className="bg-blue-600/20 border border-blue-500/30 text-blue-400 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl shadow-blue-500/10 backdrop-blur-md">
+                        <Sparkles className="h-4 w-4 mr-3 animate-pulse" />
+                        {t("home.bot.badge")} {t("home.midnight_experience")}
+                      </Badge>
+                    </motion.div>
 
-              <div className="relative z-10">
-	                <h1 className="text-4xl sm:text-5xl md:text-8xl font-black tracking-tighter text-white leading-[0.9] uppercase max-w-5xl mb-6 md:mb-10 drop-shadow-2xl">
-	                  {t("home.hero.title")}
-	                </h1>
-	
-	                <p className="text-slate-200 font-medium text-base md:text-xl max-w-2xl leading-relaxed drop-shadow-lg">
-	                  {t("home.hero.desc")}
-	                </p>
-              </div>
-            </motion.div>
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                      className="relative w-full overflow-hidden rounded-[32px] md:rounded-[48px] p-6 md:p-12 mb-8 border border-white/10 shadow-2xl group"
+                    >
+                      <div className="absolute inset-0 z-0">
+                        <img 
+                          src="https://images.unsplash.com/photo-1544016768-982d1554f0b9?q=80&w=2070&auto=format&fit=crop" 
+                          className="w-full h-full object-cover opacity-25 group-hover:scale-110 transition-transform duration-[10s] ease-linear select-none pointer-events-none"
+                          alt="Boeing Dreamliner"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/60 to-transparent" />
+                        <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-[2px]" />
+                      </div>
+                      <div className="relative z-10">
+                        <h1 className="text-4xl sm:text-5xl md:text-8xl font-black tracking-tighter text-white leading-[0.9] uppercase max-w-5xl mb-6 md:mb-10 drop-shadow-2xl">
+                          {settings?.heroTitle || t("home.hero.title")}
+                        </h1>
+                        <p className="text-slate-200 font-medium text-base md:text-xl max-w-2xl leading-relaxed drop-shadow-lg">
+                          {settings?.heroSubtitle || t("home.hero.desc")}
+                        </p>
+                      </div>
+                    </motion.div>
 
-            <motion.div 
-              initial={{ opacity: 0, y: 40 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
-              className="w-full"
-            >
-               <FlightSearchForm className="hover:shadow-blue-500/5 transition-shadow duration-700" />
-            </motion.div>
-          </div>
-        </div>
-      </section>
+                    <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, type: "spring", stiffness: 100 }} className="w-full">
+                       <FlightSearchForm className="hover:shadow-blue-500/5 transition-shadow duration-700" />
+                    </motion.div>
 
-      {/* Stats / Value Section */}
-	      <section className="py-8 md:py-12 relative z-10">
-	        <div className="container mx-auto px-4 max-w-6xl">
-	           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-12">
-	              {[
-	                { label: t("home.stats.routes"), value: "2,400+", icon: Compass },
-	                { label: t("home.stats.partners"), value: "45+", icon: Star },
-	                { label: t("home.stats.travelers"), value: "120k", icon: Globe2 },
-	                { label: t("home.stats.speed"), value: "< 2s", icon: Zap }
-	              ].map((stat, i) => (
-	                <div key={i} className="flex flex-col items-center text-center space-y-1.5 md:space-y-3 p-4 md:p-6 rounded-[24px] md:rounded-[32px] bg-white/5 border border-white/5 backdrop-blur-sm">
-	                   <stat.icon className="h-5 w-5 md:h-6 md:w-6 text-blue-500 mb-1" />
-	                   <span className="text-2xl md:text-4xl font-black text-white tracking-tighter">{stat.value}</span>
-	                   <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">{stat.label}</span>
-	                </div>
-	              ))}
-	           </div>
-	        </div>
-	      </section>
-
-      {/* Market Insights & Tools */}
-      <section className="py-20 relative z-10">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            
-            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
-               <div className="group p-10 rounded-[48px] bg-slate-900/40 border border-white/5 backdrop-blur-3xl hover:border-blue-500/30 transition-all duration-500 shadow-2xl">
-                  <div className="flex items-center justify-between mb-8">
-                    <TrendingUp className="h-8 w-8 text-blue-500 group-hover:scale-110 transition-transform" />
-                    <Badge className="bg-blue-600/20 text-blue-400 border border-blue-500/20 text-[9px] uppercase font-black px-4 py-1.5 rounded-full">{t("home.intel.badge")}</Badge>
-                  </div>
-                  <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-6">{t("home.intel.title")}</h3>
-                  <div className="space-y-6">
-                     {[
-                       { icon: CheckCircle2, label: t("home.intel.r1"), color: "text-emerald-400" },
-                       { icon: Info, label: t("home.intel.r2"), color: "text-blue-400" },
-                       { icon: Navigation, label: t("home.intel.r3"), color: "text-coral-500" }
-                     ].map((item, i) => (
-                       <div key={i} className="flex items-start gap-4">
-                          <item.icon className={cn("h-5 w-5 mt-0.5 shrink-0", item.color)} />
-                          <p className="text-sm font-bold text-slate-400 leading-relaxed">{item.label}</p>
-                       </div>
-                     ))}
-                  </div>
-               </div>
-
-               <div className="group p-10 rounded-[48px] bg-slate-900/40 border border-white/5 backdrop-blur-3xl hover:border-coral-500/30 transition-all duration-500 shadow-2xl">
-                  <div className="flex items-center justify-between mb-8">
-                    <Clock className="h-8 w-8 text-coral-500 group-hover:scale-110 transition-transform" />
-                    <Badge className="bg-coral-500/20 text-coral-400 border border-coral-500/20 text-[9px] uppercase font-black px-4 py-1.5 rounded-full">{t("home.care.badge")}</Badge>
-                  </div>
-                  <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-6">{t("home.care.title")}</h3>
-                  <div className="space-y-6">
-                     {[
-                       { icon: ShieldAlert, label: t("home.care.r1"), color: "text-coral-500" },
-                       { icon: Plane, label: t("home.care.r2"), color: "text-coral-500" },
-                       { icon: Headphones, label: t("home.care.r3"), color: "text-emerald-400" }
-                     ].map((item, i) => (
-                       <div key={i} className="flex items-start gap-4">
-                          <item.icon className={cn("h-5 w-5 mt-0.5 shrink-0", item.color)} />
-                          <p className="text-sm font-bold text-slate-400 leading-relaxed">{item.label}</p>
-                       </div>
-                     ))}
-                  </div>
-               </div>
-            </div>
-
-            <div className="p-10 rounded-[48px] bg-white text-slate-950 shadow-2xl flex flex-col justify-between relative overflow-hidden group">
-               {/* Background Gloss */}
-               <div className="absolute top-0 right-0 w-32 h-32 bg-slate-900/5 blur-[40px] rounded-full translate-x-1/2 -translate-y-1/2" />
-               
-               <div className="relative z-10">
-                  <h3 className="text-3xl font-black uppercase tracking-tight mb-3">{t("home.toolbox.title")}</h3>
-                  <p className="text-slate-500 text-sm mb-12 font-bold uppercase tracking-widest">{t("home.toolbox.subtitle")}</p>
-                  
-                  <div className="space-y-8">
-                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                           <CloudSun className="h-6 w-6 text-blue-600" />
-                           <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t("home.toolbox.weather")}</span>
+                    {settings?.promotionalBanner && (
+                      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="w-full max-w-4xl mt-12">
+                        <div className="relative group p-8 md:p-12 rounded-[40px] bg-gradient-to-r from-blue-600 to-indigo-700 overflow-hidden shadow-[0_20px_50px_rgba(37,99,235,0.3)]">
+                          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[80px] rounded-full -mr-32 -mt-32" />
+                          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                            <div className="text-left">
+                              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-200 mb-4">{t("home.bot.badge")}</p>
+                              <h3 className="text-2xl md:text-4xl font-black text-white uppercase tracking-tight leading-tight">
+                                {settings.promotionalBanner}
+                              </h3>
+                            </div>
+                            <Button onClick={() => setLocation("/deals")} className="h-16 px-10 rounded-[20px] bg-white text-blue-600 hover:bg-blue-50 font-black text-xs uppercase tracking-widest shadow-xl transition-transform hover:scale-105 active:scale-95">
+                              {t("home.toolbox.access")} <ArrowRight className="ml-3 h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <span className="text-2xl font-black tracking-tighter">24°C</span>
-                     </div>
-                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                           <Banknote className="h-6 w-6 text-emerald-600" />
-                           <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t("home.toolbox.exchange")}</span>
-                        </div>
-                        <span className="text-2xl font-black tracking-tighter">1 USD = 5.04 BRL</span>
-                     </div>
-                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                           <Navigation className="h-6 w-6 text-orange-600" />
-                           <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t("home.toolbox.status")}</span>
-                        </div>
-                        <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest bg-orange-50 px-3 py-1 rounded-md">{t("home.toolbox.monitoring")}</span>
-                     </div>
-                  </div>
-               </div>
-               
-               <Button 
-                  onClick={() => setLocation("/toolbox")}
-                  className="w-full mt-12 rounded-[24px] bg-slate-950 text-white hover:bg-blue-600 h-16 font-black text-xs uppercase tracking-[0.2em] shadow-2xl transition-all hover:scale-105 active:scale-95"
-                >
-                   {t("home.toolbox.access")} <ArrowRight className="ml-3 h-4 w-4" />
-                </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Deals Section */}
-      <section className="py-20 relative z-10 overflow-hidden">
-        {/* Decorative mask */}
-        <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-3xl -z-10" />
-        
-        <div className="container mx-auto px-4 max-w-6xl">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-12 mb-20 relative">
-            <div className="max-w-2xl relative z-10">
-              <Badge className="bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-full px-6 py-2 mb-8 text-[10px] uppercase font-black tracking-[0.4em]">
-                <Globe2 className="h-4 w-4 mr-3" />
-                {t("home.deals.badge")}
-              </Badge>
-              <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-[0.9] uppercase mb-8">
-                {t("home.deals.title")} <br />
-                <span className="text-blue-500">{t("results.filter_active")}</span>
-              </h2>
-              <p className="text-slate-400 font-medium text-lg leading-relaxed">{t("home.deals.desc")}</p>
-            </div>
-
-            {/* Decorative Header Image */}
-            <div className="absolute right-[-4rem] top-[-4rem] bottom-[-4rem] w-[50%] pointer-events-none hidden md:block select-none opacity-40 mix-blend-screen">
-               <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/20 to-transparent z-10" />
-               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950 z-10" />
-               <img 
-                 src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=1200&auto=format&fit=crop" 
-                 className="w-full h-full object-cover rounded-l-full grayscale" 
-                 alt="" 
-               />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {dealsLoading ? (
-              Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-[430px] rounded-[48px] bg-white/5 border border-white/5 animate-pulse" />)
-            ) : catalogDeals.length > 0 ? (
-              catalogDeals.map((deal) => (
-                <DealCard 
-                  key={deal.id} 
-                  deal={{
-                    ...deal,
-                    title: deal.headline || `${deal.origin} → ${deal.destination}`,
-                    description: deal.description || "",
-                    imageUrl: deal.imageUrl || getDestinationImage(deal.destination)
-                  }} 
-                />
-              ))
-            ) : (
-              <div className="col-span-full py-24 text-center bg-white/5 rounded-[48px] border border-dashed border-white/10">
-                 <p className="text-slate-500 font-black uppercase tracking-widest text-[10px]">{t("results.no_matching_flights")}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Airline Partner Network */}
-      <section className="py-16 relative z-10">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <div className="text-center mb-20">
-             <Badge variant="outline" className="mb-6 border-white/10 text-slate-500 text-[9px] uppercase font-black tracking-[0.3em] px-5 py-1.5 rounded-full">{t("home.stats.network")}</Badge>
-             <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-6">{t("home.stats.alliance_title")}</h2>
-             <p className="text-slate-400 font-medium max-w-xl mx-auto text-lg leading-relaxed">{t("home.stats.alliance_desc")}</p>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10">
-             {airlines?.slice(0, 12).map((airline) => (
-               <div key={airline.id} className="flex flex-col items-center gap-4 transition-all p-8 rounded-[32px] border border-white/5 bg-slate-900/40 hover:bg-slate-900/60 hover:border-blue-500/30 group">
-                  <div className="h-12 w-full flex items-center justify-center grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500">
-                    {airline.logoUrl ? (
-                      <img src={airline.logoUrl} alt={airline.name} className="h-full w-auto object-contain" />
-                    ) : (
-                      <Plane className="h-10 w-10 text-slate-700" />
+                      </motion.div>
                     )}
                   </div>
-                  <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest group-hover:text-slate-400 transition-colors">{airline.name}</span>
-               </div>
-             ))}
-          </div>
-        </div>
-      </section>
+                </div>
+              </section>
+            );
 
-      {/* CTA Final */}
-      <section className="py-24 relative z-10 overflow-hidden bg-white text-slate-950">
-         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/5 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
-         <div className="container mx-auto px-4 max-w-6xl relative z-10 text-center">
-            <Badge className="bg-slate-950 text-white rounded-full px-6 py-2 mb-8 text-[10px] uppercase font-black tracking-[0.5em] shadow-xl">{t("home.stats.ready")}</Badge>
-            <h2 className="text-5xl md:text-8xl font-black tracking-tighter uppercase leading-[0.9] mb-12">
-              {t("home.cta.title")}
-            </h2>
-            <p className="text-slate-500 text-xl md:text-2xl font-bold max-w-2xl mx-auto mb-16 uppercase tracking-tight">{t("home.cta.subtitle")}</p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-              <a href={contactWhatsAppHref} target="_blank" rel="noreferrer" className="flex h-20 items-center justify-center gap-5 rounded-[24px] bg-blue-600 px-16 text-sm font-black text-white hover:bg-slate-950 transition-all shadow-2xl shadow-blue-600/30 hover:scale-105 active:scale-95">
-                {t("footer.contact_cta")} <MessageCircle className="h-6 w-6" />
-              </a>
-              <Button 
-                variant="outline" 
-                className="h-20 rounded-[24px] border-slate-200 bg-white px-16 text-sm font-black uppercase tracking-widest text-slate-950 hover:bg-slate-50 shadow-xl transition-all hover:scale-105 active:scale-95" 
-                onClick={() => setLocation("/senior")}
-              >
-                {t("home.senior.btn")}
-              </Button>
-            </div>
-         </div>
-      </section>
+          case "stats":
+            return (
+              <section key="stats" className="py-8 md:py-12 relative z-10">
+                <div className="container mx-auto px-4 max-w-6xl">
+                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-12">
+                      {[
+                        { label: t("home.stats.routes"), value: "2,400+", icon: Compass },
+                        { label: t("home.stats.partners"), value: "45+", icon: Star },
+                        { label: t("home.stats.travelers"), value: "120k", icon: Globe2 },
+                        { label: t("home.stats.speed"), value: "< 2s", icon: Zap }
+                      ].map((stat, i) => (
+                        <div key={i} className="flex flex-col items-center text-center space-y-1.5 md:space-y-3 p-4 md:p-6 rounded-[24px] md:rounded-[32px] bg-white/5 border border-white/5 backdrop-blur-sm">
+                           <stat.icon className="h-5 w-5 md:h-6 md:w-6 text-blue-500 mb-1" />
+                           <span className="text-2xl md:text-4xl font-black text-white tracking-tighter">{stat.value}</span>
+                           <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">{stat.label}</span>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+              </section>
+            );
+
+          case "insights":
+            return (
+              <section key="insights" className="py-20 relative z-10">
+                <div className="container mx-auto px-4 max-w-6xl">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                    <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
+                       <div className="group p-10 rounded-[48px] bg-slate-900/40 border border-white/5 backdrop-blur-3xl hover:border-blue-500/30 transition-all duration-500 shadow-2xl">
+                          <div className="flex items-center justify-between mb-8">
+                            <TrendingUp className="h-8 w-8 text-blue-500 group-hover:scale-110 transition-transform" />
+                            <Badge className="bg-blue-600/20 text-blue-400 border border-blue-500/20 text-[9px] uppercase font-black px-4 py-1.5 rounded-full">{t("home.intel.badge")}</Badge>
+                          </div>
+                          <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-6">{t("home.intel.title")}</h3>
+                          <div className="space-y-6">
+                             {[
+                               { icon: CheckCircle2, label: t("home.intel.r1"), color: "text-emerald-400" },
+                               { icon: Info, label: t("home.intel.r2"), color: "text-blue-400" },
+                               { icon: Navigation, label: t("home.intel.r3"), color: "text-coral-500" }
+                             ].map((item, i) => (
+                               <div key={i} className="flex items-start gap-4">
+                                  <item.icon className={cn("h-5 w-5 mt-0.5 shrink-0", item.color)} />
+                                  <p className="text-sm font-bold text-slate-400 leading-relaxed">{item.label}</p>
+                               </div>
+                             ))}
+                          </div>
+                       </div>
+                       <div className="group p-10 rounded-[48px] bg-slate-900/40 border border-white/5 backdrop-blur-3xl hover:border-coral-500/30 transition-all duration-500 shadow-2xl">
+                          <div className="flex items-center justify-between mb-8">
+                            <Clock className="h-8 w-8 text-coral-500 group-hover:scale-110 transition-transform" />
+                            <Badge className="bg-coral-500/20 text-coral-400 border border-coral-500/20 text-[9px] uppercase font-black px-4 py-1.5 rounded-full">{t("home.care.badge")}</Badge>
+                          </div>
+                          <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-6">{t("home.care.title")}</h3>
+                          <div className="space-y-6">
+                             {[
+                               { icon: ShieldAlert, label: t("home.care.r1"), color: "text-coral-500" },
+                               { icon: Plane, label: t("home.care.r2"), color: "text-coral-500" },
+                               { icon: Headphones, label: t("home.care.r3"), color: "text-emerald-400" }
+                             ].map((item, i) => (
+                               <div key={i} className="flex items-start gap-4">
+                                  <item.icon className={cn("h-5 w-5 mt-0.5 shrink-0", item.color)} />
+                                  <p className="text-sm font-bold text-slate-400 leading-relaxed">{item.label}</p>
+                               </div>
+                             ))}
+                          </div>
+                       </div>
+                    </div>
+                    <div className="p-10 rounded-[48px] bg-white text-slate-950 shadow-2xl flex flex-col justify-between relative overflow-hidden group">
+                       <div className="absolute top-0 right-0 w-32 h-32 bg-slate-900/5 blur-[40px] rounded-full translate-x-1/2 -translate-y-1/2" />
+                       <div className="relative z-10">
+                          <h3 className="text-3xl font-black uppercase tracking-tight mb-3">{t("home.toolbox.title")}</h3>
+                          <p className="text-slate-500 text-sm mb-12 font-bold uppercase tracking-widest">{t("home.toolbox.subtitle")}</p>
+                          <div className="space-y-8">
+                             <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                   <CloudSun className="h-6 w-6 text-blue-600" />
+                                   <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t("home.toolbox.weather")}</span>
+                                </div>
+                                <span className="text-2xl font-black tracking-tighter">24°C</span>
+                             </div>
+                             <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                   <Banknote className="h-6 w-6 text-emerald-600" />
+                                   <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t("home.toolbox.exchange")}</span>
+                                </div>
+                                <span className="text-2xl font-black tracking-tighter">1 USD = 5.04 BRL</span>
+                             </div>
+                             <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                   <Navigation className="h-6 w-6 text-orange-600" />
+                                   <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t("home.toolbox.status")}</span>
+                                </div>
+                                <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest bg-orange-50 px-3 py-1 rounded-md">{t("home.toolbox.monitoring")}</span>
+                             </div>
+                          </div>
+                       </div>
+                       <Button onClick={() => setLocation("/toolbox")} className="w-full mt-12 rounded-[24px] bg-slate-950 text-white hover:bg-blue-600 h-16 font-black text-xs uppercase tracking-[0.2em] shadow-2xl transition-all hover:scale-105 active:scale-95">
+                           {t("home.toolbox.access")} <ArrowRight className="ml-3 h-4 w-4" />
+                        </Button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            );
+
+          case "deals":
+            return (
+              <section key="deals" className="py-20 relative z-10 overflow-hidden">
+                <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-3xl -z-10" />
+                <div className="container mx-auto px-4 max-w-6xl">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-12 mb-20 relative">
+                    <div className="max-w-2xl relative z-10">
+                      <Badge className="bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-full px-6 py-2 mb-8 text-[10px] uppercase font-black tracking-[0.4em]">
+                        <Globe2 className="h-4 w-4 mr-3" />
+                        {t("home.deals.badge")}
+                      </Badge>
+                      <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-[0.9] uppercase mb-8">
+                        {t("home.deals.title")} <br />
+                        <span className="text-blue-500">{t("results.filter_active")}</span>
+                      </h2>
+                      <p className="text-slate-400 font-medium text-lg leading-relaxed">{t("home.deals.desc")}</p>
+                    </div>
+                    <div className="absolute right-[-4rem] top-[-4rem] bottom-[-4rem] w-[50%] pointer-events-none hidden md:block select-none opacity-40 mix-blend-screen">
+                       <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/20 to-transparent z-10" />
+                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950 z-10" />
+                       <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=1200&auto=format&fit=crop" className="w-full h-full object-cover rounded-l-full grayscale" alt="" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {dealsLoading ? (
+                      Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-[430px] rounded-[48px] bg-white/5 border border-white/5 animate-pulse" />)
+                    ) : catalogDeals.length > 0 ? (
+                      catalogDeals.map((deal) => (
+                        <DealCard key={deal.id} deal={{...deal, title: deal.headline || `${deal.origin} → ${deal.destination}`, description: deal.description || "", imageUrl: deal.imageUrl || getDestinationImage(deal.destination)}} />
+                      ))
+                    ) : (
+                      <div className="col-span-full py-24 text-center bg-white/5 rounded-[48px] border border-dashed border-white/10">
+                         <p className="text-slate-500 font-black uppercase tracking-widest text-[10px]">{t("results.no_matching_flights")}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
+            );
+
+          case "partners":
+            return (
+              <section key="partners" className="py-16 relative z-10">
+                <div className="container mx-auto px-4 max-w-6xl">
+                  <div className="text-center mb-20">
+                     <Badge variant="outline" className="mb-6 border-white/10 text-slate-500 text-[9px] uppercase font-black tracking-[0.3em] px-5 py-1.5 rounded-full">{t("home.stats.network")}</Badge>
+                     <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-6">{t("home.stats.alliance_title")}</h2>
+                     <p className="text-slate-400 font-medium max-w-xl mx-auto text-lg leading-relaxed">{t("home.stats.alliance_desc")}</p>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10">
+                     {airlines?.slice(0, 12).map((airline) => (
+                       <div key={airline.id} className="flex flex-col items-center gap-4 transition-all p-8 rounded-[32px] border border-white/5 bg-slate-900/40 hover:bg-slate-900/60 hover:border-blue-500/30 group">
+                          <div className="h-12 w-full flex items-center justify-center grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500">
+                            {airline.logoUrl ? <img src={airline.logoUrl} alt={airline.name} className="h-full w-auto object-contain" /> : <Plane className="h-10 w-10 text-slate-700" />}
+                          </div>
+                          <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest group-hover:text-slate-400 transition-colors">{airline.name}</span>
+                       </div>
+                     ))}
+                  </div>
+                </div>
+              </section>
+            );
+
+          case "cta":
+            return (
+              <section key="cta" className="py-24 relative z-10 overflow-hidden bg-white text-slate-950">
+                 <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/5 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
+                 <div className="container mx-auto px-4 max-w-6xl relative z-10 text-center">
+                    <Badge className="bg-slate-950 text-white rounded-full px-6 py-2 mb-8 text-[10px] uppercase font-black tracking-[0.5em] shadow-xl">{t("home.stats.ready")}</Badge>
+                    <h2 className="text-5xl md:text-8xl font-black tracking-tighter uppercase leading-[0.9] mb-12">
+                      {t("home.cta.title")}
+                    </h2>
+                    <p className="text-slate-500 text-xl md:text-2xl font-bold max-w-2xl mx-auto mb-16 uppercase tracking-tight">{t("home.cta.subtitle")}</p>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                      <a href={contactWhatsAppHref} target="_blank" rel="noreferrer" className="flex h-20 items-center justify-center gap-5 rounded-[24px] bg-blue-600 px-16 text-sm font-black text-white hover:bg-slate-950 transition-all shadow-2xl shadow-blue-600/30 hover:scale-105 active:scale-95">
+                        {t("footer.contact_cta")} <MessageCircle className="h-6 w-6" />
+                      </a>
+                      <Button variant="outline" className="h-20 rounded-[24px] border-slate-200 bg-white px-16 text-sm font-black uppercase tracking-widest text-slate-950 hover:bg-slate-50 shadow-xl transition-all hover:scale-105 active:scale-95" onClick={() => setLocation("/senior")}>
+                        {t("home.senior.btn")}
+                      </Button>
+                    </div>
+                 </div>
+              </section>
+            );
+
+          default:
+            return null;
+        }
+      })}
     </div>
   );
 }

@@ -73,6 +73,8 @@ export const siteSettings = pgTable("site_settings", {
   mobileAppProductionEnabled: boolean("mobile_app_production_enabled").default(true).notNull(),
   mobileConsumerRelease: jsonb("mobile_consumer_release").$type<MobileReleaseChannel | null>(),
   mobileAdminRelease: jsonb("mobile_admin_release").$type<MobileReleaseChannel | null>(),
+  promotionalBanner: text("promotional_banner").default("Ofertas Exclusivas Mobile - 15% OFF"),
+  mobileLayout: jsonb("mobile_layout").$type<any[]>(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 

@@ -145,6 +145,21 @@ export function registerRoutes(app: Express) {
       sharedCheckoutApi: true,
       supportEmail: process.env.SUPPORT_EMAIL || "support@michelstravel.agency",
       supportWhatsApp: process.env.WHATSAPP_NUMBER || null,
+      heroTitle: settings?.heroTitle || null,
+      heroSubtitle: settings?.heroSubtitle || null,
+      promotionalBanner: settings?.promotionalBanner || null,
+      mobileLayout: settings?.mobileLayout || null,
+    });
+  });
+
+  app.get('/api/public/settings', async (_req, res) => {
+    const settings = await storage.getSiteSettings();
+    res.json({
+      siteName: settings?.siteName || "Michels Travel",
+      heroTitle: settings?.heroTitle || null,
+      heroSubtitle: settings?.heroSubtitle || null,
+      promotionalBanner: settings?.promotionalBanner || null,
+      mobileLayout: settings?.mobileLayout || null,
     });
   });
 
