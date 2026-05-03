@@ -44,6 +44,8 @@
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 4.5rem;
+    /* Suporte para notch e barras de sistema */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
   * {
     @apply border-border;
@@ -61,6 +63,18 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
     @apply tracking-tight;
+  }
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .min-h-screen-safe {
+    min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   }
 }
 

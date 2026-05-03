@@ -112,13 +112,13 @@ export default function Home() {
               </div>
 
               <div className="relative z-10">
-                <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-white leading-[0.9] uppercase max-w-5xl mb-10 drop-shadow-2xl">
-                  {t("home.hero.title")}
-                </h1>
-
-                <p className="text-slate-100 font-medium text-lg md:text-xl max-w-2xl leading-relaxed drop-shadow-lg">
-                  {t("home.hero.desc")}
-                </p>
+	                <h1 className="text-4xl sm:text-5xl md:text-8xl font-black tracking-tighter text-white leading-[0.9] uppercase max-w-5xl mb-6 md:mb-10 drop-shadow-2xl">
+	                  {t("home.hero.title")}
+	                </h1>
+	
+	                <p className="text-slate-200 font-medium text-base md:text-xl max-w-2xl leading-relaxed drop-shadow-lg">
+	                  {t("home.hero.desc")}
+	                </p>
               </div>
             </motion.div>
 
@@ -135,24 +135,24 @@ export default function Home() {
       </section>
 
       {/* Stats / Value Section */}
-      <section className="py-12 relative z-10">
-        <div className="container mx-auto px-4 max-w-6xl">
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
-              {[
-                { label: t("home.stats.routes"), value: "2,400+", icon: Compass },
-                { label: t("home.stats.partners"), value: "45+", icon: Star },
-                { label: t("home.stats.travelers"), value: "120k", icon: Globe2 },
-                { label: t("home.stats.speed"), value: "< 2s", icon: Zap }
-              ].map((stat, i) => (
-                <div key={i} className="flex flex-col items-center text-center space-y-3 p-6 rounded-[32px] bg-white/5 border border-white/5 backdrop-blur-sm">
-                   <stat.icon className="h-6 w-6 text-blue-500 mb-2" />
-                   <span className="text-3xl md:text-4xl font-black text-white tracking-tighter">{stat.value}</span>
-                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{stat.label}</span>
-                </div>
-              ))}
-           </div>
-        </div>
-      </section>
+	      <section className="py-8 md:py-12 relative z-10">
+	        <div className="container mx-auto px-4 max-w-6xl">
+	           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-12">
+	              {[
+	                { label: t("home.stats.routes"), value: "2,400+", icon: Compass },
+	                { label: t("home.stats.partners"), value: "45+", icon: Star },
+	                { label: t("home.stats.travelers"), value: "120k", icon: Globe2 },
+	                { label: t("home.stats.speed"), value: "< 2s", icon: Zap }
+	              ].map((stat, i) => (
+	                <div key={i} className="flex flex-col items-center text-center space-y-1.5 md:space-y-3 p-4 md:p-6 rounded-[24px] md:rounded-[32px] bg-white/5 border border-white/5 backdrop-blur-sm">
+	                   <stat.icon className="h-5 w-5 md:h-6 md:w-6 text-blue-500 mb-1" />
+	                   <span className="text-2xl md:text-4xl font-black text-white tracking-tighter">{stat.value}</span>
+	                   <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">{stat.label}</span>
+	                </div>
+	              ))}
+	           </div>
+	        </div>
+	      </section>
 
       {/* Market Insights & Tools */}
       <section className="py-20 relative z-10">

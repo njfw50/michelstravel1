@@ -242,18 +242,18 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                 </div>
 
                 {/* Swap Button (Overlapping on Mobile, Centered on Desktop) */}
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 md:relative md:right-auto md:top-auto md:translate-y-0 flex items-center justify-center z-20">
-                  <button
-                    type="button"
-                    onClick={() => { const tmp = origin; setOrigin(destination); setDestination(tmp); }}
-                    className={cn(
-                      "rounded-full border border-white/10 bg-slate-800 shadow-[0_0_20px_rgba(0,0,0,0.5)] text-blue-400 hover:text-white hover:border-blue-500 hover:bg-blue-600 transition-all active:scale-90 md:rounded-2xl",
-                      isCompact ? "h-10 w-10 md:h-11 md:w-11" : "h-12 w-12 md:h-16 md:w-16"
-                    )}
-                  >
-                    <ArrowRightLeft className="h-5 w-5 mx-auto rotate-90 md:rotate-0" />
-                  </button>
-                </div>
+	                <div className="absolute right-4 top-1/2 -translate-y-1/2 md:relative md:right-auto md:top-auto md:translate-y-0 flex items-center justify-center z-20">
+	                  <button
+	                    type="button"
+	                    onClick={() => { const tmp = origin; setOrigin(destination); setDestination(tmp); }}
+	                    className={cn(
+	                      "rounded-xl md:rounded-2xl border border-white/10 bg-slate-800 shadow-[0_0_20px_rgba(0,0,0,0.5)] text-blue-400 hover:text-white hover:border-blue-500 hover:bg-blue-600 transition-all active:scale-90",
+	                      isCompact ? "h-10 w-10 md:h-11 md:w-11" : "h-11 w-11 md:h-16 md:w-16"
+	                    )}
+	                  >
+	                    <ArrowRightLeft className="h-4 w-4 md:h-5 md:w-5 mx-auto rotate-90 md:rotate-0" />
+	                  </button>
+	                </div>
 
                 {/* Arrival Location */}
                 <div className="relative mt-2 md:mt-0">
@@ -475,19 +475,19 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                 </Popover>
              </div>
 
-             <div className="md:col-span-4">
-                <Button 
-                  onClick={handleSearch}
-                  disabled={isSubmitting}
-                  className={cn(
-                    "w-full bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.3em] shadow-2xl shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-95",
-                    isCompact ? "h-14 md:h-14 rounded-2xl text-[10px]" : "h-14 md:h-20 rounded-[28px] text-xs"
-                  )}
-                >
-                  <Search className="h-5 w-5 mr-3" />
-                  {isSubmitting ? t("results.loading") : t("home.hero.cta")}
-                </Button>
-             </div>
+	             <div className="md:col-span-4">
+	                <Button 
+	                  onClick={handleSearch}
+	                  disabled={isSubmitting}
+	                  className={cn(
+	                    "w-full bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.3em] shadow-2xl shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-95",
+	                    isCompact ? "h-14 md:h-14 rounded-2xl text-[10px]" : "h-16 md:h-20 rounded-[20px] md:rounded-[28px] text-xs"
+	                  )}
+	                >
+	                  <Search className="h-5 w-5 mr-3" />
+	                  {isSubmitting ? t("results.loading") : t("home.hero.cta")}
+	                </Button>
+	             </div>
           </div>
         </form>
       </div>
