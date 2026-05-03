@@ -211,7 +211,7 @@ function StandardTripCard({ booking, defaultExpanded = false }: { booking: Booki
         open={showSeatMap}
         onOpenChange={setShowSeatMap}
         bookingId={booking.id.toString()}
-        referenceCode={booking.referenceCode}
+        referenceCode={booking.referenceCode || ''}
         contactEmail={booking.contactEmail}
       />
       

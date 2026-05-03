@@ -989,12 +989,12 @@ export function registerRoutes(app: Express) {
   app.get('/api/bookings/:id/seat-map', async (req, res) => {
     try {
       const booking = await storage.getBooking(req.params.id);
-      if (!booking || !booking.orderId) {
+      if (!booking || !booking.duffelOrderId) {
         return res.status(404).json({ error: "Booking or Duffel order not found" });
       }
 
       const { getOrderSeatMaps } = await import('./services/duffel');
-      const seatMaps = await getOrderSeatMaps(booking.orderId);
+      const seatMaps = await getOrderSeatMaps(booking.duffelOrderId);
       
       const seatMarkupRate = await getCommissionRate();
       const processed = seatMaps.map((sm: any) => ({
@@ -1038,7 +1038,7 @@ export function registerRoutes(app: Express) {
       const { services, referenceCode, contactEmail } = req.body;
       const booking = await storage.getBooking(req.params.id);
       
-      if (!booking || !booking.orderId) {
+      if (!booking || !booking.duffelOrderId) {
         return res.status(404).json({ error: "Booking or Duffel order not found" });
       }
 
@@ -1051,7 +1051,7 @@ export function registerRoutes(app: Express) {
       }
 
       const { addOrderServices } = await import('./services/duffel');
-      const success = await addOrderServices(booking.orderId, services);
+      const success = await addOrderServices(booking.duffelOrderId, services);
       
       if (success) {
         res.json({ success: true });
@@ -1069,7 +1069,7 @@ export function registerRoutes(app: Express) {
       const { passengers, referenceCode, contactEmail } = req.body;
       const booking = await storage.getBooking(req.params.id);
       
-      if (!booking || !booking.orderId) {
+      if (!booking || !booking.duffelOrderId) {
         return res.status(404).json({ error: "Booking or Duffel order not found" });
       }
 
@@ -1082,7 +1082,7 @@ export function registerRoutes(app: Express) {
       }
 
       const { updateOrderPassengers } = await import('./services/duffel');
-      const success = await updateOrderPassengers(booking.orderId, passengers);
+      const success = await updateOrderPassengers(booking.duffelOrderId, passengers);
       
       if (success) {
         // Update local booking status if needed

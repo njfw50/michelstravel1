@@ -83,3 +83,16 @@ O projeto foi reorganizado seguindo a estrutura de gestão de Harvard, focada em
 - **Phase IV: Publication** - Lançamento e monitoramento.
 
 Acompanhe o progresso através dos Milestones e Issues categorizadas.
+
+### [2026-05-03] — Instituição da Lei XIX (Integridade de Referências)
+**Author:** Antigravity AI
+**Status:** VIGENTE
+**Fundamentação:** Lei 14 (Segurança e Integridade)
+
+#### 📝 Root Cause Analysis
+O Incidente #001 revelou uma vulnerabilidade na Auditoria Ativa: a omissão de imports críticos (utilitários e ícones) durante refatorações massivas. Isso resultou em falhas de build em produção que não foram detectadas antes do commit.
+
+#### 🛠️ Corrective Actions & Hardening
+- **Decreto da Lei XIX:** Estabelece a obrigatoriedade da auditoria básica de imports e integridade de referências.
+- **Implementação do Law Enforcer:** Criação do script `script/law-enforcer.mjs` que valida tipos e build localmente.
+- **Interlock de Deploy:** Integração do comando `npm run audit` no ciclo de vida do projeto.

@@ -45,7 +45,7 @@ try {
   }
 
   if (-not $SkipCheck) {
-    Invoke-Step -Label "Running npm run check" -Action {
+    Invoke-Step -Label "Auditoria de Imports e Tipos (LEI XIX)" -Action {
       npm run check
       if ($LASTEXITCODE -ne 0) {
         throw "npm run check failed."

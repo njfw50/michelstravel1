@@ -105,7 +105,7 @@ function TestModeControl() {
 
   if (isLoading) return null;
 
-  const currentTestMode = testModeData?.testMode ?? true;
+  const currentTestMode = (testModeData as any)?.testMode ?? true;
 
   return (
     <Card className="glass-card border-white/5 overflow-hidden">

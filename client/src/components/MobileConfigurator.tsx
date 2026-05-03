@@ -311,7 +311,12 @@ export function MobileConfigurator() {
                         <div className="space-y-6">
                           {deals.slice(0, 1).map((deal) => (
                             <div key={deal.id} className="scale-[0.95] origin-left">
-                              <DealCard deal={{...deal, title: deal.headline, price: `${deal.currency} ${deal.price}`}} />
+                              <DealCard deal={{
+                                ...deal, 
+                                title: deal.headline || "", 
+                                price: `${deal.currency} ${deal.price}`,
+                                imageUrl: deal.imageUrl || undefined
+                              } as any} />
                             </div>
                           ))}
                         </div>
