@@ -11,6 +11,7 @@ import { useI18n } from "@/lib/i18n";
 import { useSiteSettings, useUpdateSettings } from "@/hooks/use-admin";
 import { useFeaturedDeals } from "@/hooks/use-flights";
 import { DealCard } from "@/components/DealCard";
+import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function MobileConfigurator() {
