@@ -84,23 +84,23 @@ O projeto foi reorganizado seguindo a estrutura de gestão de Harvard, focada em
 
 Acompanhe o progresso através dos Milestones e Issues categorizadas.
 
-### [2026-05-03] — Liturgia de Restauração e Expansão (Incidente #001)
-**Autor:** Antigravity AI
-**Status:** CONCLUÍDO / SELADO
-**Fundamentação:** Lei 14 (Segurança) & Lei 05 (Livro da Vida)
+### [2026-05-03] — Liturgy of Restoration and Expansion (Incident #001)
+**Author:** Antigravity AI
+**Status:** COMPLETED / SEALED
+**Foundation:** Law 14 (Security) & Law 05 (Book of Life)
 
-#### 📝 Crônica do Ritual
-O sistema enfrentou uma crise de integridade em produção devido à omissão de imports ("Dívida de Referência Fantasma"). O que se seguiu foi um ritual completo de restauração canônica:
+#### 📝 Ritual Chronicle
+The system faced an integrity crisis in production due to missing imports ("Ghost Reference Debt"). This was followed by a complete canonical restoration ritual:
 
-1.  **Investigação (O Exame de Consciência):** Identificamos que a complexidade da refatoração suprimiu a atenção aos utilitários básicos.
-2.  **Reparação Técnica (A Purificação):** O `Law Enforcer` foi implementado como uma barreira de build local, corrigindo instantaneamente todos os erros de tipo e referências.
-3.  **Expansão Legislativa (O Decreto):** Criação da **Lei XIX (Integrity of References)** para tornar o erro impossível por via jurídica.
-4.  **Ato Democrático (A Proposta):** Criação de branch legislativa no repositório central de governança para auditoria.
-5.  **Poder Executivo (Medida Provisória):** Promulgação da **MP 2026/01**, integrando a Lei XIX ao corpo canônico principal sob regime de urgência.
+1.  **Investigation (Examination of Conscience):** Identified that the complexity of the refactoring suppressed attention to basic utilities.
+2.  **Technical Repair (Purification):** The `Law Enforcer` was implemented as a local build barrier, instantly correcting all type and reference errors.
+3.  **Legislative Expansion (Decree):** Creation of **Law XIX (Integrity of References)** to make the error legally impossible.
+4.  **Democratic Act (Proposal):** Creation of a legislative branch in the central governance repository for audit.
+5.  **Executive Power (Provisional Measure):** Promulgation of **MP 2026/01**, integrating Law XIX into the main canonical body under emergency regime.
 
-#### 🛠️ Evidência Técnica de Soberania
+#### 🛠️ Technical Evidence of Sovereignty
 - **Build Status:** ✅ PASS (Local & Render)
-- **Law Enforcer:** Ativo e bloqueante.
-- **Canons:** Expandidos para 20 leis.
+- **Law Enforcer:** Active and blocking.
+- **Canons:** Expanded to 20 laws.
 
-*A ordem foi restaurada através do rigor.*
+*Order was restored through rigor.*

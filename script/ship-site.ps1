@@ -43,25 +43,25 @@ try {
       powershell -ExecutionPolicy Bypass -File "$PSScriptRoot\publish-android-release.ps1" -ApkPath $AndroidApkPath -Version $AndroidVersion
     }
   }
-
+ 
   if (-not $SkipCheck) {
-    Invoke-Step -Label "Auditoria de Imports e Tipos (LEI XIX)" -Action {
+    Invoke-Step -Label "Import and Type Audit (CANON XIX)" -Action {
       npm run check
       if ($LASTEXITCODE -ne 0) {
         throw "npm run check failed."
       }
     }
   }
-
+ 
   if (-not $SkipBuild) {
-    Invoke-Step -Label "Running npm run build" -Action {
+    Invoke-Step -Label "Running Production Build" -Action {
       npm run build
       if ($LASTEXITCODE -ne 0) {
         throw "npm run build failed."
       }
     }
   }
-
+ 
   $status = git status --porcelain
   if (-not $status) {
     Write-Host "No local changes to commit."
@@ -72,14 +72,14 @@ try {
         throw "git add failed."
       }
     }
-
+ 
     Invoke-Step -Label "Creating commit" -Action {
       git commit -m $CommitMessage
       if ($LASTEXITCODE -ne 0) {
         throw "git commit failed."
       }
     }
-
+ 
     Invoke-Step -Label "Pushing to origin/$Branch" -Action {
       git push origin $Branch
       if ($LASTEXITCODE -ne 0) {
@@ -87,7 +87,7 @@ try {
       }
     }
   }
-
+ 
   if (-not $SkipDeploy) {
     Invoke-Step -Label "Triggering Render deploy" -Action {
       powershell -ExecutionPolicy Bypass -File "$PSScriptRoot\render-deploy.ps1"
