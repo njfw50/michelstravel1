@@ -55,22 +55,22 @@ function LanguageSwitcher({ variant = "navbar" }: { variant?: "navbar" | "footer
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={isLoading}
-          className={cn(
-            "h-11 gap-3 rounded-2xl px-4 text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-xl",
-            variant === "navbar"
-              ? "bg-white/5 border border-white/5 text-white/80 hover:bg-white/10 hover:text-white"
-              : "border border-white/10 bg-slate-900/40 text-white/80 hover:bg-blue-600 hover:text-white",
-            isLoading && "opacity-50 grayscale",
-          )}
-          data-testid="button-language-switcher"
-        >
-          <Globe className={cn("h-4 w-4 text-blue-400", isLoading && "animate-spin")} />
-          <span className="min-w-[1.5em] text-center">{isLoading ? "..." : current.flag}</span>
-        </Button>
+	        <Button
+	          variant="ghost"
+	          size="sm"
+	          disabled={isLoading}
+	          className={cn(
+	            "h-10 md:h-11 gap-2 md:gap-3 rounded-xl md:rounded-2xl px-2 md:px-4 text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-xl",
+	            variant === "navbar"
+	              ? "bg-white/5 border border-white/5 text-white/80 hover:bg-white/10 hover:text-white"
+	              : "border border-white/10 bg-slate-900/40 text-white/80 hover:bg-blue-600 hover:text-white",
+	            isLoading && "opacity-50 grayscale",
+	          )}
+	          data-testid="button-language-switcher"
+	        >
+	          <Globe className={cn("h-3.5 w-3.5 md:h-4 md:w-4 text-blue-400", isLoading && "animate-spin")} />
+	          <span className="min-w-[1.2em] md:min-w-[1.5em] text-center">{isLoading ? "..." : current.flag}</span>
+	        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align={variant === "footer" ? "start" : "end"}
@@ -196,19 +196,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-slate-950 text-white selection:bg-blue-600/30 selection:text-white flex flex-col">
       <header className="fixed inset-x-0 top-0 z-40 transition-all duration-500">
-        <div className={cn(
-          "container mx-auto px-4 md:px-6 transition-all duration-500",
-          scrolled ? "pt-4 md:pt-4" : "pt-8 md:pt-10"
-        )}>
-          <div
-            className={cn(
-              "flex items-center justify-between gap-4 rounded-[32px] border border-white/10 px-4 py-3 shadow-2xl backdrop-blur-3xl transition-all duration-500 md:px-6 md:py-4",
-              scrolled ? "bg-slate-900/90 scale-100" : "bg-slate-900/60 scale-[1.02]",
-            )}
-          >
+	        <div className={cn(
+	          "container mx-auto px-2 md:px-6 transition-all duration-500",
+	          scrolled ? "pt-2 md:pt-4" : "pt-4 md:pt-10"
+	        )}>
+	          <div
+	            className={cn(
+	              "flex items-center justify-between gap-4 rounded-[24px] md:rounded-[32px] border border-white/10 px-3 py-2 shadow-2xl backdrop-blur-3xl transition-all duration-500 md:px-6 md:py-4",
+	              scrolled ? "bg-slate-900/90 scale-100" : "bg-slate-900/60 scale-[1.01] md:scale-[1.02]",
+	            )}
+	          >
             <div className="flex min-w-0 flex-1 items-center gap-8 md:gap-12">
               <Link href="/" className="group flex shrink-0 items-center gap-5">
-                <div className="brand-mark-shell brand-mark-shell--header shadow-2xl border border-white/20">
+	                <div className="brand-mark-shell brand-mark-shell--header h-12 w-12 md:h-20 md:w-20 shadow-2xl border border-white/20">
                   <img src={brandMark} alt="Michels Travel" className="transition-transform duration-700 group-hover:scale-110" />
                 </div>
                 <div className="hidden min-w-0 xl:block">
@@ -235,7 +235,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </nav>
             </div>
 
-            <div className="flex shrink-0 items-center gap-4 md:gap-8 border-l border-white/5 pl-8">
+	            <div className="flex shrink-0 items-center gap-2 md:gap-8 border-l border-white/5 pl-2 md:pl-8">
               <LanguageSwitcher variant="navbar" />
               <div className="hidden items-center gap-4 md:flex">
                 {user ? (
@@ -275,24 +275,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </>
-                ) : (
-                  <Button
-                    onClick={() => openLoginDialog()}
-                    className="h-11 whitespace-nowrap rounded-2xl bg-blue-600 px-8 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-2xl shadow-blue-600/30 hover:bg-blue-500 transition-all hover:scale-105 active:scale-95"
-                    data-testid="button-signin"
-                  >
-                    {t("nav.signin")}
-                  </Button>
-                )}
+	                ) : (
+	                  <Button
+	                    onClick={() => openLoginDialog()}
+	                    className="h-10 md:h-11 whitespace-nowrap rounded-xl md:rounded-2xl bg-blue-600 px-4 md:px-8 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-2xl shadow-blue-600/30 hover:bg-blue-500 transition-all hover:scale-105 active:scale-95"
+	                    data-testid="button-signin"
+	                  >
+	                    {t("nav.signin")}
+	                  </Button>
+	                )}
               </div>
 
-              <button
-                className="hidden h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-300 transition-all hover:bg-blue-600 hover:text-white shadow-xl lg:hidden"
-                onClick={() => setIsMobileMenuOpen((value) => !value)}
-                data-testid="button-mobile-menu"
-              >
-                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
+
             </div>
           </div>
         </div>
@@ -306,32 +300,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
             exit={{ opacity: 0, scale: 0.95 }}
             className="fixed inset-0 z-[90] flex items-center justify-center px-4 bg-slate-950/95 backdrop-blur-2xl"
           >
-            <div className="w-full max-w-sm rounded-[40px] border border-white/10 bg-slate-900/80 p-8 shadow-2xl shadow-black/80 space-y-3">
+            <div className="w-full max-w-sm rounded-[40px] border border-white/10 bg-slate-900/80 p-6 shadow-2xl shadow-black/80 space-y-2">
+                <div className="flex justify-between items-center mb-6 px-2">
+                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Navigation</span>
+                  <button onClick={() => setIsMobileMenuOpen(false)} className="h-10 w-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10">
+                    <X className="h-5 w-5 text-white" />
+                  </button>
+                </div>
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={cn(
-                      "flex items-center justify-center rounded-[24px] py-5 px-6 text-sm font-black uppercase tracking-[0.3em] transition-all",
+                      "flex items-center gap-4 rounded-[24px] py-4 px-6 text-sm font-black uppercase tracking-[0.2em] transition-all",
                       location === link.href ? "bg-blue-600 text-white shadow-xl shadow-blue-600/20" : "text-slate-400 hover:bg-white/5 hover:text-white",
                     )}
                   >
+                    <span className="h-1.5 w-1.5 rounded-full bg-current opacity-40" />
                     {link.label}
                   </Link>
                 ))}
                 
-                <div className="pt-8 space-y-4">
+                <div className="pt-6 space-y-3">
                   {user ? (
-                    <Button onClick={() => { setIsMobileMenuOpen(false); logout(); }} variant="ghost" className="w-full h-16 rounded-[24px] text-red-500 hover:bg-red-500/10 font-black uppercase tracking-widest">
+                    <Button onClick={() => { setIsMobileMenuOpen(false); logout(); }} variant="ghost" className="w-full h-14 rounded-[24px] text-red-500 hover:bg-red-500/10 font-black uppercase tracking-widest text-xs">
                        Logout
                     </Button>
                   ) : (
-                    <Button onClick={() => { setIsMobileMenuOpen(false); openLoginDialog(); }} className="w-full h-16 rounded-[24px] bg-blue-600 text-white font-black uppercase tracking-[0.3em] shadow-2xl shadow-blue-600/30">
+                    <Button onClick={() => { setIsMobileMenuOpen(false); openLoginDialog(); }} className="w-full h-14 rounded-[24px] bg-blue-600 text-white font-black uppercase tracking-[0.2em] shadow-2xl shadow-blue-600/30 text-xs">
                       {t("nav.signin")}
                     </Button>
                   )}
-                  <button onClick={() => setIsMobileMenuOpen(false)} className="w-full py-4 text-[10px] font-black uppercase tracking-[0.5em] text-slate-600 hover:text-white transition-all">Close Menu</button>
                 </div>
             </div>
           </motion.div>
@@ -451,7 +451,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                <span className="text-[8px] font-black uppercase tracking-widest">{user.isAdmin ? "Admin" : "Perfil"}</span>
             </Link>
           )}
-          <button onClick={() => setIsMobileMenuOpen(true)} className="flex flex-col items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-all">
+          <button 
+            onClick={() => setIsMobileMenuOpen(true)} 
+            className={cn(
+              "flex flex-col items-center gap-1.5 transition-all",
+              isMobileMenuOpen ? "text-blue-500 scale-110" : "text-slate-500 hover:text-slate-300"
+            )}
+          >
              <Menu className="h-5 w-5" />
              <span className="text-[8px] font-black uppercase tracking-widest">Menu</span>
           </button>

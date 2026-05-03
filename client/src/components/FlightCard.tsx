@@ -147,22 +147,29 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
     >
       <div className="p-4 md:p-8 relative z-10">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 mb-4 md:mb-6 border-b border-white/5 pb-4 md:pb-6">
-          <div className="flex items-center gap-4 md:gap-5 min-w-0 md:min-w-[180px]">
-            <div className="h-11 w-11 md:h-14 md:w-14 shrink-0 flex items-center justify-center rounded-[18px] bg-white/5 border border-white/10 p-2 shadow-xl transition-all group-hover:scale-105">
-              {flight.logoUrl ? (
-                <img src={flight.logoUrl || ""} alt={flight.airline || ""} className="h-full w-full object-contain" />
-              ) : (
-                <Plane className="h-8 w-8 text-slate-700" />
-              )}
-            </div>
-            <div>
-              <h3 className="text-2xl font-black text-white tracking-tight leading-none mb-3">{flight.airline}</h3>
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white/5 border border-white/5 px-3 py-1 rounded-full">{flight.flightNumber}</span>
-                {flight.passengers?.[0]?.cabinClassName && (
-                  <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em]">{flight.passengers[0].cabinClassName}</span>
+          <div className="flex items-center justify-between w-full md:w-auto md:min-w-[180px]">
+            <div className="flex items-center gap-3 md:gap-5">
+              <div className="h-10 w-10 md:h-14 md:w-14 shrink-0 flex items-center justify-center rounded-[14px] md:rounded-[18px] bg-white/5 border border-white/10 p-1.5 md:p-2 shadow-xl transition-all group-hover:scale-105">
+                {flight.logoUrl ? (
+                  <img src={flight.logoUrl || ""} alt={flight.airline || ""} className="h-full w-full object-contain" />
+                ) : (
+                  <Plane className="h-6 w-6 md:h-8 md:w-8 text-slate-700" />
                 )}
               </div>
+              <div>
+                <h3 className="text-lg md:text-2xl font-black text-white tracking-tight leading-none mb-1.5 md:mb-3">{flight.airline}</h3>
+                <div className="flex items-center gap-2 md:gap-3">
+                  <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white/5 border border-white/5 px-2 md:px-3 py-0.5 md:py-1 rounded-full">{flight.flightNumber}</span>
+                  {flight.passengers?.[0]?.cabinClassName && (
+                    <span className="text-[8px] md:text-[10px] font-black text-blue-400 uppercase tracking-[0.2em]">{flight.passengers[0].cabinClassName}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+            {/* Preço Mobile flutuante no topo */}
+            <div className="md:hidden text-right">
+              <span className="text-xl font-black text-white tracking-tighter">{formattedPrice}</span>
+              <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">Total</p>
             </div>
           </div>
 

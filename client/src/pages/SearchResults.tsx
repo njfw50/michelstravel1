@@ -49,6 +49,11 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import type { FlightOffer, FlightSlice } from "@shared/schema";
 import {
   buildSeniorRecommendations,
@@ -346,16 +351,53 @@ export default function SearchResults() {
               </div>
               
               {!isSearching && (
-                <div className="flex items-center gap-4 bg-slate-900/60 p-2 rounded-2xl border border-white/5 shadow-2xl">
-                  <select 
-                    value={sortBy} 
-                    onChange={e => setSortBy(e.target.value as SortOption)} 
-                    className="h-12 rounded-xl bg-transparent px-6 text-[10px] font-black uppercase tracking-widest text-white focus:outline-none transition-all cursor-pointer min-w-[200px]"
-                  >
-                    <option value="cheapest" className="bg-slate-950">{t("results.sort_cheapest")}</option>
-                    <option value="fastest" className="bg-slate-950">{t("results.sort_fastest")}</option>
-                    <option value="best" className="bg-slate-950">{t("results.sort_best")}</option>
-                  </select>
+                <div className="flex items-center gap-3">
+                  <Sheet>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="lg:hidden h-12 rounded-2xl border-white/10 bg-slate-900/60 text-[10px] font-black uppercase tracking-widest text-white gap-2">
+                          <Filter className="h-4 w-4 text-blue-400" />
+                          {t("results.filters")}
+                          {activeFilterCount > 0 && <Badge className="ml-1 bg-blue-600 h-5 w-5 p-0 flex items-center justify-center rounded-full">{activeFilterCount}</Badge>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[calc(100vw-2rem)] p-6 bg-slate-950/95 backdrop-blur-3xl border-white/10 rounded-[32px] shadow-2xl">
+                         <div className="space-y-8">
+                            <div className="flex justify-between items-center">
+                              <h3 className="text-sm font-black uppercase tracking-widest text-white">Filtros</h3>
+                              {activeFilterCount > 0 && (
+                                <button onClick={() => { setSelectedStops(new Set()); setSelectedAirlines(new Set()); setPriceRange(null); }} className="text-[10px] font-black uppercase tracking-widest text-blue-400">Limpar</button>
+                              )}
+                            </div>
+                            <div className="space-y-6">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Preço Máximo</p>
+                              <Slider 
+                                min={priceExtents.min} 
+                                max={priceExtents.max} 
+                                value={priceRange || [priceExtents.min, priceExtents.max]} 
+                                onValueChange={v => setPriceRange([v[0], v[1]])} 
+                              />
+                              <div className="flex justify-between text-[10px] font-black text-slate-400">
+                                <span>{formatPrice(priceRange?.[0] || priceExtents.min)}</span>
+                                <span>{formatPrice(priceRange?.[1] || priceExtents.max)}</span>
+                              </div>
+                            </div>
+                         </div>
+                      </PopoverContent>
+                    </Popover>
+                  </Sheet>
+
+                  <div className="flex items-center gap-4 bg-slate-900/60 p-1 rounded-2xl border border-white/5 shadow-2xl">
+                    <select 
+                      value={sortBy} 
+                      onChange={e => setSortBy(e.target.value as SortOption)} 
+                      className="h-10 md:h-12 rounded-xl bg-transparent px-4 md:px-6 text-[10px] font-black uppercase tracking-widest text-white focus:outline-none transition-all cursor-pointer min-w-[140px] md:min-w-[200px]"
+                    >
+                      <option value="cheapest" className="bg-slate-950">{t("results.sort_cheapest")}</option>
+                      <option value="fastest" className="bg-slate-950">{t("results.sort_fastest")}</option>
+                      <option value="best" className="bg-slate-950">{t("results.sort_best")}</option>
+                    </select>
+                  </div>
                 </div>
               )}
             </div>
