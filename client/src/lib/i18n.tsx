@@ -59,17 +59,36 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   // 2. Optimized translation function with Memo and efficient lookup
   const t = useCallback((key: TranslationKeys | string, params?: Record<string, string | number>) => {
     const getNestedValue = (obj: any, path: string) => {
-      if (obj && obj[path]) return obj[path];
+      if (!obj) return undefined;
+      if (obj[path]) return obj[path];
       return path.split('.').reduce((acc, part) => acc && acc[part], obj);
     };
 
-    const value = getNestedValue(translations[language], key);
+    // Attempt 1: Current Language
+    let value = getNestedValue(translations[language], key);
 
+    // Attempt 2: Fallback to English if current is not English
+    if (typeof value !== "string" && language !== "en") {
+      value = getNestedValue(translations["en"], key);
+      if (import.meta.env && !import.meta.env.PROD && typeof value === "string") {
+        console.info(`[I18n Fallback] Key "${key}" missing in [${language}], used [en] instead.`);
+      }
+    }
+
+    // Attempt 3: Humanized Emergency Rendering (The "Definitive Fix")
     if (typeof value !== "string") {
       if (import.meta.env && !import.meta.env.PROD) {
-        console.warn(`[I18n Integrity] Key "${key}" not found or not a string in [${language}]`);
+        console.error(`[I18n FATAL] Key "${key}" missing globally! Fixing with emergency humanization.`);
       }
-      return key; // Return the key instead of empty string to avoid layout shifts
+      
+      // Transform "search.departure_date" -> "Departure Date" or "SEARCH.DATE" -> "Date"
+      const parts = key.split('.');
+      const rawLabel = parts[parts.length - 1];
+      return rawLabel
+        .replace(/_/g, ' ')
+        .replace(/([A-Z])/g, ' $1')
+        .trim()
+        .replace(/^\w/, (c) => c.toUpperCase());
     }
 
     // 3. Variable replacement without creating RegExp instances in a loop (Performance)

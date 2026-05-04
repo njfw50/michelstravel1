@@ -13,6 +13,7 @@
     "final_price_taxes": "Preço Final com Taxas Inclusas"
   },
   "results": {
+    "loading": "Buscando voos...",
     "return_time": "Hora de Retorno",
     "searching": "Procurando os melhores voos...",
     "flights_found": "{count} voos encontrados",
@@ -51,7 +52,7 @@
     "adjust_filters": "Tente ajustar os filtros para encontrar mais opções.",
     "from": "a partir de",
     "round_trip_total": "ida e volta",
-    "options": "opções disponíveis",
+    "options": "opções",
     "outbound": "Voo de Ida",
     "return": "Voo de Retorno",
     "leg": "Trecho",
@@ -90,7 +91,12 @@
     "senior_assistant": "Falar com assistente",
     "senior_call": "Chamar no WhatsApp",
     "senior_back": "Voltar",
-    "senior_badge": "Consultoria Premium"
+    "senior_badge": "Consultoria Premium",
+    "option": "opção",
+    "found": "encontradas",
+    "transparency_title": "Transparência Michels",
+    "transparency_desc": "Os preços apresentados incluem todas as taxas obrigatórias. Nossa inteligência atualiza as tarifas a cada 5 minutos para garantir a precisão total da sua reserva.",
+    "adjust_search": "Ajustar Busca"
   },
   "nav": {
     "flights": "Voos",
@@ -172,7 +178,28 @@
     "secure_email": "E-mail Seguro"
   },
   "home": {
+    "board": {
+      "col_origin": "Origem",
+      "title": "Painel de Voos",
+      "subtitle": "Encontre as melhores tarifas para rotas populares – atualizadas em tempo real",
+      "col_flight": "Voo",
+      "col_time": "Horário",
+      "col_route": "Rota",
+      "col_duration": "Duração",
+      "col_stops": "Paradas",
+      "col_price": "Preço",
+      "loading": "Buscando voos...",
+      "no_flights": "Nenhum voo disponível no momento",
+      "per_person": "por pessoa",
+      "book": "Reserve Agora",
+      "show_more": "Ver mais voos",
+      "show_less": "Mostrar menos voos",
+      "more_flights": "voos",
+      "disclaimer": "Preços sujeitos a alterações. Tarifas mais baixas para as próximas 2 semanas."
+    },
     "hero": {
+      "whatsapp_topic": "Consulta de Passagem Premium",
+      "whatsapp_details": "Cheguei pelo novo Hero VIP",
       "badge": "Curadoria de Viagens & Concierge Exclusivo",
       "title": "A Arte de Viajar Bem: Excelência, Conforto e Suporte Exclusivo.",
       "desc": "Descubra o novo padrão em viagens. Mais do que reservas, oferecemos uma curadoria inteligente e um serviço de concierge focado em quem exige o melhor. Cuidamos de cada detalhe para que sua única preocupação seja aproveitar o destino.",
@@ -231,24 +258,6 @@
       "destinations": "Destinos",
       "support": "Suporte",
       "secure": "Segurança Garantida"
-    },
-    "board": {
-      "title": "Painel de Voos",
-      "subtitle": "Encontre as melhores tarifas para rotas populares – atualizadas em tempo real",
-      "col_flight": "Voo",
-      "col_time": "Horário",
-      "col_route": "Rota",
-      "col_duration": "Duração",
-      "col_stops": "Paradas",
-      "col_price": "Preço",
-      "loading": "Buscando voos...",
-      "no_flights": "Nenhum voo disponível no momento",
-      "per_person": "por pessoa",
-      "book": "Reserve Agora",
-      "show_more": "Ver mais voos",
-      "show_less": "Mostrar menos voos",
-      "more_flights": "voos",
-      "disclaimer": "Preços sujeitos a alterações. Tarifas mais baixas para as próximas 2 semanas."
     },
     "how": {
       "title": "Como Funciona",
@@ -400,7 +409,12 @@
     "infants_desc": "Menores de 2 anos",
     "button": "Buscar Voos",
     "travel_class": "Classe de Viagem",
-    "select_travelers": "Selecione os Passageiros"
+    "select_travelers": "Selecione os Passageiros",
+    "date": "Data",
+    "departure_date": "Data de Partida",
+    "multi_city_add": "+ Adicionar Trecho",
+    "validation_error": "Erro na Busca",
+    "fill_all_fields": "Por favor, preencha todos os campos do trecho"
   },
   "class": {
     "economy": "Classe Econômica",
@@ -409,6 +423,10 @@
     "first": "Primeira Classe"
   },
   "booking": {
+    "audio": {
+      "contact": "Instruções de contato por voz",
+      "payment": "Instruções de pagamento por voz"
+    },
     "title": "Conclua Sua Reserva",
     "subtitle": "Informe seus dados e siga para um pagamento seguro",
     "contact_info": "Detalhes para Contato",
@@ -526,7 +544,22 @@
       "corrected": "Nome corrigido com sucesso.",
       "review": "Por favor, revise o nome digitado.",
       "confirmed": "Nome confirmado."
-    }
+    },
+    "easy_mode": {
+      "title": "Reserva Simplificada",
+      "description": "Modo assistido para máxima facilidade",
+      "badge": "Modo Fácil",
+      "assistant": "Assistente Mia",
+      "call": "Ligar via WhatsApp",
+      "back": "Voltar"
+    },
+    "enable_audio_guide": "Ativar guia de áudio assistido",
+    "audio_play": "Ouvir instruções",
+    "audio_stop": "Parar áudio",
+    "extra_baggage": "Bagagem Extra",
+    "helpful_note": "Nota importante para sua viagem",
+    "stuck_help": "Precisa de ajuda com este passo?",
+    "accept_terms": "Eu aceito os termos e condições"
   },
   "payment": {
     "title": "Detalhes de Pagamento",
@@ -571,6 +604,38 @@
     "no_extras": "Nenhuma opção extra disponível para este voo."
   },
   "admin": {
+    "field_placeholder_airport": "Cidade ou Aeroporto (Ex: GRU)",
+    "login_password_placeholder": "Digite sua senha secreta",
+    "security_auth": "Autenticação de Segurança",
+    "live_chat": {
+      "voice_message": "Mensagem de Voz",
+      "reply_placeholder": "Digite sua resposta...",
+      "subtitle": "Atendimento em tempo real com viajantes",
+      "title": "Chat ao Vivo",
+      "start_call": "Iniciar Videochamada",
+      "recording": "Gravando...",
+      "recording_label": "Gravando",
+      "stop_recording": "Parar",
+      "send_audio": "Enviar Áudio",
+      "video_call": "Videochamada",
+      "audio": "Áudio",
+      "sessions": "Sessões",
+      "requests": "Solicitações",
+      "active_sessions": "Em Andamento",
+      "new_service": "Novo Atendimento",
+      "search_now": "Pesquisar agora",
+      "share": "compartilhar",
+      "shared": "compartilhado",
+      "fare_search": "Pesquisa de Tarifas",
+      "origin": "Origem",
+      "destination": "Destino",
+      "departure_date": "Data de Ida",
+      "chat_channel": "Canal de Chat",
+      "your_message_placeholder": "Sua mensagem...",
+      "add_note_placeholder": "Adicionar nota para o viajante...",
+      "no_flights_searched": "Nenhum voo pesquisado",
+      "secure_consultation_room": "Sala de Consulta Segura"
+    },
     "dashboard": "Painel de Controle",
     "welcome": "Bem-vindo novamente!",
     "happening": "Confira as últimas novidades.",
@@ -604,34 +669,23 @@
     "commission_error": "Erro",
     "commission_range": "A comissão deve estar entre 0% e 100%.",
     "commission_example": "Exemplo: em uma reserva de $1.000, sua comissão será",
-    "live_chat": {
-      "start_call": "Iniciar Videochamada",
-      "voice_message": "Mensagem de Voz",
-      "recording": "Gravando...",
-      "recording_label": "Gravando",
-      "stop_recording": "Parar",
-      "send_audio": "Enviar Áudio",
-      "video_call": "Videochamada",
-      "audio": "Áudio",
-      "sessions": "Sessões",
-      "requests": "Solicitações",
-      "active_sessions": "Em Andamento",
-      "new_service": "Novo Atendimento",
-      "search_now": "Pesquisar agora",
-      "share": "compartilhar",
-      "shared": "compartilhado",
-      "fare_search": "Pesquisa de Tarifas",
-      "origin": "Origem",
-      "destination": "Destino",
-      "departure_date": "Data de Ida",
-      "chat_channel": "Canal de Chat",
-      "your_message_placeholder": "Sua mensagem...",
-      "add_note_placeholder": "Adicionar nota para o viajante...",
-      "no_flights_searched": "Nenhum voo pesquisado",
-      "secure_consultation_room": "Sala de Consulta Segura"
-    }
+    "login_title": "Acesso Administrativo",
+    "login_subtitle": "Insira sua senha de acesso para gerenciar a plataforma",
+    "password_label": "Senha de Acesso",
+    "password_placeholder": "Sua senha secreta",
+    "login_button": "Entrar no Painel",
+    "login_footer": "Sistema de Gestão Blindado",
+    "login_error": "Erro de Autenticação",
+    "login_failed": "Senha incorreta ou acesso negado"
+  },
+  "cookie": {
+    "message": "Utilizamos cookies para garantir a melhor experiência e segurança em sua navegação.",
+    "accept": "Aceitar",
+    "decline": "Recusar",
+    "privacy": "Política de Privacidade"
   },
   "blog": {
+    "loading_chronicle": "Carregando crônica...",
     "subtitle": "Dicas, guias e inspiração para a sua próxima viagem.",
     "read_article": "Ler Artigo",
     "no_posts": "Ainda não há artigos disponíveis",
@@ -675,6 +729,7 @@
     "try_again": "Tentar Novamente"
   },
   "confirm": {
+    "agency_location": "Ironbound, Newark, NJ",
     "title": "Pagamento Confirmado!",
     "subtitle": "Sua reserva foi concluída com sucesso.",
     "ref_code": "Código de Reserva",
@@ -766,7 +821,7 @@
     "photo_tip_light": "Use iluminação uniforme e evite sombras",
     "photo_tip_focus": "Mantenha a foto focada e nítida",
     "photo_tip_flat": "Coloque o documento sobre uma superfície plana",
-    "photo_tip_mrz": "Inclua as lines de texto na parte inferior do documento",
+    "photo_tip_mrz": "Inclua as linhas de texto na parte inferior do documento",
     "review_title": "Confirme seus Dados",
     "review_subtitle": "Revise e ajuste os dados extraídos antes de confirmar",
     "confidence": "Nível de Confiança",
@@ -794,7 +849,14 @@
     "tip_2": "Garanta que as duas linhas inferiores estejam completamente visíveis",
     "tip_3": "Evite reflexos e sombras sobre o documento",
     "tip_4": "Utilize a foto mais nítida possível",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "back": "Voltar",
+    "hint_hold_still": "Segure firme e alinhe o documento",
+    "hint_enhancing": "Melhorando a nitidez da imagem...",
+    "mobile_timeout": "Tempo esgotado. Tente novamente ou preencha manualmente.",
+    "open_camera": "Abrir Câmera",
+    "sending_result": "Enviando para análise...",
+    "step_finalizing": "Finalizando processamento..."
   },
   "about": {
     "title": "Quem Somos",
@@ -848,70 +910,38 @@
     "cat_account_desc": "Acesse, atualize seu perfil, login e configure suas preferências pessoais.",
     "cat_support": "Central de Atendimento",
     "cat_support_desc": "Encontre nossos canais de suporte e fale com nossa equipe dedicada.",
-    "faq_search": {
-      "q": "Como faço para buscar voos?",
-      "a": "Na página inicial, selecione origem, destino, datas e número de passageiros. Clique em 'Buscar Voos' e veja as melhores opções disponíveis em tempo real."
-    },
-    "faq_booking_steps": {
-      "q": "Quais são os passos para fazer uma reserva?",
-      "a": "1) Encontre e escolha o voo perfeito para você. 2) Preencha os dados dos passageiros. 3) Faça o pagamento com segurança usando seu cartão de crédito. 4) Receba a confirmação e o código de referência da sua reserva."
-    },
-    "faq_multi_city": {
-      "q": "Posso reservar voos para múltiplos destinos?",
-      "a": "Sem dúvidas! Utilize a busca por 'Múltiplos Destinos' e adicione até 5 trechos em uma única reserva."
-    },
-    "faq_passengers": {
-      "q": "Quantos passageiros posso incluir em uma reserva?",
-      "a": "Você pode reservar para até 9 passageiros, incluindo adultos, crianças e bebês confortavelmente."
-    },
-    "faq_payment_methods": {
-      "q": "Quais são as formas de pagamento aceitas?",
-      "a": "Aceitamos os principais cartões de crédito (Visa, Mastercard, American Express) com pagamento seguro via Stripe."
-    },
-    "faq_payment_secure": {
-      "q": "Meu pagamento é seguro?",
-      "a": "Com certeza! Usamos Stripe, referência mundial em pagamentos online, com criptografia avançada e conformidade PCI DSS."
-    },
-    "faq_currency": {
-      "q": "Em qual moeda os preços são exibidos?",
-      "a": "Os preços são mostrados em dólares americanos (USD). O valor final pode variar conforme a taxa de câmbio do seu banco."
-    },
-    "faq_manage_booking": {
-      "q": "Como acompanho minha reserva?",
-      "a": "Acesse 'Minhas Viagens' para visualizar todas as suas reservas. Também pode pesquisar pelo código de referência (MT-XXXXXX) junto ao seu e-mail."
-    },
-    "faq_cancel": {
-      "q": "Posso cancelar uma reserva?",
-      "a": "Sim! Solicite o cancelamento em 'Minhas Viagens'. O reembolso segue as regras da companhia aérea e será informado antes da confirmação."
-    },
-    "faq_baggage": {
-      "q": "Como adiciono bagagem extra?",
-      "a": "Na hora da reserva, selecione as opções de bagagem extra para cada passageiro com preços determinados pelas companhias aéreas."
-    },
-    "faq_reference": {
-      "q": "Onde encontro meu código de referência?",
-      "a": "Seu código (MT-XXXXXX) está disponível na página de confirmação e no e-mail que enviamos. Use-o para consultar sua reserva a qualquer momento."
-    },
-    "faq_create_account": {
-      "q": "Como criar uma conta?",
-      "a": "Clique em 'Entrar' no canto superior direito, escolha Email ou GitHub e siga o passo a passo para criar seu cadastro rapidamente."
-    },
-    "faq_edit_profile": {
-      "q": "Como editar meu perfil?",
-      "a": "Após o login, acesse 'Meu Perfil' para atualizar suas informações e preferências pessoais de forma prática."
-    },
-    "faq_contact": {
-      "q": "Como contato o suporte?",
-      "a": "Fale conosco via mensagens internas, chat com nossa assistente virtual Mia, e-mail ou telefone. Estamos prontos para ajudar!"
-    },
-    "faq_response_time": {
-      "q": "Qual o tempo de resposta do suporte?",
-      "a": "Respondemos em até 24 horas. Para casos urgentes, utilize o chat com Mia, disponível 24 horas por dia, 7 dias por semana."
-    },
-    "faq_live_help": {
-      "q": "Posso falar com um atendente ao vivo?",
-      "a": "Claro! Peça atendimento ao vivo pelo chat com Mia e um especialista estará pronto para ajudar você em tempo real."
-    }
+    "faq_search_q": "Como faço para buscar voos?",
+    "faq_search_a": "Na página inicial, selecione origem, destino, datas e número de passageiros. Clique em 'Buscar Voos' e veja as melhores opções disponíveis em tempo real.",
+    "faq_booking_steps_q": "Quais são os passos para fazer uma reserva?",
+    "faq_booking_steps_a": "1) Encontre e escolha o voo perfeito para você. 2) Preencha os dados dos passageiros. 3) Faça o pagamento com segurança usando seu cartão de crédito. 4) Receba a confirmação e o código de referência da sua reserva.",
+    "faq_multi_city_q": "Posso reservar voos para múltiplos destinos?",
+    "faq_multi_city_a": "Sem dúvidas! Utilize a busca por 'Múltiplos Destinos' e adicione até 5 trechos em uma única reserva.",
+    "faq_passengers_q": "Quantos passageiros posso incluir em uma reserva?",
+    "faq_passengers_a": "Você pode reservar para até 9 passageiros, incluindo adultos, crianças e bebês confortavelmente.",
+    "faq_payment_methods_q": "Quais são as formas de pagamento aceitas?",
+    "faq_payment_methods_a": "Aceitamos os principais cartões de crédito (Visa, Mastercard, American Express) com pagamento seguro via Stripe.",
+    "faq_payment_secure_q": "Meu pagamento é seguro?",
+    "faq_payment_secure_a": "Com certeza! Usamos Stripe, referência mundial em pagamentos online, com criptografia avançada e conformidade PCI DSS.",
+    "faq_currency_q": "Em qual moeda os preços são exibidos?",
+    "faq_currency_a": "Os preços são mostrados em dólares americanos (USD). O valor final pode variar conforme a taxa de câmbio do seu banco.",
+    "faq_manage_booking_q": "Como acompanho minha reserva?",
+    "faq_manage_booking_a": "Acesse 'Minhas Viagens' para visualizar todas as suas reservas. Também pode pesquisar pelo código de referência (MT-XXXXXX) junto ao seu e-mail.",
+    "faq_cancel_q": "Posso cancelar uma reserva?",
+    "faq_cancel_a": "Sim! Solicite o cancelamento em 'Minhas Viagens'. O reembolso segue as regras da companhia aérea e será informado antes da confirmação.",
+    "faq_baggage_q": "Como adiciono bagagem extra?",
+    "faq_baggage_a": "Na hora da reserva, selecione as opções de bagagem extra para cada passageiro com preços determinados pelas companhias aéreas.",
+    "faq_reference_q": "Onde encontro meu código de referência?",
+    "faq_reference_a": "Seu código (MT-XXXXXX) está disponível na página de confirmação e no e-mail que enviamos. Use-o para consultar sua reserva a qualquer momento.",
+    "faq_create_account_q": "Como criar uma conta?",
+    "faq_create_account_a": "Clique em 'Entrar' no canto superior direito, escolha Email ou GitHub e siga o passo a passo para criar seu cadastro rapidamente.",
+    "faq_edit_profile_q": "Como editar meu perfil?",
+    "faq_edit_profile_a": "Após o login, acesse 'Meu Perfil' para atualizar suas informações e preferências pessoais de forma prática.",
+    "faq_contact_q": "Como contato o suporte?",
+    "faq_contact_a": "Fale conosco via mensagens internas, chat com nossa assistente virtual Mia, e-mail ou telefone. Estamos prontos para ajudar!",
+    "faq_response_time_q": "Qual o tempo de resposta do suporte?",
+    "faq_response_time_a": "Respondemos em até 24 horas. Para casos urgentes, utilize o chat com Mia, disponível 24 horas por dia, 7 dias por semana.",
+    "faq_live_help_q": "Posso falar com um atendente ao vivo?",
+    "faq_live_help_a": "Claro! Peça atendimento ao vivo pelo chat com Mia e um especialista estará pronto para ajudar você em tempo real."
   },
   "messenger": {
     "title": "Mensagens",
@@ -948,7 +978,23 @@
     "save": "Salvar Alterações",
     "saving": "Salvando...",
     "success": "Perfil atualizado com sucesso!",
-    "error": "Erro ao atualizar perfil."
+    "error": "Erro ao atualizar perfil.",
+    "member_since": "Membro desde",
+    "total_trips": "Total de Viagens",
+    "unnamed": "Viajante sem nome",
+    "view_trips": "Ver minhas viagens",
+    "saved": "Salvo",
+    "saved_title": "Alterações Salvas",
+    "saved_desc": "Suas informações foram atualizadas no nosso sistema blindado.",
+    "error_title": "Ops, algo deu errado",
+    "error_desc": "Não conseguimos salvar suas alterações agora. Tente novamente em instantes.",
+    "secure_login": "Acesso Seguro Ativo",
+    "secure_login_desc": "Sua sessão está protegida com criptografia de ponta a ponta.",
+    "data_protected": "Dados Protegidos",
+    "data_protected_desc": "Suas informações seguem os mais rígidos padrões de privacidade e segurança.",
+    "security_title": "Segurança da Conta",
+    "login_required": "Login Necessário",
+    "login_required_desc": "Você precisa estar logado para acessar esta página."
   },
   "chatbot": {
     "greeting": "Olá! Eu sou a Mia, sua assistente Midnight. Como posso iluminar sua jornada hoje?",
@@ -996,6 +1042,34 @@
     "cancel_confirm": "Tem certeza que deseja cancelar esta viagem?",
     "yes_cancel": "Sim, Cancelar",
     "cancel_booking": "Cancelar Viagem",
-    "contact_note": "Para alterações, cancelamentos ou inclusão de bagagens, contate-nos até 24 horas antes do voo. Estamos aqui para ajudar!"
+    "contact_note": "Para alterações, cancelamentos ou inclusão de bagagens, contate-nos até 24 horas antes do voo. Estamos aqui para ajudar!",
+    "status": {
+      "pending": "Pendente",
+      "confirmed": "Confirmado",
+      "cancelled": "Cancelado",
+      "test": "Ambiente de Teste"
+    }
+  },
+  "name_coach_dialog": {
+    "badge": "Consultoria de Nomes",
+    "title_suggest": "Sugestão de Ajuste",
+    "title_confirm": "Confirmar Nome",
+    "desc_suggest": "Para evitar problemas no embarque, sugerimos uma pequena correção na formatação do seu nome.",
+    "desc_confirm": "Por favor, confirme se o nome abaixo está exatamente como no seu documento oficial.",
+    "board_title": "Quadro de Consultoria",
+    "field_label": "Campo",
+    "wrote_label": "Como você escreveu",
+    "suggest_label": "Sugestão Michels",
+    "full_name_label": "Nome Completo no Bilhete",
+    "question_suggest": "Deseja aplicar esta correção?",
+    "question_confirm": "O nome está correto?",
+    "note": "Nota: O nome no bilhete deve ser idêntico ao do passaporte ou documento de identidade.",
+    "primary_suggest": "Aplicar Sugestão",
+    "secondary_suggest": "Manter Original",
+    "primary_confirm": "Sim, está correto",
+    "secondary_confirm": "Não, quero editar",
+    "reason_characters": "Identificamos caracteres que podem não ser aceitos pelos sistemas das companhias aéreas.",
+    "reason_spacing": "Ajustamos o espaçamento para seguir o padrão internacional de aviação.",
+    "reason_case": "Corrigimos as letras maiúsculas para garantir a leitura correta no check-in."
   }
 }

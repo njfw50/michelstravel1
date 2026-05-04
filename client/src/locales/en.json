@@ -13,6 +13,7 @@
     "final_price_taxes": "Final Price with Taxes Included"
   },
   "results": {
+    "loading": "Searching flights...",
     "return_time": "Return Time",
     "searching": "Searching flights...",
     "flights_found": "{count} flights found",
@@ -82,7 +83,12 @@
     "senior_assistant": "Talk to assistant",
     "senior_call": "Chat on WhatsApp",
     "senior_back": "Back",
-    "senior_badge": "Premium Consulting"
+    "senior_badge": "Premium Consulting",
+    "option": "option",
+    "found": "found",
+    "transparency_title": "Michels Transparency",
+    "transparency_desc": "Prices shown include all mandatory taxes. Our intelligence updates fares every 5 minutes to ensure total accuracy for your booking.",
+    "adjust_search": "Adjust Search"
   },
   "nav": {
     "flights": "Flights",
@@ -164,6 +170,48 @@
     "secure_email": "Secure Email"
   },
   "home": {
+    "board": {
+      "col_origin": "Origin",
+      "title": "Flight Board",
+      "subtitle": "Best prices for popular routes - updated in real time",
+      "col_flight": "Flight",
+      "col_time": "Time",
+      "col_route": "Route",
+      "col_duration": "Duration",
+      "col_stops": "Stops",
+      "col_price": "Price",
+      "loading": "Loading flights...",
+      "no_flights": "No flights available at the moment",
+      "per_person": "per person",
+      "book": "Book",
+      "show_more": "Show more flights",
+      "show_less": "Show less",
+      "more_flights": "flights",
+      "disclaimer": "Prices subject to change. Lowest fares found for the next 2 weeks."
+    },
+    "hero": {
+      "whatsapp_topic": "Premium Flight Inquiry",
+      "whatsapp_details": "Arrived via New Hero VIP",
+      "badge": "Curated Travel & Exclusive Concierge",
+      "title": "The Art of Traveling Well: Excellence, Comfort, and Exclusive Support.",
+      "desc": "Discover the new standard in travel. More than just bookings, we offer intelligent curation and a concierge service focused on those who demand the best.",
+      "btn_explore": "Explore Destinations",
+      "btn_consulting": "Private Consulting",
+      "cta": "Search Flights",
+      "perks": {
+        "1": "Live fares",
+        "2": "Support in Portuguese, English, and Spanish",
+        "3": "Booking flow with real-time tracking"
+      },
+      "box": {
+        "badge": "24/7 Concierge",
+        "sub": "Bespoke Experience",
+        "title": "Assisting every step of your journey with an invisible and continuous presence.",
+        "desc": "Peace of mind throughout the process from flawless route curation to proactive support.",
+        "whatsapp_topic": "Premium Flight Consultation",
+        "whatsapp_details": "Landing from the new VIP Hero"
+      }
+    },
     "trending": "Trending",
     "midnight_experience": "Premium Experience",
     "toolbox": {
@@ -202,24 +250,6 @@
       "destinations": "Destinations",
       "support": "Support",
       "secure": "Secure"
-    },
-    "board": {
-      "title": "Flight Board",
-      "subtitle": "Best prices for popular routes - updated in real time",
-      "col_flight": "Flight",
-      "col_time": "Time",
-      "col_route": "Route",
-      "col_duration": "Duration",
-      "col_stops": "Stops",
-      "col_price": "Price",
-      "loading": "Loading flights...",
-      "no_flights": "No flights available at the moment",
-      "per_person": "per person",
-      "book": "Book",
-      "show_more": "Show more flights",
-      "show_less": "Show less",
-      "more_flights": "flights",
-      "disclaimer": "Prices subject to change. Lowest fares found for the next 2 weeks."
     },
     "how": {
       "title": "How It Works",
@@ -262,27 +292,6 @@
       "chat_user": "I want to travel to Miami",
       "chat_reply": "I found flights starting at $680! Want me to find the best deals?",
       "chat_placeholder": "Type your message..."
-    },
-    "hero": {
-      "badge": "Curated Travel & Exclusive Concierge",
-      "title": "The Art of Traveling Well: Excellence, Comfort, and Exclusive Support.",
-      "desc": "Discover the new standard in travel. More than just bookings, we offer intelligent curation and a concierge service focused on those who demand the best.",
-      "btn_explore": "Explore Destinations",
-      "btn_consulting": "Private Consulting",
-      "cta": "Search Flights",
-      "perks": {
-        "1": "Live fares",
-        "2": "Support in Portuguese, English, and Spanish",
-        "3": "Booking flow with real-time tracking"
-      },
-      "box": {
-        "badge": "24/7 Concierge",
-        "sub": "Bespoke Experience",
-        "title": "Assisting every step of your journey with an invisible and continuous presence.",
-        "desc": "Peace of mind throughout the process from flawless route curation to proactive support.",
-        "whatsapp_topic": "Premium Flight Consultation",
-        "whatsapp_details": "Landing from the new VIP Hero"
-      }
     },
     "search": {
       "badge": "Search live flights",
@@ -387,7 +396,12 @@
     "children_desc": "2-11 years",
     "infants": "Infants",
     "infants_desc": "Under 2 years",
-    "button": "Search Flight"
+    "button": "Search Flight",
+    "date": "Date",
+    "departure_date": "Departure Date",
+    "multi_city_add": "+ Add Flight",
+    "validation_error": "Search Error",
+    "fill_all_fields": "Please fill all fields for this leg"
   },
   "class": {
     "economy": "Economy",
@@ -396,6 +410,10 @@
     "first": "First Class"
   },
   "booking": {
+    "audio": {
+      "contact": "Voice contact instructions",
+      "payment": "Voice payment instructions"
+    },
     "title": "Complete Your Booking",
     "subtitle": "Fill in your details below and proceed to secure payment",
     "contact_info": "Contact Information",
@@ -491,7 +509,22 @@
       "corrected": "Name corrected successfully.",
       "review": "Please review the entered name.",
       "confirmed": "Name confirmed."
-    }
+    },
+    "easy_mode": {
+      "title": "Easy Booking",
+      "description": "Guided mode for maximum ease",
+      "badge": "Easy Mode",
+      "assistant": "Mia Assistant",
+      "call": "Call via WhatsApp",
+      "back": "Back"
+    },
+    "enable_audio_guide": "Enable assisted audio guide",
+    "audio_play": "Play instructions",
+    "audio_stop": "Stop audio",
+    "extra_baggage": "Extra Baggage",
+    "helpful_note": "Important note for your trip",
+    "stuck_help": "Need help with this step?",
+    "accept_terms": "I accept terms and conditions"
   },
   "payment": {
     "title": "Payment Details",
@@ -536,6 +569,15 @@
     "no_extras": "No extra options available for this flight."
   },
   "admin": {
+    "field_placeholder_airport": "City or Airport (Ex: JFK)",
+    "login_password_placeholder": "Enter your secret password",
+    "security_auth": "Security Authentication",
+    "live_chat": {
+      "voice_message": "Voice Message",
+      "reply_placeholder": "Type your reply...",
+      "subtitle": "Real-time support with travelers",
+      "title": "Live Chat"
+    },
     "dashboard": "Dashboard",
     "welcome": "Welcome back",
     "happening": "Here's what's happening.",
@@ -554,9 +596,24 @@
     "test_mode_warning": "Warning: To disable test mode, you need to configure a production key for flight searches.",
     "test_mode_toggle_on": "Enable Test Mode",
     "test_mode_toggle_off": "Disable Test Mode",
-    "token_status": "Connection Status"
+    "token_status": "Connection Status",
+    "login_title": "Admin Access",
+    "login_subtitle": "Enter your password to manage the platform",
+    "password_label": "Access Password",
+    "password_placeholder": "Your secret password",
+    "login_button": "Enter Dashboard",
+    "login_footer": "Secure Management System",
+    "login_error": "Authentication Error",
+    "login_failed": "Incorrect password or access denied"
+  },
+  "cookie": {
+    "message": "We use cookies to ensure the best experience and security in your navigation.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "privacy": "Privacy Policy"
   },
   "blog": {
+    "loading_chronicle": "Loading chronicle...",
     "subtitle": "Tips, guides, and inspiration for your next adventure.",
     "read_article": "Read Article",
     "no_posts": "No articles yet",
@@ -575,22 +632,82 @@
     "try_again": "Try Again"
   },
   "scan": {
-    "title": "Scan Document",
-    "subtitle": "Scan your passport, ID card, driver's license, or other official document to auto-fill",
+    "title": "Scan Your Document",
+    "subtitle": "Capture your passport, ID, or other official document for automatic filling.",
     "scan_document": "Scan Document",
     "supported_docs": "Accepted Documents",
     "doc_passport": "Passport",
-    "doc_id_card": "National ID Card",
+    "doc_id_card": "Identity Card (RG / DNI)",
     "doc_travel_doc": "Travel Document",
     "doc_visa": "Visa / Other Official Documents (TSA, REAL ID)",
     "doc_document": "Document",
     "use_camera": "Use Camera",
+    "camera_tip": "Capture a clear and sharp photo of the document",
+    "use_mobile_scanner": "Scan with Phone",
+    "mobile_tip": "Scan the QR Code with your smartphone",
+    "scan_remote_title": "Scan with Smartphone",
+    "scan_remote_subtitle": "Scan the QR code below to open the smart reader on your phone.",
+    "scan_remote_waiting": "Waiting for your phone...",
+    "scan_remote_copy_link": "Copy link",
     "upload_photo": "Upload Photo",
+    "upload_tip": "Choose an image saved on your device",
+    "privacy_notice": "Your photo will be processed securely to fill your booking accurately. Sensitive data will not be stored after use.",
     "processing": "Processing Document",
+    "processing_desc": "Extracting information from your document...",
     "reading_document": "Reading document...",
+    "step_loading": "Starting reader...",
+    "step_ocr": "Digitizing high-definition image...",
+    "step_parsing": "Structuring data securely...",
     "step_done": "Done!",
+    "step_preparing": "Preparing image...",
+    "step_enhancing": "Enhancing quality...",
+    "step_ai_review": "Analyzing with artificial intelligence...",
+    "attempt_mrz_zone": "Checking international security codes...",
+    "attempt_mrz_backup": "Reviewing the bottom strip...",
+    "attempt_enhanced": "Optimizing reading...",
+    "attempt_original": "Checking original information...",
+    "attempt_full_document": "Analyzing complete document...",
+    "multi_attempt_notice": "Multiple analyses to ensure best result...",
+    "photo_tips_title": "Tips for Perfect Photo",
+    "photo_tip_light": "Use even lighting and avoid shadows",
+    "photo_tip_focus": "Keep the photo focused and sharp",
+    "photo_tip_flat": "Place document on a flat surface",
+    "photo_tip_mrz": "Include the lines of text at the bottom of the document",
+    "review_title": "Confirm Your Data",
+    "review_subtitle": "Review and adjust extracted data before confirming",
+    "confidence": "Confidence Level",
+    "warnings": "Important Warnings",
+    "verify_data": "Some fields may need manual correction. Check all information carefully.",
+    "source_mrz": "Automatic ICAO Standard Verification",
+    "source_ai": "Predictive Intelligent Analysis",
+    "source_ocr": "Automation and Secure Recognition",
+    "ai_notes": "Analysis summary",
+    "ai_review_ready": "Our intelligent analysis has reviewed the fields and highlighted points needing your confirmation.",
+    "warning_doc_number": "Confirm document number.",
+    "warning_birth_date": "Verify date of birth.",
+    "warning_expiry": "Check document validity.",
+    "warning_type": "Confirm identified document type.",
+    "warning_manual_review": "The image assisted in filling, but this reading needs manual review.",
+    "warning_low_confidence": "Low confidence. Re-read information with document in hand.",
+    "doc_number": "Document Number",
+    "try_again": "Try Again",
     "confirm_data": "Confirm Data",
-    "cancel": "Cancel"
+    "error_title": "Reading Failed",
+    "no_mrz_found": "Could not capture document data. Ensure the bottom part is visible and legible.",
+    "ocr_error": "We couldn't identify info in the image. Try again with a clearer, well-lit photo.",
+    "tips_title": "Tips for perfect capture:",
+    "tip_1": "Position document on a flat, well-lit surface",
+    "tip_2": "Ensure both bottom lines are completely visible",
+    "tip_3": "Avoid reflections and shadows on the document",
+    "tip_4": "Use the clearest possible photo",
+    "cancel": "Cancel",
+    "back": "Back",
+    "hint_hold_still": "Hold still and align the document",
+    "hint_enhancing": "Improving image clarity...",
+    "mobile_timeout": "Time's up. Try again or fill in manually.",
+    "open_camera": "Open Camera",
+    "sending_result": "Sending for analysis...",
+    "step_finalizing": "Finalizing processing..."
   },
   "about": {
     "title": "About Us",
@@ -615,7 +732,39 @@
     "cat_payment": "Payments",
     "cat_trips": "My Trips",
     "cat_account": "My Account",
-    "cat_support": "Support"
+    "cat_support": "Support",
+    "faq_search_q": "How do I search for flights?",
+    "faq_search_a": "On the home page, select origin, destination, dates, and number of passengers. Click 'Search Flights' and see the best options available in real time.",
+    "faq_booking_steps_q": "What are the steps to make a booking?",
+    "faq_booking_steps_a": "1) Find and choose the perfect flight for you. 2) Fill in the passenger details. 3) Pay securely using your credit card. 4) Receive confirmation and your booking reference code.",
+    "faq_multi_city_q": "Can I book flights for multiple destinations?",
+    "faq_multi_city_a": "Absolutely! Use the 'Multi-City' search and add up to 5 legs in a single booking.",
+    "faq_passengers_q": "How many passengers can I include in a booking?",
+    "faq_passengers_a": "You can book for up to 9 passengers, including adults, children, and infants comfortably.",
+    "faq_payment_methods_q": "What are the accepted payment methods?",
+    "faq_payment_methods_a": "We accept all major credit cards (Visa, Mastercard, American Express) with secure payment via Stripe.",
+    "faq_payment_secure_q": "Is my payment secure?",
+    "faq_payment_secure_a": "Definitely! We use Stripe, a global leader in online payments, with advanced encryption and PCI DSS compliance.",
+    "faq_currency_q": "In which currency are prices displayed?",
+    "faq_currency_a": "Prices are shown in US Dollars (USD). The final amount may vary depending on your bank's exchange rate.",
+    "faq_manage_booking_q": "How do I track my booking?",
+    "faq_manage_booking_a": "Access 'My Trips' to view all your bookings. You can also search by the reference code (MT-XXXXXX) along with your email.",
+    "faq_cancel_q": "Can I cancel a booking?",
+    "faq_cancel_a": "Yes! Request cancellation in 'My Trips'. Refunds follow the airline's rules and will be informed before confirmation.",
+    "faq_baggage_q": "How do I add extra baggage?",
+    "faq_baggage_a": "At the time of booking, select extra baggage options for each passenger with prices determined by the airlines.",
+    "faq_reference_q": "Where do I find my reference code?",
+    "faq_reference_a": "Your code (MT-XXXXXX) is available on the confirmation page and in the email we sent. Use it to check your booking at any time.",
+    "faq_create_account_q": "How to create an account?",
+    "faq_create_account_a": "Click 'Sign In' in the top right corner, choose Email or GitHub, and follow the steps to create your registration quickly.",
+    "faq_edit_profile_q": "How to edit my profile?",
+    "faq_edit_profile_a": "After logging in, access 'My Profile' to update your information and personal preferences conveniently.",
+    "faq_contact_q": "How do I contact support?",
+    "faq_contact_a": "Talk to us via internal messages, chat with our virtual assistant Mia, email, or phone. We are ready to help!",
+    "faq_response_time_q": "What is the support response time?",
+    "faq_response_time_a": "We respond within 24 hours. For urgent cases, use the chat with Mia, available 24 hours a day, 7 days a week.",
+    "faq_live_help_q": "Can I talk to a live agent?",
+    "faq_live_help_a": "Of course! Request live support via chat with Mia and a specialist will be ready to help you in real time."
   },
   "profile": {
     "title": "My Profile",
@@ -626,11 +775,22 @@
     "phone": "Phone number",
     "email_label": "Email",
     "save": "Save Changes",
-    "saved": "Saved!",
-    "saved_title": "Profile updated",
-    "saved_desc": "Your information has been saved successfully.",
-    "error_title": "Error",
-    "error_desc": "Could not update your profile. Please try again."
+    "saved": "Saved",
+    "saved_title": "Changes Saved",
+    "saved_desc": "Your information has been updated in our secure system.",
+    "error_title": "Ops, something went wrong",
+    "error_desc": "We couldn't save your changes now. Try again in a moment.",
+    "member_since": "Member since",
+    "total_trips": "Total Trips",
+    "unnamed": "Unnamed Traveler",
+    "view_trips": "View my trips",
+    "secure_login": "Secure Access Active",
+    "secure_login_desc": "Your session is protected with end-to-end encryption.",
+    "data_protected": "Data Protected",
+    "data_protected_desc": "Your information follows the strictest privacy and security standards.",
+    "security_title": "Account Security",
+    "login_required": "Login Required",
+    "login_required_desc": "You need to be logged in to access this page."
   },
   "chatbot": {
     "greeting": "Hello! I am Mia, your Midnight assistant. How can I illuminate your journey today?",
@@ -678,10 +838,39 @@
     "cancel_confirm": "Are you sure you want to cancel this booking?",
     "yes_cancel": "Yes, Cancel",
     "cancel_booking": "Cancel Booking",
-    "contact_note": "For changes, cancellations, or baggage questions, contact us at least 24 hours before your flight departure. We're here to help!"
+    "contact_note": "For changes, cancellations, or baggage questions, contact us at least 24 hours before your flight departure. We're here to help!",
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "cancelled": "Cancelled",
+      "test": "Test Environment"
+    }
   },
   "confirm": {
+    "agency_location": "Ironbound, Newark, NJ",
     "whatsapp_help_topic": "Help after booking",
     "whatsapp_help_details": "Page: Booking Confirmation"
+  },
+  "name_coach_dialog": {
+    "badge": "Name Consultancy",
+    "title_suggest": "Adjustment Suggestion",
+    "title_confirm": "Confirm Name",
+    "desc_suggest": "To avoid boarding issues, we suggest a small correction to your name formatting.",
+    "desc_confirm": "Please confirm if the name below is exactly as in your official document.",
+    "board_title": "Consultancy Board",
+    "field_label": "Field",
+    "wrote_label": "As you wrote",
+    "suggest_label": "Michels Suggestion",
+    "full_name_label": "Full Name on Ticket",
+    "question_suggest": "Do you want to apply this correction?",
+    "question_confirm": "Is the name correct?",
+    "note": "Note: The name on the ticket must be identical to the passport or ID document.",
+    "primary_suggest": "Apply Suggestion",
+    "secondary_suggest": "Keep Original",
+    "primary_confirm": "Yes, it is correct",
+    "secondary_confirm": "No, I want to edit",
+    "reason_characters": "We identified characters that may not be accepted by airline systems.",
+    "reason_spacing": "We adjusted the spacing to follow the international aviation standard.",
+    "reason_case": "We corrected uppercase letters to ensure correct reading at check-in."
   }
 }
