@@ -123,10 +123,10 @@ export default function Home() {
                       </div>
                       <div className="relative z-10">
                         <h1 className="text-4xl sm:text-5xl md:text-8xl font-black tracking-tighter text-white leading-[0.9] uppercase max-w-5xl mb-6 md:mb-10 drop-shadow-2xl">
-                          {settings?.heroTitle || t("home.hero.title")}
+                          {section.props?.title || settings?.heroTitle || t("home.hero.title")}
                         </h1>
                         <p className="text-slate-200 font-medium text-base md:text-xl max-w-2xl leading-relaxed drop-shadow-lg">
-                          {settings?.heroSubtitle || t("home.hero.desc")}
+                          {section.props?.subtitle || settings?.heroSubtitle || t("home.hero.desc")}
                         </p>
                       </div>
                     </motion.div>
@@ -333,12 +333,14 @@ export default function Home() {
                  <div className="container mx-auto px-4 max-w-6xl relative z-10 text-center">
                     <Badge className="bg-slate-950 text-white rounded-full px-6 py-2 mb-8 text-[10px] uppercase font-black tracking-[0.5em] shadow-xl">{t("home.stats.ready")}</Badge>
                     <h2 className="text-5xl md:text-8xl font-black tracking-tighter uppercase leading-[0.9] mb-12">
-                      {t("home.cta.title")}
+                      {section.props?.title || t("home.cta.title")}
                     </h2>
-                    <p className="text-slate-500 text-xl md:text-2xl font-bold max-w-2xl mx-auto mb-16 uppercase tracking-tight">{t("home.cta.subtitle")}</p>
+                    <p className="text-slate-500 text-xl md:text-2xl font-bold max-w-2xl mx-auto mb-16 uppercase tracking-tight">
+                      {section.props?.subtitle || t("home.cta.subtitle")}
+                    </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                       <a href={contactWhatsAppHref} target="_blank" rel="noreferrer" className="flex h-20 items-center justify-center gap-5 rounded-[24px] bg-blue-600 px-16 text-sm font-black text-white hover:bg-slate-950 transition-all shadow-2xl shadow-blue-600/30 hover:scale-105 active:scale-95">
-                        {t("footer.contact_cta")} <MessageCircle className="h-6 w-6" />
+                        {section.props?.buttonText || t("footer.contact_cta")} <MessageCircle className="h-6 w-6" />
                       </a>
                       <Button variant="outline" className="h-20 rounded-[24px] border-slate-200 bg-white px-16 text-sm font-black uppercase tracking-widest text-slate-950 hover:bg-slate-50 shadow-xl transition-all hover:scale-105 active:scale-95" onClick={() => setLocation("/senior")}>
                         {t("home.senior.btn")}
@@ -349,7 +351,48 @@ export default function Home() {
             );
 
           default:
-            return null;
+            // Custom or Advanced Section Types
+            return (
+              <section key={section.id} className={cn("relative z-10 overflow-hidden", section.style?.paddingY || "py-20")}>
+                {section.props?.imageUrl && (
+                  <div className="absolute inset-0 z-0">
+                    <img src={section.props.imageUrl} className="w-full h-full object-cover opacity-20" alt="" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+                  </div>
+                )}
+                <div className="container mx-auto px-4 max-w-4xl relative z-10">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className={cn(
+                      "p-12 md:p-24 rounded-[48px] md:rounded-[64px] border border-white/10 backdrop-blur-3xl shadow-2xl flex flex-col",
+                      section.style?.bgVariant === "glass" ? "bg-white/5" : "bg-slate-900/40",
+                      section.style?.textAlign === "center" ? "items-center text-center" : "items-start text-left"
+                    )}
+                  >
+                    <h2 className="text-4xl md:text-7xl font-black text-white uppercase tracking-tighter leading-none mb-8">
+                      {section.props?.title || section.label}
+                    </h2>
+                    <p className="text-slate-400 font-medium text-lg md:text-2xl max-w-2xl leading-tight mb-12">
+                      {section.props?.subtitle}
+                    </p>
+                    {section.props?.buttonText && (
+                      <Button 
+                        className={cn(
+                          "h-20 px-16 rounded-[32px] font-black text-sm uppercase tracking-widest shadow-2xl transition-all hover:scale-105 active:scale-95",
+                          section.style?.accentColor === "rose" ? "bg-rose-600 hover:bg-rose-500" :
+                          section.style?.accentColor === "emerald" ? "bg-emerald-600 hover:bg-emerald-500" :
+                          "bg-white text-slate-950 hover:bg-indigo-600 hover:text-white"
+                        )}
+                      >
+                        {section.props.buttonText}
+                      </Button>
+                    )}
+                  </motion.div>
+                </div>
+              </section>
+            );
         }
       })}
     </div>

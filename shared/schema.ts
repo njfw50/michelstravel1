@@ -216,6 +216,10 @@ export const customers = pgTable("customers", {
   whatsapp: text("whatsapp"),
   loyaltyPoints: integer("loyalty_points").default(0),
   preferences: jsonb("preferences"), // JSON for travel preferences, restrictions, etc.
+  notes: text("notes"), // Internal concierge notes
+  tags: jsonb("tags"), // Segmentations like ["VIP", "Frequent", "High-Value"]
+  totalBookings: integer("total_bookings").default(0),
+  region: text("region"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -274,7 +278,23 @@ export const bookingsRelations = relations(bookings, ({ one }) => ({
 // === ZOD SCHEMAS ===
 export const insertFlightSearchSchema = createInsertSchema(flightSearches).omit({ id: true, searchCount: true, lastSearchedAt: true });
 export const insertBookingSchema = createInsertSchema(bookings).omit({ id: true, createdAt: true, commissionAmount: true });
-export const insertSiteSettingsSchema = createInsertSchema(siteSettings).omit({ id: true, updatedAt: true });
+const mobileLayoutSectionSchema = z.object({
+  id: z.string(),
+  enabled: z.boolean(),
+  type: z.enum(["hero", "stats", "insights", "deals", "partners", "cta", "custom", "image-hero", "stats-grid", "cta-card"]).optional(),
+  label: z.string().optional(),
+  props: z.record(z.any()).optional(),
+  style: z.object({
+    paddingY: z.string().optional(),
+    bgVariant: z.string().optional(),
+    accentColor: z.string().optional(),
+    textAlign: z.string().optional(),
+  }).optional(),
+});
+
+export const insertSiteSettingsSchema = createInsertSchema(siteSettings).extend({
+  mobileLayout: z.array(mobileLayoutSectionSchema).nullable().optional(),
+}).omit({ id: true, updatedAt: true });
 export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({ id: true, createdAt: true });
 export const insertLiveSessionSchema = createInsertSchema(liveSessions).omit({ id: true, createdAt: true, closedAt: true });
 export const insertLiveSessionBlockSchema = createInsertSchema(liveSessionBlocks).omit({ id: true, updatedAt: true });

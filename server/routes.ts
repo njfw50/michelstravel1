@@ -4,9 +4,10 @@ import { storage } from './storage';
 import { stripeService } from './stripeService';
 import { getUncachableStripeClient } from './stripeClient';
 import { db } from "./db";
-import { flightSearches, bookings, siteSettings, conversations, messages, seniorAlerts, insertFeaturedDealSchema, type FlightSearchParams } from "@shared/schema";
+import { flightSearches, bookings, siteSettings, conversations, messages, seniorAlerts, insertFeaturedDealSchema, insertSiteSettingsSchema, type FlightSearchParams } from "@shared/schema";
 import { customerProfiles, users } from "@shared/models/auth";
 import { desc, eq, and, gt, sql } from "drizzle-orm";
+import { z } from "zod";
 import { nanoid } from "nanoid";
 import jwt from "jsonwebtoken";
 
@@ -2289,8 +2290,17 @@ export function registerRoutes(app: Express) {
 
   // Update Admin Settings
   app.post('/api/admin/settings', requireAdmin, async (req, res) => {
-    const updated = await storage.upsertSiteSettings(req.body);
-    res.json(updated);
+    try {
+      // Law 14: Strict validation of incoming settings
+      const validatedData = insertSiteSettingsSchema.parse(req.body);
+      const updated = await storage.upsertSiteSettings(validatedData);
+      res.json(updated);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid settings data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update settings" });
+    }
   });
 
   app.get('/api/admin/mobile-release/status', requireAdmin, async (req, res) => {
@@ -4664,6 +4674,17 @@ OUTPUT FORMAT (JSON only):
       res.json(list);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch customers" });
+    }
+  });
+
+  app.patch('/api/admin/customers/:id', requireAdmin, async (req, res) => {
+    try {
+      const id = req.params.id as string;
+      const { notes, tags } = req.body;
+      const updated = await storage.updateCustomer(id, { notes, tags });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update customer" });
     }
   });
 

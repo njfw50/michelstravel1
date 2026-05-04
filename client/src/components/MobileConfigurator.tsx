@@ -1,156 +1,182 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Smartphone, Monitor, Save, RotateCcw, 
+  Plus, Trash2, ChevronRight, Settings2, 
+  Layout, Eye, Image as ImageIcon, Type, 
+  Palette, Smartphone as PhoneIcon, ChevronDown,
+  Layers, Zap, Shield, ArrowLeft, MoreHorizontal,
+  Wifi, Battery, Signal, User, Search, Laptop, Tablet,
+  RefreshCw, Megaphone, ArrowRight
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Smartphone, Laptop, Tablet, Save, RefreshCw, Eye, Image as ImageIcon, 
-  Megaphone, Layout, ArrowRight, Plus, Trash2, Copy, ChevronDown, ChevronUp,
-  Palette, Link2, Settings2, Grid3x3, Type, FileImage, Zap, Layers
-} from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n";
 import { useSiteSettings, useUpdateSettings } from "@/hooks/use-admin";
 import { useFeaturedDeals } from "@/hooks/use-flights";
 import { DealCard } from "@/components/DealCard";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-interface SectionConfig {
-  id: string;
-  enabled: boolean;
-  label: string;
-  title?: string;
-  subtitle?: string;
-  description?: string;
-  backgroundColor?: string;
-  textColor?: string;
-  imageUrl?: string;
-  buttonText?: string;
-  buttonLink?: string;
-  buttonColor?: string;
-  stats?: Array<{ label: string; value: string }>;
-  customData?: Record<string, any>;
-}
 
 export function MobileConfigurator() {
-  const { t, language } = useI18n();
+  const { data: settings, isLoading: settingsLoading } = useSiteSettings();
+  const updateSettings = useUpdateSettings();
   const { toast } = useToast();
   const qc = useQueryClient();
-  const [previewScale, setPreviewScale] = useState(0.75);
-  const [activeTab, setActiveTab] = useState("sections");
-  const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  const { t } = useI18n();
 
-  const { data: settings, isLoading: settingsLoading } = useSiteSettings();
-  const { data: deals = [] } = useFeaturedDeals(language);
-  const updateSettings = useUpdateSettings();
+  const defaultLayout = [
+    { id: "hero", enabled: true, type: "hero", label: "Hero Banner" },
+    { id: "deals", enabled: true, type: "deals", label: "Featured Deals" },
+    { id: "stats", enabled: true, type: "stats", label: "Market Stats" }
+  ];
 
-  const [config, setConfig] = useState({
+  const [config, setConfig] = useState<any>({
     heroTitle: "",
     heroSubtitle: "",
     promotionalBanner: "",
-    mobileLayout: [] as SectionConfig[],
-    primaryColor: "#4f46e5",
-    secondaryColor: "#06b6d4",
-    accentColor: "#f59e0b",
+    mobileLayout: defaultLayout,
   });
 
-  const defaultLayout: SectionConfig[] = [
-    { 
-      id: "hero", 
-      enabled: true, 
-      label: "Hero & Pesquisa",
-      title: "Para onde deseja viajar?",
-      subtitle: "Bem-vindo novamente. Visão atualizada",
-      backgroundColor: "#0f172a",
-      textColor: "#ffffff",
-      imageUrl: "https://images.unsplash.com/photo-1559268950-2d7ceb2eee35?auto=format&fit=crop&q=80&w=1200",
-      buttonText: "Buscar Voos",
-      buttonColor: "#3b82f6"
-    },
-    { 
-      id: "stats", 
-      enabled: true, 
-      label: "Estatísticas",
-      stats: [
-        { label: "Rotas", value: "2,400+" },
-        { label: "Clientes", value: "10k+" },
-        { label: "Parceiros", value: "45+" },
-        { label: "Velocidade", value: "< 2s" }
-      ],
-      backgroundColor: "#1e293b"
-    },
-    { 
-      id: "insights", 
-      enabled: true, 
-      label: "Market Insights",
-      title: "Inteligência de Mercado",
-      description: "Análises em tempo real de preços e tendências",
-      backgroundColor: "#0f172a"
-    },
-    { 
-      id: "deals", 
-      enabled: true, 
-      label: "Ofertas em Destaque",
-      title: "Melhores Ofertas",
-      backgroundColor: "#0f172a"
-    },
-    { 
-      id: "partners", 
-      enabled: true, 
-      label: "Rede de Parceiros",
-      backgroundColor: "#1e293b"
-    },
-    { 
-      id: "cta", 
-      enabled: true, 
-      label: "CTA de Encerramento",
-      title: "Pronto para viajar?",
-      buttonText: "Contactar Concierge",
-      backgroundColor: "#ffffff",
-      textColor: "#0f172a",
-      buttonColor: "#3b82f6"
-    }
-  ];
+  const [activeTab, setActiveTab] = useState<"sections" | "content" | "design">("sections");
+  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
+  const [previewScale, setPreviewScale] = useState(0.85);
 
+  const { data: deals } = useFeaturedDeals();
+
+
+  // Initialize extended layout if missing
   useEffect(() => {
     if (settings) {
+      const baseLayout = settings.mobileLayout || defaultLayout;
+      const extendedLayout = baseLayout.map((s: any) => ({
+        ...s,
+        props: s.props || {}, // Ensure props object exists for all
+        style: s.style || { 
+          paddingY: "py-12",
+          bgVariant: "transparent",
+          accentColor: "blue"
+        }
+      }));
+
       setConfig({
         heroTitle: settings.heroTitle || "Para onde deseja viajar?",
         heroSubtitle: settings.heroSubtitle || "Bem-vindo novamente. Visão atualizada",
         promotionalBanner: settings.promotionalBanner || "Ofertas Exclusivas Mobile - 15% OFF",
-        mobileLayout: settings.mobileLayout || defaultLayout,
-        primaryColor: "#4f46e5",
-        secondaryColor: "#06b6d4",
-        accentColor: "#f59e0b",
+        mobileLayout: extendedLayout,
       });
     }
   }, [settings]);
 
+  const sanitizeUrl = (url: string) => {
+    if (!url) return "";
+    // Basic protocol check to prevent javascript: or data: injection (Law 14)
+    if (url.trim().toLowerCase().startsWith("javascript:") || url.trim().toLowerCase().startsWith("data:")) {
+      return "";
+    }
+    return url;
+  };
+
   const handleSave = async () => {
     try {
-      await updateSettings.mutateAsync({
-        ...settings,
-        heroTitle: config.heroTitle,
-        heroSubtitle: config.heroSubtitle,
-        promotionalBanner: config.promotionalBanner,
-        mobileLayout: config.mobileLayout,
-      });
+      // Create a clean, validated payload (Law 14 Compliance)
+      const payload = {
+        siteName: settings?.siteName,
+        commissionPercentage: settings?.commissionPercentage,
+        testMode: settings?.testMode,
+        mobileAppTestEnabled: settings?.mobileAppTestEnabled,
+        mobileAppProductionEnabled: settings?.mobileAppProductionEnabled,
+        heroTitle: config.heroTitle.slice(0, 200),
+        heroSubtitle: config.heroSubtitle.slice(0, 500),
+        promotionalBanner: config.promotionalBanner.slice(0, 200),
+        mobileLayout: config.mobileLayout.map((s: any) => ({
+          ...s,
+          props: Object.fromEntries(
+            Object.entries(s.props || {}).map(([k, v]) => [k, typeof v === 'string' ? sanitizeUrl(v) : v])
+          )
+        })),
+      };
+
+      await updateSettings.mutateAsync(payload as any);
       toast({
-        title: "✨ Layout Publicado",
-        description: "A estrutura do site mobile foi sincronizada com sucesso.",
+        title: "Soberania Sincronizada",
+        description: "O layout mobile foi atualizado com sucesso.",
       });
       qc.invalidateQueries({ queryKey: ["/api/public/settings"] });
+      qc.invalidateQueries({ queryKey: ["/api/site-settings"] });
     } catch (err) {
+      console.error("Save error:", err);
       toast({
         variant: "destructive",
-        title: "Erro ao salvar",
-        description: "Não foi possível atualizar o layout.",
+        title: "Falha na Transmissão",
+        description: "O servidor rejeitou as alterações de arquitetura.",
       });
     }
+  };
+
+  const addSection = (type: "custom" | "image-hero" | "stats-grid" | "cta-card") => {
+    const id = `${type}-${Date.now()}`;
+    const newSection = {
+      id,
+      enabled: true,
+      type,
+      label: `Nova Seção ${type.replace('-', ' ')}`,
+      props: {
+        title: "Título da Seção",
+        subtitle: "Descrição detalhada para o usuário.",
+        buttonText: "Ação Principal",
+        imageUrl: "https://images.unsplash.com/photo-1544016768-982d1554f0b9?auto=format&fit=crop&q=80&w=1200",
+        stats: [
+          { label: "Métrica 1", value: "100+" },
+          { label: "Métrica 2", value: "50k" }
+        ]
+      },
+      style: {
+        paddingY: "py-16",
+        bgVariant: "glass",
+        accentColor: "blue",
+        textAlign: "center"
+      }
+    };
+    setConfig({ ...config, mobileLayout: [...config.mobileLayout, newSection] });
+    setEditingSectionId(id);
+    setActiveTab("content");
+  };
+
+  const deleteSection = (id: string) => {
+    setConfig({
+      ...config,
+      mobileLayout: config.mobileLayout.filter((s: any) => s.id !== id)
+    });
+    if (editingSectionId === id) setEditingSectionId(null);
+  };
+
+  const updateSectionProp = (id: string, key: string, value: any) => {
+    const newLayout = config.mobileLayout.map((s: any) => 
+      s.id === id ? { ...s, props: { ...s.props, [key]: value } } : s
+    );
+    setConfig({ ...config, mobileLayout: newLayout });
+  };
+
+  const updateSectionStyle = (id: string, key: string, value: any) => {
+    const newLayout = config.mobileLayout.map((s: any) => 
+      s.id === id ? { ...s, style: { ...s.style, [key]: value } } : s
+    );
+    setConfig({ ...config, mobileLayout: newLayout });
+  };
+
+  const updateSectionLabel = (id: string, label: string) => {
+    const newLayout = config.mobileLayout.map((s: any) => 
+      s.id === id ? { ...s, label } : s
+    );
+    setConfig({ ...config, mobileLayout: newLayout });
   };
 
   const moveSection = (index: number, direction: 'up' | 'down') => {
@@ -162,43 +188,10 @@ export function MobileConfigurator() {
   };
 
   const toggleSection = (id: string) => {
-    const newLayout = config.mobileLayout.map(s => 
+    const newLayout = config.mobileLayout.map((s: any) => 
       s.id === id ? { ...s, enabled: !s.enabled } : s
     );
     setConfig({ ...config, mobileLayout: newLayout });
-  };
-
-  const updateSectionConfig = (id: string, updates: Partial<SectionConfig>) => {
-    const newLayout = config.mobileLayout.map(s => 
-      s.id === id ? { ...s, ...updates } : s
-    );
-    setConfig({ ...config, mobileLayout: newLayout });
-  };
-
-  const duplicateSection = (index: number) => {
-    const section = config.mobileLayout[index];
-    const newSection = { ...section, id: `${section.id}-${Date.now()}` };
-    const newLayout = [...config.mobileLayout];
-    newLayout.splice(index + 1, 0, newSection);
-    setConfig({ ...config, mobileLayout: newLayout });
-  };
-
-  const deleteSection = (index: number) => {
-    const newLayout = config.mobileLayout.filter((_, i) => i !== index);
-    setConfig({ ...config, mobileLayout: newLayout });
-    setSelectedSection(null);
-  };
-
-  const addNewSection = (type: string) => {
-    const newSection: SectionConfig = {
-      id: `custom-${Date.now()}`,
-      enabled: true,
-      label: `Seção Customizada ${config.mobileLayout.length + 1}`,
-      backgroundColor: "#0f172a",
-      textColor: "#ffffff",
-      customData: { type }
-    };
-    setConfig({ ...config, mobileLayout: [...config.mobileLayout, newSection] });
   };
 
   if (settingsLoading) {
@@ -209,550 +202,446 @@ export function MobileConfigurator() {
     );
   }
 
-  const currentSection = config.mobileLayout.find(s => s.id === selectedSection);
+  const editingSection = config.mobileLayout.find((s: any) => s.id === editingSectionId);
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 animate-in fade-in duration-500 pb-20">
-      {/* Left Sidebar - Configuration Panel */}
+      {/* Configuration Sidebar - Studio Mode */}
       <div className="xl:col-span-4 space-y-6">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-2xl font-black text-white tracking-tight">Arquitetura Mobile</h2>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Editor Completo do App</p>
+            <h2 className="text-2xl font-black text-white tracking-tight">Michels Studio</h2>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-1">Full Service Editor</p>
           </div>
           <Button 
             onClick={handleSave} 
             disabled={updateSettings.isPending}
-            className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white gap-2 rounded-2xl px-6 shadow-xl shadow-indigo-600/20"
+            className="bg-indigo-600 hover:bg-indigo-500 text-white gap-2 rounded-2xl px-6 shadow-xl shadow-indigo-600/40 border border-white/10"
           >
             {updateSettings.isPending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} 
-            Publicar
+            Deploy
           </Button>
         </div>
 
-        {/* Tabs for Configuration */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-slate-900/50 border border-white/10 rounded-xl p-1">
-            <TabsTrigger value="sections" className="rounded-lg text-xs font-bold">Seções</TabsTrigger>
-            <TabsTrigger value="content" className="rounded-lg text-xs font-bold">Conteúdo</TabsTrigger>
-            <TabsTrigger value="design" className="rounded-lg text-xs font-bold">Design</TabsTrigger>
-          </TabsList>
+        {/* Studio Navigation */}
+        <div className="flex p-1.5 bg-slate-900/80 rounded-[24px] border border-white/5 shadow-2xl backdrop-blur-xl">
+          {(["sections", "content", "design"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={cn(
+                "flex-1 py-3.5 text-[10px] font-black uppercase tracking-widest rounded-[18px] transition-all",
+                activeTab === tab ? "bg-white text-slate-950 shadow-xl scale-100" : "text-slate-500 hover:text-white scale-95"
+              )}
+            >
+              {tab === "sections" ? "Ecrã" : tab === "content" ? "Propriedades" : "Estilos"}
+            </button>
+          ))}
+        </div>
 
-          {/* Sections Tab */}
-          <TabsContent value="sections" className="space-y-4 mt-6">
-            <Card className="glass-card border-white/5 overflow-hidden">
-              <CardHeader className="border-b border-white/5 bg-white/5">
-                <CardTitle className="text-sm font-black uppercase tracking-widest text-indigo-400 flex items-center gap-2">
-                  <Layers className="h-4 w-4" /> Estrutura de Seções
+        {activeTab === "sections" && (
+          <div className="space-y-4 animate-in slide-in-from-left-4 duration-500">
+            <Card className="glass-card border-white/5 overflow-hidden rounded-[32px] shadow-2xl">
+              <CardHeader className="p-6 border-b border-white/5 bg-white/5 flex flex-row items-center justify-between">
+                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-indigo-400 flex items-center gap-2">
+                  <Layout className="h-4 w-4" /> Arquitetura do Site
                 </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 space-y-3 max-h-[500px] overflow-y-auto">
-                {config.mobileLayout.map((section, idx) => (
-                  <div 
-                    key={section.id}
-                    onClick={() => setSelectedSection(section.id)}
-                    className={cn(
-                      "p-4 rounded-2xl border transition-all cursor-pointer group",
-                      selectedSection === section.id 
-                        ? "bg-indigo-500/15 border-indigo-500/30 shadow-lg shadow-indigo-500/10"
-                        : section.enabled 
-                          ? "bg-white/5 border-white/10 hover:border-white/20" 
-                          : "bg-slate-950/40 border-white/5 opacity-50 grayscale"
-                    )}
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => addSection("custom")}
+                    variant="outline" size="sm" 
+                    className="h-8 px-4 text-[9px] font-black uppercase border-white/10 text-white hover:bg-white/10 rounded-xl"
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="flex flex-col gap-1">
-                          <Button 
-                            variant="ghost" size="icon" className="h-5 w-5 text-slate-600 hover:text-white p-0"
-                            onClick={(e) => { e.stopPropagation(); moveSection(idx, 'up'); }}
-                          >
-                            <ChevronUp className="h-3 w-3" />
-                          </Button>
-                          <Button 
-                            variant="ghost" size="icon" className="h-5 w-5 text-slate-600 hover:text-white p-0"
-                            onClick={(e) => { e.stopPropagation(); moveSection(idx, 'down'); }}
-                          >
-                            <ChevronDown className="h-3 w-3" />
-                          </Button>
-                        </div>
-                        <div className="min-w-0">
-                          <span className="text-xs font-black text-white uppercase tracking-tight block truncate">{section.label}</span>
-                          <span className="text-[10px] text-slate-500">{section.id}</span>
-                        </div>
+                    + Novo Bloco
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3">
+                {config.mobileLayout.map((section: any, idx: number) => (
+                  <div 
+                    key={section.id} 
+                    className={cn(
+                      "p-4 rounded-[24px] border transition-all flex items-center justify-between group cursor-pointer",
+                      section.enabled ? "bg-white/5 border-white/10" : "bg-slate-950/40 border-white/5 opacity-50 grayscale",
+                      editingSectionId === section.id && "ring-2 ring-indigo-500 bg-white/10 border-indigo-400"
+                    )}
+                    onClick={() => {
+                      setEditingSectionId(section.id);
+                      setActiveTab("content");
+                    }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button 
+                          variant="ghost" size="icon" className="h-6 w-6 text-slate-600 hover:text-white"
+                          onClick={(e) => { e.stopPropagation(); moveSection(idx, 'up'); }}
+                        >
+                          <ArrowRight className="h-3 w-3 -rotate-90" />
+                        </Button>
+                        <Button 
+                          variant="ghost" size="icon" className="h-6 w-6 text-slate-600 hover:text-white"
+                          onClick={(e) => { e.stopPropagation(); moveSection(idx, 'down'); }}
+                        >
+                          <ArrowRight className="h-3 w-3 rotate-90" />
+                        </Button>
                       </div>
-                      <div className="flex gap-1">
-                        <Button 
-                          variant="ghost" size="icon" className="h-7 w-7 text-slate-600 hover:text-white"
-                          onClick={(e) => { e.stopPropagation(); duplicateSection(idx); }}
-                          title="Duplicar"
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                        <Button 
-                          variant={section.enabled ? "default" : "outline"} 
-                          size="sm" 
-                          className={cn("rounded-lg h-7 px-3 text-[8px] font-black uppercase", section.enabled ? "bg-indigo-600" : "border-white/10 text-slate-500")}
-                          onClick={(e) => { e.stopPropagation(); toggleSection(section.id); }}
-                        >
-                          {section.enabled ? "✓" : "✕"}
-                        </Button>
+                      <div>
+                        <span className="text-xs font-black text-white uppercase tracking-tight block">{section.label || section.id}</span>
+                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{section.type || "Nativa"}</span>
                       </div>
                     </div>
+                    <Button 
+                      variant={section.enabled ? "default" : "outline"} 
+                      size="sm" 
+                      className={cn("rounded-xl h-8 px-4 text-[9px] font-black uppercase", section.enabled ? "bg-indigo-600" : "border-white/10 text-slate-500")}
+                      onClick={(e) => { e.stopPropagation(); toggleSection(section.id); }}
+                    >
+                      {section.enabled ? "Live" : "Oculto"}
+                    </Button>
                   </div>
                 ))}
               </CardContent>
             </Card>
+          </div>
+        )}
 
-            {/* Add New Section */}
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Adicionar Seção</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="rounded-xl border-white/10 text-slate-400 hover:text-white h-9"
-                  onClick={() => addNewSection("custom")}
-                >
-                  <Plus className="h-3 w-3 mr-1" /> Customizada
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="rounded-xl border-white/10 text-slate-400 hover:text-white h-9"
-                  onClick={() => addNewSection("banner")}
-                >
-                  <Plus className="h-3 w-3 mr-1" /> Banner
-                </Button>
+        {activeTab === "content" && (
+          <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
+            {!editingSectionId ? (
+              <div className="p-20 text-center space-y-4 bg-slate-900/40 rounded-[32px] border border-dashed border-white/10">
+                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
+                   <Eye className="h-6 w-6 text-slate-600" />
+                </div>
+                <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Selecione uma seção no ecrã para editar propriedades</p>
               </div>
-            </div>
-          </TabsContent>
-
-          {/* Content Tab */}
-          <TabsContent value="content" className="space-y-4 mt-6">
-            <Card className="glass-card border-white/5 overflow-hidden">
-              <CardHeader className="border-b border-white/5 bg-white/5">
-                <CardTitle className="text-sm font-black uppercase tracking-widest text-indigo-400 flex items-center gap-2">
-                  <Type className="h-4 w-4" /> Conteúdo Principal
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-6">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Título Hero</Label>
-                  <Input 
-                    value={config.heroTitle} 
-                    onChange={(e) => setConfig({...config, heroTitle: e.target.value})}
-                    className="bg-slate-900/50 border-white/10 rounded-xl text-white"
-                    placeholder="Título principal da página"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Subtítulo Hero</Label>
-                  <Input 
-                    value={config.heroSubtitle} 
-                    onChange={(e) => setConfig({...config, heroSubtitle: e.target.value})}
-                    className="bg-slate-900/50 border-white/10 rounded-xl text-white"
-                    placeholder="Subtítulo descritivo"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Banner Promocional</Label>
-                  <Textarea 
-                    value={config.promotionalBanner} 
-                    onChange={(e) => setConfig({...config, promotionalBanner: e.target.value})}
-                    className="bg-slate-900/50 border-white/10 rounded-xl text-white min-h-[80px] resize-none"
-                    placeholder="Mensagem promocional destacada"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Section-Specific Content */}
-            {currentSection && (
-              <Card className="glass-card border-white/5 overflow-hidden">
-                <CardHeader className="border-b border-white/5 bg-white/5">
-                  <CardTitle className="text-sm font-black uppercase tracking-widest text-blue-400 flex items-center gap-2">
-                    <Settings2 className="h-4 w-4" /> Editar: {currentSection.label}
+            ) : (
+              <Card className="glass-card border-white/5 overflow-hidden rounded-[32px] shadow-2xl">
+                <CardHeader className="p-6 border-b border-white/5 bg-white/5 flex flex-row items-center justify-between">
+                  <CardTitle className="text-[10px] font-black uppercase tracking-widest text-indigo-400 flex items-center gap-2">
+                    <Megaphone className="h-4 w-4" /> Editor de Bloco: {editingSection?.label}
                   </CardTitle>
+                  <Button variant="ghost" size="sm" onClick={() => setEditingSectionId(null)} className="text-[9px] font-black uppercase text-slate-500 hover:text-white">Fechar</Button>
                 </CardHeader>
-                <CardContent className="p-6 space-y-4">
-                  {currentSection.title && (
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Título da Seção</Label>
-                      <Input 
-                        value={currentSection.title} 
-                        onChange={(e) => updateSectionConfig(currentSection.id, { title: e.target.value })}
-                        className="bg-slate-900/50 border-white/10 rounded-xl text-white"
-                      />
-                    </div>
-                  )}
-                  {currentSection.subtitle && (
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Subtítulo</Label>
-                      <Input 
-                        value={currentSection.subtitle} 
-                        onChange={(e) => updateSectionConfig(currentSection.id, { subtitle: e.target.value })}
-                        className="bg-slate-900/50 border-white/10 rounded-xl text-white"
-                      />
-                    </div>
-                  )}
-                  {currentSection.description && (
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Descrição</Label>
-                      <Textarea 
-                        value={currentSection.description} 
-                        onChange={(e) => updateSectionConfig(currentSection.id, { description: e.target.value })}
-                        className="bg-slate-900/50 border-white/10 rounded-xl text-white min-h-[60px] resize-none"
-                      />
-                    </div>
-                  )}
-                  {currentSection.buttonText && (
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Texto do Botão</Label>
-                      <Input 
-                        value={currentSection.buttonText} 
-                        onChange={(e) => updateSectionConfig(currentSection.id, { buttonText: e.target.value })}
-                        className="bg-slate-900/50 border-white/10 rounded-xl text-white"
-                      />
-                    </div>
-                  )}
-                  {currentSection.buttonLink && (
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Link do Botão</Label>
-                      <Input 
-                        value={currentSection.buttonLink} 
-                        onChange={(e) => updateSectionConfig(currentSection.id, { buttonLink: e.target.value })}
-                        className="bg-slate-900/50 border-white/10 rounded-xl text-white"
-                        placeholder="/deals ou https://..."
-                      />
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          {/* Design Tab */}
-          <TabsContent value="design" className="space-y-4 mt-6">
-            <Card className="glass-card border-white/5 overflow-hidden">
-              <CardHeader className="border-b border-white/5 bg-white/5">
-                <CardTitle className="text-sm font-black uppercase tracking-widest text-indigo-400 flex items-center gap-2">
-                  <Palette className="h-4 w-4" /> Cores Globais
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cor Primária</Label>
-                  <div className="flex gap-2">
-                    <input 
-                      type="color" 
-                      value={config.primaryColor}
-                      onChange={(e) => setConfig({...config, primaryColor: e.target.value})}
-                      className="h-10 w-16 rounded-lg cursor-pointer border border-white/10"
-                    />
-                    <Input 
-                      value={config.primaryColor}
-                      onChange={(e) => setConfig({...config, primaryColor: e.target.value})}
-                      className="bg-slate-900/50 border-white/10 rounded-xl text-white flex-1 text-xs"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cor Secundária</Label>
-                  <div className="flex gap-2">
-                    <input 
-                      type="color" 
-                      value={config.secondaryColor}
-                      onChange={(e) => setConfig({...config, secondaryColor: e.target.value})}
-                      className="h-10 w-16 rounded-lg cursor-pointer border border-white/10"
-                    />
-                    <Input 
-                      value={config.secondaryColor}
-                      onChange={(e) => setConfig({...config, secondaryColor: e.target.value})}
-                      className="bg-slate-900/50 border-white/10 rounded-xl text-white flex-1 text-xs"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cor de Destaque</Label>
-                  <div className="flex gap-2">
-                    <input 
-                      type="color" 
-                      value={config.accentColor}
-                      onChange={(e) => setConfig({...config, accentColor: e.target.value})}
-                      className="h-10 w-16 rounded-lg cursor-pointer border border-white/10"
-                    />
-                    <Input 
-                      value={config.accentColor}
-                      onChange={(e) => setConfig({...config, accentColor: e.target.value})}
-                      className="bg-slate-900/50 border-white/10 rounded-xl text-white flex-1 text-xs"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Section-Specific Design */}
-            {currentSection && (
-              <Card className="glass-card border-white/5 overflow-hidden">
-                <CardHeader className="border-b border-white/5 bg-white/5">
-                  <CardTitle className="text-sm font-black uppercase tracking-widest text-blue-400 flex items-center gap-2">
-                    <Palette className="h-4 w-4" /> Design: {currentSection.label}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 space-y-4">
+                <CardContent className="p-6 space-y-6">
+                  {/* Common Name */}
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cor de Fundo</Label>
-                    <div className="flex gap-2">
-                      <input 
-                        type="color" 
-                        value={currentSection.backgroundColor || "#0f172a"}
-                        onChange={(e) => updateSectionConfig(currentSection.id, { backgroundColor: e.target.value })}
-                        className="h-10 w-16 rounded-lg cursor-pointer border border-white/10"
-                      />
-                      <Input 
-                        value={currentSection.backgroundColor || "#0f172a"}
-                        onChange={(e) => updateSectionConfig(currentSection.id, { backgroundColor: e.target.value })}
-                        className="bg-slate-900/50 border-white/10 rounded-xl text-white flex-1 text-xs"
-                      />
-                    </div>
+                    <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Nome da Seção (Painel)</Label>
+                    <Input 
+                      value={editingSection?.label} 
+                      onChange={(e) => updateSectionLabel(editingSectionId!, e.target.value)}
+                      className="bg-slate-950/60 border-white/5 rounded-[18px] text-white h-14 font-bold"
+                    />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cor do Texto</Label>
-                    <div className="flex gap-2">
-                      <input 
-                        type="color" 
-                        value={currentSection.textColor || "#ffffff"}
-                        onChange={(e) => updateSectionConfig(currentSection.id, { textColor: e.target.value })}
-                        className="h-10 w-16 rounded-lg cursor-pointer border border-white/10"
-                      />
-                      <Input 
-                        value={currentSection.textColor || "#ffffff"}
-                        onChange={(e) => updateSectionConfig(currentSection.id, { textColor: e.target.value })}
-                        className="bg-slate-900/50 border-white/10 rounded-xl text-white flex-1 text-xs"
-                      />
-                    </div>
-                  </div>
-                  {currentSection.imageUrl && (
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">URL da Imagem</Label>
-                      <Input 
-                        value={currentSection.imageUrl} 
-                        onChange={(e) => updateSectionConfig(currentSection.id, { imageUrl: e.target.value })}
-                        className="bg-slate-900/50 border-white/10 rounded-xl text-white text-xs"
-                        placeholder="https://..."
-                      />
-                    </div>
-                  )}
-                  {currentSection.buttonColor && (
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cor do Botão</Label>
-                      <div className="flex gap-2">
-                        <input 
-                          type="color" 
-                          value={currentSection.buttonColor}
-                          onChange={(e) => updateSectionConfig(currentSection.id, { buttonColor: e.target.value })}
-                          className="h-10 w-16 rounded-lg cursor-pointer border border-white/10"
-                        />
+
+                  {/* Dynamic Properties based on type */}
+                  <div className="space-y-6 pt-4 border-t border-white/5">
+                     <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Título Principal</Label>
                         <Input 
-                          value={currentSection.buttonColor}
-                          onChange={(e) => updateSectionConfig(currentSection.id, { buttonColor: e.target.value })}
-                          className="bg-slate-900/50 border-white/10 rounded-xl text-white flex-1 text-xs"
+                          value={editingSection?.props?.title || (editingSection?.id === 'hero' ? config.heroTitle : "")} 
+                          onChange={(e) => {
+                            if (editingSection?.id === 'hero') setConfig({...config, heroTitle: e.target.value});
+                            updateSectionProp(editingSectionId!, "title", e.target.value);
+                          }}
+                          className="bg-slate-950/60 border-white/5 rounded-[18px] text-white h-14 font-bold"
                         />
-                      </div>
-                    </div>
-                  )}
+                     </div>
+                     
+                     <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Subtítulo / Descrição</Label>
+                        <Textarea 
+                          value={editingSection?.props?.subtitle || (editingSection?.id === 'hero' ? config.heroSubtitle : "")} 
+                          onChange={(e) => {
+                            if (editingSection?.id === 'hero') setConfig({...config, heroSubtitle: e.target.value});
+                            updateSectionProp(editingSectionId!, "subtitle", e.target.value);
+                          }}
+                          className="bg-slate-950/60 border-white/5 rounded-[24px] text-white min-h-[120px] font-medium resize-none"
+                        />
+                     </div>
+
+                     {(editingSection?.type === "custom" || editingSection?.id === "hero") && (
+                       <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Imagem de Fundo (URL)</Label>
+                          <div className="flex gap-2">
+                            <Input 
+                              value={editingSection?.props?.imageUrl || ""} 
+                              onChange={(e) => updateSectionProp(editingSectionId!, "imageUrl", e.target.value)}
+                              className="bg-slate-950/60 border-white/5 rounded-[18px] text-white h-14 text-xs"
+                            />
+                            <Button variant="outline" className="h-14 w-14 rounded-[18px] border-white/5 bg-white/5"><ImageIcon className="h-4 w-4" /></Button>
+                          </div>
+                       </div>
+                     )}
+
+                     {editingSection?.props?.buttonText !== undefined && (
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Texto do Botão</Label>
+                          <Input 
+                            value={editingSection.props.buttonText} 
+                            onChange={(e) => updateSectionProp(editingSectionId!, "buttonText", e.target.value)}
+                            className="bg-slate-950/60 border-white/5 rounded-[18px] text-white h-14 font-bold"
+                          />
+                        </div>
+                     )}
+                  </div>
+
+                  <div className="pt-8 flex flex-col gap-3">
+                    <Button 
+                      variant="destructive" 
+                      className="w-full rounded-[20px] font-black text-[10px] uppercase h-14 gap-3 bg-red-600/10 border border-red-500/20 text-red-500 hover:bg-red-600 hover:text-white"
+                      onClick={() => deleteSection(editingSectionId!)}
+                    >
+                      <RefreshCw className="h-4 w-4 rotate-45" /> Remover este Bloco
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}
-          </TabsContent>
-        </Tabs>
+          </div>
+        )}
 
-        {/* Delete Section Button */}
-        {currentSection && (
-          <Button 
-            variant="destructive"
-            className="w-full rounded-xl gap-2"
-            onClick={() => deleteSection(config.mobileLayout.findIndex(s => s.id === currentSection.id))}
-          >
-            <Trash2 className="h-4 w-4" /> Deletar Seção
-          </Button>
+        {activeTab === "design" && (
+          <div className="space-y-4 animate-in fade-in duration-500">
+             {!editingSectionId ? (
+                <Card className="glass-card border-white/5 p-12 text-center rounded-[32px]">
+                   <p className="text-xs font-black text-slate-500 uppercase">Selecione um bloco para configurar estilos visuais</p>
+                </Card>
+             ) : (
+                <Card className="glass-card border-white/5 overflow-hidden rounded-[32px] shadow-2xl">
+                   <CardHeader className="p-6 border-b border-white/5 bg-white/5">
+                      <CardTitle className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Design do Bloco</CardTitle>
+                   </CardHeader>
+                   <CardContent className="p-6 space-y-8">
+                      <div className="space-y-4">
+                        <Label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Cor de Destaque</Label>
+                        <div className="flex gap-3">
+                          {["blue", "indigo", "rose", "emerald", "amber"].map(color => (
+                            <button 
+                              key={color}
+                              onClick={() => updateSectionStyle(editingSectionId!, "accentColor", color)}
+                              className={cn(
+                                "w-10 h-10 rounded-full border-2 transition-all",
+                                editingSection?.style?.accentColor === color ? "border-white scale-110" : "border-transparent",
+                                `bg-${color}-500`
+                              )}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <Label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Variante de Fundo</Label>
+                        <div className="grid grid-cols-2 gap-3">
+                           {["transparent", "glass", "solid", "gradient"].map(v => (
+                             <Button 
+                                key={v}
+                                variant="outline"
+                                onClick={() => updateSectionStyle(editingSectionId!, "bgVariant", v)}
+                                className={cn(
+                                  "h-14 rounded-2xl text-[9px] font-black uppercase border-white/5",
+                                  editingSection?.style?.bgVariant === v ? "bg-white text-slate-950 border-white" : "bg-white/5 text-slate-500"
+                                )}
+                             >
+                               {v}
+                             </Button>
+                           ))}
+                        </div>
+                      </div>
+                   </CardContent>
+                </Card>
+             )}
+          </div>
         )}
       </div>
 
-      {/* Right Side - Preview */}
+      {/* Samsung S24 Ultra Simulator - Deep Linked */}
       <div className="xl:col-span-8 flex flex-col items-center justify-start py-4">
-        {/* Device Selector */}
-        <div className="mb-6 flex items-center gap-4 bg-slate-900/80 p-2 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-xl">
-          <Button variant="ghost" size="sm" className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/10">Samsung S24</Button>
-          <Button variant="ghost" size="sm" className="h-9 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white">iPhone 15</Button>
-          <div className="h-4 w-[1px] bg-white/10 mx-2" />
-          <div className="flex items-center gap-4 px-2">
-            <span className="text-[9px] font-black text-slate-500 uppercase">Escala</span>
+        <div className="mb-8 flex items-center gap-6 bg-slate-950/80 p-3 rounded-[28px] border border-white/10 shadow-2xl backdrop-blur-2xl">
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" className="h-10 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white bg-indigo-600 shadow-lg shadow-indigo-600/20">Samsung S24 Ultra</Button>
+            <Button variant="ghost" size="sm" className="h-10 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white">iPhone 15 Pro Max</Button>
+          </div>
+          <div className="h-5 w-[1px] bg-white/10" />
+          <div className="flex items-center gap-5 px-3">
+            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Escala Preview</span>
             <input 
-              type="range" min="0.5" max="1.0" step="0.05" value={previewScale} 
+              type="range" min="0.4" max="1.0" step="0.05" value={previewScale} 
               onChange={(e) => setPreviewScale(parseFloat(e.target.value))}
-              className="w-32 accent-indigo-500"
+              className="w-40 accent-indigo-500"
             />
-            <span className="text-[10px] font-black text-indigo-400 w-8">{Math.round(previewScale * 100)}%</span>
+            <span className="text-[11px] font-black text-indigo-400 w-10 text-right">{Math.round(previewScale * 100)}%</span>
           </div>
         </div>
 
-        {/* Device Frame */}
-        <div className="relative transition-all duration-500 ease-out" style={{ transform: `scale(${previewScale})`, transformOrigin: 'top center' }}>
-          <div className="relative w-[420px] h-[860px] bg-slate-950 rounded-[60px] border-[12px] border-slate-800 shadow-[0_0_120px_rgba(0,0,0,0.9),inset_0_0_20px_rgba(255,255,255,0.05)] overflow-hidden">
+        {/* The Device Frame */}
+        <div className="relative transition-all duration-700 ease-in-out" style={{ transform: `scale(${previewScale})`, transformOrigin: 'top center' }}>
+          {/* Samsung Frame Refined */}
+          <div className="relative w-[440px] h-[920px] bg-slate-950 rounded-[72px] border-[14px] border-slate-900 shadow-[0_0_150px_rgba(0,0,0,0.9),inset_0_0_40px_rgba(255,255,255,0.05)] overflow-hidden ring-1 ring-white/10">
             {/* Status Bar */}
-            <div className="absolute top-0 inset-x-0 h-10 z-50 flex items-center justify-between px-10 text-[10px] font-bold text-white">
-              <span>9:41</span>
-              <div className="flex gap-2">
-                <div className="w-3 h-3 bg-white/20 rounded-sm" />
-                <div className="w-3 h-3 bg-white/20 rounded-sm" />
-                <div className="w-6 h-3 bg-white/20 rounded-sm" />
+            <div className="absolute top-0 inset-x-0 h-12 z-50 flex items-center justify-between px-12 text-[11px] font-black text-white">
+              <span>11:11</span>
+              <div className="flex gap-2.5 items-center">
+                <div className="w-4 h-4 bg-white/10 rounded-full border border-white/20" />
+                <div className="w-4 h-4 bg-white/10 rounded-full border border-white/20" />
+                <div className="w-8 h-4 bg-white/30 rounded-md" />
               </div>
             </div>
 
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-900 rounded-full border-2 border-slate-800/50 z-50 shadow-inner" />
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 w-6 h-6 bg-slate-900 rounded-full border-2 border-slate-800 z-50 shadow-inner" />
             
-            {/* Screen Content */}
-            <div className="w-full h-full bg-slate-950 overflow-y-auto scrollbar-none flex flex-col pb-20">
+            {/* Dynamic Screen Content */}
+            <div className="w-full h-full bg-slate-950 overflow-y-auto scrollbar-none flex flex-col pb-24">
               
-              {/* Header */}
-              <div className="pt-12 pb-6 px-6 flex items-center justify-between bg-slate-950/80 backdrop-blur-md sticky top-0 z-40 border-b border-white/5">
-                <div className="flex items-center gap-2">
-                   <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center font-black text-[10px] text-white">MT</div>
-                   <span className="text-xs font-black text-white uppercase tracking-tighter">Michels</span>
+              {/* Header (App UI Style) */}
+              <div className="pt-16 pb-6 px-8 flex items-center justify-between bg-slate-950/90 backdrop-blur-3xl sticky top-0 z-40 border-b border-white/5">
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-700 flex items-center justify-center font-black text-[12px] text-white shadow-lg">MT</div>
+                   <div>
+                     <span className="text-sm font-black text-white uppercase tracking-tighter block">Michels</span>
+                     <span className="text-[8px] font-bold text-indigo-400 uppercase tracking-widest">Concierge</span>
+                   </div>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                  <div className="w-5 h-0.5 bg-white mb-1 rounded-full" />
-                  <div className="w-3 h-0.5 bg-white rounded-full self-end mr-2.5" />
+                <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center justify-center gap-1.5 shadow-xl">
+                  <div className="w-6 h-0.5 bg-white rounded-full" />
+                  <div className="w-4 h-0.5 bg-white rounded-full self-start ml-3" />
                 </div>
               </div>
 
-              {/* Dynamic Sections */}
               {config.mobileLayout.map((section: any) => {
                 if (!section.enabled) return null;
+                const isEditing = editingSectionId === section.id;
+
+                const SectionWrapper = ({ children }: { children: React.ReactNode }) => (
+                  <div 
+                    onClick={() => { setEditingSectionId(section.id); setActiveTab("content"); }}
+                    className={cn(
+                      "relative cursor-pointer transition-all duration-300",
+                      isEditing ? "ring-4 ring-indigo-500/50 scale-[0.98] z-30" : "hover:ring-2 hover:ring-white/10"
+                    )}
+                  >
+                    {isEditing && (
+                      <div className="absolute -top-3 -right-3 bg-indigo-500 text-white text-[8px] font-black px-3 py-1 rounded-full z-50 uppercase tracking-widest shadow-xl">Editando</div>
+                    )}
+                    {children}
+                  </div>
+                );
 
                 switch (section.id) {
                   case "hero":
                     return (
-                      <div key="hero" className="relative min-h-[400px] flex flex-col justify-end px-8 pb-12 overflow-hidden" style={{ backgroundColor: section.backgroundColor }}>
-                        {section.imageUrl && (
-                          <>
-                            <img src={section.imageUrl} className="absolute inset-0 w-full h-full object-cover opacity-60" alt="" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
-                          </>
-                        )}
-                        <div className="relative z-10 space-y-4">
-                          <h1 className="text-4xl font-black text-white leading-[0.9] uppercase tracking-tighter drop-shadow-2xl" style={{ color: section.textColor }}>
-                            {config.heroTitle}
-                          </h1>
-                          <p className="text-sm font-bold text-slate-300 leading-relaxed drop-shadow-lg">
-                            {config.heroSubtitle}
-                          </p>
-                          <div className="pt-6">
-                            <div className="h-14 w-full bg-white/10 backdrop-blur-2xl border border-white/10 rounded-2xl flex items-center px-5 gap-3">
-                              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                              <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Origem</span>
+                      <SectionWrapper key="hero">
+                        <div className="relative min-h-[500px] flex flex-col justify-end px-10 pb-16 overflow-hidden">
+                          <img src={section.props?.imageUrl || "https://images.unsplash.com/photo-1559268950-2d7ceb2eee35?auto=format&fit=crop&q=80&w=1200"} className="absolute inset-0 w-full h-full object-cover opacity-70" alt="" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+                          <div className="relative z-10 space-y-6">
+                            <h1 className="text-5xl font-black text-white leading-[0.85] uppercase tracking-tighter drop-shadow-2xl">
+                              {section.props?.title || config.heroTitle}
+                            </h1>
+                            <p className="text-base font-bold text-slate-300 leading-tight drop-shadow-lg opacity-90">
+                              {section.props?.subtitle || config.heroSubtitle}
+                            </p>
+                            <div className="pt-8">
+                              <div className="h-16 w-full bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[28px] flex items-center px-6 gap-4 shadow-2xl">
+                                <div className="w-3 h-3 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_15px_rgba(99,102,241,0.5)]" />
+                                <span className="text-xs font-black text-white/50 uppercase tracking-[0.2em]">{t("home.board.col_origin")}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </SectionWrapper>
                     );
 
                   case "stats":
                     return (
-                      <div key="stats" className="px-10 py-10 grid grid-cols-2 gap-8 border-b border-white/5" style={{ backgroundColor: section.backgroundColor }}>
-                        {section.stats?.map((stat: any, i: number) => (
-                          <div key={i} className="space-y-1">
-                            <p className="text-2xl font-black text-white tracking-tighter">{stat.value}</p>
-                            <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{stat.label}</p>
+                      <SectionWrapper key="stats">
+                        <div className="px-12 py-16 grid grid-cols-2 gap-12 border-b border-white/5 bg-slate-900/10">
+                          <div className="space-y-2">
+                            <p className="text-4xl font-black text-white tracking-tighter">2.4k</p>
+                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Rotas Ativas</p>
                           </div>
-                        ))}
-                      </div>
-                    );
-
-                  case "insights":
-                    return (
-                      <div key="insights" className="p-8 space-y-6" style={{ backgroundColor: section.backgroundColor }}>
-                        <div className="p-8 rounded-[40px] bg-white text-slate-950">
-                           <h3 className="text-xl font-black uppercase tracking-tight mb-4">{section.title || "Inteligência"}</h3>
-                           <div className="space-y-4">
-                              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dólar Hoje</span>
-                                 <span className="font-black">R$ 5.04</span>
-                              </div>
-                              <Button className="w-full h-12 rounded-xl bg-slate-950 text-white font-black text-[10px] uppercase">Acessar</Button>
-                           </div>
+                          <div className="space-y-2">
+                            <p className="text-4xl font-black text-white tracking-tighter">12h</p>
+                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Support Time</p>
+                          </div>
                         </div>
-                      </div>
+                      </SectionWrapper>
                     );
 
                   case "deals":
                     return (
-                      <div key="deals" className="px-6 py-8 space-y-8" style={{ backgroundColor: section.backgroundColor }}>
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">{section.title || "Ofertas"}</h3>
-                          <div className="h-[1px] flex-1 bg-white/5 ml-4" />
+                      <SectionWrapper key="deals">
+                        <div className="px-8 py-12 space-y-10">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-[11px] font-black text-white uppercase tracking-[0.5em]">{t("home.deals.title")}</h3>
+                            <div className="h-[1px] flex-1 bg-white/10 ml-6" />
+                          </div>
+                          <div className="space-y-8">
+                            {deals?.slice(0, 1).map((deal: any) => (
+                              <div key={deal.id} className="scale-100">
+                                <DealCard deal={{
+                                  ...deal, 
+                                  title: deal.headline || "", 
+                                  price: `${deal.currency} ${deal.price}`,
+                                  imageUrl: deal.imageUrl || undefined
+                                } as any} />
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                        <div className="space-y-6">
-                          {deals.slice(0, 1).map((deal) => (
-                            <div key={deal.id} className="scale-[0.95] origin-left">
-                              <DealCard deal={{
-                                ...deal, 
-                                title: deal.headline || "", 
-                                price: `${deal.currency} ${deal.price}`,
-                                imageUrl: deal.imageUrl || undefined
-                              } as any} />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-
-                  case "partners":
-                    return (
-                      <div key="partners" className="px-6 py-10 border-y border-white/5" style={{ backgroundColor: section.backgroundColor }}>
-                        <div className="flex gap-4 overflow-x-auto scrollbar-none opacity-40">
-                           {[1,2,3,4].map(i => <div key={i} className="h-12 w-24 bg-white/5 rounded-xl border border-white/5 shrink-0" />)}
-                        </div>
-                      </div>
+                      </SectionWrapper>
                     );
 
                   case "cta":
                     return (
-                      <div key="cta" className="px-8 py-16 text-center space-y-6" style={{ backgroundColor: section.backgroundColor, color: section.textColor }}>
-                        <h2 className="text-4xl font-black uppercase leading-none tracking-tighter">{section.title || "Pronto?"}</h2>
-                        <Button 
-                          className="w-full h-16 rounded-2xl text-white font-black uppercase tracking-widest shadow-xl"
-                          style={{ backgroundColor: section.buttonColor || "#3b82f6" }}
-                        >
-                          {section.buttonText || "Contactar"}
-                        </Button>
-                      </div>
+                      <SectionWrapper key="cta">
+                        <div className="px-10 py-24 text-center space-y-10 bg-white text-slate-950">
+                          <h2 className="text-5xl font-black uppercase leading-none tracking-tighter">{t("home.cta.title")}</h2>
+                          <Button className="w-full h-20 rounded-[32px] bg-indigo-600 text-white font-black uppercase tracking-widest shadow-2xl shadow-indigo-600/30 text-xs">Contactar Concierge</Button>
+                        </div>
+                      </SectionWrapper>
                     );
 
                   default:
+                    // Render Custom or Image-based sections
                     return (
-                      <div key={section.id} className="px-8 py-12 text-center space-y-4" style={{ backgroundColor: section.backgroundColor, color: section.textColor }}>
-                        <h3 className="text-2xl font-black uppercase">{section.title || section.label}</h3>
-                        <p className="text-sm">{section.description || "Seção customizada"}</p>
-                      </div>
+                      <SectionWrapper key={section.id}>
+                        <div className={cn("px-8 py-16", section.style?.paddingY || "py-16")}>
+                           <div className={cn(
+                             "p-12 rounded-[48px] border backdrop-blur-3xl space-y-6 shadow-2xl relative overflow-hidden",
+                             section.style?.bgVariant === "glass" ? "bg-white/5 border-white/10" : "bg-slate-900 border-white/5",
+                             section.style?.textAlign === "center" ? "text-center items-center" : "text-left items-start"
+                           )}>
+                              {section.props?.imageUrl && (
+                                <img src={section.props.imageUrl} className="absolute inset-0 w-full h-full object-cover opacity-20 -z-10" alt="" />
+                              )}
+                              <h3 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">{section.props?.title || "Novo Bloco"}</h3>
+                              <p className="text-[13px] font-bold text-slate-400 leading-tight">{section.props?.subtitle || "Personalize este bloco agora."}</p>
+                              {section.props?.buttonText && (
+                                <div className="pt-6">
+                                  <Button className="w-full h-14 rounded-[24px] bg-white text-slate-950 font-black text-[11px] uppercase tracking-[0.2em] shadow-xl">
+                                    {section.props.buttonText}
+                                  </Button>
+                                </div>
+                              )}
+                           </div>
+                        </div>
+                      </SectionWrapper>
                     );
                 }
               })}
 
             </div>
 
-            {/* Navigation Bar */}
-            <div className="absolute bottom-0 inset-x-0 h-16 bg-slate-950/95 backdrop-blur-2xl border-t border-white/5 flex items-center justify-around px-8 z-50">
-              <div className="w-10 h-10 flex items-center justify-center">
-                <div className="w-4 h-4 rounded-sm border-2 border-slate-500" />
+            {/* Android Refined Bottom Bar */}
+            <div className="absolute bottom-0 inset-x-0 h-20 bg-slate-950/95 backdrop-blur-3xl border-t border-white/5 flex items-center justify-around px-12 z-50 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+              <div className="w-12 h-12 flex items-center justify-center opacity-40">
+                <div className="w-5 h-5 rounded-md border-2 border-white" />
               </div>
-              <div className="w-10 h-10 flex items-center justify-center">
-                <div className="w-5 h-5 rounded-full border-2 border-slate-500" />
+              <div className="w-12 h-12 flex items-center justify-center">
+                <div className="w-6 h-6 rounded-full border-2 border-white shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
               </div>
-              <div className="w-10 h-10 flex items-center justify-center">
-                <div className="w-4 h-4 border-l-2 border-b-2 border-slate-500 rotate-45 ml-1" />
+              <div className="w-12 h-12 flex items-center justify-center opacity-40">
+                <div className="w-5 h-5 border-l-2 border-b-2 border-white rotate-45 ml-1" />
               </div>
             </div>
 

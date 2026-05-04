@@ -291,15 +291,15 @@ export default function AdminDashboard() {
     return matchesSearch && matchesStatus;
   });
 
-  const chartData = (stats as any)?.dailyRevenue?.map((d: any) => ({
+  const chartData = stats?.dailyRevenue?.map((d) => ({
     date: d.date,
     revenue: d.revenue,
     commission: d.commission,
     bookings: d.bookings,
   })) || [];
 
-  const statusBreakdown = (stats as any)?.statusBreakdown || {};
-  const topRoutes = (stats as any)?.topRoutes || [];
+  const statusBreakdown = stats?.statusBreakdown || {};
+  const topRoutes = stats?.topRoutes || [];
   
   const activeTitle =
     activeTab === "command"
