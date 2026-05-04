@@ -4,7 +4,7 @@ import { storage } from './storage';
 import { stripeService } from './stripeService';
 import { getUncachableStripeClient } from './stripeClient';
 import { db } from "./db";
-import { flightSearches, bookings, siteSettings, conversations, messages, seniorAlerts, insertFeaturedDealSchema, insertSiteSettingsSchema, type FlightSearchParams } from "@shared/schema";
+import { flightSearches, bookings, siteSettings, conversations, messages, seniorAlerts, insertFeaturedDealSchema, insertSiteSettingsSchema, insertCustomerSchema, type FlightSearchParams } from "@shared/schema";
 import { customerProfiles, users } from "@shared/models/auth";
 import { desc, eq, and, gt, sql } from "drizzle-orm";
 import { z } from "zod";
