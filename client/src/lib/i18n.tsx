@@ -27,7 +27,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem("michels-travel-lang") as Language;
     if (["pt", "en", "es"].includes(saved)) return saved;
 
-    const browserLang = navigator.language.split("-")[0] as Language;
+    const browserLang = (navigator.language || "pt").split("-")[0] as Language;
     return ["pt", "en", "es"].includes(browserLang) ? browserLang : "pt";
   });
 
