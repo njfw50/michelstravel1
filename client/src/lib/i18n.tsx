@@ -56,10 +56,10 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     setTimeout(() => setIsLoading(false), 300);
   }, []);
 
-  // 2. Optimized translation function with Memo and efficient lookup
+  // 2. Optimized translation function with efficient lookup
   const t = useCallback((key: TranslationKeys | string, params?: Record<string, string | number>) => {
     const getNestedValue = (obj: any, path: string) => {
-      if (!obj) return undefined;
+      if (!obj || !path) return undefined;
       if (obj[path]) return obj[path];
       return path.split('.').reduce((acc, part) => acc && acc[part], obj);
     };
@@ -67,23 +67,15 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     // Attempt 1: Current Language
     let value = getNestedValue(translations[language], key);
 
-    // Attempt 2: Fallback to English if current is not English
+    // Attempt 2: Fallback to English
     if (typeof value !== "string" && language !== "en") {
       value = getNestedValue(translations["en"], key);
-      if (import.meta.env && !import.meta.env.PROD && typeof value === "string") {
-        console.info(`[I18n Fallback] Key "${key}" missing in [${language}], used [en] instead.`);
-      }
     }
 
-    // Attempt 3: Humanized Emergency Rendering (The "Definitive Fix")
+    // Attempt 3: Humanized Emergency Rendering
     if (typeof value !== "string") {
-      if (import.meta.env && !import.meta.env.PROD) {
-        console.error(`[I18n FATAL] Key "${key}" missing globally! Fixing with emergency humanization.`);
-      }
-      
-      // Transform "search.departure_date" -> "Departure Date" or "SEARCH.DATE" -> "Date"
       const parts = key.split('.');
-      const rawLabel = parts[parts.length - 1];
+      const rawLabel = parts[parts.length - 1] || key;
       return rawLabel
         .replace(/_/g, ' ')
         .replace(/([A-Z])/g, ' $1')
@@ -91,7 +83,6 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
         .replace(/^\w/, (c) => c.toUpperCase());
     }
 
-    // 3. Variable replacement without creating RegExp instances in a loop (Performance)
     if (params) {
       return value.replace(/{(\w+)}/g, (_: string, k: string) => {
         return params[k]?.toString() ?? `{${k}}`;
