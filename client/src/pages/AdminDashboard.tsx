@@ -28,6 +28,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState, useEffect, Fragment } from "react";
 import { AdStudio } from "@/components/AdStudio";
+import { TestModeControl } from "@/components/TestModeControl";
+import { CommissionControl } from "@/components/CommissionControl";
+import { FeaturedDealsManager } from "@/components/FeaturedDealsManager";
+import { DocumentScannerForm } from "@/components/document/DocumentScannerForm";
 import { useLocation } from "wouter";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
@@ -50,132 +54,7 @@ function AutoFitText({ children, className, minFontSize = 12, maxFontSize = 40, 
   );
 }
 
-function TestModeControl() {
-  const { t } = useI18n();
-  const { toast } = useToast();
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [pendingMode, setPendingMode] = useState<boolean | null>(null);
-  const [preflightLoading, setPreflightLoading] = useState(false);
-  const [preflightData, setPreflightData] = useState<any>(null);
-
-  const { data: testModeData, isLoading } = useQuery({
-    queryKey: ['/api/test-mode'],
-  });
-
-  const toggleMutation = useMutation({
-    mutationFn: async (enabled: boolean) => {
-      const res = await apiRequest('POST', '/api/test-mode', { enabled });
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/test-mode'] });
-      toast({
-        title: "Status Atualizado",
-        description: `Modo de teste agora está ${pendingMode ? 'ATIVADO' : 'DESATIVADO'}`,
-      });
-      setShowConfirmDialog(false);
-    }
-  });
-
-  const handleToggleClick = async (newTestMode: boolean) => {
-    setPendingMode(newTestMode);
-    setShowConfirmDialog(true);
-    setPreflightLoading(true);
-    try {
-      const res = await fetch(`/api/test-mode/preflight?mode=${newTestMode ? 'test' : 'production'}`);
-      const data = await res.json();
-      setPreflightData(data);
-    } catch (e) {
-      setPreflightData({
-        ready: false,
-        duffelReady: false,
-        stripeReady: false,
-        issues: ["Failed to check API status"],
-        targetMode: newTestMode ? 'test' : 'production',
-      });
-    } finally {
-      setPreflightLoading(false);
-    }
-  };
-
-  const handleConfirm = () => {
-    if (pendingMode !== null) {
-      toggleMutation.mutate(pendingMode);
-    }
-  };
-
-  if (isLoading) return null;
-
-  const currentTestMode = (testModeData as any)?.testMode ?? true;
-
-  return (
-    <Card className="glass-card border-white/5 overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between pb-6 border-b border-white/5">
-        <div>
-          <CardTitle className="text-xl font-bold text-white font-display">Status de Segurança (Sandbox)</CardTitle>
-          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Controle de ambiente Duffel/Stripe</p>
-        </div>
-        <Badge className={`px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest ${currentTestMode ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'}`}>
-          {currentTestMode ? "Modo Teste Ativo" : "Ambiente Produção"}
-        </Badge>
-      </CardHeader>
-      <CardContent className="pt-8 space-y-6">
-        <div className="flex items-center justify-between">
-           <div className="space-y-1">
-             <p className="text-sm font-bold text-white">Transição de Ambiente</p>
-             <p className="text-xs text-slate-400">Alternar entre sandbox para testes e produção para vendas reais.</p>
-           </div>
-           <Button 
-             onClick={() => handleToggleClick(!currentTestMode)}
-             className={`rounded-2xl px-8 py-6 font-black uppercase tracking-widest ${currentTestMode ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-indigo-600 hover:bg-indigo-500'}`}
-           >
-             {currentTestMode ? "Mudar para Produção" : "Mudar para Teste"}
-           </Button>
-        </div>
-        
-        <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-          <AlertDialogContent className="glass-card border-white/10 bg-slate-900/95 backdrop-blur-2xl text-white">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-2xl font-black font-display tracking-tight">Confirmação Crítica</AlertDialogTitle>
-              <AlertDialogDescription className="text-slate-400 pt-4">
-                Você está prestes a alternar o sistema para <strong>{pendingMode ? 'TESTE' : 'PRODUÇÃO'}</strong>. 
-                Isso afetará todas as integrações de pagamento e emissão de voos imediatamente.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="py-6 space-y-4">
-               {preflightLoading ? (
-                 <div className="flex items-center gap-3 text-indigo-400 animate-pulse">
-                   <Loader2 className="h-5 w-5 animate-spin" />
-                   <span className="text-xs font-bold uppercase">Validando credenciais...</span>
-                 </div>
-               ) : preflightData && (
-                 <div className="space-y-3">
-                    <div className={`p-4 rounded-xl border flex items-center justify-between ${preflightData.duffelReady ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'}`}>
-                      <span className="text-[10px] font-black uppercase">Duffel API</span>
-                      <span className="text-xs font-bold">{preflightData.duffelReady ? 'PRONTO' : 'PENDENTE'}</span>
-                    </div>
-                    <div className={`p-4 rounded-xl border flex items-center justify-between ${preflightData.stripeReady ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'}`}>
-                      <span className="text-[10px] font-black uppercase">Stripe Gateway</span>
-                      <span className="text-xs font-bold">{preflightData.stripeReady ? 'PRONTO' : 'PENDENTE'}</span>
-                    </div>
-                 </div>
-               )}
-            </div>
-            <AlertDialogFooter className="pt-4 border-t border-white/5">
-              <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5 rounded-xl">Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleConfirm} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl">Confirmar Mudança</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Dummy components for the layout (replaced with real ones in the actual file)
-function CommissionControl() { return <div className="p-8 glass-card border-white/5 mb-8"><h3 className="text-white font-bold mb-4">Ajustes de Comissão</h3><p className="text-slate-400 text-sm">Controle de margens para a diáspora.</p></div>; }
-function FeaturedDealsManager() { return <div className="p-8 glass-card border-white/5 mb-8"><h3 className="text-white font-bold mb-4">Gerente de Ofertas</h3><p className="text-slate-400 text-sm">Configure os cards da home page.</p></div>; }
-function DocumentScannerForm() { return <div className="p-8 glass-card border-white/5"><h3 className="text-white font-bold mb-4">Validador de Identidade</h3><p className="text-slate-400 text-sm">Simulação de terminal seguro.</p></div>; }
+// Mobile Release Controls (Placeholder for future expansion)
 function MobileAppChannelControl() { return null; }
 function MobileAppReleaseControl() { return null; }
 

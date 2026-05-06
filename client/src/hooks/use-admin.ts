@@ -289,3 +289,71 @@ export function useAdminOwnerDesk() {
     refetchInterval: 15000,
   });
 }
+
+export function useAdminFeaturedDeals() {
+  return useQuery({
+    queryKey: [api.admin.featured_deals.list.path],
+    queryFn: async () => {
+      const res = await fetch(api.admin.featured_deals.list.path, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch featured deals");
+      return api.admin.featured_deals.list.responses[200].parse(await res.json());
+    },
+  });
+}
+
+export function useCreateFeaturedDeal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const res = await fetch(api.admin.featured_deals.create.path, {
+        method: api.admin.featured_deals.create.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to create featured deal");
+      return api.admin.featured_deals.create.responses[201].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.admin.featured_deals.list.path] });
+    },
+  });
+}
+
+export function useUpdateFeaturedDeal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const url = api.admin.featured_deals.update.path.replace(":id", id);
+      const res = await fetch(url, {
+        method: api.admin.featured_deals.update.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to update featured deal");
+      return api.admin.featured_deals.update.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.admin.featured_deals.list.path] });
+    },
+  });
+}
+
+export function useDeleteFeaturedDeal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const url = api.admin.featured_deals.delete.path.replace(":id", id);
+      const res = await fetch(url, {
+        method: api.admin.featured_deals.delete.method,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to delete featured deal");
+      return api.admin.featured_deals.delete.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.admin.featured_deals.list.path] });
+    },
+  });
+}

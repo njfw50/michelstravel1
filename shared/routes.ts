@@ -202,6 +202,80 @@ export const api = {
         401: errorSchemas.unauthorized,
       },
     },
+    test_mode_preflight: {
+      method: 'GET' as const,
+      path: '/api/admin/test-mode/preflight' as const,
+      input: z.object({
+        target: z.enum(['test', 'production']),
+      }),
+      responses: {
+        200: z.object({
+          targetMode: z.string(),
+          ready: z.boolean(),
+          duffelReady: z.boolean(),
+          stripeReady: z.boolean(),
+          issues: z.array(z.string()),
+        }),
+        401: errorSchemas.unauthorized,
+      },
+    },
+    test_mode_toggle: {
+      method: 'POST' as const,
+      path: '/api/admin/test-mode' as const,
+      input: z.object({
+        testMode: z.boolean(),
+        confirmed: z.boolean(),
+      }),
+      responses: {
+        200: z.object({
+          testMode: z.boolean(),
+          activeTokenIsTest: z.boolean(),
+          stripeSynced: z.boolean(),
+          message: z.string(),
+        }),
+        401: errorSchemas.unauthorized,
+      },
+    },
+    featured_deals: {
+      list: {
+        method: 'GET' as const,
+        path: '/api/admin/featured-deals' as const,
+        responses: {
+          200: z.array(z.custom<typeof featuredDeals.$inferSelect>()),
+          401: errorSchemas.unauthorized,
+        },
+      },
+      create: {
+        method: 'POST' as const,
+        path: '/api/admin/featured-deals' as const,
+        input: insertFeaturedDealSchema,
+        responses: {
+          201: z.custom<typeof featuredDeals.$inferSelect>(),
+          400: errorSchemas.validation,
+          401: errorSchemas.unauthorized,
+        },
+      },
+      update: {
+        method: 'PATCH' as const,
+        path: '/api/admin/featured-deals/:id' as const,
+        input: insertFeaturedDealSchema.partial(),
+        responses: {
+          200: z.custom<typeof featuredDeals.$inferSelect>(),
+          400: errorSchemas.validation,
+          401: errorSchemas.unauthorized,
+          404: errorSchemas.notFound,
+        },
+      },
+      delete: {
+        method: 'DELETE' as const,
+        path: '/api/admin/featured-deals/:id' as const,
+        responses: {
+          200: z.object({ success: z.boolean() }),
+          401: errorSchemas.unauthorized,
+          404: errorSchemas.notFound,
+        },
+      },
+    },
   },
   blog: {
     list: {
