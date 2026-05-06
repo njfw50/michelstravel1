@@ -173,21 +173,22 @@
     "board": {
       "col_origin": "Origin",
       "title": "Flight Board",
-      "subtitle": "Best prices for popular routes - updated in real time",
+      "subtitle": "Find the best fares for popular routes",
       "col_flight": "Flight",
       "col_time": "Time",
       "col_route": "Route",
       "col_duration": "Duration",
       "col_stops": "Stops",
       "col_price": "Price",
-      "loading": "Loading flights...",
-      "no_flights": "No flights available at the moment",
+      "loading": "Finding flights...",
+      "no_flights": "No flights available",
       "per_person": "per person",
-      "book": "Book",
+      "book": "Book Now",
       "show_more": "Show more flights",
       "show_less": "Show less",
       "more_flights": "flights",
-      "disclaimer": "Prices subject to change. Lowest fares found for the next 2 weeks."
+      "disclaimer": "Prices subject to change.",
+      "col_destination": "Destination"
     },
     "hero": {
       "whatsapp_topic": "Premium Flight Inquiry",
@@ -275,7 +276,7 @@
       "t3_text": "I booked flights for the whole family to Lisbon and everything was perfect. I got help reviewing the details before ticketing and traveled with much more confidence."
     },
     "cta": {
-      "title": "Plan your next flight with more clarity",
+      "title": "Ready for your next journey?",
       "subtitle": "Search fares, compare options, and book with Michels Travel support whenever you need it.",
       "button": "Search airfares"
     },
@@ -350,7 +351,7 @@
     },
     "deals": {
       "badge": "Featured opportunities",
-      "title": "Unmissable Destinations in Flash Sale.",
+      "title": "Featured Deals",
       "desc": "Explore the most incredible destinations for prices that fit your family's budget.",
       "btn_guide": "View travel guide",
       "from": "From",

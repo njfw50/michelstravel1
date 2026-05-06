@@ -173,7 +173,7 @@
     "board": {
       "col_origin": "Origen",
       "title": "Panel de Vuelos",
-      "subtitle": "Encuentre las mejores tarifas para rutas populares – actualizadas en tiempo real",
+      "subtitle": "Encontre las mejores tarifas para rutas populares",
       "col_flight": "Vuelo",
       "col_time": "Horario",
       "col_route": "Ruta",
@@ -181,13 +181,14 @@
       "col_stops": "Paradas",
       "col_price": "Precio",
       "loading": "Buscando vuelos...",
-      "no_flights": "Ningún vuelo disponible en este momento",
+      "no_flights": "No hay vuelos disponibles",
       "per_person": "por persona",
-      "book": "Reserve Ahora",
+      "book": "Reservar Ahora",
       "show_more": "Ver más vuelos",
-      "show_less": "Mostrar menos vuelos",
+      "show_less": "Mostrar menos",
       "more_flights": "vuelos",
-      "disclaimer": "Precios sujetos a cambios. Tarifas más bajas para las próximas 2 semanas."
+      "disclaimer": "Precios sujetos a cambios.",
+      "col_destination": "Destino"
     },
     "hero": {
       "whatsapp_topic": "Consulta de Pasaje Premium",
@@ -275,7 +276,7 @@
       "t3_text": "Reservé vuelos para toda la familia hacia Lisboa y todo corrió perfectamente. Recibí ayuda para revisar los datos antes de la emisión, lo que me dejó viajando mucho más tranquila."
     },
     "cta": {
-      "title": "Planifique su próximo vuelo con total tranquilidad",
+      "title": "¿Listo para su próximo viaje?",
       "subtitle": "Busque tarifas, compare opciones y reserve con el soporte dedicado de Michels Travel siempre que lo necesite.",
       "button": "Buscar pasajes"
     },
@@ -350,7 +351,7 @@
     },
     "deals": {
       "badge": "Oportunidades destacadas",
-      "title": "Destinos Imperdibles en Oferta Relámpago.",
+      "title": "Ofertas Destacadas",
       "desc": "Explore los destinos más increíbles por precios que se ajustan al presupuesto de su familia.",
       "btn_guide": "Ver guía de viaje",
       "from": "Desde",

@@ -181,7 +181,7 @@
     "board": {
       "col_origin": "Origem",
       "title": "Painel de Voos",
-      "subtitle": "Encontre as melhores tarifas para rotas populares – atualizadas em tempo real",
+      "subtitle": "Encontre as melhores tarifas para rotas populares",
       "col_flight": "Voo",
       "col_time": "Horário",
       "col_route": "Rota",
@@ -189,13 +189,14 @@
       "col_stops": "Paradas",
       "col_price": "Preço",
       "loading": "Buscando voos...",
-      "no_flights": "Nenhum voo disponível no momento",
+      "no_flights": "Nenhum voo disponível",
       "per_person": "por pessoa",
       "book": "Reserve Agora",
       "show_more": "Ver mais voos",
-      "show_less": "Mostrar menos voos",
+      "show_less": "Mostrar menos",
       "more_flights": "voos",
-      "disclaimer": "Preços sujeitos a alterações. Tarifas mais baixas para as próximas 2 semanas."
+      "disclaimer": "Preços sujeitos a alterações.",
+      "col_destination": "Destino"
     },
     "hero": {
       "whatsapp_topic": "Consulta de Passagem Premium",
@@ -283,7 +284,7 @@
       "t3_text": "Reservei voos para toda a família rumo a Lisboa e tudo correu perfeitamente. Recebi ajuda para revisar os dados antes da emissão, o que me deixou viajando muito mais tranquila."
     },
     "cta": {
-      "title": "Planeje seu próximo voo com total tranquilidade",
+      "title": "Pronto para sua próxima jornada?",
       "subtitle": "Pesquise tarifas, compare opções e reserve com o suporte dedicado da Michels Travel sempre que precisar.",
       "button": "Buscar passagens"
     },
@@ -358,7 +359,7 @@
     },
     "deals": {
       "badge": "Oportunidades em destaque",
-      "title": "Destinos Imperdíveis em Oferta Relâmpago.",
+      "title": "Ofertas em Destaque",
       "desc": "Explore os destinos mais incríveis por preços que cabem no bolso da sua família. Selecionamos passagens aéreas e rotas estratégicas focando na perfeita aliança entre excelência, baixo preço de cotação e exclusividade antes de subirem de preço.",
       "btn_guide": "Ver guia de viagem",
       "from": "A partir de",
