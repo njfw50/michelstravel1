@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Instagram, Facebook, Sparkles, Image as ImageIcon, Type, 
   Send, Copy, Share2, Palette, Smartphone, Layout, 
-  Eye, Download, Wand2, Zap, Rocket, Target, Globe
+  Eye, Download, Wand2, Zap, Rocket, Target, Globe, Users
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 

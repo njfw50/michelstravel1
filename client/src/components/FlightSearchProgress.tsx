@@ -49,7 +49,7 @@ export default function FlightSearchProgress({ origin, destination }: FlightSear
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950 p-4 md:p-12 overflow-hidden"
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/98 p-4 md:p-12 overflow-hidden backdrop-blur-sm"
     >
       {/* Premium Cinematic Background */}
       <div className="absolute inset-0 z-0 overflow-hidden">
@@ -121,12 +121,13 @@ export default function FlightSearchProgress({ origin, destination }: FlightSear
                     <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Capacidade de Processamento</span>
                     <span className="text-4xl font-black text-white font-mono tracking-tighter">{Math.floor(progress)}<span className="text-blue-500 text-2xl">%</span></span>
                  </div>
-                 <div className="relative h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                  <div className="relative h-2 w-full bg-white/10 rounded-full overflow-hidden shadow-inner">
                     <motion.div 
-                      className="absolute h-full bg-blue-500 shadow-[0_0_20px_rgba(37,99,235,0.6)]"
+                      className="absolute h-full bg-gradient-to-r from-blue-600 to-blue-400 shadow-[0_0_30px_rgba(37,99,235,0.8)]"
                       style={{ width: `${progress}%` }}
+                      transition={{ type: "spring", stiffness: 50, damping: 20 }}
                     />
-                 </div>
+                  </div>
               </div>
            </div>
 

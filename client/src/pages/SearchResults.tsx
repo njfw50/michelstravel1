@@ -402,9 +402,9 @@ export default function SearchResults() {
               )}
             </div>
 
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
               {isSearching && (
-                <div className="bg-transparent border-white/5">
+                <div className="flex items-center justify-center min-h-[500px] w-full py-20">
                   <FlightSearchProgress 
                     origin={params.origin || "---"} 
                     destination={params.destination || "---"} 

@@ -340,7 +340,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <LoginDialog open={loginDialogOpen} onOpenChange={handleLoginDialogChange} authError={authError} />
 
-      <main className="flex-1 relative z-10 pt-20 md:pt-28 pb-24 md:pb-0">
+      <main className="flex-1 pt-20 md:pt-28 pb-24 md:pb-0 relative">
         {children}
       </main>
 
@@ -445,12 +445,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
              <UnreadBadge />
              <span className="text-[8px] font-black uppercase tracking-widest">Chat</span>
           </Link>
-          {user && (
-            <Link href={user.isAdmin ? "/admin" : "/profile"} className={cn("flex flex-col items-center gap-1.5 transition-all", location === "/admin" || location === "/profile" ? "text-blue-500 scale-110" : "text-slate-500 hover:text-slate-300")}>
-               {user.isAdmin ? <LayoutDashboard className="h-5 w-5" /> : <User className="h-5 w-5" />}
-               <span className="text-[8px] font-black uppercase tracking-widest">{user.isAdmin ? "Admin" : "Perfil"}</span>
-            </Link>
-          )}
+          <Link href="/profile" className={cn("flex flex-col items-center gap-1.5 transition-all", location === "/profile" ? "text-blue-500 scale-110" : "text-slate-500 hover:text-slate-300")}>
+             <User className="h-5 w-5" />
+             <span className="text-[8px] font-black uppercase tracking-widest">Perfil</span>
+          </Link>
           <button 
             onClick={() => setIsMobileMenuOpen(true)} 
             className={cn(

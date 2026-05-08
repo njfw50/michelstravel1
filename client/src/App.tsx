@@ -145,7 +145,6 @@ function MainApp() {
     <>
       <Toaster />
       <LanguageSelector />
-      <TestModeBanner />
       <Router />
       <SafeWrapper><Chatbot /></SafeWrapper>
       <SafeWrapper><CookieConsent /></SafeWrapper>
