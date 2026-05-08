@@ -404,7 +404,9 @@ export default function SearchResults() {
 
             <AnimatePresence mode="wait">
               {isSearching && (
-                <div className="flex items-center justify-center min-h-[500px] w-full py-20">
+                <div className="flex flex-col items-center justify-center min-h-[600px] w-full py-32 space-y-8">
+                  <div className="h-12 w-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 animate-pulse">Iniciando Protocolo de Busca...</p>
                   <FlightSearchProgress 
                     origin={params.origin || "---"} 
                     destination={params.destination || "---"} 
