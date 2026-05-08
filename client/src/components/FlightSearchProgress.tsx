@@ -49,7 +49,7 @@ export default function FlightSearchProgress({ origin, destination }: FlightSear
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/98 p-4 md:p-12 overflow-hidden backdrop-blur-sm"
+      className="fixed inset-0 z-[999999] flex items-center justify-center bg-slate-950 p-6 md:p-20 overflow-hidden"
     >
       {/* Premium Cinematic Background */}
       <div className="absolute inset-0 z-0 overflow-hidden">
@@ -66,8 +66,8 @@ export default function FlightSearchProgress({ origin, destination }: FlightSear
             animate={{ y: 0, opacity: 1 }}
             className="flex flex-col items-center md:items-start text-center md:text-left"
           >
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 mb-3 px-4 py-1.5 border border-white/10 rounded-full">Partida Imediata</span>
-            <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-none">{origin}</h2>
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 mb-4 px-4 py-1.5 border border-white/10 rounded-full bg-white/5">Partida Imediata</span>
+            <h2 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20 tracking-tighter leading-none">{origin}</h2>
           </motion.div>
 
           <div className="flex-1 w-full max-w-[300px] flex flex-col items-center gap-4">
@@ -93,8 +93,8 @@ export default function FlightSearchProgress({ origin, destination }: FlightSear
             transition={{ delay: 0.2 }}
             className="flex flex-col items-center md:items-end text-center md:text-right"
           >
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 mb-3 px-4 py-1.5 border border-white/10 rounded-full">Destino Curado</span>
-            <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-none">{destination}</h2>
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 mb-4 px-4 py-1.5 border border-white/10 rounded-full bg-white/5">Destino Curado</span>
+            <h2 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20 tracking-tighter leading-none">{destination}</h2>
           </motion.div>
         </div>
 
