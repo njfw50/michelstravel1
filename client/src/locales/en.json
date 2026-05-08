@@ -1,6 +1,6 @@
 {
   "flight": {
-    "book": "Book Now",
+    "book": "Reserve Your Flight",
     "total_price": "Total Price",
     "price_per_adult": "Price per adult",
     "select": "Select",
@@ -13,9 +13,9 @@
     "final_price_taxes": "Final Price with Taxes Included"
   },
   "results": {
-    "loading": "Searching flights...",
+    "loading": "Finding the best deals...",
     "return_time": "Return Time",
-    "searching": "Searching flights...",
+    "searching": "Locating the best options for you...",
     "flights_found": "{count} flights found",
     "filters": "Filters",
     "stops_filter": "Stops",
@@ -57,8 +57,8 @@
     "select_return": "Now select return flight",
     "showing": "Showing",
     "show_more": "Show more flights",
-    "senior_title": "Premium Bespoke Collection",
-    "senior_description": "A curation of flights meticulously selected by our specialists, designed to deliver the pinnacle of comfort and predictability on your journey.",
+    "senior_title": "Michels Premium Curation",
+    "senior_description": "Flights handpicked by our experts to ensure maximum comfort, shorter layovers, and a superior travel experience.",
     "senior_summary_title": "Senior summary",
     "senior_summary_priority": "Priority",
     "senior_summary_connections": "Connections",
@@ -135,7 +135,7 @@
     "github_oauth_failed": "GitHub sign-in failed. Please try again."
   },
   "footer": {
-    "slogan": "The elegant design of your next trip. Route curation, shielded transactions, and exceptional support throughout your journey.",
+    "slogan": "Excellence in every detail of your journey. Specialized curation, secure payments, and humanized support worldwide.",
     "company": "Company",
     "about": "About Us",
     "careers": "Careers",
@@ -183,7 +183,7 @@
       "loading": "Finding flights...",
       "no_flights": "No flights available",
       "per_person": "per person",
-      "book": "Book Now",
+      "book": "Reserve Your Flight",
       "show_more": "Show more flights",
       "show_less": "Show less",
       "more_flights": "flights",
@@ -194,8 +194,8 @@
       "whatsapp_topic": "Premium Flight Inquiry",
       "whatsapp_details": "Arrived via New Hero VIP",
       "badge": "Curated Travel & Exclusive Concierge",
-      "title": "The Art of Traveling Well: Excellence, Comfort, and Exclusive Support.",
-      "desc": "Discover the new standard in travel. More than just bookings, we offer intelligent curation and a concierge service focused on those who demand the best.",
+      "title": "The Art of Traveling Well: Excellence, Comfort, and Exclusive Support",
+      "desc": "Discover a new standard in travel consulting. We offer intelligent curation and concierge support for discerning travelers. We handle every detail so you can simply enjoy your destination.",
       "btn_explore": "Explore Destinations",
       "btn_consulting": "Private Consulting",
       "cta": "Search Flights",

@@ -141,7 +141,7 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       className={cn(
-        "group relative grid grid-cols-1 md:grid-cols-[1fr_240px] overflow-hidden rounded-[32px] border border-white/5 bg-slate-900/40 backdrop-blur-3xl shadow-2xl transition-all duration-500 hover:bg-slate-900/60 hover:shadow-blue-500/5",
+        "group relative grid grid-cols-1 md:grid-cols-[1fr_280px] overflow-hidden rounded-[24px] border border-white/10 bg-slate-900/50 backdrop-blur-3xl shadow-2xl transition-all duration-500 hover:bg-slate-900/70 hover:shadow-blue-500/10",
         "before:absolute before:inset-0 before:bg-gradient-to-br before:from-blue-600/[0.04] before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity"
       )}
     >
@@ -167,9 +167,9 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
               </div>
             </div>
             {/* Preço Mobile flutuante no topo */}
-            <div className="md:hidden text-right">
-              <span className="text-xl font-black text-white tracking-tighter">{formattedPrice}</span>
-              <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">Total</p>
+            <div className="md:hidden text-right bg-blue-600/10 px-3 py-1 rounded-xl border border-blue-500/20">
+              <span className="text-lg font-black text-blue-400 tracking-tighter">{formattedPrice}</span>
+              <p className="text-[7px] font-black uppercase tracking-[0.2em] text-blue-500/60">Final</p>
             </div>
           </div>
 
@@ -203,13 +203,13 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
         </div>
       </div>
 
-      <div className="relative bg-white/5 backdrop-blur-md border-t md:border-t-0 md:border-l border-white/5 p-5 md:p-10 flex flex-col justify-center items-center md:items-end gap-4 md:gap-8 overflow-hidden">
+      <div className="relative bg-white/[0.02] backdrop-blur-md border-t md:border-t-0 md:border-l border-white/10 p-6 md:p-8 flex flex-col justify-center items-center md:items-end gap-6 md:gap-8 overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 md:w-48 md:h-48 bg-blue-500/10 blur-[80px] rounded-full translate-x-1/3 -translate-y-1/3" />
         
         <div className="relative z-10 text-center md:text-right space-y-1 md:space-y-2">
           <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-500">Price per Traveler</p>
           <div className="flex flex-col items-center md:items-end gap-1">
-            <span className="text-3xl md:text-5xl font-black text-white tracking-tighter leading-none">
+            <span className="text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tighter leading-none whitespace-nowrap">
               {formattedPrice}
             </span>
           </div>

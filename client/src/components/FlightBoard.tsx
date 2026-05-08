@@ -58,26 +58,27 @@ function formatDuration(iso: string): string {
   return `${h}h${m.padStart(2, "0")}`;
 }
 
-function formatTime(dateStr: string): string {
+function formatTime(dateStr: string, locale: string = "pt-BR"): string {
   try {
     const d = new Date(dateStr);
-    return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+    return d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", hour12: false });
   } catch {
     return "--:--";
   }
 }
 
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string, locale: string = "pt-BR"): string {
   try {
     const d = new Date(dateStr);
-    return d.toLocaleDateString("en-US", { day: "2-digit", month: "short" });
+    return d.toLocaleDateString(locale, { day: "2-digit", month: "short" });
   } catch {
     return "";
   }
 }
 
 export function FlightBoard() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+  const locale = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
   const [_, setLocation] = useLocation();
   const [showAll, setShowAll] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -120,9 +121,9 @@ export function FlightBoard() {
           <div className="flex items-center gap-4">
             <div className="text-right">
               <div className="font-mono text-2xl font-bold text-gray-900 tracking-wider" data-testid="text-board-clock">
-                {currentTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}
+                {currentTime.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}
               </div>
-              <div className="text-[11px] text-gray-400 font-mono">{currentTime.toLocaleDateString("en-US", { weekday: "short", day: "2-digit", month: "short", year: "numeric" })} {Intl.DateTimeFormat().resolvedOptions().timeZone.split("/").pop()}</div>
+              <div className="text-[11px] text-gray-400 font-mono">{currentTime.toLocaleDateString(locale, { weekday: "short", day: "2-digit", month: "short", year: "numeric" })} {Intl.DateTimeFormat().resolvedOptions().timeZone.split("/").pop()}</div>
             </div>
             <Button
               size="icon"
@@ -191,7 +192,7 @@ export function FlightBoard() {
 
                   <div className="flex items-center">
                     <div className="font-mono text-lg font-bold text-blue-600" data-testid={`text-board-departure-${i}`}>
-                      {formatTime(flight.departureTime)}
+                      {formatTime(flight.departureTime, locale)}
                     </div>
                   </div>
 
@@ -231,8 +232,7 @@ export function FlightBoard() {
                       <div className="flex items-center gap-1 justify-end">
                         <TrendingDown className="h-3 w-3 text-emerald-500" />
                         <span className="text-lg font-bold text-gray-900 font-mono" data-testid={`text-board-price-${i}`}>
-                          {flight.currency === "USD" ? "$" : flight.currency === "EUR" ? "\u20AC" : flight.currency === "GBP" ? "\u00A3" : flight.currency === "BRL" ? "R$" : flight.currency}
-                          {flight.price.toFixed(0)}
+{new Intl.NumberFormat(locale, { style: "currency", currency: flight.currency, minimumFractionDigits: 0 }).format(flight.price)}
                         </span>
                       </div>
                       <div className="text-[10px] text-gray-400">{t("home.board.per_person")}</div>

@@ -1,6 +1,6 @@
 {
   "flight": {
-    "book": "Reserve Já Sua Passagem",
+    "book": "Reservar Passagem",
     "total_price": "Preço Total",
     "price_per_adult": "Preço por adulto",
     "select": "Selecionar",
@@ -13,9 +13,9 @@
     "final_price_taxes": "Preço Final com Taxas Inclusas"
   },
   "results": {
-    "loading": "Buscando voos...",
+    "loading": "Buscando as melhores ofertas...",
     "return_time": "Hora de Retorno",
-    "searching": "Procurando os melhores voos...",
+    "searching": "Localizando as melhores opções para você...",
     "flights_found": "{count} voos encontrados",
     "filters": "Filtros",
     "stops_filter": "Número de Paradas",
@@ -65,8 +65,8 @@
     "select_return": "Agora, escolha seu voo de volta",
     "showing": "Exibindo",
     "show_more": "Mostrar mais voos",
-    "senior_title": "Coleção Premium Personalizada",
-    "senior_description": "Uma curadoria de voos meticulosamente selecionados pelos nossos especialistas, pensada para entregar o ápice de conforto e previsibilidade na sua jornada.",
+    "senior_title": "Curadoria Premium Michels",
+    "senior_description": "Voos selecionados por nossos especialistas para garantir o máximo conforto, menor tempo de conexão e uma experiência de viagem superior.",
     "senior_summary_title": "Resumo do modo especial",
     "senior_summary_priority": "Prioridade",
     "senior_summary_connections": "Conexões",
@@ -143,7 +143,7 @@
     "github_oauth_failed": "Falha na autenticação com GitHub. Por favor, tente outra vez."
   },
   "footer": {
-    "slogan": "O design elegante da sua próxima viagem. Curadoria de rotas, transações blindadas e suporte excepcional em toda a sua jornada.",
+    "slogan": "A excelência em cada detalhe da sua viagem. Curadoria especializada, pagamentos seguros e suporte humanizado em todo o mundo.",
     "company": "Empresa",
     "about": "Sobre Nós",
     "careers": "Carreiras",
@@ -188,7 +188,7 @@
       "col_duration": "Duração",
       "col_stops": "Paradas",
       "col_price": "Preço",
-      "loading": "Buscando voos...",
+      "loading": "Buscando as melhores ofertas...",
       "no_flights": "Nenhum voo disponível",
       "per_person": "por pessoa",
       "book": "Reserve Agora",
@@ -202,8 +202,8 @@
       "whatsapp_topic": "Consulta de Passagem Premium",
       "whatsapp_details": "Cheguei pelo novo Hero VIP",
       "badge": "Curadoria de Viagens & Concierge Exclusivo",
-      "title": "A Arte de Viajar Bem: Excelência, Conforto e Suporte Exclusivo.",
-      "desc": "Descubra o novo padrão em viagens. Mais do que reservas, oferecemos uma curadoria inteligente e um serviço de concierge focado em quem exige o melhor. Cuidamos de cada detalhe para que sua única preocupação seja aproveitar o destino.",
+      "title": "A Arte de Viajar Bem: Excelência, Conforto e Suporte Exclusivo",
+      "desc": "Descubra um novo padrão de consultoria. Oferecemos curadoria inteligente e suporte concierge para viajantes exigentes. Cuidamos de cada detalhe para que você apenas aproveite o destino.",
       "btn_explore": "Explorar Destinos",
       "btn_consulting": "Consultoria Privada",
       "cta": "Buscar Voos",
