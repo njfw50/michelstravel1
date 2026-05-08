@@ -200,17 +200,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
 	          "container mx-auto px-2 md:px-6 transition-all duration-500",
 	          scrolled ? "pt-2 md:pt-4" : "pt-4 md:pt-10"
 	        )}>
-	          <div
-	            className={cn(
-	              "flex items-center justify-between gap-4 rounded-[24px] md:rounded-[32px] border border-white/10 px-3 py-2 shadow-2xl backdrop-blur-3xl transition-all duration-500 md:px-6 md:py-4",
-	              scrolled ? "bg-slate-900/90 scale-100" : "bg-slate-900/60 scale-[1.01] md:scale-[1.02]",
-	            )}
-	          >
+		          <div
+		            className={cn(
+		              "flex items-center justify-between gap-2 md:gap-4 rounded-full md:rounded-[32px] border border-white/10 px-2 py-1.5 shadow-2xl backdrop-blur-3xl transition-all duration-500 md:px-6 md:py-4",
+		              scrolled ? "bg-slate-900/90 scale-100" : "bg-slate-900/60 scale-[1.01] md:scale-[1.02]",
+		            )}
+		          >
             <div className="flex min-w-0 flex-1 items-center gap-8 md:gap-12">
               <Link href="/" className="group flex shrink-0 items-center gap-5">
-	                <div className="brand-mark-shell brand-mark-shell--header h-12 w-12 md:h-20 md:w-20 shadow-2xl border border-white/20">
-                  <img src={brandMark} alt="Michels Travel" className="transition-transform duration-700 group-hover:scale-110" />
-                </div>
+		                <div className="brand-mark-shell brand-mark-shell--header h-10 w-10 md:h-20 md:w-20 shadow-2xl border border-white/20">
+	                  <img src={brandMark} alt="Michels Travel" className="transition-transform duration-700 group-hover:scale-110" />
+	                </div>
                 <div className="hidden min-w-0 xl:block">
                   <span className="block whitespace-nowrap text-lg font-black uppercase tracking-[0.25em] text-white">Michels Travel</span>
                   <span className="block whitespace-nowrap text-[10px] font-black uppercase tracking-[0.3em] text-blue-400/80">{t("nav.sub_brand") || "Opcao eficiente"}</span>
@@ -235,9 +235,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </nav>
             </div>
 
-	            <div className="flex shrink-0 items-center gap-2 md:gap-8 border-l border-white/5 pl-2 md:pl-8">
-              <LanguageSwitcher variant="navbar" />
-              <div className="hidden items-center gap-4 md:flex">
+		            <div className="flex shrink-0 items-center gap-1.5 md:gap-8 border-l border-white/5 pl-1.5 md:pl-8">
+	              <LanguageSwitcher variant="navbar" />
+	              <div className="hidden items-center gap-4 md:flex">
                 {user ? (
                   <>
                     <Link href="/messages" data-testid="button-messages-nav">

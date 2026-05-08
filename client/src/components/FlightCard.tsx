@@ -84,35 +84,35 @@ function SliceTimeline({ slice, index, t, totalSlices }: { slice: FlightSliceLik
         </span>
       </div>
 
-      <div className="flex items-center justify-between gap-8">
-        <div className="flex-1 flex items-center gap-8">
-          <div className="text-left">
-            <div className="text-xl md:text-2xl font-black text-white leading-none tracking-tighter">
+      <div className="flex items-center justify-between gap-2 md:gap-8">
+        <div className="flex-1 flex items-center gap-4 md:gap-8">
+          <div className="text-left min-w-[60px] md:min-w-[80px]">
+            <div className="text-lg md:text-2xl font-black text-white leading-none tracking-tighter">
               {safeFormatTime(firstSegment.departureTime)}
             </div>
-            <div className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 pl-0.5">
+            <div className="mt-1.5 md:mt-2 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
               {slice.originCode || "DEP"}
             </div>
           </div>
 
           <div className="flex-1 flex flex-col items-center">
-            <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] mb-2">{formatDuration(slice.duration)}</span>
+            <span className="text-[8px] md:text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] mb-1.5 md:mb-2">{formatDuration(slice.duration)}</span>
             <div className="relative w-full h-[1px] bg-white/10 rounded-full">
                <div className="absolute inset-0 bg-blue-600/20 opacity-0 group-hover/slice:opacity-100 transition-opacity" />
-               <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 px-3 border border-white/5 rounded-full py-1">
-                 <Plane className="h-3 w-3 text-slate-600 group-hover:text-blue-400 transition-all rotate-90" />
+               <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 px-2 md:px-3 border border-white/5 rounded-full py-0.5 md:py-1">
+                 <Plane className="h-2.5 w-2.5 md:h-3 w-3 text-slate-600 group-hover:text-blue-400 transition-all rotate-90" />
                </div>
             </div>
-            <div className={`mt-3 text-[9px] font-black uppercase tracking-[0.25em] ${stopsCount === 0 ? "text-emerald-500/80" : "text-amber-500/80"}`}>
+            <div className={`mt-2 md:mt-3 text-[8px] md:text-[9px] font-black uppercase tracking-[0.25em] ${stopsCount === 0 ? "text-emerald-500/80" : "text-amber-500/80"}`}>
               {stopsLabel}
             </div>
           </div>
 
-          <div className="text-right">
-            <div className="text-xl md:text-2xl font-black text-white leading-none tracking-tighter">
+          <div className="text-right min-w-[60px] md:min-w-[80px]">
+            <div className="text-lg md:text-2xl font-black text-white leading-none tracking-tighter">
               {safeFormatTime(lastSegment.arrivalTime)}
             </div>
-            <div className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 pr-0.5">
+            <div className="mt-1.5 md:mt-2 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
               {slice.destinationCode || "ARR"}
             </div>
           </div>

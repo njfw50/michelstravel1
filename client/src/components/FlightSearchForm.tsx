@@ -185,8 +185,8 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
       className={cn(
         "relative z-10 mx-auto w-full transition-all duration-300",
         isCompact 
-          ? "rounded-[32px] border border-white/10 bg-slate-900/40 backdrop-blur-3xl shadow-2xl"
-          : "max-w-6xl rounded-[48px] border border-white/10 bg-slate-900/60 backdrop-blur-3xl shadow-2xl",
+          ? "rounded-[24px] md:rounded-[32px] border border-white/10 bg-slate-900/40 backdrop-blur-3xl shadow-2xl"
+          : "max-w-6xl rounded-[32px] md:rounded-[48px] border border-white/10 bg-slate-900/60 backdrop-blur-3xl shadow-2xl",
         className
       )}
       id="flight-search-form"
@@ -198,12 +198,12 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
         {!isCompact && (
           <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <Tabs value={tripType} onValueChange={setTripType} className="w-full md:w-auto">
-              <TabsList className="flex h-14 w-full md:w-auto overflow-x-auto items-center rounded-2xl bg-white/5 p-1.5 border border-white/5 scrollbar-hide">
+              <TabsList className="flex h-12 md:h-14 w-full md:w-auto overflow-x-auto items-center rounded-xl md:rounded-2xl bg-white/5 p-1 border border-white/5 scrollbar-hide">
                 {["round-trip", "one-way", "multi-city"].map((type) => (
                   <TabsTrigger
                     key={type}
                     value={type}
-                    className="flex-1 md:flex-none whitespace-nowrap rounded-xl px-7 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-xl"
+                    className="flex-1 md:flex-none whitespace-nowrap rounded-lg md:rounded-xl px-4 md:px-7 py-2 md:py-2.5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-xl"
                   >
                     {t(`search.${type.replace("-", "_")}`)}
                   </TabsTrigger>
@@ -227,9 +227,9 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
               isCompact ? "grid-cols-1 md:grid-cols-12" : "grid-cols-1 md:grid-cols-11"
             )}>
               {/* Origin & Destination Group */}
-              <div className={cn("relative grid gap-2 md:gap-4", isCompact ? "md:col-span-7 md:grid-cols-[1fr_auto_1fr]" : "md:col-span-7 md:grid-cols-[1fr_auto_1fr]")}>
+              <div className={cn("relative flex flex-col md:grid gap-2 md:gap-4", isCompact ? "md:col-span-7 md:grid-cols-[1fr_auto_1fr]" : "md:col-span-7 md:grid-cols-[1fr_auto_1fr]")}>
                 {/* Departure Location */}
-                <div className="relative">
+                <div className="relative w-full">
                     <LocationSearch
                       label={isCompact ? "" : t("search.from")}
                       value={origin}
@@ -241,31 +241,31 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                     />
                 </div>
 
-                {/* Swap Button (Overlapping on Mobile, Centered on Desktop) */}
-	                <div className="absolute right-4 top-1/2 -translate-y-1/2 md:relative md:right-auto md:top-auto md:translate-y-0 flex items-center justify-center z-20">
-	                  <button
-	                    type="button"
-	                    onClick={() => { const tmp = origin; setOrigin(destination); setDestination(tmp); }}
-	                    className={cn(
-	                      "rounded-xl md:rounded-2xl border border-white/10 bg-slate-800 shadow-[0_0_20px_rgba(0,0,0,0.5)] text-blue-400 hover:text-white hover:border-blue-500 hover:bg-blue-600 transition-all active:scale-90",
-	                      isCompact ? "h-10 w-10 md:h-11 md:w-11" : "h-11 w-11 md:h-16 md:w-16"
-	                    )}
-	                  >
-	                    <ArrowRightLeft className="h-4 w-4 md:h-5 md:w-5 mx-auto rotate-90 md:rotate-0" />
-	                  </button>
-	                </div>
+                {/* Swap Button (Centered between inputs on mobile, Centered on Desktop) */}
+		                <div className="flex items-center justify-center z-20 -my-4 md:my-0 md:relative">
+		                  <button
+		                    type="button"
+		                    onClick={() => { const tmp = origin; setOrigin(destination); setDestination(tmp); }}
+		                    className={cn(
+		                      "rounded-full md:rounded-2xl border border-white/10 bg-slate-800 shadow-[0_0_20px_rgba(0,0,0,0.5)] text-blue-400 hover:text-white hover:border-blue-500 hover:bg-blue-600 transition-all active:scale-90",
+		                      isCompact ? "h-10 w-10 md:h-11 md:w-11" : "h-10 w-10 md:h-16 md:w-16"
+		                    )}
+		                  >
+		                    <ArrowRightLeft className="h-4 w-4 md:h-5 md:w-5 mx-auto rotate-90 md:rotate-0" />
+		                  </button>
+		                </div>
 
                 {/* Arrival Location */}
-                <div className="relative mt-2 md:mt-0">
-                  <LocationSearch
-                    label={isCompact ? "" : t("search.to")}
-                    value={destination}
-                    onChange={setDestination}
-                    placeholder={t("search.to")}
-                    isLarge={!isCompact}
-                    className="w-full"
-                    dark={true}
-                  />
+                <div className="relative w-full">
+                    <LocationSearch
+                      label={isCompact ? "" : t("search.to")}
+                      value={destination}
+                      onChange={setDestination}
+                      placeholder={t("search.to")}
+                      isLarge={!isCompact}
+                      className="w-full"
+                      dark={true}
+                    />
                 </div>
               </div>
 
