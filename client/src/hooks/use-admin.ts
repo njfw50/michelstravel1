@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@shared/routes";
 import type { InsertSiteSetting } from "@shared/schema";
+import { useAuth } from "./use-auth";
+import { useLocation } from "wouter";
 
 export interface AdminCommandCenterData {
   generatedAt: string;
@@ -215,6 +217,10 @@ export interface AdminOwnerDeskData {
 }
 
 export function useAdminStats() {
+  const { user } = useAuth();
+  const [location] = useLocation();
+  const isAdminPath = location.startsWith("/admin");
+
   return useQuery({
     queryKey: [api.admin.dashboard_stats.path],
     queryFn: async () => {
@@ -267,6 +273,10 @@ export function useUpdateSettings() {
 }
 
 export function useAdminCommandCenter() {
+  const { user } = useAuth();
+  const [location] = useLocation();
+  const isAdminPath = location.startsWith("/admin");
+
   return useQuery<AdminCommandCenterData>({
     queryKey: ["/api/admin/command-center"],
     queryFn: async () => {
@@ -275,10 +285,15 @@ export function useAdminCommandCenter() {
       return res.json();
     },
     refetchInterval: 15000,
+    enabled: !!user?.isAdmin && isAdminPath,
   });
 }
 
 export function useAdminOwnerDesk() {
+  const { user } = useAuth();
+  const [location] = useLocation();
+  const isAdminPath = location.startsWith("/admin");
+
   return useQuery<AdminOwnerDeskData>({
     queryKey: ["/api/admin/owner-desk"],
     queryFn: async () => {
@@ -287,6 +302,7 @@ export function useAdminOwnerDesk() {
       return res.json();
     },
     refetchInterval: 15000,
+    enabled: !!user?.isAdmin && isAdminPath,
   });
 }
 
