@@ -28,20 +28,20 @@ type CopySet = {
 
 const COPY: Record<"pt" | "en" | "es", CopySet> = {
   pt: {
-    comfort: "Mais calmo para viajar",
+    comfort: "Opção mais confortável",
     fastest: "Menor tempo total",
-    balanced: "Melhor equilibrio",
-    total: "Tempo total",
-    direct: "Sem conexao",
-    stops: (count) => `${count} ${count === 1 ? "conexao" : "conexoes"}`,
-    layover: "Maior espera",
-    noLayover: "Sem espera entre voos",
-    day: "Horario mais tranquilo",
-    caution: "Pode cansar mais",
-    why: "Bom para voce porque",
-    select: "Escolher este voo",
-    outbound: "Ida",
-    inbound: "Volta",
+    balanced: "Melhor equilíbrio",
+    total: "Tempo total de viagem",
+    direct: "Voo direto",
+    stops: (count) => `${count} ${count === 1 ? "conexão" : "conexões"}`,
+    layover: "Tempo de espera",
+    noLayover: "Sem esperas longas",
+    day: "Horário preferencial",
+    caution: "Pode ser cansativo",
+    why: "Ideal para você porque",
+    select: "Selecionar este voo",
+    outbound: "Voo de ida",
+    inbound: "Voo de volta",
   },
   en: {
     comfort: "Calmest option",
@@ -189,7 +189,7 @@ export default function SeniorFlightOptionCard({
           </div>
 
           <div className="w-full rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-left sm:w-auto sm:px-5 sm:text-right">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Preco total</p>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">{copy.total}</p>
             <p className="mt-1 text-3xl font-extrabold text-slate-950 sm:text-4xl">
               {new Intl.NumberFormat(locale, {
                 style: "currency",
@@ -249,7 +249,7 @@ export default function SeniorFlightOptionCard({
                       {/* Show connection cities if any */}
                       {connectionCities.length > 0 && (
                         <div className="mt-1 text-[12px] text-blue-700 font-bold">
-                          Conexão em: {connectionCities.join(", ")}
+                          Conexão em: <span className="text-slate-900">{connectionCities.join(", ")}</span>
                         </div>
                       )}
                     </div>

@@ -262,9 +262,9 @@ export default function SearchResults() {
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px]" />
       </div>
 
-      <div className="relative z-50 w-full mb-10 pt-8">
-        <div className="container mx-auto max-w-7xl px-4">
-          <div className="bg-slate-900/40 backdrop-blur-3xl border border-white/10 rounded-[40px] shadow-2xl p-1 overflow-hidden transition-all hover:bg-slate-900/60">
+      <div className="relative z-50 w-full mb-6 md:mb-10 pt-4 md:pt-8">
+        <div className="container mx-auto max-w-7xl px-2 md:px-4">
+          <div className="bg-slate-900/40 backdrop-blur-3xl border border-white/10 rounded-[24px] md:rounded-[40px] shadow-2xl p-0.5 md:p-1 overflow-hidden transition-all hover:bg-slate-900/60">
             <FlightSearchForm defaultValues={defaultValues as any} isCompact={true} className="shadow-none border-none !bg-transparent" />
           </div>
         </div>

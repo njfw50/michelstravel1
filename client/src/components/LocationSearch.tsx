@@ -107,7 +107,7 @@ export function LocationSearch({
         dark 
           ? "bg-slate-950/40 border-white/10 hover:bg-white/5 hover:border-blue-500/50 focus-within:bg-white/5 focus-within:border-blue-600 focus-within:ring-4 focus-within:ring-blue-600/10" 
           : "bg-slate-50 border-slate-50 hover:bg-white hover:border-blue-200 focus-within:bg-white focus-within:border-blue-600 focus-within:ring-8 focus-within:ring-blue-600/5",
-        isLarge ? "rounded-[24px] px-6 h-16 md:h-20 shadow-xl border" : "rounded-2xl px-5 h-12 md:h-14 border",
+        isLarge ? "rounded-[20px] md:rounded-[24px] px-4 md:px-6 h-14 md:h-20 shadow-xl border" : "rounded-xl md:rounded-2xl px-4 md:px-5 h-11 md:h-14 border",
       )}>
         <MapPin className={cn(dark ? "text-blue-400" : "text-blue-500", "shrink-0", isLarge ? "h-6 w-6 mr-4" : "h-5 w-5 mr-3")} />
         <Input 
@@ -118,7 +118,7 @@ export function LocationSearch({
           className={cn(
             "border-none shadow-none focus-visible:ring-0 p-0 h-full w-full bg-transparent appearance-none",
             dark ? "text-white placeholder:text-slate-800" : "text-slate-900 placeholder:text-slate-400",
-            isLarge ? "text-base md:text-lg font-black" : "text-[11px] md:text-sm font-bold",
+            isLarge ? "text-sm md:text-lg font-black" : "text-[10px] md:text-sm font-bold",
           )}
           data-testid={`input-${label.toLowerCase()}`}
           value={displayText || query}

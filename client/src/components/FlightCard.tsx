@@ -84,9 +84,9 @@ function SliceTimeline({ slice, index, t, totalSlices }: { slice: FlightSliceLik
         </span>
       </div>
 
-      <div className="flex items-center justify-between gap-8">
-        <div className="flex-1 flex items-center gap-8">
-          <div className="text-left">
+      <div className="flex items-center justify-between gap-4 md:gap-8">
+        <div className="flex-1 flex items-center gap-4 md:gap-8">
+          <div className="text-left min-w-[60px] md:min-w-[80px]">
             <div className="text-xl md:text-2xl font-black text-white leading-none tracking-tighter">
               {safeFormatTime(firstSegment.departureTime)}
             </div>
@@ -108,7 +108,7 @@ function SliceTimeline({ slice, index, t, totalSlices }: { slice: FlightSliceLik
             </div>
           </div>
 
-          <div className="text-right">
+          <div className="text-right min-w-[60px] md:min-w-[80px]">
             <div className="text-xl md:text-2xl font-black text-white leading-none tracking-tighter">
               {safeFormatTime(lastSegment.arrivalTime)}
             </div>
@@ -130,18 +130,13 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
   const currentSearch = typeof window !== "undefined" ? window.location.search : "";
   const bookUrl = `/book/${flight.id}${currentSearch}`;
 
-  const formattedPrice = new Intl.NumberFormat(language === "pt" ? "pt-BR" : "en-US", {
-    style: "currency",
-    currency: flight.currency || "USD",
-  }).format(Number(flight.price));
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       className={cn(
-        "group relative grid grid-cols-1 md:grid-cols-[1fr_240px] overflow-hidden rounded-[32px] border border-white/5 bg-slate-900/40 backdrop-blur-3xl shadow-2xl transition-all duration-500 hover:bg-slate-900/60 hover:shadow-blue-500/5",
+        "group relative grid grid-cols-1 md:grid-cols-[1fr_280px] overflow-hidden rounded-[32px] border border-white/10 bg-slate-900/50 backdrop-blur-3xl shadow-2xl transition-all duration-500 hover:bg-slate-900/70 hover:shadow-blue-500/10",
         "before:absolute before:inset-0 before:bg-gradient-to-br before:from-blue-600/[0.04] before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity"
       )}
     >
@@ -151,7 +146,7 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
             <div className="flex items-center gap-3 md:gap-5">
               <div className="h-10 w-10 md:h-14 md:w-14 shrink-0 flex items-center justify-center rounded-[14px] md:rounded-[18px] bg-white/5 border border-white/10 p-1.5 md:p-2 shadow-xl transition-all group-hover:scale-105">
                 {flight.logoUrl ? (
-                  <img src={flight.logoUrl || ""} alt={flight.airline || ""} className="h-full w-full object-contain" />
+                   <img src={flight.logoUrl || ""} alt={flight.airline || ""} className="h-full w-full object-contain" />
                 ) : (
                   <Plane className="h-6 w-6 md:h-8 md:w-8 text-slate-700" />
                 )}
@@ -165,11 +160,6 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
                   )}
                 </div>
               </div>
-            </div>
-            {/* Preço Mobile flutuante no topo */}
-            <div className="md:hidden text-right">
-              <span className="text-xl font-black text-white tracking-tighter">{formattedPrice}</span>
-              <p className="text-[8px] font-black uppercase tracking-widest text-slate-600">Total</p>
             </div>
           </div>
 
@@ -216,7 +206,7 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
           <div className="flex flex-col items-center md:items-end">
             <div className="flex items-baseline gap-1 group-hover:scale-105 transition-transform duration-500">
               <span className="text-xl md:text-2xl font-bold text-blue-500/80 mb-1">{flight.currency === 'BRL' ? 'R$' : 'US$'}</span>
-              <span className="text-4xl md:text-6xl font-black text-white tracking-tighter tabular-nums leading-none">
+              <span className="text-4xl md:text-6xl font-black text-white tracking-tighter tabular-nums leading-none whitespace-nowrap">
                 {Math.floor(Number(flight.price)).toLocaleString(language === "pt" ? "pt-BR" : "en-US")}
               </span>
               <span className="text-xl md:text-2xl font-bold text-white/40 mb-1">
