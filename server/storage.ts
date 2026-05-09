@@ -4,7 +4,7 @@ import {
   flightSearches, bookings, siteSettings, blogPosts, users,
   liveSessions, liveSessionBlocks, liveSessionMessages,
   internalThreads, internalMessages, voiceEscalations, featuredDeals,
-  seniorAlerts, customers, transactions, bookingLogs, knowledgeBase, scannerSessions,
+  seniorAlerts, customers, transactions, bookingLogs, knowledgeBase,
   type FlightSearch, type InsertFlightSearch,
   type Booking, type InsertBooking,
   type SiteSetting, type InsertSiteSetting,
@@ -21,7 +21,6 @@ import {
   type Transaction, type InsertTransaction,
   type BookingLog, type InsertBookingLog,
   type KnowledgeBaseEntry, type InsertKnowledgeBaseEntry,
-  type ScannerSessionData, type InsertScannerSession,
 } from "@shared/schema";
 
 // Import Auth Storage
@@ -126,11 +125,6 @@ export interface IStorage extends IAuthStorage {
   createKnowledgeBaseEntry(entry: InsertKnowledgeBaseEntry): Promise<KnowledgeBaseEntry>;
   deleteKnowledgeBaseEntry(id: string): Promise<void>;
 
-  // Scanner Bridge
-  createScannerSession(session: InsertScannerSession): Promise<ScannerSessionData>;
-  getScannerSession(sessionId: string): Promise<ScannerSessionData | undefined>;
-  updateScannerSession(sessionId: string, data: any): Promise<ScannerSessionData | undefined>;
-  cleanupExpiredScannerSessions(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -620,41 +614,6 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(transactions).orderBy(desc(transactions.createdAt));
   }
 
-  // --- Scanner Bridge ---
-  async createScannerSession(session: InsertScannerSession): Promise<ScannerSessionData> {
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 15); // 15 min expiry
-    const [s] = await db.insert(scannerSessions).values({
-      ...session,
-      expiresAt,
-    }).returning();
-    return s;
-  }
-
-  async getScannerSession(sessionId: string): Promise<ScannerSessionData | undefined> {
-    const [s] = await db.select().from(scannerSessions).where(eq(scannerSessions.sessionId, sessionId));
-    if (!s) return undefined;
-    
-    // Check expiry
-    if (s.expiresAt && s.expiresAt < new Date()) {
-      await db.delete(scannerSessions).where(eq(scannerSessions.sessionId, sessionId));
-      return undefined;
-    }
-    
-    return s;
-  }
-
-  async updateScannerSession(sessionId: string, data: any): Promise<ScannerSessionData | undefined> {
-    const [s] = await db.update(scannerSessions)
-      .set({ data })
-      .where(eq(scannerSessions.sessionId, sessionId))
-      .returning();
-    return s;
-  }
-
-  async cleanupExpiredScannerSessions(): Promise<void> {
-    await db.delete(scannerSessions).where(sql`${scannerSessions.expiresAt} < NOW()`);
-  }
 }
 
 export const storage = new DatabaseStorage();

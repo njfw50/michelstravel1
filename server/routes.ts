@@ -44,7 +44,6 @@ import {
 } from "./services/serviceAi";
 import { buildOwnerDeskSnapshot } from "./services/ownerDesk";
 import { buildRedactedDocumentPayload } from "./services/passengerPrivacy";
-import { analyzeDocumentScanWithAi } from "./services/documentScannerAi";
 import { getBalancedDeals, runDealsAutomation } from "./services/deals-automation";
 
 function parseIdRouteParam(value: string | string[] | undefined): string {
@@ -107,26 +106,6 @@ export function registerRoutes(app: Express) {
     res.redirect(301, '/admin/live-chat');
   });
 
-  app.get('/api/mobile/config', async (_req, res) => {
-    const settings = await storage.getSiteSettings();
-    const availability = getMobileAppAvailability(settings);
-
-    res.json({
-      environment: availability.environment,
-      appEnabled: availability.enabled,
-      appTestEnabled: availability.testEnabled,
-      appProductionEnabled: availability.productionEnabled,
-      sharedResultsApi: true,
-      sharedCheckoutApi: true,
-      supportEmail: process.env.SUPPORT_EMAIL || "support@michelstravel.agency",
-      supportWhatsApp: process.env.WHATSAPP_NUMBER || null,
-      heroTitle: settings?.heroTitle || null,
-      heroSubtitle: settings?.heroSubtitle || null,
-      promotionalBanner: settings?.promotionalBanner || null,
-      mobileLayout: settings?.mobileLayout || null,
-    });
-  });
-
   app.get('/api/public/settings', async (_req, res) => {
     const settings = await storage.getSiteSettings();
     res.json({
@@ -134,35 +113,6 @@ export function registerRoutes(app: Express) {
       heroTitle: settings?.heroTitle || null,
       heroSubtitle: settings?.heroSubtitle || null,
       promotionalBanner: settings?.promotionalBanner || null,
-      mobileLayout: settings?.mobileLayout || null,
-    });
-  });
-
-  app.get('/api/app-release', async (_req, res) => {
-    const settings = await storage.getSiteSettings();
-    res.json(await getPublicAppReleaseManifest(settings));
-  });
-
-  app.use('/api', async (req, res, next) => {
-    if (!isMobileConsumerRequest(req)) {
-      return next();
-    }
-
-    if (req.path === '/mobile/config') {
-      return next();
-    }
-
-    const settings = await storage.getSiteSettings();
-    const availability = getMobileAppAvailability(settings);
-
-    if (availability.enabled) {
-      return next();
-    }
-
-    return res.status(503).json({
-      error: `Mobile app access is disabled in ${availability.environment} mode.`,
-      code: 'mobile_app_disabled',
-      environment: availability.environment,
     });
   });
 
@@ -183,36 +133,6 @@ export function registerRoutes(app: Express) {
         res.status(500).json({ error: 'Failed to search places' });
     }
   });
-
-  app.post('/api/document-scanner/analyze', async (req, res) => {
-    try {
-      const {
-        documentImageDataUrl,
-        mrzImageDataUrl,
-        rawOcrText,
-        mrzResult,
-        declaredDocumentType,
-      } = req.body ?? {};
-
-      if (!documentImageDataUrl || typeof documentImageDataUrl !== "string") {
-        return res.status(400).json({ error: "documentImageDataUrl required" });
-      }
-
-      const analysis = await analyzeDocumentScanWithAi({
-        documentImageDataUrl,
-        mrzImageDataUrl: typeof mrzImageDataUrl === "string" ? mrzImageDataUrl : null,
-        rawOcrText: typeof rawOcrText === "string" ? rawOcrText : null,
-        mrzResult: mrzResult && typeof mrzResult === "object" ? mrzResult : null,
-        declaredDocumentType: typeof declaredDocumentType === "string" ? declaredDocumentType : null,
-      });
-
-      res.json(analysis);
-    } catch (error) {
-      console.error("[DOCUMENT SCANNER] Analyze route failed:", error);
-      res.status(500).json({ error: "Failed to analyze document" });
-    }
-  });
-
   // Search Flights
   app.get('/api/flights/search', async (req, res) => {
     try {
