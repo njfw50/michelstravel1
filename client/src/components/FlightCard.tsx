@@ -203,26 +203,42 @@ export function FlightCard({ flight, simplified = false }: FlightCardProps) {
         </div>
       </div>
 
-      <div className="relative bg-white/5 backdrop-blur-md border-t md:border-t-0 md:border-l border-white/5 p-5 md:p-10 flex flex-col justify-center items-center md:items-end gap-4 md:gap-8 overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 md:w-48 md:h-48 bg-blue-500/10 blur-[80px] rounded-full translate-x-1/3 -translate-y-1/3" />
+      <div className="relative bg-slate-950/50 backdrop-blur-xl border-t md:border-t-0 md:border-l border-white/10 p-6 md:p-10 flex flex-col justify-center items-center md:items-end gap-6 md:gap-10 overflow-hidden">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-blue-600/10 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
         
-        <div className="relative z-10 text-center md:text-right space-y-1 md:space-y-2">
-          <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-500">Price per Traveler</p>
-          <div className="flex flex-col items-center md:items-end gap-1">
-            <span className="text-3xl md:text-5xl font-black text-white tracking-tighter leading-none">
-              {formattedPrice}
-            </span>
-          </div>
-          <p className="flex items-center justify-center md:justify-end gap-2 text-[9px] font-black text-slate-600 uppercase tracking-widest">
-             <Info className="h-3 w-3" />
-             Final Price with Taxes Included
+        <div className="relative z-10 text-center md:text-right w-full">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 mb-4 flex items-center justify-center md:justify-end gap-2">
+            <span className="h-[1px] w-4 bg-white/10 md:hidden" />
+            {t("results.price_per_traveler") || "Price per Traveler"}
+            <span className="h-[1px] w-4 bg-white/10 md:hidden" />
           </p>
+          
+          <div className="flex flex-col items-center md:items-end">
+            <div className="flex items-baseline gap-1 group-hover:scale-105 transition-transform duration-500">
+              <span className="text-xl md:text-2xl font-bold text-blue-500/80 mb-1">{flight.currency === 'BRL' ? 'R$' : 'US$'}</span>
+              <span className="text-4xl md:text-6xl font-black text-white tracking-tighter tabular-nums leading-none">
+                {Math.floor(Number(flight.price)).toLocaleString(language === "pt" ? "pt-BR" : "en-US")}
+              </span>
+              <span className="text-xl md:text-2xl font-bold text-white/40 mb-1">
+                ,{(Number(flight.price) % 1).toFixed(2).split('.')[1]}
+              </span>
+            </div>
+            
+            <div className="mt-4 flex items-center justify-center md:justify-end gap-2 py-2 px-4 rounded-full bg-white/5 border border-white/5">
+               <Info className="h-3 w-3 text-blue-400" />
+               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                 {t("results.final_price") || "Final Price with Taxes Included"}
+               </p>
+            </div>
+          </div>
         </div>
 
-        <Link href={bookUrl} className="w-full relative z-10">
-          <Button className="w-full h-12 md:h-14 rounded-[16px] md:rounded-[20px] bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.25em] text-[10px] shadow-2xl shadow-blue-600/30 transition-all hover:scale-105 active:scale-95 group">
+        <Link href={bookUrl} className="w-full relative z-10 group/btn">
+          <Button className="w-full h-14 md:h-16 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.3em] text-xs shadow-[0_20px_50px_rgba(37,99,235,0.2)] transition-all hover:-translate-y-1 active:translate-y-0 group">
             {t("flight.select")}
-            <ArrowRight className="ml-3 h-4 w-4 transition-transform group-hover:translate-x-2" />
+            <div className="ml-4 h-8 w-8 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </div>
           </Button>
         </Link>
       </div>
