@@ -15,7 +15,7 @@ import {
   Phone, Megaphone, Plus, Trash2, ExternalLink, Copy, Search, RefreshCw, 
   ChevronDown, ChevronUp, Calendar, MapPin, LayoutDashboard, Settings, 
   Activity, Eye, EyeOff, Download, Upload, Zap, Clock, AlertCircle,
-  Smartphone, BookOpen, ShieldAlert, ToggleLeft, CheckCircle
+  BookOpen, ShieldAlert, ToggleLeft, CheckCircle
 } from "lucide-react";
 import { VoiceEscalations } from "@/components/VoiceEscalations";
 import { AdminCommandCenter } from "@/components/AdminCommandCenter";
@@ -23,15 +23,13 @@ import { SeniorCareDesk } from "@/components/SeniorCareDesk";
 import { useI18n } from "@/lib/i18n";
 import { AdminKnowledgeHub } from "@/components/AdminKnowledgeHub";
 import { AdminCustomerInsights } from "@/components/AdminCustomerInsights";
-import { MobileConfigurator } from "@/components/MobileConfigurator";
+import { SocialStudio } from "@/components/SocialStudio";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState, useEffect, Fragment } from "react";
-import { AdStudio } from "@/components/AdStudio";
 import { TestModeControl } from "@/components/TestModeControl";
 import { CommissionControl } from "@/components/CommissionControl";
 import { FeaturedDealsManager } from "@/components/FeaturedDealsManager";
-import { DocumentScannerForm } from "@/components/document/DocumentScannerForm";
 import { useLocation } from "wouter";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
@@ -54,9 +52,6 @@ function AutoFitText({ children, className, minFontSize = 12, maxFontSize = 40, 
   );
 }
 
-// Mobile Release Controls (Placeholder for future expansion)
-function MobileAppChannelControl() { return null; }
-function MobileAppReleaseControl() { return null; }
 
 function AdminLoginForm() {
   const [, setLocation] = useLocation();
@@ -104,7 +99,7 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"command" | "overview" | "bookings" | "settings" | "senior" | "crm" | "kb" | "mobile" | "ads">("command");
+  const [activeTab, setActiveTab] = useState<"command" | "overview" | "bookings" | "settings" | "senior" | "crm" | "kb" | "ads">("command");
 
   const { data: adminCheck, isLoading: adminCheckLoading } = useQuery<{ isAdmin: boolean }>({
     queryKey: ["/api/admin/check"],
@@ -194,11 +189,9 @@ export default function AdminDashboard() {
               ? "Central de Conhecimento (Treinar Mia)"
               : activeTab === "bookings"
                 ? "Controle de Viagens Premium"
-                : activeTab === "mobile"
-                  ? "Configurador de Experiência Mobile (Samsung Preview)"
-                  : activeTab === "ads"
-                    ? "Estúdio Criativo de Marketing (Instagram/Facebook)"
-                    : "Configurações Operacionais da Agência";
+              : activeTab === "ads"
+                ? "Estúdio de Social Media AI (Premium Merchandise)"
+                : "Configurações Operacionais da Agência";
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-950 font-sans selection:bg-indigo-500/30">
@@ -271,23 +264,18 @@ export default function AdminDashboard() {
             <span className="font-semibold text-sm tracking-wide">Treinamento (IA)</span>
           </Button>
 
-          <Button 
-            variant="ghost" 
-            className={`w-full justify-start gap-3.5 rounded-2xl transition-all duration-300 group px-4 py-6 ${activeTab === "mobile" ? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/20 shadow-[0_0_25px_rgba(99,102,241,0.1)]" : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent"}`} 
-            onClick={() => setActiveTab("mobile")}
-          >
-            <Smartphone className={`h-4.5 w-4.5 transition-transform duration-300 ${activeTab === "mobile" ? "scale-110 text-indigo-400" : "group-hover:translate-x-1"}`} />
-            <span className="font-semibold text-sm tracking-wide">Canais do App Mobile</span>
-          </Button>
-
-          <Button 
-            variant="ghost" 
-            className={`w-full justify-start gap-3.5 rounded-2xl transition-all duration-300 group px-4 py-6 ${activeTab === "ads" ? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/20 shadow-[0_0_25px_rgba(99,102,241,0.1)]" : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent"}`} 
+          <button
             onClick={() => setActiveTab("ads")}
+            className={cn(
+              "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300",
+              activeTab === "ads"
+                ? "bg-purple-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+                : "text-zinc-400 hover:bg-white/5 hover:text-white"
+            )}
           >
-            <Megaphone className={`h-4.5 w-4.5 transition-transform duration-300 ${activeTab === "ads" ? "scale-110 text-indigo-400" : "group-hover:translate-x-1"}`} />
-            <span className="font-semibold text-sm tracking-wide">Estúdio de Marketing</span>
-          </Button>
+            <Sparkles className="w-5 h-5" />
+            <span className="font-bold text-sm">Estúdio Social AI</span>
+          </button>
 
           <Button 
             variant="ghost" 
@@ -400,15 +388,10 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {activeTab === "mobile" && (
-              <div className="animate-in fade-in duration-300">
-                <MobileConfigurator />
-              </div>
-            )}
 
             {activeTab === "ads" && (
               <div className="animate-in fade-in duration-300">
-                <AdStudio />
+                <SocialStudio />
               </div>
             )}
 
@@ -811,26 +794,6 @@ export default function AdminDashboard() {
                 <CommissionControl />
                 <FeaturedDealsManager />
                 <VoiceEscalations />
-                <Card className="glass-card border-white/5 overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 blur-[40px] -mr-12 -mt-12 pointer-events-none" />
-                  <CardHeader className="border-b border-white/5">
-                    <CardTitle className="flex items-center gap-3 text-white font-display tracking-tight text-lg">
-                      <div className="h-10 w-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                        <ShieldCheck className="h-5 w-5" />
-                      </div>
-                      Painel de Verificação de Identidade (TSA)
-                    </CardTitle>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Validação de Documentos e Biometria Digital</p>
-                  </CardHeader>
-                  <CardContent className="p-4 md:p-8 space-y-6">
-                    <div className="bg-white/5 border border-white/5 p-5 rounded-2xl">
-                       <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                        Utilize o motor de visão Mia para realizar OCR e validação de autenticidade em documentos de viagem. Esta ferramenta simula o processamento realizado no Terminal Sênior.
-                      </p>
-                    </div>
-                    <DocumentScannerForm />
-                  </CardContent>
-                </Card>
               </div>
             )}
 

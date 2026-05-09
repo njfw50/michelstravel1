@@ -121,7 +121,6 @@ export interface AdminOwnerDeskData {
     seniorCases: number;
     paymentWatch: number;
     liveNow: number;
-    mobileLinked: number;
     alertingNow: number;
     overdueFollowUps: number;
   };
@@ -163,12 +162,6 @@ export interface AdminOwnerDeskData {
     bookingId: number | null;
     threadId: number | null;
   }>;
-  mobileDeck: {
-    headline: string;
-    criticalCount: number;
-    dueSoonCount: number;
-    linkedDevices: number;
-  };
   cases: Array<{
     id: string;
     customerName: string | null;
@@ -198,9 +191,6 @@ export interface AdminOwnerDeskData {
     openEscalations: number;
     liveRequests: number;
     activeLiveSessions: number;
-    appLinked: boolean;
-    deviceCount: number;
-    scannerHandoffEnabled: boolean;
     bookingId: number | null;
     threadId: number | null;
     liveSessionId: number | null;

@@ -42,18 +42,10 @@ import {
   getServiceAiStatus,
   SERVICE_AI_AGENT_TOOLS,
 } from "./services/serviceAi";
-import {
-  getMobileReleaseStatus,
-  getPublicAppReleaseManifest,
-  getStoredAppReleaseManifest,
-  publishChannelRelease,
-  verifyGitHubCommit,
-} from "./services/mobileRelease";
 import { buildOwnerDeskSnapshot } from "./services/ownerDesk";
 import { buildRedactedDocumentPayload } from "./services/passengerPrivacy";
 import { analyzeDocumentScanWithAi } from "./services/documentScannerAi";
 import { getBalancedDeals, runDealsAutomation } from "./services/deals-automation";
-import { ensureCustomerProfile, resolveCustomerMobileAuth } from "./routes/customer_mobile";
 
 function parseIdRouteParam(value: string | string[] | undefined): string {
   const normalizedValue = Array.isArray(value) ? value[0] : value;
@@ -94,25 +86,7 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
   return res.status(401).json({ error: "Admin authentication required" });
 }
 
-function isMobileConsumerRequest(req: Request) {
-  const clientHeader = String(req.headers["x-michels-client"] || "").toLowerCase();
-  return clientHeader === "mobile-consumer";
-}
 
-function getMobileAppAvailability(settings?: { testMode?: boolean | null; mobileAppTestEnabled?: boolean | null; mobileAppProductionEnabled?: boolean | null }) {
-  const testModeActive = settings?.testMode ?? true;
-  const environment = testModeActive ? "test" as const : "production" as const;
-  const enabled = testModeActive
-    ? settings?.mobileAppTestEnabled ?? true
-    : settings?.mobileAppProductionEnabled ?? true;
-
-  return {
-    environment,
-    enabled,
-    testEnabled: settings?.mobileAppTestEnabled ?? true,
-    productionEnabled: settings?.mobileAppProductionEnabled ?? true,
-  };
-}
 
 /**
  * Register all application routes
@@ -2280,8 +2254,6 @@ export function registerRoutes(app: Express) {
         heroTitle: "Find Your Next Adventure",
         heroSubtitle: "Best prices on flights worldwide.",
         testMode: true,
-        mobileAppTestEnabled: true,
-        mobileAppProductionEnabled: true,
         updatedAt: new Date(),
       });
     }
@@ -2303,71 +2275,30 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  app.get('/api/admin/mobile-release/status', requireAdmin, async (req, res) => {
+  // Social Media AI Studio - Content Generation
+  app.post('/api/admin/social/generate', requireAdmin, async (req, res) => {
     try {
-      const channel = req.query.channel === "admin" ? "admin" : "senior";
-      const settings = await storage.getSiteSettings();
-      res.json(await getMobileReleaseStatus(channel, settings));
-    } catch (error: any) {
-      res.status(500).json({ error: error?.message || "Failed to load mobile release status" });
-    }
-  });
+      const { dealId, platform, tone } = req.body;
+      const deals = await storage.getFeaturedDeals();
+      const deal = deals.find(d => d.id === dealId);
 
-  app.get('/api/admin/mobile-release/verify', requireAdmin, async (req, res) => {
-    try {
-      const commitHash = String(req.query.commit || "");
-      const channel = req.query.channel === "admin" ? "admin" : "senior";
-      const settings = await storage.getSiteSettings();
-      const status = await getMobileReleaseStatus(channel, settings);
-      const commit = await verifyGitHubCommit(commitHash);
-
-      res.json({
-        ...status,
-        commit,
-      });
-    } catch (error: any) {
-      res.status(400).json({ error: error?.message || "Failed to verify commit" });
-    }
-  });
-
-  app.post('/api/admin/mobile-release/publish', requireAdmin, async (req, res) => {
-    try {
-      const channel = req.body?.channel === "admin" ? "admin" : "senior";
-      const commitHash = String(req.body?.commitHash || "").trim();
-
-      if (!commitHash) {
-        return res.status(400).json({ error: "commitHash is required" });
+      if (!deal) {
+        return res.status(404).json({ error: "Deal not found" });
       }
 
-      const settings = await storage.getSiteSettings();
-      const release = await publishChannelRelease(channel, commitHash, settings);
-      const updated = await storage.upsertSiteSettings({
-        ...(settings ? {
-          siteName: settings.siteName || undefined,
-          commissionPercentage: settings.commissionPercentage || undefined,
-          heroTitle: settings.heroTitle || undefined,
-          heroSubtitle: settings.heroSubtitle || undefined,
-          testMode: settings.testMode ?? true,
-          mobileAppTestEnabled: settings.mobileAppTestEnabled ?? true,
-          mobileAppProductionEnabled: settings.mobileAppProductionEnabled ?? true,
-          mobileConsumerRelease: channel === "senior" ? release : settings.mobileConsumerRelease ?? undefined,
-          mobileAdminRelease: channel === "admin" ? release : settings.mobileAdminRelease ?? undefined,
-        } : {
-          testMode: true,
-          mobileAppTestEnabled: true,
-          mobileAppProductionEnabled: true,
-          mobileConsumerRelease: channel === "senior" ? release : undefined,
-          mobileAdminRelease: channel === "admin" ? release : undefined,
-        }),
+      const prompt = `Gere uma legenda magnética de marketing para ${platform} no tom ${tone}. 
+      Contexto da oferta: Voo de ${deal.originCity} para ${deal.destinationCity} por R$ ${deal.price} via ${deal.airline}.
+      Inclua emojis e hashtags relevantes. Foco em conversão e luxo (Michels Travel).`;
+
+      const { createServiceAiCompletionWithFallback } = await import('./services/serviceAi');
+      const completion = await createServiceAiCompletionWithFallback({
+        messages: [{ role: "user", content: prompt }],
       });
 
-      res.json({
-        success: true,
-        manifest: getStoredAppReleaseManifest(updated),
-        published: release,
-      });
+      res.json({ copy: completion });
     } catch (error: any) {
-      res.status(400).json({ error: error?.message || "Failed to publish mobile release" });
+      console.error("Social AI Generation Error:", error);
+      res.status(500).json({ error: "Failed to generate AI copy" });
     }
   });
 

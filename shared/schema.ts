@@ -2,7 +2,6 @@ import { pgTable, text, serial, integer, boolean, timestamp, jsonb, decimal, uui
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import type { MobileReleaseChannel } from "./mobile-release";
 
 // Import auth models - CRITICAL for Replit Auth
 export * from "./models/auth";
@@ -69,12 +68,6 @@ export const siteSettings = pgTable("site_settings", {
   heroTitle: text("hero_title").default("Find Your Next Adventure"),
   heroSubtitle: text("hero_subtitle").default("Best prices on flights worldwide."),
   testMode: boolean("test_mode").default(true).notNull(),
-  mobileAppTestEnabled: boolean("mobile_app_test_enabled").default(true).notNull(),
-  mobileAppProductionEnabled: boolean("mobile_app_production_enabled").default(true).notNull(),
-  mobileConsumerRelease: jsonb("mobile_consumer_release").$type<MobileReleaseChannel | null>(),
-  mobileAdminRelease: jsonb("mobile_admin_release").$type<MobileReleaseChannel | null>(),
-  promotionalBanner: text("promotional_banner").default("Ofertas Exclusivas Mobile - 15% OFF"),
-  mobileLayout: jsonb("mobile_layout").$type<any[]>(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
@@ -258,14 +251,6 @@ export const knowledgeBase = pgTable("knowledge_base", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// === SCANNER SESSIONS (Cross-device Scanner Bridge) ===
-export const scannerSessions = pgTable("scanner_sessions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  sessionId: text("session_id").notNull().unique(),
-  data: jsonb("data"), // The scanned result
-  createdAt: timestamp("created_at").defaultNow(),
-  expiresAt: timestamp("expires_at"),
-});
 
 // === RELATIONS ===
 export const bookingsRelations = relations(bookings, ({ one }) => ({
@@ -278,23 +263,7 @@ export const bookingsRelations = relations(bookings, ({ one }) => ({
 // === ZOD SCHEMAS ===
 export const insertFlightSearchSchema = createInsertSchema(flightSearches).omit({ id: true, searchCount: true, lastSearchedAt: true });
 export const insertBookingSchema = createInsertSchema(bookings).omit({ id: true, createdAt: true, commissionAmount: true });
-const mobileLayoutSectionSchema = z.object({
-  id: z.string(),
-  enabled: z.boolean(),
-  type: z.enum(["hero", "stats", "insights", "deals", "partners", "cta", "custom", "image-hero", "stats-grid", "cta-card"]).optional(),
-  label: z.string().optional(),
-  props: z.record(z.any()).optional(),
-  style: z.object({
-    paddingY: z.string().optional(),
-    bgVariant: z.string().optional(),
-    accentColor: z.string().optional(),
-    textAlign: z.string().optional(),
-  }).optional(),
-});
-
-export const insertSiteSettingsSchema = createInsertSchema(siteSettings).extend({
-  mobileLayout: z.array(mobileLayoutSectionSchema).nullable().optional(),
-}).omit({ id: true, updatedAt: true });
+export const insertSiteSettingsSchema = createInsertSchema(siteSettings).omit({ id: true, updatedAt: true });
 export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({ id: true, createdAt: true });
 export const insertLiveSessionSchema = createInsertSchema(liveSessions).omit({ id: true, createdAt: true, closedAt: true });
 export const insertLiveSessionBlockSchema = createInsertSchema(liveSessionBlocks).omit({ id: true, updatedAt: true });
@@ -308,7 +277,6 @@ export const insertCustomerSchema = createInsertSchema(customers).omit({ id: tru
 export const insertTransactionSchema = createInsertSchema(transactions).omit({ id: true, createdAt: true });
 export const insertBookingLogSchema = createInsertSchema(bookingLogs).omit({ id: true, createdAt: true });
 export const insertKnowledgeBaseSchema = createInsertSchema(knowledgeBase).omit({ id: true, updatedAt: true });
-export const insertScannerSessionSchema = createInsertSchema(scannerSessions).omit({ id: true, createdAt: true });
 
 // === TYPES ===
 export type FlightSearch = typeof flightSearches.$inferSelect;
@@ -356,8 +324,6 @@ export type InsertBookingLog = z.infer<typeof insertBookingLogSchema>;
 export type KnowledgeBaseEntry = typeof knowledgeBase.$inferSelect;
 export type InsertKnowledgeBaseEntry = z.infer<typeof insertKnowledgeBaseSchema>;
 
-export type ScannerSessionData = typeof scannerSessions.$inferSelect;
-export type InsertScannerSession = z.infer<typeof insertScannerSessionSchema>;
 
 // === API TYPES ===
 // Search Query Params

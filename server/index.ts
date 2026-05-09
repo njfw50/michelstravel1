@@ -2,8 +2,6 @@ import express, { type Request, type Response, type NextFunction } from "express
 import { runMigrations } from 'stripe-replit-sync';
 import { registerRoutes } from "./routes";
 import { registerVoiceEscalationRoutes } from "./routes/voice_escalation";
-import { registerCustomerMobileRoutes } from "./routes/customer_mobile";
-import { registerOwnerPushRoutes } from "./routes/owner_push";
 import { registerSeniorCareRoutes } from "./routes/senior_care";
 import { serveStatic } from "./static";
 import { getStripeSync } from "./stripeClient";
@@ -13,7 +11,6 @@ import { createServer } from "http";
 import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 import { runAppMigrations } from "./appMigrations";
 import { ensureDefaultBlogPosts } from "./blogSeed";
-import { startOwnerPushLoop } from "./services/ownerPush";
 import { startItineraryNotificationLoop } from "./services/itineraryNotification";
 
 const app = express();
@@ -214,9 +211,7 @@ app.use((req, res, next) => {
     await setupAuth(app);
     registerAuthRoutes(app);
     registerRoutes(app);
-    registerCustomerMobileRoutes(app);
     registerVoiceEscalationRoutes(app);
-    registerOwnerPushRoutes(app);
     registerSeniorCareRoutes(app);
   } catch (err) {
     console.error("Route registration failed:", err);
@@ -224,7 +219,6 @@ app.use((req, res, next) => {
 
   // Background loops
   try {
-    startOwnerPushLoop();
     startItineraryNotificationLoop();
   } catch (err) {
     console.error("Background loops failed to start:", err);

@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { 
   AlertTriangle, ArrowRight, CheckCircle2, Copy, DollarSign, ExternalLink, 
   Info, Loader2, Mail, MessageSquare, Phone, Plane, RefreshCw, Send, 
-  ShieldAlert, Smartphone, Sparkles, TrendingUp, Users 
+  ShieldAlert, Sparkles, TrendingUp, Users 
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { format, formatDistanceToNowStrict } from "date-fns";
@@ -21,11 +21,7 @@ import { useAdminCommandCenter, useAdminOwnerDesk, type AdminCommandCenterData, 
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { fetchCityDetails, type CityHighlights } from "@/lib/travel-service";
-import { fetchAppReleaseManifest, getAdminAndroidPrimaryUrl, hasAdminAndroidRelease, DEFAULT_APP_RELEASE_MANIFEST } from "@/lib/app-release";
-import { formatBytes } from "@/lib/formatBytes";
 
-// Fallback Expo build page (token-based)
-const EXPO_ADMIN_BUILD_URL = "https://expo.dev/accounts/njfw23/projects/michels-travel-admin/builds?token=GgvD0zgdlx6ARx_OdBgblAuTZEPJqAMpJ6TzMbfH";
 
 interface AdminCommandCenterProps {
   onOpenLiveDesk: (options?: { sessionId?: string }) => void;
@@ -265,15 +261,6 @@ const replyMacros = [
 ];
 
 export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSettings }: AdminCommandCenterProps) {
-  // --- App Admin Download Integration ---
-  const { data: appRelease } = useQuery({
-    queryKey: ["/app-release.json"],
-    queryFn: fetchAppReleaseManifest,
-    staleTime: 30000,
-  });
-  const manifest = appRelease ?? DEFAULT_APP_RELEASE_MANIFEST;
-  const releaseReady = hasAdminAndroidRelease(manifest);
-  const primaryUrl = getAdminAndroidPrimaryUrl(manifest);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data, isLoading, isError, error } = useAdminCommandCenter();
@@ -497,50 +484,6 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
     }
   };
 
-  const handleOpenAdminInstallPage = () => {
-    if (releaseReady && primaryUrl) {
-      window.open(primaryUrl, "_blank", "noopener,noreferrer");
-    } else {
-      // Fallback para Expo
-      window.open(EXPO_ADMIN_BUILD_URL, "_blank", "noopener,noreferrer");
-      toast({
-        title: "Instalador via Expo",
-        description: "O app admin nativo ainda não foi publicado. Você será redirecionado para a página de builds do Expo.",
-      });
-    }
-  };
-
-  const handleCopyAdminInstallLink = async () => {
-    if (releaseReady && primaryUrl) {
-      try {
-        await navigator.clipboard.writeText(primaryUrl);
-        toast({
-          title: "Link de instalação copiado",
-          description: "Abra no seu celular para instalar o app admin.",
-        });
-      } catch {
-        toast({
-          title: "Clipboard indisponível",
-          description: "Não foi possível copiar o link nesta sessão.",
-          variant: "destructive",
-        });
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(EXPO_ADMIN_BUILD_URL);
-        toast({
-          title: "Link do Expo copiado",
-          description: "Abra no seu celular para acessar a página de builds do Expo.",
-        });
-      } catch {
-        toast({
-          title: "Clipboard indisponível",
-          description: "Não foi possível copiar o link nesta sessão.",
-          variant: "destructive",
-        });
-      }
-    }
-  };
 
   const openEmail = (email?: string | null) => {
     if (!email) return;
@@ -747,25 +690,6 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                   <MessageSquare className="h-5 w-5" />
                   Abrir Atendimento Live
                 </Button>
-                <Button
-                  variant="secondary"
-                  className="h-14 gap-3 rounded-2xl border border-white/10 bg-white/5 px-6 font-bold text-slate-300 transition-all whitespace-nowrap hover:bg-white/15 hover:text-white sm:px-7"
-                  onClick={handleOpenAdminInstallPage}
-                >
-                  <Smartphone className="h-5 w-5" />
-                  Instalar App Admin
-                </Button>
-                
-                <div className="flex items-center gap-2">
-                   <Button
-                    variant="secondary"
-                    size="icon"
-                    className="h-14 w-14 rounded-2xl border border-white/10 bg-white/5 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/30 transition-all"
-                    onClick={handleCopyAdminInstallLink}
-                    title="Copiar link do app"
-                  >
-                    <ExternalLink className="h-5 w-5" />
-                  </Button>
                   <Button
                     variant="secondary"
                     size="icon"

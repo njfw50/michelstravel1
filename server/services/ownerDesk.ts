@@ -2,8 +2,7 @@ import { desc } from "drizzle-orm";
 
 import { db } from "../db";
 import { storage } from "../storage";
-import { bookings, internalMessages, liveSessions } from "@shared/schema";
-import { customerMobileDevices, customerProfiles, users } from "@shared/models/auth";
+import { customerProfiles, users } from "@shared/models/auth";
 
 export type OwnerDeskAction =
   | "open-live-desk"
@@ -51,9 +50,6 @@ export interface OwnerDeskCase {
   openEscalations: number;
   liveRequests: number;
   activeLiveSessions: number;
-  appLinked: boolean;
-  deviceCount: number;
-  scannerHandoffEnabled: boolean;
   bookingId: string | null;
   threadId: string | null;
   liveSessionId: string | null;
@@ -69,18 +65,12 @@ export interface OwnerDeskSnapshot {
     seniorCases: number;
     paymentWatch: number;
     liveNow: number;
-    mobileLinked: number;
+    liveNow: number;
     alertingNow: number;
     overdueFollowUps: number;
   };
   alerts: OwnerDeskAlert[];
   followUps: OwnerDeskFollowUp[];
-  mobileDeck: {
-    headline: string;
-    criticalCount: number;
-    dueSoonCount: number;
-    linkedDevices: number;
-  };
   cases: OwnerDeskCase[];
 }
 
@@ -144,9 +134,6 @@ interface CaseAccumulator {
   activeLiveSessions: number;
   hasPaymentPending: boolean;
   hasTicketIssue: boolean;
-  appLinked: boolean;
-  deviceCount: number;
-  scannerHandoffEnabled: boolean;
   bookingId: string | null;
   bookingUpdatedAt: number;
   threadId: string | null;
@@ -274,9 +261,6 @@ function makeEmptyCase(id: string): CaseAccumulator {
     activeLiveSessions: 0,
     hasPaymentPending: false,
     hasTicketIssue: false,
-    appLinked: false,
-    deviceCount: 0,
-    scannerHandoffEnabled: false,
     bookingId: null,
     bookingUpdatedAt: 0,
     threadId: null,
@@ -448,7 +432,6 @@ function heatScoreFromCase(caseRef: CaseAccumulator, now: number) {
   if (caseRef.serviceMode === "senior") score += 10;
   if (caseRef.totalRevenue >= 1200) score += 8;
   else if (caseRef.totalRevenue >= 600) score += 4;
-  if (!caseRef.appLinked && caseRef.serviceMode === "senior") score += 4;
 
   const ageHours = caseRef.lastTouchAt > 0 ? Math.max(0, (now - caseRef.lastTouchAt) / (1000 * 60 * 60)) : 0;
   if (ageHours >= 24 && (caseRef.unreadInboxCount > 0 || caseRef.liveRequests > 0 || caseRef.hasPaymentPending)) {
@@ -550,7 +533,6 @@ export async function buildOwnerDeskSnapshot(): Promise<OwnerDeskSnapshot> {
     escalations,
     allUsers,
     profiles,
-    deviceRows,
     messageRows,
   ] = await Promise.all([
     db.select().from(bookings).orderBy(desc(bookings.createdAt)),
@@ -559,22 +541,12 @@ export async function buildOwnerDeskSnapshot(): Promise<OwnerDeskSnapshot> {
     storage.getAllVoiceEscalations(),
     db.select().from(users),
     db.select().from(customerProfiles),
-    db.select().from(customerMobileDevices).orderBy(desc(customerMobileDevices.updatedAt)),
     db.select().from(internalMessages).orderBy(desc(internalMessages.createdAt)).limit(500),
   ]);
 
   const userById = new Map(allUsers.map((user) => [user.id, user]));
   const profileByUserId = new Map(profiles.map((profile) => [profile.userId, profile]));
-  const devicesByUserId = new Map<string, Array<typeof deviceRows[number]>>();
   const latestMessageByThreadId = new Map<string, typeof messageRows[number]>();
-
-  for (const device of deviceRows) {
-    if (device.revokedAt) continue;
-    if (!devicesByUserId.has(device.userId)) {
-      devicesByUserId.set(device.userId, []);
-    }
-    devicesByUserId.get(device.userId)!.push(device);
-  }
 
   for (const message of messageRows) {
     if (!latestMessageByThreadId.has(message.threadId)) {
@@ -642,12 +614,6 @@ export async function buildOwnerDeskSnapshot(): Promise<OwnerDeskSnapshot> {
       if (profile.experienceMode === "senior") {
         caseRef.serviceMode = "senior";
       }
-      caseRef.scannerHandoffEnabled = Boolean(profile.scannerHandoffEnabled);
-    }
-
-    if (activeDevices.length > 0) {
-      caseRef.appLinked = true;
-      caseRef.deviceCount = Math.max(caseRef.deviceCount, activeDevices.length);
     }
   };
 
@@ -1037,18 +1003,11 @@ export async function buildOwnerDeskSnapshot(): Promise<OwnerDeskSnapshot> {
       seniorCases: finalizedCases.filter((item) => item.serviceMode === "senior").length,
       paymentWatch: finalizedCases.filter((item) => item.stage === "payment-follow-up").length,
       liveNow: finalizedCases.filter((item) => item.liveRequests > 0 || item.activeLiveSessions > 0).length,
-      mobileLinked: finalizedCases.filter((item) => item.appLinked).length,
       alertingNow: alerts.length,
       overdueFollowUps: followUps.filter((item) => item.overdue).length,
     },
     alerts,
     followUps,
-    mobileDeck: {
-      headline: alerts[0]?.title || "Sem alertas criticos no momento",
-      criticalCount: criticalAlertCount,
-      dueSoonCount,
-      linkedDevices: finalizedCases.reduce((sum, item) => sum + item.deviceCount, 0),
-    },
     cases: finalizedCases,
   };
 }
