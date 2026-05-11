@@ -23,7 +23,7 @@ import { SeniorCareDesk } from "@/components/SeniorCareDesk";
 import { useI18n } from "@/lib/i18n";
 import { AdminKnowledgeHub } from "@/components/AdminKnowledgeHub";
 import { AdminCustomerInsights } from "@/components/AdminCustomerInsights";
-import { SocialStudio } from "@/components/SocialStudio";
+import { AdStudio } from "@/components/AdStudio";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import React, { useState, useEffect, Fragment } from "react";
@@ -191,7 +191,7 @@ export default function AdminDashboard() {
               : activeTab === "bookings"
                 ? "Controle de Viagens Premium"
               : activeTab === "ads"
-                ? "Estúdio de Social Media AI (Premium Merchandise)"
+                ? "Estúdio de Marketing (Premium Merchandise)"
                 : "Configurações Operacionais da Agência";
 
   return (
@@ -274,8 +274,8 @@ export default function AdminDashboard() {
                 : "text-zinc-400 hover:bg-white/5 hover:text-white"
             )}
           >
-            <Sparkles className="w-5 h-5" />
-            <span className="font-bold text-sm">Estúdio Social AI</span>
+            <Megaphone className="w-5 h-5" />
+            <span className="font-bold text-sm">Estúdio de Marketing</span>
           </button>
 
           <Button 
@@ -455,7 +455,7 @@ export default function AdminDashboard() {
 
             {activeTab === "ads" && (
               <div className="animate-in fade-in duration-300">
-                <SocialStudio />
+                <AdStudio />
               </div>
             )}
 

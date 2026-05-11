@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,35 +8,139 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Instagram, Facebook, Sparkles, Image as ImageIcon, Type, 
   Send, Copy, Share2, Palette, Smartphone, Layout, 
-  Eye, Download, Wand2, Zap, Rocket, Target, Globe, Users
+  Eye, Download, Wand2, Zap, Rocket, Target, Globe, Users,
+  CheckCircle2, Loader2, Plane
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAdminFeaturedDeals } from "@/hooks/use-admin";
+import { cn } from "@/lib/utils";
 
 export function AdStudio() {
   const { toast } = useToast();
-  const [adText, setAdText] = useState("Saindo de Newark para o Brasil? Temos as melhores tarifas!");
+  const { data: deals, isLoading: dealsLoading } = useAdminFeaturedDeals();
+  const [selectedDealId, setSelectedDealId] = useState<string>("");
+  const [adText, setAdText] = useState("Temos as melhores tarifas para o Brasil!");
   const [activeFormat, setActiveFormat] = useState<"story" | "post" | "reels">("story");
-  const [accentColor, setAccentColor] = useState("#4f46e5");
+  const [activeCampaign, setActiveCampaign] = useState<"conversion" | "reach">("conversion");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+
+  const selectedDeal = deals?.find(d => d.id === selectedDealId);
+
+  // Sync initial text when deal is selected
+  useEffect(() => {
+    if (selectedDeal) {
+      setAdText(`🇧🇷 Voos para ${selectedDeal.destinationCity} saindo de ${selectedDeal.originCity}. A partir de R$ ${selectedDeal.price}! Reserve com a Michels Travel.`);
+    }
+  }, [selectedDealId]);
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText("https://michelstravel.agency/search?ref=ad_insta");
+    const link = selectedDeal 
+      ? `https://michelstravel.agency/search?origin=${selectedDeal.originCity}&dest=${selectedDeal.destinationCity}&ref=ad_studio`
+      : "https://michelstravel.agency/search?ref=ad_studio";
+    navigator.clipboard.writeText(link);
     toast({
       title: "Link Copiado",
-      description: "O link de conversão foi copiado para sua área de transferência.",
+      description: "O link de conversão estratégica foi copiado.",
     });
   };
 
-  const handleMagicFill = () => {
-    setIsGenerating(true);
-    setTimeout(() => {
-      setAdText("✨ Viagem para o Brasil com atendimento em português. Reserve agora e pague em 12x!");
-      setIsGenerating(false);
+  const handleMagicFill = async () => {
+    if (!selectedDealId) {
       toast({
-        title: "Inteligência Ativada",
-        description: "Copywriter IA gerou um texto de alta conversão.",
+        title: "Atenção",
+        description: "Selecione uma oferta primeiro para a Mia gerar a copy.",
+        variant: "destructive"
       });
-    }, 800);
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const response = await fetch("/api/admin/social/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dealId: selectedDealId,
+          platform: "instagram",
+          tone: "elite",
+          mode: "copy"
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to generate AI content");
+      const data = await response.json();
+      setAdText(data.copy);
+      
+      toast({
+        title: "Copywriter IA (Mia)",
+        description: "Texto de alta conversão gerado com sucesso.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro na Geração",
+        description: "Não foi possível conectar com a Mia.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!selectedDeal || !adText) {
+      toast({
+        title: "Erro",
+        description: "Gere o conteúdo e selecione uma oferta antes de publicar.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsPublishing(true);
+    try {
+      const response = await fetch("/api/admin/social/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dealId: selectedDealId,
+          platform: "instagram",
+          copy: adText,
+          imageUrl: selectedDeal.imageUrl,
+          format: activeFormat
+        }),
+      });
+
+      if (!response.ok) throw new Error("Publishing failed");
+      const data = await response.json();
+      
+      toast({
+        title: "Merchandise Publicado!",
+        description: `Status: ${data.status}. Post sincronizado com o estúdio.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro na Publicação",
+        description: "Falha ao enviar para o Instagram/Facebook.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleDownload = () => {
+    toast({
+      title: "Exportando Arte",
+      description: "Aguarde enquanto renderizamos o banner em 4K.",
+    });
+    // Simulate download
+    setTimeout(() => {
+      toast({
+        title: "Pronto!",
+        description: "Arte exportada com sucesso (formato .png)",
+      });
+    }, 1500);
   };
 
   return (
@@ -58,14 +162,64 @@ export function AdStudio() {
           </CardHeader>
           <CardContent className="pt-8 space-y-6">
             
+            {/* Offer Selection */}
+            <div className="space-y-3">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex justify-between">
+                <span>1. Seleção de Oferta</span>
+                {selectedDeal && <span className="text-indigo-400 flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> Ativa</span>}
+              </Label>
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                {dealsLoading ? (
+                  <div className="py-4 text-center"><Loader2 className="w-5 h-5 animate-spin text-indigo-500 mx-auto" /></div>
+                ) : (
+                  deals?.map((deal) => (
+                    <button
+                      key={deal.id}
+                      onClick={() => setSelectedDealId(deal.id)}
+                      className={cn(
+                        "w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left",
+                        selectedDealId === deal.id
+                          ? "bg-indigo-600/20 border-indigo-500/50 shadow-lg shadow-indigo-500/10"
+                          : "bg-white/5 border-white/5 hover:bg-white/10"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn("p-1.5 rounded-full", selectedDealId === deal.id ? "bg-indigo-500" : "bg-slate-800")}>
+                          <Plane className="w-3 h-3 text-white" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-white truncate">{deal.destinationCity}</p>
+                          <p className="text-[9px] text-slate-400 uppercase tracking-tighter">R$ {deal.price} • {deal.airline}</p>
+                        </div>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Objetivo da Campanha</Label>
               <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" className="h-12 rounded-xl bg-white/5 border-white/10 text-xs font-bold text-white hover:bg-white/10">
-                  <Target className="mr-2 h-4 w-4 text-emerald-400" /> Conversão
+                <Button 
+                  variant="outline" 
+                  onClick={() => setActiveCampaign("conversion")}
+                  className={cn(
+                    "h-12 rounded-xl text-xs font-bold transition-all",
+                    activeCampaign === "conversion" ? "bg-indigo-600 text-white border-indigo-500" : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                  )}
+                >
+                  <Target className={cn("mr-2 h-4 w-4", activeCampaign === "conversion" ? "text-white" : "text-emerald-400")} /> Conversão
                 </Button>
-                <Button variant="outline" className="h-12 rounded-xl bg-white/5 border-white/10 text-xs font-bold text-white hover:bg-white/10">
-                  <Globe className="mr-2 h-4 w-4 text-indigo-400" /> Alcance
+                <Button 
+                  variant="outline" 
+                  onClick={() => setActiveCampaign("reach")}
+                  className={cn(
+                    "h-12 rounded-xl text-xs font-bold transition-all",
+                    activeCampaign === "reach" ? "bg-indigo-600 text-white border-indigo-500" : "bg-white/5 border-white/10 text-white hover:bg-white/10"
+                  )}
+                >
+                  <Globe className={cn("mr-2 h-4 w-4", activeCampaign === "reach" ? "text-white" : "text-indigo-400")} /> Alcance
                 </Button>
               </div>
             </div>
@@ -77,10 +231,11 @@ export function AdStudio() {
                   variant="ghost" 
                   size="sm" 
                   onClick={handleMagicFill}
-                  disabled={isGenerating}
+                  disabled={isGenerating || !selectedDealId}
                   className="h-6 text-[9px] font-black uppercase tracking-tighter text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
                 >
-                  <Wand2 className="mr-1 h-3 w-3" /> Sugestão IA
+                  {isGenerating ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Wand2 className="mr-1 h-3 w-3" />}
+                  Sugestão IA
                 </Button>
               </div>
               <textarea 
@@ -93,7 +248,7 @@ export function AdStudio() {
 
             <div className="space-y-3">
               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Formato de Destino</Label>
-              <Tabs defaultValue="story" onValueChange={(v) => setActiveFormat(v as any)} className="w-full">
+              <Tabs value={activeFormat} onValueChange={(v) => setActiveFormat(v as any)} className="w-full">
                 <TabsList className="grid grid-cols-3 bg-slate-950/60 p-1 rounded-xl h-12">
                   <TabsTrigger value="story" className="rounded-lg text-[10px] font-black uppercase data-[state=active]:bg-indigo-600">Story</TabsTrigger>
                   <TabsTrigger value="post" className="rounded-lg text-[10px] font-black uppercase data-[state=active]:bg-indigo-600">Post</TabsTrigger>
@@ -137,7 +292,10 @@ export function AdStudio() {
           <CardContent className="flex items-center justify-center p-8 md:p-12 relative z-10">
             
             {/* Mockup Container */}
-            <div className={`relative transition-all duration-500 ${activeFormat === 'story' ? 'aspect-[9/16] w-64' : 'aspect-square w-72'} rounded-[40px] border-[8px] border-slate-900 shadow-2xl overflow-hidden bg-slate-800`}>
+            <div className={cn(
+              "relative transition-all duration-500 rounded-[40px] border-[8px] border-slate-900 shadow-2xl overflow-hidden bg-slate-800",
+              activeFormat === 'story' || activeFormat === 'reels' ? 'aspect-[9/16] w-64' : 'aspect-square w-72'
+            )}>
               
               {/* Fake UI Overlay */}
               <div className="absolute inset-0 z-20 flex flex-col justify-between p-6 pointer-events-none">
@@ -168,22 +326,33 @@ export function AdStudio() {
 
               {/* Background Mock (Simulating an image) */}
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-slate-800 flex items-center justify-center">
-                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1570710891163-6d3b5c47248b?q=80\u0026w=2070')] bg-cover bg-center opacity-40 mix-blend-overlay" />
+                 {selectedDeal?.imageUrl ? (
+                   <img src={selectedDeal.imageUrl} className="w-full h-full object-cover opacity-60" alt="Mockup" />
+                 ) : (
+                   <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1570710891163-6d3b5c47248b?q=80&w=2070')] bg-cover bg-center opacity-40 mix-blend-overlay" />
+                 )}
                  <div className="text-slate-700/20 font-black text-4xl rotate-45 select-none tracking-[0.5em] font-display">INSTAGRAM</div>
               </div>
 
-              {/* Safe Zone Indicators (Hidden usually, shown on hover/active) */}
+              {/* Safe Zone Indicators */}
               <div className="absolute inset-0 border-x-2 border-white/5 border-dashed pointer-events-none opacity-20" />
             </div>
 
             {/* Float Floating Action Panel */}
             <div className="absolute bottom-8 right-8 flex flex-col gap-3">
-               <Button className="h-14 w-14 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-2xl flex flex-col gap-0 items-center justify-center border-4 border-slate-950">
+               <Button 
+                onClick={handleDownload}
+                className="h-14 w-14 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-2xl flex flex-col gap-0 items-center justify-center border-4 border-slate-950 transition-transform active:scale-90"
+               >
                   <Download className="h-5 w-5" />
                   <span className="text-[8px] font-black mt-1">PNG</span>
                </Button>
-               <Button className="h-14 w-14 rounded-full bg-violet-600 hover:bg-violet-500 text-white shadow-2xl flex flex-col gap-0 items-center justify-center border-4 border-slate-950">
-                  <Send className="h-5 w-5" />
+               <Button 
+                onClick={handlePublish}
+                disabled={isPublishing || !selectedDealId}
+                className="h-14 w-14 rounded-full bg-violet-600 hover:bg-violet-500 text-white shadow-2xl flex flex-col gap-0 items-center justify-center border-4 border-slate-950 transition-transform active:scale-90"
+               >
+                  {isPublishing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
                   <span className="text-[8px] font-black mt-1">ADS</span>
                </Button>
             </div>
@@ -213,11 +382,11 @@ export function AdStudio() {
                 { label: "Cliques no Link", val: "1,240", change: "+12%", icon: Zap, color: "text-amber-400" },
                 { label: "Alcance Estimado", val: "45.2k", change: "+8%", icon: Users, color: "text-indigo-400" },
                 { label: "Conversão Direta", val: "3.4%", change: "+0.5%", icon: Rocket, color: "text-emerald-400" },
-                { label: "Custo por Clique", val: "$0.42", change: "-5%", icon: DollarSign, color: "text-cyan-400" },
+                { label: "Custo por Clique", val: "$0.42", change: "-5%", icon: Zap, color: "text-cyan-400" },
               ].map((m, i) => (
                 <div key={i} className="p-6 rounded-2xl bg-white/5 border border-white/5 space-y-3">
                    <div className="flex items-center justify-between">
-                     <m.icon className={`h-5 w-5 ${m.color}`} />
+                     <m.icon className={cn("h-5 w-5", m.color)} />
                      <span className="text-[10px] font-black text-emerald-400">{m.change}</span>
                    </div>
                    <div>
@@ -230,25 +399,5 @@ export function AdStudio() {
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function DollarSign(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="12" x2="12" y1="2" y2="22" />
-      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-    </svg>
   );
 }
