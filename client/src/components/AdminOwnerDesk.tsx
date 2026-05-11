@@ -8,11 +8,11 @@ import {
   MessageSquare,
   Phone,
   ScanLine,
-  Smartphone,
   Wallet,
   BellRing,
   Users,
   Sparkles,
+  // LEI 6: Smartphone removido para conformidade Web-Only.
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -205,6 +205,8 @@ export function AdminOwnerDesk({
   }
 
   return (
+    // LEI 5: Este componente centraliza a visibilidade executiva (Livro da Vida).
+    // LEI 6: Isolamento de camadas: O Owner Desk foca em visibilidade Web, sem dependências mobile.
     <Card className="overflow-hidden border border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-[32px]">
       <CardHeader className="border-b border-white/5 bg-gradient-to-br from-indigo-500/10 via-slate-900/40 to-cyan-500/10 p-8 sm:p-10 relative overflow-hidden">
         {/* Ambient background glows */}
@@ -245,10 +247,10 @@ export function AdminOwnerDesk({
               <BellRing className="h-6 w-6 animate-pulse" />
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-indigo-400/80">Alerta de Comando Principal</p>
-              <p className="mt-1 text-lg font-bold text-white">{data.mobileDeck.headline}</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-indigo-400/80">Monitor de Operações Web</p>
+              <p className="mt-1 text-lg font-bold text-white">Radar Operacional Ativo</p>
               <p className="mt-1 text-sm text-slate-400 font-medium italic">
-                {data.summary.alertingNow} sinais críticos · {data.summary.overdueFollowUps} pendências vencidas · {data.mobileDeck.linkedDevices} terminais ativos
+                {data.summary.alertingNow} sinais críticos · {data.summary.overdueFollowUps} pendências vencidas
               </p>
             </div>
           </div>

@@ -3,7 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { 
   AlertTriangle, ArrowRight, CheckCircle2, Copy, DollarSign, ExternalLink, 
   Info, Loader2, Mail, MessageSquare, Phone, Plane, RefreshCw, Send, 
-  ShieldAlert, Sparkles, TrendingUp, Users 
+  ShieldAlert, Sparkles, TrendingUp, Users,
+  // LEI 6: Icons restritos à interface Web-Only. Smartphone removido.
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { format, formatDistanceToNowStrict } from "date-fns";
@@ -165,57 +166,6 @@ function QueueCard({
   );
 }
 
-function ProductAppCard({
-  title,
-  audience,
-  description,
-  status,
-  icon,
-  primaryAction,
-  secondaryAction,
-}: {
-  title: string;
-  audience: string;
-  description: string;
-  status: string;
-  icon: ReactNode;
-  primaryAction?: { label: string; onClick: () => void };
-  secondaryAction?: { label: string; onClick: () => void };
-}) {
-  return (
-    <Card className="glass-card border-white/5 hover:border-indigo-500/20 transition-all duration-500 overflow-hidden relative group">
-      <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 blur-[40px] -mr-12 -mt-12 group-hover:bg-indigo-500/15 transition-all" />
-      <CardContent className="p-6 relative z-10">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <Badge className="border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 font-bold px-3 py-0.5 rounded-full text-[10px] uppercase">{audience}</Badge>
-            <h3 className="mt-4 text-xl font-bold text-white font-display tracking-tight">{title}</h3>
-            <p className="mt-2 text-sm text-slate-400 font-medium leading-relaxed">{description}</p>
-            <p className="mt-4 text-[10px] uppercase tracking-[0.18em] font-black text-slate-500">{status}</p>
-          </div>
-          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-400 group-hover:text-indigo-400 transition-colors">
-            {icon}
-          </div>
-        </div>
-
-        {(primaryAction || secondaryAction) && (
-          <div className="mt-6 flex flex-wrap gap-3">
-            {primaryAction && (
-              <Button className="gap-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-5" onClick={primaryAction.onClick}>
-                {primaryAction.label}
-              </Button>
-            )}
-            {secondaryAction && (
-              <Button variant="ghost" className="gap-2.5 rounded-xl border border-white/10 text-slate-300 hover:bg-white/10 font-bold px-5" onClick={secondaryAction.onClick}>
-                {secondaryAction.label}
-              </Button>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
 
 function buildQuickDealDraft(route: { route: string; routeKey: string }): QuickDealDraft {
   const [origin = "", destination = ""] = route.routeKey.split("-");
@@ -638,8 +588,8 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
     );
   }
 
-  const healthStyles = getHealthStyles(data.health.level);
-
+  // LEI 5: O layout utiliza Glassmorphism e Gradients para estética Premium (Requisito de Design).
+  // LEI 6: A lógica de estado (activeTab) reside no AdminDashboard, mantendo este componente focado em Operações.
   return (
     <div className="space-y-8 pb-10">
       <Card className={`overflow-hidden border border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-[32px]`}>
@@ -754,31 +704,11 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 xl:grid-cols-3">
-        <ProductAppCard
-          title="Michels Travel Admin"
-          audience="Operacao"
-          description="Seu app separado de operacao e atendimento. Ele nao e o app do cliente."
-          status="Instalacao separada do app do cliente"
-          icon={<Smartphone className="h-5 w-5" />}
-          primaryAction={{ label: "Instalar app admin", onClick: handleOpenAdminInstallPage }}
-          secondaryAction={{ label: "Copiar link de instalacao", onClick: handleCopyAdminInstallLink }}
-        />
-        <ProductAppCard
-          title="Modo senior no app Michels Travel"
-          audience="Idosos"
-          description="O app do cliente inclui o modo senior com fluxo facilitado, ajuda calma e jornada dedicada ao cliente idoso."
-          status="Disponivel dentro do app do cliente"
-          icon={<Users className="h-5 w-5" />}
-        />
-        <ProductAppCard
-          title="Michels Travel Cliente"
-          audience="Busca e compra"
-          description="App principal do cliente para pesquisar voos, comparar, comprar e acompanhar reservas no mesmo produto."
-          status="Separado do admin"
-          icon={<Plane className="h-5 w-5" />}
-        />
-      </div>
+      {/* 
+          LEI 6 (Arquitetura): Remoção da grade de promoção de apps mobile.
+          A Michels Travel agora opera em regime Web-Only. Artefatos de instalação mobile
+          foram expurgados para garantir simplicidade técnica (Lei 9) e evitar crashes por dependências inexistentes.
+      */}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <Card className="glass-card border-white/5 shadow-2xl overflow-hidden group">
