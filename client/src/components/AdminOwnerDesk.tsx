@@ -25,7 +25,7 @@ type OwnerDeskCase = AdminOwnerDeskData["cases"][number];
 type OwnerDeskAction = OwnerDeskCase["availableActions"][number];
 type OwnerDeskAlert = AdminOwnerDeskData["alerts"][number];
 type OwnerDeskFollowUp = AdminOwnerDeskData["followUps"][number];
-type FilterKey = "all" | "hot" | "senior" | "payment" | "live" | "mobile";
+type FilterKey = "all" | "hot" | "senior" | "payment" | "live";
 
 const filterLabels: Array<{ key: FilterKey; label: string }> = [
   { key: "all", label: "Todos" },
@@ -33,7 +33,6 @@ const filterLabels: Array<{ key: FilterKey; label: string }> = [
   { key: "senior", label: "Senior" },
   { key: "payment", label: "Pagamento" },
   { key: "live", label: "Ao vivo" },
-  { key: "mobile", label: "App" },
 ];
 
 function formatMoney(amount: number) {
@@ -148,8 +147,7 @@ export function AdminOwnerDesk({
         return source.filter((item) => item.stage === "payment-follow-up" || item.pendingBookings > 0);
       case "live":
         return source.filter((item) => item.liveRequests > 0 || item.activeLiveSessions > 0);
-      case "mobile":
-        return source.filter((item) => item.appLinked);
+
       default:
         return source;
     }
@@ -236,7 +234,6 @@ export function AdminOwnerDesk({
             <SummaryCard title="Cuidado Sênior" value={data.summary.seniorCases} hint="Condução White-Glove" icon={<Headphones className="h-5 w-5 text-indigo-400" />} />
             <SummaryCard title="Em Pagamento" value={data.summary.paymentWatch} hint="Receita em Validação" icon={<Wallet className="h-5 w-5 text-cyan-400" />} />
             <SummaryCard title="Suporte Realtime" value={data.summary.liveNow} hint="Chat de Elite" icon={<MessageSquare className="h-5 w-5 text-emerald-400" />} />
-            <SummaryCard title="App Link" value={data.summary.mobileLinked} hint="Omnichannel Ativo" icon={<Smartphone className="h-5 w-5 text-slate-300" />} />
           </div>
         </div>
       </CardHeader>
@@ -447,15 +444,7 @@ export function AdminOwnerDesk({
                           {ownerCase.needsHumanHelp && (
                             <Badge className="border border-orange-500/30 bg-orange-500/10 text-orange-400 font-bold px-3 py-1 rounded-full text-[10px] uppercase underline underline-offset-4 decoration-2">Solicitou Humano</Badge>
                           )}
-                          {ownerCase.appLinked && (
-                            <Badge className="border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold px-3 py-1 rounded-full text-[10px]">App Ativo</Badge>
-                          )}
-                          {ownerCase.scannerHandoffEnabled && (
-                            <Badge className="border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 font-bold px-3 py-1 rounded-full text-[10px] flex items-center gap-1.5 uppercase">
-                              <ScanLine className="h-3.5 w-3.5" />
-                              Scanner Online
-                            </Badge>
-                          )}
+
                         </div>
                         <p className="mt-6 text-sm font-medium text-slate-400 flex items-center gap-2">
                           <span className="text-white font-bold">{ownerCase.route || "Planejamento Livre"}</span> 
@@ -475,7 +464,6 @@ export function AdminOwnerDesk({
                       <MetricBlock label="Receita Estimada" value={formatMoney(ownerCase.totalRevenue)} icon={<Wallet className="h-4 w-4 text-emerald-400" />} />
                       <MetricBlock label="Volume" value={ownerCase.totalBookings} unit="Reservas" icon={<Users className="h-4 w-4 text-indigo-400" />} />
                       <MetricBlock label="Inbox" value={ownerCase.unreadInboxCount} unit="Mensagens" icon={<MessageSquare className="h-4 w-4 text-cyan-400" />} />
-                      <MetricBlock label="Devices" value={ownerCase.deviceCount} unit="Terminais" icon={<Smartphone className="h-4 w-4 text-slate-400" />} />
                     </div>
 
                     <div className="mt-10 rounded-[28px] bg-gradient-to-br from-indigo-500/10 via-slate-900/60 to-slate-900 border border-indigo-500/20 p-8 shadow-inner shadow-indigo-500/5">

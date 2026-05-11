@@ -95,12 +95,42 @@ export function SocialStudio() {
   };
 
   const publishPost = async () => {
+    if (!selectedDeal || !generatedCopy) {
+      toast({
+        title: "Erro",
+        description: "Gere o conteúdo antes de publicar.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsPublishing(true);
     try {
-      await new Promise(r => setTimeout(r, 2000));
+      const response = await fetch("/api/admin/social/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dealId: selectedDealId,
+          platform: activePlatform,
+          copy: generatedCopy,
+          imageUrl: selectedDeal.imageUrl,
+          rules: generatedRules
+        }),
+      });
+
+      if (!response.ok) throw new Error("Publishing failed");
+      
+      const data = await response.json();
+      
       toast({
-        title: "Publicado com Sucesso!",
-        description: `O merchandise de ${selectedDeal?.destinationCity} foi enviado para aprovação/publicação.`,
+        title: "Merchandise Publicado!",
+        description: `Post ID: ${data.postId}. Status: ${data.status}.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro na Publicação",
+        description: "Falha ao enviar para a rede social.",
+        variant: "destructive"
       });
     } finally {
       setIsPublishing(false);

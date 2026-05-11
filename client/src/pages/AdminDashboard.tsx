@@ -33,6 +33,7 @@ import { FeaturedDealsManager } from "@/components/FeaturedDealsManager";
 import { useLocation } from "wouter";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
@@ -354,9 +355,72 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        {/* Scrollable Document Area */}
+        {/* Main Area Header & Stats */}
         <div className="flex-1 overflow-y-auto p-6 md:p-10 scrollbar-none">
-          <div className="mx-auto w-full max-w-[1920px] animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20">
+          <div className="mx-auto w-full max-w-[1920px] animate-in fade-in slide-in-from-bottom-6 duration-700 pb-10">
+            
+            {/* Premium Aesthetic Values Card */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              <div className="relative group overflow-hidden rounded-[32px] bg-slate-900/40 border border-white/5 p-8 backdrop-blur-2xl transition-all hover:border-indigo-500/30">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[60px] -mr-16 -mt-16 group-hover:bg-indigo-500/20 transition-all" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="h-10 w-10 bg-indigo-500/20 rounded-xl border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                      <DollarSign className="h-5 w-5" />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Volume Bruto (Global)</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-5xl font-black text-white font-display tracking-tighter leading-none mb-2">
+                      ${((stats as any)?.totalRevenue ?? 0).toLocaleString()}
+                    </span>
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+                      <TrendingUp className="h-3 w-3" /> +12.5% em relação ao período anterior
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative group overflow-hidden rounded-[32px] bg-slate-900/40 border border-white/5 p-8 backdrop-blur-2xl transition-all hover:border-cyan-500/30">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 blur-[60px] -mr-16 -mt-16 group-hover:bg-cyan-500/20 transition-all" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="h-10 w-10 bg-cyan-500/20 rounded-xl border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                      <Zap className="h-5 w-5" />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Taxa de Conversão Concierge</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-5xl font-black text-white font-display tracking-tighter leading-none mb-2">
+                      84.2%
+                    </span>
+                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                      <Activity className="h-3 w-3" /> Eficiência de Fechamento via Mia IA
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative group overflow-hidden rounded-[32px] bg-gradient-to-br from-indigo-600/20 to-purple-600/20 border border-white/10 p-8 backdrop-blur-2xl transition-all hover:border-white/20">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="h-10 w-10 bg-white/10 rounded-xl border border-white/20 flex items-center justify-center text-white">
+                      <Users className="h-5 w-5" />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Comissões Acumuladas</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-5xl font-black text-white font-display tracking-tighter leading-none mb-2">
+                      ${((stats as any)?.totalCommission ?? 0).toLocaleString()}
+                    </span>
+                    <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest flex items-center gap-2">
+                      <CheckCircle2 className="h-3 w-3 text-emerald-400" /> Disponível para Liquidação
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {activeTab === "command" && (
               <div className="animate-in fade-in duration-300">

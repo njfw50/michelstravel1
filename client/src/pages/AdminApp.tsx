@@ -360,7 +360,6 @@ interface OwnerDeskMobileData {
     seniorCases: number;
     paymentWatch: number;
     liveNow: number;
-    mobileLinked: number;
     alertingNow: number;
     overdueFollowUps: number;
   };
@@ -368,7 +367,6 @@ interface OwnerDeskMobileData {
     headline: string;
     criticalCount: number;
     dueSoonCount: number;
-    linkedDevices: number;
   };
   alerts: OwnerDeskMobileAlert[];
   followUps: OwnerDeskMobileFollowUp[];
@@ -1991,8 +1989,8 @@ function OwnerAlertsPanel({ onLogout }: { onLogout: () => void }) {
             <p className="mt-1 text-2xl font-bold text-emerald-800">{data?.summary.hotCases || 0}</p>
           </div>
           <div className="rounded-2xl border border-blue-200 bg-blue-50 p-3">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-blue-700">App</p>
-            <p className="mt-1 text-2xl font-bold text-blue-800">{data?.summary.mobileLinked || 0}</p>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-blue-700">Senior</p>
+            <p className="mt-1 text-2xl font-bold text-blue-800">{data?.summary.seniorCases || 0}</p>
           </div>
         </div>
       </Card>

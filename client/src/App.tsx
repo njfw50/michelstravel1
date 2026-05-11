@@ -33,11 +33,10 @@ import BlogPost from "@/pages/BlogPost";
 import About from "@/pages/About";
 import IronboundNewark from "@/pages/IronboundNewark";
 import BrazilFlightsNewark from "@/pages/BrazilFlightsNewark";
-import AppSeniorDownload from "@/pages/AppSeniorDownload";
-import AppAdminDownload from "@/pages/AppAdminDownload";
+
 import AdminApp from "@/pages/AdminApp";
 import TravelExplorer from "@/pages/TravelExplorer";
-import ScannerPage from "@/pages/ScannerPage";
+
 import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import CheckoutCancel from "@/pages/CheckoutCancel";
 import MyTrips from "@/pages/MyTrips";
@@ -95,9 +94,7 @@ function Router() {
       <Route path="/about" component={() => <Layout><About /></Layout>} />
       <Route path="/agencia-de-viagens-ironbound-newark" component={() => <Layout><IronboundNewark /></Layout>} />
       <Route path="/passagens-para-o-brasil-saindo-de-newark" component={() => <Layout><BrazilFlightsNewark /></Layout>} />
-      <Route path="/apps/michels-travel" component={() => <Layout><AppSeniorDownload /></Layout>} />
-      <Route path="/apps/michels-travel-senior" component={() => <Layout><AppSeniorDownload /></Layout>} />
-      <Route path="/apps/michels-travel-admin" component={() => <Layout><AppAdminDownload /></Layout>} />
+
       <Route path="/blog" component={() => <Layout><BlogList /></Layout>} />
       <Route path="/blog/:slug" component={() => <Layout><BlogPost /></Layout>} />
       
@@ -118,7 +115,7 @@ function Router() {
       <Route path="/assistance" component={() => <Layout><Assistance /></Layout>} />
       <Route path="/checkout/success" component={CheckoutSuccess} />
       <Route path="/checkout/cancel" component={CheckoutCancel} />
-      <Route path="/scan" component={ScannerPage} />
+
 
       <Route component={NotFound} />
     </Switch>

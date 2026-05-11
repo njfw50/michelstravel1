@@ -676,7 +676,7 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                     <span key={i} className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">
                       {word}{" "}
                     </span>
-                  ),
+                  )
                 )}
               </AutoFitText>
               <p className="mt-6 max-w-2xl text-lg text-slate-400 font-medium leading-relaxed italic">

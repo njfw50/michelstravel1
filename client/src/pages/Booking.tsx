@@ -23,7 +23,7 @@ import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 import { useI18n } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
-import { ScanDocumentDialog } from "@/components/ScanDocumentDialog";
+
 import BaggageSelector from "@/components/BaggageSelector";
 import PaymentForm from "@/components/PaymentForm";
 import SeniorNameCoachDialog, {
@@ -379,27 +379,9 @@ function PassengerForm({ index, control, register, errors, passengerType, isDocR
 
       {expanded && (
         <div className="px-5 pb-7 space-y-6 border-t border-white/5 pt-6">
-          <div className="flex justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-10 gap-2 rounded-xl border-blue-500/30 text-blue-400 bg-blue-500/5 hover:bg-blue-500 hover:text-white transition-all font-bold text-xs"
-              onClick={() => setScanOpen(true)}
-              data-testid={`button-scan-document-${index}`}
-            >
-              <ScanLine className="h-4 w-4" />
-              {t("scan.scan_document")}
-            </Button>
-          </div>
 
-          <ScanDocumentDialog
-            open={scanOpen}
-            onOpenChange={setScanOpen}
-            onConfirm={handleScanConfirm}
-            passengerIndex={index}
-            declaredDocumentType={declaredDocType}
-          />
+
+
 
           {isEasyMode && (
             <div className="relative overflow-hidden rounded-[24px] border border-blue-500/20 bg-blue-500/5 p-4 backdrop-blur-sm shadow-xl">
