@@ -3,6 +3,8 @@ import { desc } from "drizzle-orm";
 import { db } from "../db";
 import { storage } from "../storage";
 import { customerProfiles, users } from "@shared/models/auth";
+import { bookings, liveSessions, internalMessages } from "@shared/schema";
+
 
 export type OwnerDeskAction =
   | "open-live-desk"
@@ -64,7 +66,6 @@ export interface OwnerDeskSnapshot {
     hotCases: number;
     seniorCases: number;
     paymentWatch: number;
-    liveNow: number;
     liveNow: number;
     alertingNow: number;
     overdueFollowUps: number;
@@ -591,7 +592,6 @@ export async function buildOwnerDeskSnapshot(): Promise<OwnerDeskSnapshot> {
     if (!userId) return;
     const user = userById.get(userId);
     const profile = profileByUserId.get(userId);
-    const activeDevices = devicesByUserId.get(userId) || [];
 
     registerKey(caseRef, `user:${userId}`);
     if (user?.email) registerKey(caseRef, `email:${normalizeEmail(user.email)}`);
@@ -907,9 +907,6 @@ export async function buildOwnerDeskSnapshot(): Promise<OwnerDeskSnapshot> {
         openEscalations: caseRef.openEscalations,
         liveRequests: caseRef.liveRequests,
         activeLiveSessions: caseRef.activeLiveSessions,
-        appLinked: caseRef.appLinked,
-        deviceCount: caseRef.deviceCount,
-        scannerHandoffEnabled: caseRef.scannerHandoffEnabled,
         bookingId: caseRef.bookingId,
         threadId: caseRef.threadId,
         liveSessionId: caseRef.liveSessionId,

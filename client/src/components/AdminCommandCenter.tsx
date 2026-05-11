@@ -698,7 +698,6 @@ export function AdminCommandCenter({ onOpenLiveDesk, onOpenBookings, onOpenSetti
                 <p className="text-[10px] text-indigo-400/60 font-black uppercase tracking-widest">
                   AVG Ticket: {formatCurrency(data.revenue.avgBookingValue)}
                 </p>
-              </div>
             </div>
           </div>
         </CardContent>

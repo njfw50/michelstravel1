@@ -112,7 +112,6 @@ export function registerRoutes(app: Express) {
       siteName: settings?.siteName || "Michels Travel",
       heroTitle: settings?.heroTitle || null,
       heroSubtitle: settings?.heroSubtitle || null,
-      promotionalBanner: settings?.promotionalBanner || null,
     });
   });
 
@@ -516,10 +515,9 @@ export function registerRoutes(app: Express) {
         }
 
         const bookingData = req.body;
-        const mobileAuth = await resolveCustomerMobileAuth(req);
         const webUser = (req as any).user;
-        const resolvedUserId = webUser?.claims?.sub || webUser?.id || mobileAuth?.userId || null;
-        const resolvedContactEmail = bookingData.contactEmail || mobileAuth?.email;
+        const resolvedUserId = webUser?.claims?.sub || webUser?.id || null;
+        const resolvedContactEmail = bookingData.contactEmail;
         const commissionRate = settings?.commissionPercentage ? parseFloat(settings.commissionPercentage) / 100 : 0.085;
         const requestedOfferId = typeof bookingData?.flightData?.id === "string" ? bookingData.flightData.id : null;
 
@@ -1431,10 +1429,9 @@ export function registerRoutes(app: Express) {
       if (!booking) return res.status(404).json({ error: "Booking not found" });
 
       const user = (req as any).user;
-      const mobileAuth = await resolveCustomerMobileAuth(req);
       const { referenceCode, contactEmail } = req.body || {};
       const hasValidRef = referenceCode && contactEmail && booking.referenceCode === referenceCode && booking.contactEmail === contactEmail;
-      const resolvedUserId = user?.claims?.sub || user?.id || mobileAuth?.userId || null;
+      const resolvedUserId = user?.claims?.sub || user?.id || null;
       const hasValidUser = resolvedUserId && booking.userId && resolvedUserId === booking.userId;
       if (booking.userId && !hasValidUser && !hasValidRef) {
         return res.status(403).json({ error: "Access denied" });
@@ -1559,8 +1556,7 @@ export function registerRoutes(app: Express) {
       if (!booking) return res.status(404).json({ error: "Booking not found" });
 
       const user = (req as any).user;
-      const mobileAuth = await resolveCustomerMobileAuth(req);
-      const resolvedUserId = user?.claims?.sub || user?.id || mobileAuth?.userId || null;
+      const resolvedUserId = user?.claims?.sub || user?.id || null;
       if (booking.userId && resolvedUserId !== booking.userId) {
         const { reference, email } = req.query;
         if (!reference || !email || reference !== booking.referenceCode || email !== booking.contactEmail) {
@@ -4611,38 +4607,4 @@ OUTPUT FORMAT (JSON only):
     }
   });
 
-  // === SCANNER BRIDGE ROUTES ===
-
-  app.post('/api/scanner/session', async (req, res) => {
-    try {
-      const { sessionId } = req.body;
-      if (!sessionId) return res.status(400).json({ error: "sessionId required" });
-      const session = await storage.createScannerSession({ sessionId, data: null });
-      res.json(session);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to create scanner session" });
-    }
-  });
-
-  app.get('/api/scanner/session/:sessionId', async (req, res) => {
-    try {
-      const session = await storage.getScannerSession(req.params.sessionId);
-      if (!session) return res.status(404).json({ error: "Session not found or expired" });
-      res.json(session);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get scanner session" });
-    }
-  });
-
-  app.post('/api/scanner/result/:sessionId', async (req, res) => {
-    try {
-      const { data } = req.body;
-      if (!data) return res.status(400).json({ error: "data required" });
-      const session = await storage.updateScannerSession(req.params.sessionId, data);
-      if (!session) return res.status(404).json({ error: "Session not found or expired" });
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to save scan result" });
-    }
-  });
 }
