@@ -12,8 +12,9 @@ const translations: Record<Language, any> = { pt, en, es };
 type TranslationKeys = string;
 
 interface I18nContextType {
-  language: Language; 
+  language: Language;
   setLanguage: (lang: Language) => void;
+
   t: (key: TranslationKeys, params?: Record<string, string | number>) => string;
   isLoading: boolean;
 }
