@@ -130,15 +130,27 @@ export function TestModeControl() {
                    <span className="text-xs font-bold uppercase tracking-widest">Validando integridade das APIs...</span>
                  </div>
                ) : preflightData && (
-                 <div className="grid grid-cols-2 gap-4">
-                    <div className={`p-5 rounded-2xl border flex flex-col gap-2 transition-all ${preflightData.duffelReady ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/5 border-rose-500/20 text-rose-400'}`}>
-                      <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Duffel API</span>
-                      <span className="text-sm font-black uppercase">{preflightData.duffelReady ? 'Operacional' : 'Falha'}</span>
-                    </div>
-                    <div className={`p-5 rounded-2xl border flex flex-col gap-2 transition-all ${preflightData.stripeReady ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/5 border-rose-500/20 text-rose-400'}`}>
-                      <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Stripe Gateway</span>
-                      <span className="text-sm font-black uppercase">{preflightData.stripeReady ? 'Operacional' : 'Falha'}</span>
-                    </div>
+                 <div className="space-y-4">
+                   <div className="grid grid-cols-2 gap-4">
+                     <div className={`p-5 rounded-2xl border flex flex-col gap-2 transition-all ${preflightData.duffelReady ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-amber-500/5 border-amber-500/20 text-amber-400'}`}>
+                       <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Duffel API</span>
+                       <span className="text-sm font-black uppercase">{preflightData.duffelReady ? 'Operacional' : 'Atenção'}</span>
+                     </div>
+                     <div className={`p-5 rounded-2xl border flex flex-col gap-2 transition-all ${preflightData.stripeReady ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-amber-500/5 border-amber-500/20 text-amber-400'}`}>
+                       <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Stripe Gateway</span>
+                       <span className="text-sm font-black uppercase">{preflightData.stripeReady ? 'Operacional' : 'Atenção'}</span>
+                     </div>
+                   </div>
+                   {/* Avisos informativos — NÃO bloqueiam a transição (Lei 9: simplicidade) */}
+                   {preflightData.issues && preflightData.issues.length > 0 && (
+                     <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4 space-y-2">
+                       <p className="text-[9px] font-black uppercase tracking-widest text-amber-400 opacity-70">⚠ Avisos de Configuração</p>
+                       {preflightData.issues.map((issue: string, idx: number) => (
+                         <p key={idx} className="text-xs text-amber-300/80 leading-relaxed">{issue}</p>
+                       ))}
+                       <p className="text-[9px] text-amber-400/50 pt-1">Você pode prosseguir, mas verifique as variáveis de ambiente no servidor.</p>
+                     </div>
+                   )}
                  </div>
                )}
             </div>
@@ -147,7 +159,7 @@ export function TestModeControl() {
               <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5 rounded-2xl h-14 px-8 font-bold order-2 sm:order-1">Abortar</AlertDialogCancel>
               <AlertDialogAction 
                 onClick={handleConfirm} 
-                disabled={!preflightData?.ready || toggleMutation.isPending}
+                disabled={preflightLoading || toggleMutation.isPending}
                 className="bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest rounded-2xl h-14 px-10 shadow-xl shadow-indigo-600/30 order-1 sm:order-2"
               >
                 {toggleMutation.isPending ? "Processando..." : "Confirmar Transição"}
