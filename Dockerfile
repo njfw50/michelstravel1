@@ -20,7 +20,7 @@ COPY . .
 
 # Build the project (frontend + backend) with memory-efficient settings
 ENV CI=true
-# RUN npm run build (Bypassed! Using pre-built dist folder via Git)
+RUN npm run build
 
 # ── Stage 2: Production ──────────────────────────────────────
 FROM node:20-slim AS production

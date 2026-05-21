@@ -11,7 +11,8 @@
     "db:push": "drizzle-kit push",
     "audit": "node script/law-enforcer.mjs",
     "deploy:render": "powershell -ExecutionPolicy Bypass -File .\\script\\render-deploy.ps1",
-    "ship:site": "powershell -ExecutionPolicy Bypass -File .\\script\\ship-site.ps1"
+    "ship:site": "powershell -ExecutionPolicy Bypass -File .\\script\\ship-site.ps1",
+    "fly:deploy": "powershell -ExecutionPolicy Bypass -File .\\script\\fly-deploy.ps1"
   },
   "dependencies": {
     "@duffel/api": "^4.21.5",
