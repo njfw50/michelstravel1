@@ -1,4 +1,4 @@
-# 🏛️ Michels Travel - Flight Commission Hub
+# 🏛️ Michels Travel
 ### Senior Travel Intelligence & Booking Governance Platform
 
 A high-performance booking and commission management system for elite travel agencies, built with React, TypeScript, Node.js, and Stripe integration. Governed by the **Canonical Engineering Protocol**.
