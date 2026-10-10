@@ -184,3 +184,11 @@ The canonical legal body was expanded to address the critical need for structura
 - **Veto Mechanism:** Active via Alpha/Beta protocols.
 
 *Privacy is not a feature; it is a sacred right protected by the Law.*
+
+### [2026-10-10] — Free-hosting simplified flight search preparation
+**Status:** Prepared for review; not deployed or connected to live credentials.
+**Scope:** `cloudflare-simple/` adds an isolated, dependency-light Cloudflare Worker with Static Assets, Duffel HTTP search, Turnstile-protected reservation requests stored in D1, private request tracking, and an authenticated agency request panel. Existing application and infrastructure remain intact.
+**Brand:** Original complete Michel's Travel logo reused byte-for-byte, with exact slogan “Opção Eficiente”.
+**Reservation semantics:** This version records requests for agency assistance only. It does not issue tickets, create Duffel orders, charge Stripe, import existing bookings, or send external notifications. Offers are refreshed before requests are stored, and changed prices require renewed customer review. Test/live tokens are separated without fallback.
+**Configuration pending:** Cloudflare account access, actual D1 binding, real Turnstile widget and secrets, Duffel live access and contract/quota review, private admin secret. No paid plan enabled and no live reservation made.
+**Verification:** Node tests validate search input, provider normalization, price/expiry checks, request lifecycle, origin checks, challenge checks, lookup privacy and admin access; SQL migration/status constraints validated; Wrangler dry-run used for deployment packaging. Live provider calls and browser interaction remain unverified.

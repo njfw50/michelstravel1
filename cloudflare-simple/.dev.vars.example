@@ -1,0 +1,4 @@
+# Copy to .dev.vars locally; never commit credentials.
+DUFFEL_API_TOKEN=
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+ADMIN_TOKEN=
