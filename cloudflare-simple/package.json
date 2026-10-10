@@ -1,0 +1,1 @@
+{"name":"michels-travel-simple","private":true,"type":"module","scripts":{"test":"node --test test/worker.test.js","dev":"npx wrangler dev","deploy":"npx wrangler deploy --env production","check:deploy":"npx wrangler deploy --dry-run --env production"},"devDependencies":{"wrangler":"^4.0.0"}}
