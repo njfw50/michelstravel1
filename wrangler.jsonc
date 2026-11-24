@@ -1,0 +1,36 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "michelstravel1",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-11-23",
+  "compatibility_flags": ["nodejs_compat"],
+  // Test address only: the Worker is served on *.workers.dev.
+  // No custom domain / routes are attached yet (Fase 4).
+  "workers_dev": true,
+  "vars": {
+    "NODE_ENV": "production",
+    "PORT": "5000"
+  },
+  "containers": [
+    {
+      "name": "michelstravel1",
+      "image": "./Dockerfile",
+      "class_name": "MichelsTravelContainer",
+      "instance_type": "standard-1"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "MICHELS_TRAVEL_CONTAINER",
+        "class_name": "MichelsTravelContainer"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["MichelsTravelContainer"]
+    }
+  ]
+}
