@@ -44,7 +44,7 @@ import {
 } from "./services/serviceAi";
 import { buildOwnerDeskSnapshot } from "./services/ownerDesk";
 import { buildRedactedDocumentPayload } from "./services/passengerPrivacy";
-import { getBalancedDeals, runDealsAutomation } from "./services/deals-automation";
+import { getBalancedDeals, runDealsAutomation, isDealsAutomationRunning } from "./services/deals-automation";
 
 function parseIdRouteParam(value: string | string[] | undefined): string {
   const normalizedValue = Array.isArray(value) ? value[0] : value;
@@ -4406,7 +4406,8 @@ OUTPUT FORMAT (JSON only):
       let deals = await getBalancedDeals();
       
       // If we don't have enough deals, trigger a quick background refresh and retry once
-      if (deals.length < 4) {
+      // (but never while a refresh is already running — that is what duplicated deals).
+      if (deals.length < 4 && !isDealsAutomationRunning()) {
         console.log("[DEALS] Not enough deals found, triggering on-demand automation...");
         await runDealsAutomation();
         deals = await getBalancedDeals();

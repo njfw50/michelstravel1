@@ -42,8 +42,8 @@ const getDestinationImage = (iata?: string) => {
   const mapping: Record<string, string> = {
     "GIG": "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?q=80&w=800&auto=format&fit=crop",
     "SDU": "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?q=80&w=800&auto=format&fit=crop",
-    "GRU": "https://images.unsplash.com/photo-1518182170546-076616fdcbfe?q=80&w=800&auto=format&fit=crop",
-    "CGH": "https://images.unsplash.com/photo-1518182170546-076616fdcbfe?q=80&w=800&auto=format&fit=crop",
+    "GRU": "https://images.pexels.com/photos/18179143/pexels-photo-18179143.jpeg?auto=compress&cs=tinysrgb&w=1000&h=625&fit=crop",
+    "CGH": "https://images.pexels.com/photos/18179143/pexels-photo-18179143.jpeg?auto=compress&cs=tinysrgb&w=1000&h=625&fit=crop",
     "MCO": "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?q=80&w=800&auto=format&fit=crop",
     "LIS": "https://images.unsplash.com/photo-1525207934214-58e69a8f8a3e?q=80&w=800&auto=format&fit=crop",
     "CDG": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=800&auto=format&fit=crop",
