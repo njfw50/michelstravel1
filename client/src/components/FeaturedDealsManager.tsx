@@ -174,7 +174,7 @@ export function FeaturedDealsManager() {
             deals.map((deal: any) => (
               <div key={deal.id} className="group relative rounded-[28px] border border-white/5 bg-white/5 overflow-hidden hover:border-indigo-500/30 transition-all duration-500">
                 <div className="h-32 w-full relative overflow-hidden">
-                  <img src={deal.imageUrl || "https://images.unsplash.com/photo-1436491865332-7a61a109c0f2?auto=format&fit=crop&q=80&w=800"} className="w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-700" alt="" />
+                  <img src={deal.imageUrl || "/images/hero-jet-sunset.jpg"} className="w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-700" alt="" />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent" />
                   <Badge className="absolute top-4 right-4 bg-indigo-600/80 backdrop-blur-md border-white/10 font-black text-[10px]">
                     {deal.origin} → {deal.destination}

@@ -99,6 +99,15 @@ export function formatPackageDates(pkg: TravelPackage, language: string): string
   return `${full.format(start)} – ${full.format(end)}`;
 }
 
+/* Intenção: só a data de ida ("10 jan 2027"), para os cartões de
+   oferta da home — a faixa completa vai em formatPackageDates. */
+export function formatPackageStartDate(pkg: TravelPackage, language: string): string {
+  const locale = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" }).format(
+    new Date(`${pkg.dates.start}T12:00:00`),
+  );
+}
+
 export function formatVerifiedDate(pkg: TravelPackage, language: string): string {
   const locale = language === "en" ? "en-US" : language === "es" ? "es-ES" : "pt-BR";
   return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" }).format(
@@ -108,15 +117,18 @@ export function formatVerifiedDate(pkg: TravelPackage, language: string): string
 
 /* Intenção: fotos SÓ das fontes já verificadas no repo (Unsplash /
    Pexels usados na Home). Destino sem foto real verificada usa a foto
-   genérica de asa ao pôr do sol — nunca a foto de outro destino
-   passada como se fosse aquele lugar (FACT_LOCK). */
+   genérica local (jato ao pôr do sol) — nunca a foto de outro destino
+   passada como se fosse aquele lugar (FACT_LOCK).
+   Correção QA 26/nov: a URL do Unsplash usada antes
+   (photo-1436491865332-7a61a109c0f3) retorna 404 — a foto genérica
+   agora é um arquivo local (Unsplash photo-1474302770737, jato ao
+   pôr do sol, verificado 200 + visto), para nunca mais quebrar. */
 const PACKAGE_IMAGES: Record<string, string> = {
   lisboa:
     "https://images.unsplash.com/photo-1525207934214-58e69a8f8a3e?q=80&w=1200&auto=format&fit=crop",
   orlando:
     "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?q=80&w=1200&auto=format&fit=crop",
-  "generic-sunset-wing":
-    "https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?q=80&w=1200&auto=format&fit=crop",
+  "generic-sunset-wing": "/images/hero-jet-sunset.jpg",
 };
 
 export function getPackageImage(pkg: TravelPackage): string {

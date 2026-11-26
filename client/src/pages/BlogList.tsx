@@ -64,6 +64,35 @@ const PULSE_CITIES = [
   { id: "sao-paulo", name: "Sao Paulo", display: "São Paulo" },
 ];
 
+/* O clima vem em inglês da API (wttr.in) — traduz as condições mais
+   comuns para o idioma da página; frase desconhecida segue em inglês
+   (nunca inventar tradução). */
+const WEATHER_CONDITIONS: Record<string, { pt: string; es: string }> = {
+  Sunny: { pt: "Ensolarado", es: "Soleado" },
+  Clear: { pt: "Céu limpo", es: "Despejado" },
+  "Partly cloudy": { pt: "Parcialmente nublado", es: "Parcialmente nublado" },
+  Cloudy: { pt: "Nublado", es: "Nublado" },
+  Overcast: { pt: "Encoberto", es: "Cubierto" },
+  Mist: { pt: "Névoa", es: "Niebla" },
+  Fog: { pt: "Nevoeiro", es: "Niebla" },
+  "Patchy rain nearby": { pt: "Chuva fraca próxima", es: "Lluvia débil cercana" },
+  "Patchy rain possible": { pt: "Possível chuva fraca", es: "Posible lluvia débil" },
+  "Light rain": { pt: "Chuva fraca", es: "Lluvia débil" },
+  "Light rain shower": { pt: "Pancada fraca", es: "Chubasco débil" },
+  "Moderate rain": { pt: "Chuva moderada", es: "Lluvia moderada" },
+  "Heavy rain": { pt: "Chuva forte", es: "Lluvia fuerte" },
+  "Thundery outbreaks possible": { pt: "Possíveis trovoadas", es: "Posibles tormentas" },
+  "Patchy light snow": { pt: "Neve fraca esparsa", es: "Nieve débil dispersa" },
+  "Light snow": { pt: "Neve fraca", es: "Nieve débil" },
+  "Moderate snow": { pt: "Neve moderada", es: "Nieve moderada" },
+  "Heavy snow": { pt: "Neve forte", es: "Nieve fuerte" },
+  "Patchy light drizzle": { pt: "Garoa fraca esparsa", es: "Llovizna débil dispersa" },
+  "Light drizzle": { pt: "Garoa fraca", es: "Llovizna débil" },
+  "Freezing fog": { pt: "Nevoeiro congelante", es: "Niebla helada" },
+  Blizzard: { pt: "Nevasca", es: "Ventisca" },
+  Thunderstorm: { pt: "Tempestade", es: "Tormenta" },
+};
+
 export default function BlogList() {
   const { data: posts, isLoading } = useBlogPosts();
   const { t, language } = useI18n();
@@ -118,6 +147,14 @@ export default function BlogList() {
 
   const activeDest = pulseData[activeTab] || PULSE_CITIES.find((c) => c.id === activeTab) || PULSE_CITIES[0];
 
+  const conditionText = (condition?: string) => {
+    if (!condition) return t("blog.loading_chronicle");
+    if ((language || "pt") === "en") return condition;
+    const hit = WEATHER_CONDITIONS[condition];
+    if (!hit) return condition;
+    return (language || "pt") === "es" ? hit.es : hit.pt;
+  };
+
   const { data: highlights, isLoading: loadingHighlights } = useDestinationHighlights({
     city: selectedDest.city,
     country: selectedDest.country,
@@ -147,14 +184,14 @@ export default function BlogList() {
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 z-10 bg-gradient-to-b from-[#0B1B3A]/40 via-[#0B1B3A]/80 to-[#0B1B3A]" />
           <img
-            src="https://images.unsplash.com/photo-1436491865332-7a61a109c055?auto=format&fit=crop&q=80&w=2000"
+            src="/images/hero-jet-sunset.jpg"
             className="animate-slow-zoom h-full w-full object-cover"
             alt="Hero Background"
           />
         </div>
 
         <div className="container relative z-20 px-4 text-center">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeOut" }}>
             <Badge className="mb-6 rounded-full border border-[#E8B65D]/30 bg-[#E8B65D]/10 px-4 py-1.5 text-xs font-extrabold uppercase tracking-[0.3em] text-[#E8B65D] backdrop-blur-md">
               {t("blog.elite_experience")}
             </Badge>
@@ -172,8 +209,9 @@ export default function BlogList() {
                   <Search className="h-4 w-4 md:h-5 md:w-5" />
                 </div>
                 <Input
+                  id="blog-search"
                   placeholder={t("blog.search_placeholder")}
-                  className="h-10 border-0 bg-transparent text-sm font-medium text-white placeholder:text-slate-500 focus-visible:ring-0 md:h-14 md:text-lg"
+                  className="h-10 border-0 bg-transparent text-sm font-medium text-white placeholder:text-slate-400 focus-visible:ring-0 md:h-14 md:text-lg"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -221,7 +259,7 @@ export default function BlogList() {
                 {activeDest.weather || "--°C"}
               </p>
               <p className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#E58B48]">
-                {activeDest.condition || t("blog.loading_chronicle")}
+                {conditionText(activeDest.condition)}
               </p>
             </div>
 
@@ -245,7 +283,10 @@ export default function BlogList() {
           </div>
         </Card>
 
-        {/* Highlights from Destinations tab */}
+        {/* Highlights from Destinations tab — fail-closed (QA 26/nov):
+            sem itens da API (preview sem banco), o bloco some em vez
+            de mostrar abas vazias e contadores "0". */}
+        {!loadingHighlights && (!highlights?.items || highlights.items.length === 0) ? null : (
         <div className="mb-12">
           <div className="no-scrollbar mb-8 flex gap-2 overflow-x-auto rounded-[28px] border border-[#101E42]/10 bg-white p-1.5 shadow-sm">
             {HIGHLIGHT_DESTINATIONS.map((d) => (
@@ -335,6 +376,7 @@ export default function BlogList() {
             </AnimatePresence>
           </motion.div>
         </div>
+        )}
       </section>
 
       {/* The Magazine - Blog Section */}
@@ -345,17 +387,33 @@ export default function BlogList() {
               <h2 className="font-display text-4xl font-extrabold tracking-tight">{t("blog.chronicles_title")}</h2>
               <p className="mt-2 font-medium text-[#3D4A6B]">{t("blog.chronicles_subtitle")}</p>
             </div>
-            <Link href="/search">
-              <Button className="hidden h-12 gap-2 rounded-2xl border border-[#101E42]/10 bg-[#FBF7EF] px-6 font-extrabold uppercase tracking-widest text-[#101E42] hover:bg-[#F5EDDD] md:flex">
-                <Filter className="h-4 w-4" /> {t("blog.advanced_filters")}
-              </Button>
-            </Link>
+            {/* O botão rola até a busca do blog e foca o campo — antes
+                levava para /search (busca de voos), rótulo errado. */}
+            <Button
+              onClick={() => {
+                const el = document.getElementById("blog-search");
+                el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                (el as HTMLInputElement | null)?.focus({ preventScroll: true });
+              }}
+              className="hidden h-12 gap-2 rounded-2xl border border-[#101E42]/10 bg-[#FBF7EF] px-6 font-extrabold uppercase tracking-widest text-[#101E42] hover:bg-[#F5EDDD] md:flex"
+            >
+              <Filter className="h-4 w-4" /> {t("blog.advanced_filters")}
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
             {/* Featured Column */}
             <div className="lg:col-span-8">
-              {featuredPost && (
+              {!isLoading && (!posts || posts.length === 0) ? (
+                <div className="flex h-full min-h-[320px] flex-col items-center justify-center rounded-[32px] border border-dashed border-[#101E42]/15 bg-white/60 px-6 py-16 text-center">
+                  <BookOpen className="mb-6 h-10 w-10 text-[#6B7594]" />
+                  <h3 className="font-display text-2xl font-extrabold tracking-tight">{t("blog.no_posts")}</h3>
+                  <p className="mt-3 max-w-md text-[15px] font-medium leading-relaxed text-[#3D4A6B]">
+                    {t("blog.no_posts_desc")}
+                  </p>
+                </div>
+              ) : (
+                featuredPost && (
                 <Link href={`/blog/${featuredPost.slug}`}>
                   <motion.div
                     whileHover={{ y: -10 }}
@@ -394,6 +452,7 @@ export default function BlogList() {
                     </div>
                   </motion.div>
                 </Link>
+                )
               )}
             </div>
 

@@ -2554,14 +2554,19 @@ Sitemap: ${SITE_URL}/sitemap.xml
 
   app.get('/sitemap.xml', async (_req, res) => {
     try {
-      const blogPosts = await storage.getBlogPosts();
+      /* Correção QA 26/nov: sem banco (preview) o getBlogPosts estoura
+         e o sitemap inteiro virava 500. Falha suave: sem posts, o
+         sitemap sai só com as páginas estáticas (200). */
+      const blogPosts = await storage.getBlogPosts().catch(() => []);
       const now = new Date().toISOString().split('T')[0];
 
       const staticPages = [
         { url: '/', priority: '1.0', changefreq: 'daily' },
         { url: '/about', priority: '0.8', changefreq: 'monthly' },
         { url: '/blog', priority: '0.7', changefreq: 'weekly' },
+        { url: '/pacotes', priority: '0.8', changefreq: 'weekly' },
         { url: '/help', priority: '0.7', changefreq: 'monthly' },
+        { url: '/seguranca', priority: '0.6', changefreq: 'monthly' },
         { url: '/terms', priority: '0.3', changefreq: 'yearly' },
         { url: '/privacy', priority: '0.3', changefreq: 'yearly' },
       ];

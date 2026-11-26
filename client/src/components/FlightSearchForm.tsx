@@ -197,6 +197,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
     <motion.div 
       initial={{ opacity: 0, y: isCompact ? -20 : 20 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       className={cn(
         "relative z-10 mx-auto w-full transition-all duration-300",
         isCompact 
@@ -218,7 +219,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                   <TabsTrigger
                     key={type}
                     value={type}
-                    className="flex-1 md:flex-none whitespace-nowrap rounded-lg md:rounded-xl px-4 md:px-7 py-2 md:py-2.5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-xl"
+                    className="flex-1 md:flex-none whitespace-nowrap rounded-lg md:rounded-xl px-4 md:px-7 py-2 md:py-2.5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.1em] text-slate-300 transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-xl"
                   >
                     {t(`search.${type.replace("-", "_")}`)}
                   </TabsTrigger>
@@ -290,7 +291,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                 isCompact ? "md:col-span-5 grid-cols-2" : "md:col-span-4 grid-cols-2"
               )}>
                   <div className="relative">
-                    {!isCompact && <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block pl-1 mb-2">{t("search.departure")}</label>}
+                    {!isCompact && <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block pl-1 mb-2">{t("search.departure")}</label>}
                     <Popover>
                       <PopoverTrigger asChild>
                         <button type="button" className={cn(
@@ -299,7 +300,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                         )}>
                           <div className="flex items-center gap-3 truncate">
                             <CalendarIcon className={cn("text-blue-400", isCompact ? "h-4 w-4" : "h-5 w-5")} />
-                            <span className={cn("font-black truncate uppercase tracking-widest", !date ? "text-slate-600" : "text-white", isCompact ? "text-[10px]" : "text-xs")}>
+                            <span className={cn("font-black truncate uppercase tracking-widest", !date ? "text-slate-400" : "text-white", isCompact ? "text-[10px]" : "text-xs")}>
                               {date ? format(date, "dd MMM") : t("search.departure")}
                             </span>
                           </div>
@@ -312,7 +313,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                   </div>
 
                   <div className="relative">
-                    {!isCompact && <label className={cn("text-[10px] font-black uppercase tracking-widest text-slate-500 block pl-1 mb-2", tripType === "one-way" && "opacity-20")}>{t("search.return")}</label>}
+                    {!isCompact && <label className={cn("text-[10px] font-black uppercase tracking-widest text-slate-400 block pl-1 mb-2", tripType === "one-way" && "opacity-20")}>{t("search.return")}</label>}
                     <Popover>
                       <PopoverTrigger asChild disabled={tripType === "one-way"}>
                         <button type="button" className={cn(
@@ -322,7 +323,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                         )}>
                           <div className="flex items-center gap-3 truncate">
                             <CalendarIcon className={cn(tripType === "one-way" ? "text-slate-700" : "text-blue-400", isCompact ? "h-4 w-4" : "h-5 w-5")} />
-                            <span className={cn("font-black truncate uppercase tracking-widest", !returnDate ? "text-slate-600" : "text-white", isCompact ? "text-[10px]" : "text-xs")}>
+                            <span className={cn("font-black truncate uppercase tracking-widest", !returnDate ? "text-slate-400" : "text-white", isCompact ? "text-[10px]" : "text-xs")}>
                               {tripType === "one-way" ? "—" : returnDate ? format(returnDate, "dd MMM") : t("search.return")}
                             </span>
                           </div>
@@ -373,13 +374,13 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                       />
                     </div>
                     <div className="md:col-span-3">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block pl-1 mb-2">{t("search.date")}</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block pl-1 mb-2">{t("search.date")}</label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <button type="button" className="h-14 md:h-20 w-full bg-slate-950/40 border border-white/10 rounded-2xl px-5 flex items-center justify-between text-left hover:bg-white/5 hover:border-blue-500/50 transition-all">
                             <div className="flex items-center gap-3 truncate">
                               <CalendarIcon className="text-blue-400 h-5 w-5" />
-                              <span className={cn("font-black uppercase tracking-widest text-xs", !leg.date ? "text-slate-600" : "text-white")}>
+                              <span className={cn("font-black uppercase tracking-widest text-xs", !leg.date ? "text-slate-400" : "text-white")}>
                                 {leg.date ? format(leg.date, "dd MMM") : t("search.departure_date")}
                               </span>
                             </div>
@@ -437,7 +438,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
           <div className="grid grid-cols-1 md:grid-cols-11 gap-6 items-end pt-8 border-t border-white/5">
              {/* Passenger / Class Picker */}
              <div className="md:col-span-7">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block pl-1 mb-2">{t("search.pax_class")}</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block pl-1 mb-2">{t("search.pax_class")}</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <button type="button" className="h-16 w-full px-6 rounded-2xl bg-slate-950/40 border border-white/10 text-white flex items-center gap-4 hover:border-blue-500/50 hover:bg-white/5 transition-all shadow-xl group">
@@ -448,7 +449,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                       <div className="h-4 w-px bg-white/10" />
                       <div className="flex items-center gap-2">
                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 group-hover:text-blue-300 transition-colors uppercase">{classLabel(cabinClass)}</span>
-                         <ChevronDown className="h-4 w-4 text-slate-600" />
+                         <ChevronDown className="h-4 w-4 text-slate-400" />
                       </div>
                     </button>
                   </PopoverTrigger>
@@ -475,7 +476,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                             <div key={p.label} className="flex justify-between items-center">
                               <div>
                                 <p className="text-sm font-bold text-white">{p.label}</p>
-                                <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{p.description}</p>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{p.description}</p>
                               </div>
                               <div className="flex items-center gap-5">
                                 <button type="button" onClick={() => p.set(Math.max(p.min, p.val - 1))} className="h-10 w-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-blue-600 transition-all active:scale-90"><Minus className="h-4 w-4" /></button>

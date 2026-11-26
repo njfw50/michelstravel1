@@ -24,12 +24,13 @@ export default function Packages() {
         path="/pacotes"
       />
 
-      {/* Hero editorial — foto quente, título grande, preço como herói
-          fica para os cartões abaixo; aqui a promessa é clara e plana. */}
+      {/* Hero editorial — foto quente local, título grande, preço como
+          herói fica para os cartões abaixo; aqui a promessa é clara e
+          plana. */}
       <section className="relative overflow-hidden bg-[#0B1B3A] pb-16 pt-12 md:pb-24 md:pt-20">
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?q=80&w=2070&auto=format&fit=crop"
+            src="/images/hero-jet-sunset.jpg"
             alt=""
             className="h-full w-full object-cover opacity-30"
           />
@@ -38,7 +39,7 @@ export default function Packages() {
         <div className="container relative z-10 mx-auto max-w-6xl px-4">
           <Link
             href="/"
-            className="mb-8 inline-flex items-center gap-2 text-[12px] font-extrabold uppercase tracking-widest text-slate-300 transition-colors hover:text-white"
+            className="mb-8 flex w-fit items-center gap-2 text-[12px] font-extrabold uppercase tracking-widest text-slate-300 transition-colors hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" /> {t("packages.back_home")}
           </Link>

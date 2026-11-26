@@ -163,7 +163,7 @@
     "seal_stripe_sub": "Checkout garantizado por Stripe",
     "seal_ssl": "Conexión segura",
     "seal_ssl_sub": "Navegación con cifrado activo",
-    "motto": "Atendimento claro y suporte humano",
+    "motto": "Atención clara y soporte humano",
     "premium_partner": "Socio Premium de Destinos",
     "elite_travel": "Gestión de Viajes Elite",
     "regional_support": "Soporte Regional Activo",
@@ -198,7 +198,7 @@
       "whatsapp_topic": "Consulta de Pasaje Premium",
       "whatsapp_details": "Llegué por el nuevo Hero VIP",
       "badge": "Curaduría de Viajes & Concierge Exclusivo",
-      "title": "El Arte de Viajar Bien: Excelencia, Confort y Soporte Exclusivo",
+      "title": "Viajar bien empieza aquí.",
       "desc": "Descubra un nuevo estándar en consultoría de viajes. Ofrecemos curaduría inteligente y soporte de conserjería para viajeros exigentes. Cuidamos cada detalle para que usted solo disfrute del destino.",
       "btn_explore": "Explorar Destinos",
       "btn_consulting": "Consultoría Privada",
@@ -418,7 +418,9 @@
     "multi_city_add": "+ Añadir Tramo",
     "validation_error": "Error en la Búsqueda",
     "fill_all_fields": "Por favor, complete todos los campos del tramo",
-    "return_before_departure": "La vuelta no puede ser antes de la ida. Elige otra fecha."
+    "return_before_departure": "La vuelta no puede ser antes de la ida. Elige otra fecha.",
+    "from": "Desde",
+    "to": "Hasta"
   },
   "class": {
     "economy": "Clase Económica",
@@ -892,7 +894,7 @@
     "mia_guide_desc": "Nuestra IA Mia puede diseñar un itinerario exclusivo basado en tu perfil viajero ahora mismo.",
     "talk_to_mia": "Hablar con Mia",
     "hero_title": "Explora lo Inexplicable.",
-    "advanced_filters": "Filtros Avanzados",
+    "advanced_filters": "Buscar en el blog",
     "pulse_note": "Clima en vivo y tarifa del tablero de vuelos — sin números inventados.",
     "seo_title": "Guía de Viajes de Élite",
     "seo_desc": "Explora el mundo con curaduría de especialistas. Consejos exclusivos, destinos secretos e itinerarios premium.",

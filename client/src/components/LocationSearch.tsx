@@ -107,7 +107,7 @@ export function LocationSearch({
       {label && (
         <label className={cn(
           "font-black block mb-2 pl-1 uppercase tracking-[0.25em] text-[10px]",
-          dark ? "text-slate-500" : "text-slate-400"
+          dark ? "text-slate-300" : "text-slate-400"
         )}>{label}</label>
       )}
       
@@ -126,7 +126,7 @@ export function LocationSearch({
           placeholder={placeholder || "Cidade ou Aeroporto"} 
           className={cn(
             "border-none shadow-none focus-visible:ring-0 p-0 h-full w-full bg-transparent appearance-none",
-            dark ? "text-white placeholder:text-slate-800" : "text-slate-900 placeholder:text-slate-400",
+            dark ? "text-white placeholder:text-slate-400" : "text-slate-900 placeholder:text-slate-400",
             isLarge ? "text-sm md:text-lg font-black" : "text-[10px] md:text-sm font-bold",
           )}
           data-testid={`input-${label.toLowerCase()}`}

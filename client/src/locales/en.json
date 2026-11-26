@@ -198,7 +198,7 @@
       "whatsapp_topic": "Premium Flight Inquiry",
       "whatsapp_details": "Arrived via New Hero VIP",
       "badge": "Curated Travel & Exclusive Concierge",
-      "title": "The Art of Traveling Well: Excellence, Comfort, and Exclusive Support",
+      "title": "Traveling well starts here.",
       "desc": "Discover a new standard in travel consulting. We offer intelligent curation and concierge support for discerning travelers. We handle every detail so you can simply enjoy your destination.",
       "btn_explore": "Explore Destinations",
       "btn_consulting": "Private Consulting",
@@ -418,7 +418,9 @@
     "multi_city_add": "+ Add Flight",
     "validation_error": "Search Error",
     "fill_all_fields": "Please fill all fields for this leg",
-    "return_before_departure": "The return cannot be before departure. Please pick another date."
+    "return_before_departure": "The return cannot be before departure. Please pick another date.",
+    "from": "From",
+    "to": "To"
   },
   "class": {
     "economy": "Economy",
@@ -665,7 +667,7 @@
     "mia_guide_desc": "Our AI Mia can design an exclusive itinerary based on your traveler profile right now.",
     "talk_to_mia": "Talk to Mia",
     "hero_title": "Explore the Unexplainable.",
-    "advanced_filters": "Advanced Filters",
+    "advanced_filters": "Search the blog",
     "pulse_note": "Live weather and flight-board fare — no invented numbers.",
     "seo_title": "Elite Travel Guide",
     "seo_desc": "Explore the world with expert curation. Exclusive tips, hidden destinations and premium itineraries.",

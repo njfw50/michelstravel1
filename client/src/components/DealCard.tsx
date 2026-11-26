@@ -32,6 +32,12 @@ interface DealCardProps {
     stops?: number;
     duration?: string;
     createdAt?: string;
+    /* Opcionais do fallback de pacotes (home): sufixo do preço
+       (pacote = total p/ 2, nunca "por pessoa"; null = sem sufixo,
+       ex.: "a reconfirmar") e destino do botão ("/pacotes" em vez
+       da busca de voos). Ausentes, o cartão se comporta como antes. */
+    priceSuffix?: string | null;
+    bookHref?: string;
   };
 }
 
@@ -39,11 +45,18 @@ export function DealCard({ deal }: DealCardProps) {
   const [, setLocation] = useLocation();
   const { language, t } = useI18n();
 
-  // Generic fallback image when the deal's image URL is dead.
-  const FALLBACK_IMAGE =
-    "https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&q=80&w=800";
+  // Generic fallback image when the deal's image URL is dead — arquivo
+  // local (jato ao pôr do sol). A URL do Unsplash usada antes
+  // (photo-1436491865332-7a61a109c0f3) retorna 404 (QA 26/nov).
+  const FALLBACK_IMAGE = "/images/hero-jet-sunset.jpg";
 
   const handleBook = () => {
+    // Pacote da vitrine: o botão leva a /pacotes (o CTA de verdade é
+    // o WhatsApp do cartão do pacote), não à busca de voos.
+    if (deal.bookHref) {
+      setLocation(deal.bookHref);
+      return;
+    }
     // Navigate to search with these params prefilled
     const searchParams = new URLSearchParams();
     searchParams.append("origin", deal.origin);
@@ -120,9 +133,11 @@ export function DealCard({ deal }: DealCardProps) {
                 </span>
                 <div className="flex items-baseline gap-1.5">
                   <span className="mt-price text-[28px]">{deal.price}</span>
-                  <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#6B7594]">
-                    {t("home.board.per_person")}
-                  </span>
+                  {deal.priceSuffix !== null && (
+                    <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#6B7594]">
+                      {deal.priceSuffix ?? t("home.board.per_person")}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

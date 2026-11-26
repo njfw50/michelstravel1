@@ -14,7 +14,9 @@ export function CookieConsent() {
   useEffect(() => {
     const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
     if (!consent) {
-      const timer = setTimeout(() => setVisible(true), 1500);
+      /* QA 26/nov: 1,5s cobria o formulário de busca na primeira
+         pintura — esperar a página assentar antes de aparecer. */
+      const timer = setTimeout(() => setVisible(true), 4000);
       return () => clearTimeout(timer);
     }
   }, []);

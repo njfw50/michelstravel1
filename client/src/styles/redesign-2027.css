@@ -168,3 +168,23 @@
     padding-bottom: 7rem;
   }
 }
+
+/* Correção QA 26/nov — cascata do cartão: o shadcn Card injeta
+   `bg-card` (navy escuro, --card do tema antigo) e a utility vence
+   `.mt-card` (mesma especificidade, utilities depois no CSS). Sem
+   isso o cartão editorial nascia navy e o preço navy sumia nele.
+   Seletor duplo vence sem !important. Vale para todo cartão que
+   pede branco explicitamente (bg-white + bg-card). */
+.mt-card.bg-card,
+.bg-white.bg-card {
+  background-color: #ffffff;
+}
+
+/* Âncoras e rolagem: o header fixo comia o topo das seções. */
+html {
+  scroll-padding-top: 8rem;
+}
+
+section[id] {
+  scroll-margin-top: 8rem;
+}

@@ -43,6 +43,7 @@ export function SecuritySection() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
           className="mx-auto max-w-3xl text-center"
         >
           <span className="mt-eyebrow mt-eyebrow--gold justify-center">
@@ -64,7 +65,7 @@ export function SecuritySection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.06 }}
+              transition={{ duration: 0.3, ease: "easeOut", delay: i * 0.05 }}
               className="flex items-start gap-4 rounded-[24px] border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
             >
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E8B65D]/15 text-[#E8B65D]">

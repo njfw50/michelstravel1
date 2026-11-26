@@ -223,7 +223,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div
             className={cn(
               "flex items-center justify-between gap-2 rounded-full border border-white/10 px-2 py-1.5 shadow-2xl backdrop-blur-3xl transition-all duration-500 md:gap-4 md:rounded-[32px] md:px-6 md:py-4",
-              scrolled ? "bg-slate-900/90 scale-100" : "bg-slate-900/60 scale-[1.01] md:scale-[1.02]",
+              scrolled ? "bg-slate-900/90 scale-100" : "bg-slate-900/80 scale-[1.01] md:scale-[1.02]",
             )}
           >
             <div className="flex min-w-0 flex-1 items-center gap-8 md:gap-12">
@@ -231,7 +231,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <img
                   src={brandMark}
                   alt="Michels Travel"
-                  className="mt-logo h-11 w-11 transition-transform duration-700 group-hover:scale-105 md:h-14 md:w-14"
+                  className="mt-logo h-14 w-14 transition-transform duration-700 group-hover:scale-105 xl:h-20 xl:w-20"
                   onError={(e) => {
                     if (e.currentTarget.src.indexOf("favicon.png") === -1) {
                       e.currentTarget.src = brandMarkFallback;
@@ -257,7 +257,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       "relative whitespace-nowrap rounded-2xl px-3.5 py-2.5 text-[11px] font-extrabold uppercase tracking-[0.15em] transition-all duration-300",
                       location === link.href
                         ? "bg-blue-600 text-white shadow-xl shadow-blue-600/20"
-                        : "text-slate-400 hover:bg-white/5 hover:text-white",
+                        : "text-slate-300 hover:bg-white/5 hover:text-white",
                     )}
                   >
                     {link.label}
@@ -420,7 +420,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <img
                   src={brandMark}
                   alt="Michels Travel"
-                  className="mt-logo h-14 w-14"
+                  className="mt-logo h-20 w-20"
                   onError={(e) => {
                     if (e.currentTarget.src.indexOf("favicon.png") === -1) {
                       e.currentTarget.src = brandMarkFallback;

@@ -123,8 +123,11 @@ e conta). Reportado como não verificado — não afirmar que funciona.
   EN "Traveling well starts here." / ES "Viajar bien empieza aquí."
   (aplicado nos 3 locales da branch).
 - **Fotos reais de Porto e Tel Aviv:** os cartões usam foto genérica
-  (asa ao pôr do sol) até a direção de arte entregar as fotos reais.
-  Nunca foto de outro destino como se fosse o lugar.
+  local (jato ao pôr do sol, `client/public/images/hero-jet-sunset.jpg`)
+  até a direção de arte entregar as fotos reais. A URL do Unsplash
+  usada antes (photo-1436491865332) morreu com 404 (QA 26/nov) — nada
+  de foto externa sem verificação. Nunca foto de outro destino como se
+  fosse o lugar.
 - **Londres:** fora do seed (sem hotel confirmado) — em `pending[]`.
 - **Terra Santa:** divergência 6 vs 7 noites — confirmar no recheck TAAP.
 - **Lisboa (18/nov) e Terra Santa (20/nov):** preço fora da janela de
@@ -149,3 +152,71 @@ e conta). Reportado como não verificado — não afirmar que funciona.
 7. Conferência visual final: **PENDENTE** — renderizar o preview e olhar
    em tamanho real (celular + desktop) antes de mostrar a ele.
 8. Uma ideia por seção; no máximo 3 níveis hierárquicos por cartão.
+
+## Rodada de conserto — QA do preview 26/nov/2026 (branch redesign-2027)
+
+O preview (build 6cfc8135) foi conferido no desktop (1919px) e NÃO
+passou: herói quebrado, preços ilegíveis, ofertas/alianças/blog vazios.
+Causas conferidas no código e corrigidas (sem commit — aguardando
+revisão e novo preview):
+
+1. **Foto do herói morta:** a URL do Unsplash `photo-1436491865332`
+   (herói + genérica dos pacotes) retorna 404 — uma URL quebrava 5
+   imagens; o herói do blog usava outra ID morta (`...c055`). Trocado
+   por foto local `client/public/images/hero-jet-sunset.jpg` (Unsplash
+   photo-1474302770737, jato ao pôr do sol, verificado 200 + visto).
+   Recife (REC, photo-1596162391609) também 404 — cai no genérico.
+2. **Preço escuro-sobre-escuro:** o shadcn Card injeta `bg-card`
+   (navy `--card` do tema antigo) e a utility vencia `.mt-card`
+   (branco) na cascata. Corrigido com `.mt-card.bg-card` /
+   `.bg-white.bg-card` em `redesign-2027.css` (especificidade maior,
+   sem `!important`) — preço navy sobre cartão branco.
+3. **H1 não era o título escolhido:** o título C estava só em
+   `home.search.title` (aba/SEO); o H1 lê `home.hero.title` (frase
+   antiga). Título C aplicado ao H1 nos 3 locales — e o locale passa
+   a vencer o `site_settings`: o banco de produção guarda o título
+   legado em inglês ("Find Your Next Adventure") e o subtítulo
+   ("Best prices on flights worldwide."), que não podem vencer.
+4. **Fade-in lento:** motions de 0,8s + delay de até 0,7s deixavam o
+   conteúdo invisível por segundos. Agora ≤0,35s / delay ≤0,1s no
+   herói, na busca e nos cartões de segurança.
+5. **Ofertas vazias:** a API `/api/public/flight-deals` volta 500 no
+   preview (sem banco) — a seção mostra os 4 pacotes reais do
+   `packages.json` como fallback (preço = total p/ 2; velho = "a
+   reconfirmar"; botão leva a /pacotes). A API vence quando há dados.
+6. **Alianças vazias:** sem logo, a seção some (fail-closed).
+7. **Blog vazio + sitemap 500:** `/api/blog` volta 500 no preview —
+   a lista mostra o estado vazio honesto (`blog.no_posts`, já
+   traduzido); o sitemap agora falha suave (só páginas estáticas,
+   + `/pacotes` e `/seguranca`). "Filtros Avançados" não leva mais
+   para /search — rola até a busca do blog. Clima do Pulso traduzido
+   (a API devolve inglês). Bloco de destaques some quando vazio.
+8. **Logo pequeno:** header 44–56px → 56px (xl: 80px); rodapé 56px
+   → 80px. Arquivo intacto (LOGO_LOCK).
+9. **ES:** campos de busca caíam no inglês ("From"/"To") por falta
+   das chaves `search.from/to` — criadas ("Desde"/"Hasta"); rodapé
+   "Atendimento claro y suporte humano" → "Atención clara y soporte
+   humano".
+10. **Nits:** link "voltar" do /pacotes em linha própria; `scroll-
+    padding-top: 8rem` (header fixo não come mais o topo das
+    seções); banner de cookies de 1,5s → 4s; contraste dos campos
+    de busca (placeholder slate-800 → slate-400, rótulos
+    slate-500/600 → slate-300/400) e da navegação.
+
+**Causa raiz das seções vazias no preview:** o preview NÃO tem
+`DATABASE_URL` — `/api/public/settings`, `/api/blog` e
+`/api/public/flight-deals` devolvem 500 (conferido com curl no
+preview); `/api/airlines` devolve `[]`. Em produção o banco existe,
+mas os fallbacks acima valem para qualquer falha. Adicionar o
+`DATABASE_URL` como segredo de preview é decisão do dono (o preview
+passaria a ler o banco de produção — ver antes de ligar).
+
+**Não reproduzido no código:** "Experiência Recomenda" e "Ponto de
+Interesse Local 0" (QA) — nenhuma das duas strings existe no código;
+provável leitura de widget da API de destinos, que some com o bloco
+vazio. Re-QA deve confirmar que sumiram.
+
+**Pendente de verificação ao vivo (re-QA):** mobile (~390px) — o QA
+não tinha emulação móvel; renderização real das correções no novo
+preview (herói, preços, ofertas, blog); calendário e autocomplete
+(Parte 3, já pendentes).

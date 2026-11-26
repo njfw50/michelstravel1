@@ -51,13 +51,22 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { buildWhatsAppHref, buildWhatsAppMessage } from "@/lib/contact";
 import type { ContactLanguage } from "@/lib/contact";
+import {
+  formatPackagePrice,
+  formatPackageStartDate,
+  getPackageImage,
+  getPackages,
+  isPriceFresh,
+} from "@/lib/packages";
 
 /* Fotos de destino já verificadas no repo (Unsplash/Pexels). Destino
-   sem foto real verificada usa a asa ao pôr do sol (genérica) — nunca
-   a foto de outro destino como se fosse aquele lugar. */
+   sem foto real verificada usa a foto genérica LOCAL (jato ao pôr do
+   sol) — nunca a foto de outro destino como se fosse aquele lugar.
+   Correção QA 26/nov: a URL do Unsplash usada antes
+   (photo-1436491865332-7a61a109c0f3) retorna 404; Recife (REC,
+   photo-1596162391609) também — os dois caem no genérico local. */
 const getDestinationImage = (iata?: string) => {
-  if (!iata)
-    return "https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?q=80&w=800&auto=format&fit=crop";
+  if (!iata) return "/images/hero-jet-sunset.jpg";
   const code = iata.toUpperCase();
   const mapping: Record<string, string> = {
     GIG: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?q=80&w=800&auto=format&fit=crop",
@@ -70,9 +79,8 @@ const getDestinationImage = (iata?: string) => {
     EWR: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=800&auto=format&fit=crop",
     NYC: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=800&auto=format&fit=crop",
     MIA: "https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?q=80&w=800&auto=format&fit=crop",
-    REC: "https://images.unsplash.com/photo-1596162391609-843e498bdbd1?q=80&w=800&auto=format&fit=crop",
   };
-  return mapping[code] || "https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?q=80&w=800&auto=format&fit=crop";
+  return mapping[code] || "/images/hero-jet-sunset.jpg";
 };
 
 export default function Home() {
@@ -96,6 +104,54 @@ export default function Home() {
   /* Companhias COM logo, antes de cortar (Parte 3-D). Sem logo, sem
      cartão — nunca ícone genérico de avião no lugar da marca. */
   const airlinesWithLogo = (airlines || []).filter((a) => a.logoUrl).slice(0, 12);
+
+  /* Fallback fail-closed (QA 26/nov): quando a API de ofertas não
+     responde (preview sem banco → 500), a vitrine mostra os 4 pacotes
+     REAIS do packages.json — nunca seção vazia. A API vence quando há
+     dados. Preço de pacote é TOTAL p/ 2 (nunca "por pessoa") e pacote
+     velho vira "a reconfirmar" sem valor. O botão leva a /pacotes. */
+  const dealLang = (language || "pt") as ContactLanguage;
+  const packageDeals = getPackages().map((pkg, i) => {
+    const fresh = isPriceFresh(pkg);
+    return {
+      id: 9000 + i,
+      origin: "",
+      origin_city: "",
+      destination: pkg.destinationCode,
+      destination_city: pkg.destination,
+      departure_date: formatPackageStartDate(pkg, dealLang),
+      return_date: pkg.dates.end,
+      price: fresh ? formatPackagePrice(pkg, dealLang) : t("packages.reconfirm"),
+      priceSuffix: fresh ? t("packages.total_for_2") : null,
+      price_value: fresh ? pkg.price.amount : null,
+      currency: pkg.price.currency,
+      airline: "",
+      cabin_class: "",
+      stops: undefined as number | undefined,
+      duration: "",
+      title:
+        dealLang === "en"
+          ? `Package ${pkg.destination}`
+          : dealLang === "es"
+            ? `Paquete ${pkg.destination}`
+            : `Pacote ${pkg.destination}`,
+      description: pkg.hotel.name,
+      imageUrl: getPackageImage(pkg),
+      booking_url: "",
+      created_at: pkg.verifiedAt,
+      bookHref: "/pacotes",
+    };
+  });
+  const dealsToShow =
+    catalogDeals.length > 0
+      ? catalogDeals.map((deal) => ({
+          ...deal,
+          title: deal.headline || `${deal.origin} → ${deal.destination}`,
+          description: deal.description || "",
+          imageUrl: deal.imageUrl || getDestinationImage(deal.destination),
+          createdAt: deal.created_at,
+        }))
+      : packageDeals;
 
   const contactWhatsAppHref = buildWhatsAppHref(
     buildWhatsAppMessage({
@@ -135,8 +191,12 @@ export default function Home() {
                     navy: a marca fria sobre a foto quente — a logo fica
                     no header, canto superior direito, intacta. */}
                 <div className="absolute inset-0">
+                  {/* Foto quente local (jato ao pôr do sol) + scrim navy:
+                      a marca fria sobre a foto quente — a logo fica no
+                      header, canto superior direito, intacta. Arquivo
+                      local: a URL do Unsplash usada antes retornava 404. */}
                   <img
-                    src="https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?q=80&w=2070&auto=format&fit=crop"
+                    src="/images/hero-jet-sunset.jpg"
                     alt=""
                     className="h-full w-full object-cover"
                   />
@@ -145,7 +205,12 @@ export default function Home() {
 
                 <div className="container relative z-10 mx-auto px-4">
                   <div className="mx-auto flex max-w-6xl flex-col items-center text-center">
-                    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+                    <motion.div
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                      className="mb-8"
+                    >
                       <Badge className="rounded-full border border-[#E8B65D]/40 bg-[#E8B65D]/10 px-6 py-2 text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#E8B65D] backdrop-blur-md">
                         <Sparkles className="mr-3 h-4 w-4" />
                         {t("home.hero.badge")}
@@ -155,24 +220,30 @@ export default function Home() {
                     <motion.h1
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
                       className="font-display max-w-5xl text-5xl font-extrabold leading-[0.95] tracking-tight text-white sm:text-6xl md:text-7xl"
                     >
-                      {section.props?.title || settings?.heroTitle || t("home.hero.title")}
+                      {/* Título decidido pelo dono (26/nov, opção C) — o
+                          locale manda: o site_settings do banco ainda
+                          guarda o título legado em inglês ("Find Your
+                          Next Adventure") e ele NÃO pode vencer. */}
+                      {t("home.hero.title")}
                     </motion.h1>
                     <motion.p
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.15, duration: 0.8 }}
+                      transition={{ delay: 0.05, duration: 0.3, ease: "easeOut" }}
                       className="mt-6 max-w-2xl text-base font-medium leading-relaxed text-slate-200 md:text-xl"
                     >
-                      {section.props?.subtitle || settings?.heroSubtitle || t("home.hero.desc")}
+                      {/* Idem: o subtítulo legado do banco ("Best prices
+                          on flights worldwide.") não pode vencer. */}
+                      {t("home.hero.desc")}
                     </motion.p>
 
                     <motion.div
                       initial={{ opacity: 0, y: 40 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4, type: "spring", stiffness: 100 }}
+                      transition={{ delay: 0.05, duration: 0.3, ease: "easeOut" }}
                       className="mt-10 w-full"
                     >
                       <FlightSearchForm className="hover:shadow-blue-500/5 transition-shadow duration-700" />
@@ -187,7 +258,7 @@ export default function Home() {
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.7 }}
+                        transition={{ delay: 0.1, duration: 0.3, ease: "easeOut" }}
                         className="mt-12 w-full max-w-4xl"
                       >
                         <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-r from-[#E8B65D] to-[#E58B48] p-8 shadow-2xl md:p-10">
@@ -349,19 +420,8 @@ export default function Home() {
                       Array.from({ length: 4 }).map((_, i) => (
                         <div key={i} className="h-[430px] animate-pulse rounded-[32px] bg-white/5" />
                       ))
-                    ) : catalogDeals.length > 0 ? (
-                      catalogDeals.map((deal) => (
-                        <DealCard
-                          key={deal.id}
-                          deal={{
-                            ...deal,
-                            title: deal.headline || `${deal.origin} → ${deal.destination}`,
-                            description: deal.description || "",
-                            imageUrl: deal.imageUrl || getDestinationImage(deal.destination),
-                            createdAt: deal.created_at,
-                          }}
-                        />
-                      ))
+                    ) : dealsToShow.length > 0 ? (
+                      dealsToShow.map((deal) => <DealCard key={deal.id} deal={deal} />)
                     ) : (
                       <div className="col-span-full rounded-[32px] border border-dashed border-white/15 py-24 text-center">
                         <p className="text-[12px] font-extrabold uppercase tracking-widest text-slate-400">
@@ -382,6 +442,10 @@ export default function Home() {
             );
 
           case "partners":
+            /* Fail-closed (QA 26/nov): sem logo de companhia, sem seção
+               — a API de companhias volta vazia no preview (sem banco).
+               Nunca prometer uma rede vazia. */
+            if (airlinesWithLogo.length === 0) return null;
             return (
               <section key="partners" className="relative z-10 py-20 md:py-24">
                 <div className="container mx-auto max-w-6xl px-4">
