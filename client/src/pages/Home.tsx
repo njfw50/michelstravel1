@@ -233,7 +233,7 @@ export default function Home() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.05, duration: 0.3, ease: "easeOut" }}
-                      className="mt-6 max-w-2xl text-base font-medium leading-relaxed text-slate-200 md:text-xl"
+                      className="mt-6 max-w-2xl text-base font-medium leading-relaxed text-white [text-shadow:0_2px_16px_rgba(6,13,36,0.9)] md:text-xl"
                     >
                       {/* Idem: o subtítulo legado do banco ("Best prices
                           on flights worldwide.") não pode vencer. */}

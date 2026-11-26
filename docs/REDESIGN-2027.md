@@ -220,3 +220,89 @@ vazio. Re-QA deve confirmar que sumiram.
 não tinha emulação móvel; renderização real das correções no novo
 preview (herói, preços, ofertas, blog); calendário e autocomplete
 (Parte 3, já pendentes).
+
+## Rodada de conserto 2 — re-QA do preview 26/nov/2026 10:48 (branch redesign-2027)
+
+O re-QA (desktop 1919px + celular 390×844 no Chrome do PC, DevTools)
+NÃO aprovou: 10 de 11 consertos da rodada 1 verificados, mas o blog
+ainda exibia o widget "O Pulso dos Destinos" com os textos
+"Experiência Recomenda" e "Ponto de Interesse Local" + 4 defeitos
+menores. Correções (sem commit — aguardando revisão e novo preview):
+
+1. **Causa-raiz do widget (bloqueante) — estava no SERVIDOR, não no
+   cliente.** A rodada 1 afirmou que as strings "não existem no
+   código" — errado: elas estavam em `server/routes.ts`, no `catch`
+   do endpoint `/api/destinations/highlights`, que devolvia itens
+   mock inventados ("Ponto de Interesse Local" / "Experiência
+   Recomenda") em qualquer erro. No preview (sem `GEOAPIFY_API_KEY`
+   / sem banco) o endpoint sempre caía no `catch`, então o bloco
+   tinha 2 itens e a condição de esconder (`items.length === 0`)
+   nunca disparava. Correção: o `catch` agora devolve
+   `{ total: 0, items: [] }` (fail-closed — o cliente esconde o
+   bloco); o fallback curado (Torre de Belém, MASP, Magic Kingdom —
+   lugares reais, endereços reais) perdeu as distâncias inventadas
+   (`distance_m: null`; o selo de raio só aparece com valor real).
+   Verificado: zero ocorrências das duas strings em `client/src`,
+   `server/` e no `dist/` compilado.
+2. **Pulso some sem dado.** A seção "O Pulso dos Destinos" agora
+   some inteira quando, após o carregamento, nenhuma cidade tem
+   clima ou tarifa (`hasPulseData`); durante o carregamento mostra
+   esqueleto, nunca "--°C" / "---". O bloco de destaques tem regra
+   própria e não é afetado (em produção, se o clima falhar mas o
+   Geoapify funcionar, os destaques continuam aparecendo).
+3. **Botão de ida cortado no celular (390px) e "FECHA DE VUELTA"
+   cortado no desktop ES.** Causa: `px-5` + ícone 20px + texto 12px
+   `tracking-widest` não cabiam na coluna (~147px no celular,
+   ~182px no desktop). Corrigido nos 3 botões de data (ida, volta e
+   perna multi-city): `px-3 md:px-4`, `gap-2`, ícone 16px fixo com
+   `shrink-0`, texto `10px md:11px tracking-wide`, `min-w-0` no
+   contêiner (elipse funciona). Medido: "FECHA DE VUELTA" (15
+   caracteres, o mais longo) ≈ 112px num espaço de ~122px no
+   desktop; "DATA DE IDA" ≈ 82px num espaço de ~99px no celular.
+   Rótulos completos mantidos — nada encurtado.
+4. **Menu inferior em PT na página em inglês.** Os 5 rótulos eram
+   texto fixo em PT no `Layout.tsx`. Agora passam por chaves i18n
+   novas e curtas (`nav.mobile_flights/mobile_trips/mobile_messages/
+   mobile_profile/menu`): Voos/Flights/Vuelos, Viagens/Trips/Viajes,
+   Chat, Perfil/Profile/Perfil, Menu/Menú. (Os rótulos longos do
+   cabeçalho — "Minhas Viagens" etc. — não caberiam nos 5 itens.)
+5. **Subtítulo do herói sem contraste.** O subtítulo caía sobre o
+   céu claro da foto. Corrigido em Home, /pacotes e /blog: subtítulo
+   branco sólido com sombra de texto
+   (`[text-shadow:0_2px_16px_rgba(6,13,36,0.9)]`) + scrim
+   `.mt-hero-scrim` reforçado na zona intermediária (0.55→0.8 aos
+   40%). A foto do herói não mudou.
+6. **Nits.** Bolha da Mia e painel do chat subiram no celular
+   (`bottom-24/20` → `bottom-28` = 112px) para limpar a navegação
+   fixa + safe-area de celulares com notch. Rodapé ganhou `pb-28`
+   no celular: o rodapé é o último elemento da página e a navegação
+   fixa cobria a linha do copyright; a linha também ganhou
+   `leading-relaxed` para quebrar em 2 linhas sem aperto.
+7. **Diagnóstico (só relatório, sem mudança de comportamento).**
+   Console: "[Integridade Linguística] Inconsistência detectada:
+   Doc=pt, Body=undefined, Escolhido=en". Causa:
+   `client/index.html` é estático com `<html lang="pt-BR">` e o
+   `<body>` não tem atributo `lang`; o `useLanguageIntegrity`
+   (App.tsx) roda no mount com o idioma escolhido `en` (detecção do
+   navegador no PC do QA) e avisa antes de sincronizar os dois
+   atributos para o idioma escolhido — no mesmo efeito. É um
+   transiente de primeira renderização, só no console, e se
+   autocorrige; nenhum impacto visual. O idioma padrão NÃO foi
+   alterado — decisão do Michel, separada.
+
+**Verificação local:** `npm run build` exit 0; `npm run check` com
+exatamente os mesmos 10 erros pré-existentes (6 arquivos intactos,
+zero erro novo); scrim novo + `text-shadow` presentes no CSS
+compilado; chaves `mobile_*` presentes no JS compilado; foto do
+herói no `dist/`; `git status` com 11 arquivos modificados, `dist/`
+não versionado e nunca adicionado.
+
+**Pendente de verificação ao vivo (re-QA):** renderização real no
+novo preview — blog sem o widget quando vazio (confirmar que as
+duas strings sumiram da página), botões de data em 390px (PT/EN/ES)
+e "FECHA DE VUELTA" no desktop ES, menu inferior nos 3 idiomas,
+subtítulo do herói legível à primeira vista, bolha da Mia e rodapé
+no celular. O avatar "A" citado no QA não existe como componente
+na página /blog (nenhum `Avatar` renderizado lá) — provavelmente o
+bloco de ícone dos cards mock; o re-QA deve confirmar que sumiu
+junto com eles.

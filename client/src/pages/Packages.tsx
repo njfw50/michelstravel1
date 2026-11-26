@@ -50,7 +50,7 @@ export default function Packages() {
           <h1 className="font-display mt-6 max-w-3xl text-5xl font-extrabold leading-[0.95] tracking-tight text-white md:text-7xl">
             {t("packages.title")}
           </h1>
-          <p className="mt-6 max-w-2xl text-base font-medium leading-relaxed text-slate-300 md:text-xl">
+          <p className="mt-6 max-w-2xl text-base font-medium leading-relaxed text-white [text-shadow:0_2px_16px_rgba(6,13,36,0.9)] md:text-xl">
             {t("packages.subtitle")}
           </p>
           <p className="mt-provenance mt-8 !text-slate-400">

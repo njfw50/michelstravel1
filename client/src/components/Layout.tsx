@@ -412,7 +412,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <main className="relative flex-1 pb-24 pt-20 md:pb-0 md:pt-40">{children}</main>
 
-      <footer className="relative z-10 border-t border-white/5 bg-[#060D24] text-white">
+      {/* pb-28 no celular: o rodapé é o último elemento da página e a
+          navegação fixa cobre os ~71px finais (+ safe-area); sem essa
+          folga a linha do copyright some atrás do menu (QA rodada 2). */}
+      <footer className="relative z-10 border-t border-white/5 bg-[#060D24] pb-28 text-white md:pb-0">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid grid-cols-1 gap-12 py-16 md:grid-cols-12 md:gap-12 md:py-20">
             <div className="space-y-6 md:col-span-4">
@@ -564,7 +567,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex flex-col items-center justify-between gap-6 border-t border-white/5 py-8 md:flex-row">
-            <span className="text-center text-[12px] font-extrabold uppercase tracking-[0.2em] text-slate-500 md:text-left">
+            <span className="text-center text-[12px] font-extrabold uppercase leading-relaxed tracking-[0.2em] text-slate-500 md:text-left">
               &copy; {new Date().getFullYear()} Michels Travel &bull; {t("footer.elite_travel")}
             </span>
             <span className="rounded-full border border-white/5 px-5 py-2 text-[12px] font-extrabold uppercase tracking-[0.2em] text-slate-400 shadow-xl">
@@ -585,7 +588,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             )}
           >
             <Globe className="h-5 w-5" />
-            <span className="text-xs font-extrabold uppercase tracking-widest">Voos</span>
+            <span className="text-xs font-extrabold uppercase tracking-widest">{t("nav.mobile_flights")}</span>
           </Link>
           <Link
             href="/my-trips"
@@ -595,7 +598,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             )}
           >
             <Briefcase className="h-5 w-5" />
-            <span className="text-xs font-extrabold uppercase tracking-widest">Viagens</span>
+            <span className="text-xs font-extrabold uppercase tracking-widest">{t("nav.mobile_trips")}</span>
           </Link>
           <Link
             href="/messages"
@@ -606,7 +609,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           >
             <MessageSquare className="h-5 w-5" />
             <UnreadBadge />
-            <span className="text-xs font-extrabold uppercase tracking-widest">Chat</span>
+            <span className="text-xs font-extrabold uppercase tracking-widest">{t("nav.mobile_messages")}</span>
           </Link>
           <Link
             href="/profile"
@@ -616,7 +619,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             )}
           >
             <User className="h-5 w-5" />
-            <span className="text-xs font-extrabold uppercase tracking-widest">Perfil</span>
+            <span className="text-xs font-extrabold uppercase tracking-widest">{t("nav.mobile_profile")}</span>
           </Link>
           <button
             onClick={() => setIsMobileMenuOpen(true)}
@@ -626,7 +629,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             )}
           >
             <Menu className="h-5 w-5" />
-            <span className="text-xs font-extrabold uppercase tracking-widest">Menu</span>
+            <span className="text-xs font-extrabold uppercase tracking-widest">{t("nav.menu")}</span>
           </button>
         </div>
       </div>

@@ -295,12 +295,12 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                     <Popover>
                       <PopoverTrigger asChild>
                         <button type="button" className={cn(
-                          "w-full bg-slate-950/40 border border-white/10 rounded-2xl px-5 flex items-center justify-between text-left hover:bg-white/5 hover:border-blue-500/50 transition-all group",
+                          "w-full bg-slate-950/40 border border-white/10 rounded-2xl px-3 md:px-4 flex items-center justify-between text-left hover:bg-white/5 hover:border-blue-500/50 transition-all group",
                           isCompact ? "h-14 md:h-14" : "h-14 md:h-20"
                         )}>
-                          <div className="flex items-center gap-3 truncate">
-                            <CalendarIcon className={cn("text-blue-400", isCompact ? "h-4 w-4" : "h-5 w-5")} />
-                            <span className={cn("font-black truncate uppercase tracking-widest", !date ? "text-slate-400" : "text-white", isCompact ? "text-[10px]" : "text-xs")}>
+                          <div className="flex min-w-0 items-center gap-2 truncate">
+                            <CalendarIcon className={cn("shrink-0 text-blue-400", "h-4 w-4")} />
+                            <span className={cn("font-black truncate uppercase tracking-wide min-w-0", !date ? "text-slate-400" : "text-white", "text-[10px] md:text-[11px]")}>
                               {date ? format(date, "dd MMM") : t("search.departure")}
                             </span>
                           </div>
@@ -317,13 +317,13 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                     <Popover>
                       <PopoverTrigger asChild disabled={tripType === "one-way"}>
                         <button type="button" className={cn(
-                          "w-full bg-slate-950/40 border border-white/10 rounded-2xl px-5 flex items-center justify-between text-left transition-all group",
+                          "w-full bg-slate-950/40 border border-white/10 rounded-2xl px-3 md:px-4 flex items-center justify-between text-left transition-all group",
                           isCompact ? "h-14 md:h-14" : "h-14 md:h-20",
                           tripType === "one-way" ? "opacity-20 cursor-not-allowed" : "hover:bg-white/5 hover:border-blue-500/50"
                         )}>
-                          <div className="flex items-center gap-3 truncate">
-                            <CalendarIcon className={cn(tripType === "one-way" ? "text-slate-700" : "text-blue-400", isCompact ? "h-4 w-4" : "h-5 w-5")} />
-                            <span className={cn("font-black truncate uppercase tracking-widest", !returnDate ? "text-slate-400" : "text-white", isCompact ? "text-[10px]" : "text-xs")}>
+                          <div className="flex min-w-0 items-center gap-2 truncate">
+                            <CalendarIcon className={cn(tripType === "one-way" ? "text-slate-700" : "text-blue-400", "h-4 w-4 shrink-0")} />
+                            <span className={cn("font-black truncate uppercase tracking-wide min-w-0", !returnDate ? "text-slate-400" : "text-white", "text-[10px] md:text-[11px]")}>
                               {tripType === "one-way" ? "—" : returnDate ? format(returnDate, "dd MMM") : t("search.return")}
                             </span>
                           </div>
@@ -377,10 +377,10 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block pl-1 mb-2">{t("search.date")}</label>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <button type="button" className="h-14 md:h-20 w-full bg-slate-950/40 border border-white/10 rounded-2xl px-5 flex items-center justify-between text-left hover:bg-white/5 hover:border-blue-500/50 transition-all">
-                            <div className="flex items-center gap-3 truncate">
-                              <CalendarIcon className="text-blue-400 h-5 w-5" />
-                              <span className={cn("font-black uppercase tracking-widest text-xs", !leg.date ? "text-slate-400" : "text-white")}>
+                          <button type="button" className="h-14 md:h-20 w-full bg-slate-950/40 border border-white/10 rounded-2xl px-3 md:px-4 flex items-center justify-between text-left hover:bg-white/5 hover:border-blue-500/50 transition-all">
+                            <div className="flex min-w-0 items-center gap-2 truncate">
+                              <CalendarIcon className="text-blue-400 h-4 w-4 md:h-5 md:w-5 shrink-0" />
+                              <span className={cn("font-black truncate uppercase tracking-wide min-w-0 text-[10px] md:text-[11px]", !leg.date ? "text-slate-400" : "text-white")}>
                                 {leg.date ? format(leg.date, "dd MMM") : t("search.departure_date")}
                               </span>
                             </div>

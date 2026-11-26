@@ -100,6 +100,9 @@ export default function BlogList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("lisbon");
   const [pulseData, setPulseData] = useState<Record<string, any>>({});
+  // Fail-closed (QA 26/nov, rodada 2): enquanto o Pulso carrega,
+  // mostra esqueleto; sem dado real após carregar, a seção some.
+  const [pulseLoading, setPulseLoading] = useState(true);
 
   useEffect(() => {
     const fetchPulse = async () => {
@@ -142,10 +145,15 @@ export default function BlogList() {
       setPulseData(newData);
     };
 
-    fetchPulse();
+    fetchPulse().finally(() => setPulseLoading(false));
   }, []);
 
   const activeDest = pulseData[activeTab] || PULSE_CITIES.find((c) => c.id === activeTab) || PULSE_CITIES[0];
+
+  // Fail-closed (QA 26/nov, rodada 2): o Pulso só existe quando há
+  // dado real (clima ou tarifa) em ao menos uma cidade. Sem dado,
+  // a seção some inteira em vez de exibir "--°C" / "---" e abas vazias.
+  const hasPulseData = Object.values(pulseData).some((d: any) => d?.weather || d?.price);
 
   const conditionText = (condition?: string) => {
     if (!condition) return t("blog.loading_chronicle");
@@ -182,7 +190,7 @@ export default function BlogList() {
       {/* Hero Section */}
       <section className="relative flex h-[60vh] items-center justify-center overflow-hidden bg-[#0B1B3A] md:h-[70vh]">
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 z-10 bg-gradient-to-b from-[#0B1B3A]/40 via-[#0B1B3A]/80 to-[#0B1B3A]" />
+          <div className="absolute inset-0 z-10 bg-gradient-to-b from-[#0B1B3A]/40 via-[#0B1B3A]/85 to-[#0B1B3A]" />
           <img
             src="/images/hero-jet-sunset.jpg"
             className="animate-slow-zoom h-full w-full object-cover"
@@ -198,7 +206,7 @@ export default function BlogList() {
             <h1 className="font-display mb-4 bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-3xl font-extrabold leading-tight tracking-tight text-transparent md:text-8xl md:leading-none">
               {t("blog.hero_title")}
             </h1>
-            <p className="mx-auto mb-10 max-w-2xl text-lg font-medium leading-relaxed text-slate-300 md:text-xl">
+            <p className="mx-auto mb-10 max-w-2xl text-lg font-medium leading-relaxed text-white [text-shadow:0_2px_16px_rgba(6,13,36,0.9)] md:text-xl">
               {t("blog.curated_destinations")}
             </p>
 
@@ -224,8 +232,13 @@ export default function BlogList() {
         </div>
       </section>
 
-      {/* Destination Pulse — só dados reais (clima + quadro de voos). */}
+      {/* Destination Pulse — só dados reais (clima + quadro de voos).
+          Sem dado real após o carregamento, o bloco do Pulso some
+          inteiro (fail-closed, QA 26/nov rodada 2) — nunca "--°C" /
+          "---". O bloco de destaques abaixo tem regra própria. */}
       <section className="container mx-auto px-4 py-20">
+        {!pulseLoading && !hasPulseData ? null : (
+        <>
         <div className="mb-12 flex flex-col items-end justify-between gap-6 md:flex-row">
           <div className="max-w-xl">
             <div className="mb-3 flex w-fit items-center gap-3 rounded-full bg-[#3D4EAB]/10 px-3 py-1 text-[#3D4EAB]">
@@ -256,10 +269,18 @@ export default function BlogList() {
           <div className="flex flex-1 flex-col items-center gap-6 md:flex-row md:items-center md:gap-12">
             <div className="flex flex-col items-center gap-1 md:items-start">
               <p className="font-display text-5xl font-extrabold tracking-tight text-[#101E42] md:text-8xl">
-                {activeDest.weather || "--°C"}
+                {pulseLoading ? (
+                  <span className="inline-block h-12 w-36 animate-pulse rounded-2xl bg-[#101E42]/10 align-middle md:h-20" />
+                ) : (
+                  activeDest.weather || "--°C"
+                )}
               </p>
               <p className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#E58B48]">
-                {conditionText(activeDest.condition)}
+                {pulseLoading ? (
+                  <span className="inline-block h-3 w-28 animate-pulse rounded-full bg-[#101E42]/10" />
+                ) : (
+                  conditionText(activeDest.condition)
+                )}
               </p>
             </div>
 
@@ -274,7 +295,13 @@ export default function BlogList() {
           <div className="mt-8 flex items-center justify-center gap-8 border-t border-[#101E42]/10 pt-6 md:justify-end md:border-t-0 md:pt-0">
             <div className="flex flex-col items-center gap-1 md:items-end">
               <p className="text-xl font-extrabold text-[#101E42] md:text-2xl">
-                {activeDest.price ? `${activeDest.price} ${activeDest.currency}` : "---"}
+                {pulseLoading ? (
+                  <span className="inline-block h-6 w-20 animate-pulse rounded-lg bg-[#101E42]/10" />
+                ) : activeDest.price ? (
+                  `${activeDest.price} ${activeDest.currency}`
+                ) : (
+                  "---"
+                )}
               </p>
               <p className="text-[11px] font-extrabold uppercase tracking-widest text-[#E58B48]">
                 {t("blog.best_fare") || "Melhor Tarifa"}
@@ -282,6 +309,7 @@ export default function BlogList() {
             </div>
           </div>
         </Card>
+        </>)}
 
         {/* Highlights from Destinations tab — fail-closed (QA 26/nov):
             sem itens da API (preview sem banco), o bloco some em vez

@@ -85,11 +85,13 @@
 
 /* Scrim do hero: escurece a base (onde cai o texto branco) e protege
    o canto superior direito (onde vai o logo) contra escurecimento
-   excessivo — vinheta assimétrica, cf. Diretriz §3.6. */
+   excessivo — vinheta assimétrica, cf. Diretriz §3.6.
+   Rodada 2 (QA 26/nov): zona intermediária reforçada (0.55→0.8 aos
+   40%) — o subtítulo caía sobre o céu claro da foto e não lia. */
 .mt-hero-scrim {
   background:
     linear-gradient(180deg, rgba(6, 13, 36, 0.42) 0%, rgba(6, 13, 36, 0) 26%),
-    linear-gradient(0deg, rgba(6, 13, 36, 0.94) 0%, rgba(6, 13, 36, 0.55) 46%, rgba(6, 13, 36, 0) 78%);
+    linear-gradient(0deg, rgba(6, 13, 36, 0.94) 0%, rgba(6, 13, 36, 0.8) 40%, rgba(6, 13, 36, 0.5) 65%, rgba(6, 13, 36, 0) 88%);
 }
 
 /* Scrim inferior p/ texto branco sobre foto (cards de destino). O

@@ -1061,25 +1061,28 @@ export function registerRoutes(app: Express) {
           distance_m: f.properties.distance || null,
         })) || [];
 
-      // Fallback for curated cities if results are empty
+      // Fallback for curated cities if results are empty — SÓ lugares
+      // reais com endereço real (nunca inventar atração). As distâncias
+      // foram removidas (eram valores fixos sem medição — FACT_LOCK);
+      // sem distance_m o cliente não exibe o selo de raio.
       if (items.length === 0) {
         if (city.toLowerCase().includes("lisboa") || city.toLowerCase().includes("lisbon")) {
           items = [
-            { id: 'l1', name: 'Torre de Belém', address: 'Av. Brasília, 1400-038 Lisboa', distance_m: 500, category: ['tourism.sight'] },
-            { id: 'l2', name: 'Castelo de S. Jorge', address: 'R. de Santa Cruz do Castelo, 1100-129 Lisboa', distance_m: 1200, category: ['tourism.sight'] },
-            { id: 'l3', name: 'Mosteiro dos Jerónimos', address: 'Praça do Império 1400-206 Lisboa', distance_m: 800, category: ['tourism.sight'] },
+            { id: 'l1', name: 'Torre de Belém', address: 'Av. Brasília, 1400-038 Lisboa', distance_m: null, category: ['tourism.sight'] },
+            { id: 'l2', name: 'Castelo de S. Jorge', address: 'R. de Santa Cruz do Castelo, 1100-129 Lisboa', distance_m: null, category: ['tourism.sight'] },
+            { id: 'l3', name: 'Mosteiro dos Jerónimos', address: 'Praça do Império 1400-206 Lisboa', distance_m: null, category: ['tourism.sight'] },
           ];
         } else if (city.toLowerCase().includes("são paulo") || city.toLowerCase().includes("sao paulo")) {
           items = [
-            { id: 'sp1', name: 'Museu de Arte de São Paulo (MASP)', address: 'Av. Paulista, 1578 - Bela Vista', distance_m: 100, category: ['tourism.museum'] },
-            { id: 'sp2', name: 'Parque Ibirapuera', address: 'Av. Pedro Álvares Cabral - Vila Mariana', distance_m: 3000, category: ['tourism.sight'] },
-            { id: 'sp3', name: 'Mercado Municipal de São Paulo', address: 'R. Cantareira, 306 - Centro Histórico', distance_m: 4500, category: ['tourism.sight'] },
+            { id: 'sp1', name: 'Museu de Arte de São Paulo (MASP)', address: 'Av. Paulista, 1578 - Bela Vista', distance_m: null, category: ['tourism.museum'] },
+            { id: 'sp2', name: 'Parque Ibirapuera', address: 'Av. Pedro Álvares Cabral - Vila Mariana', distance_m: null, category: ['tourism.sight'] },
+            { id: 'sp3', name: 'Mercado Municipal de São Paulo', address: 'R. Cantareira, 306 - Centro Histórico', distance_m: null, category: ['tourism.sight'] },
           ];
         } else if (city.toLowerCase().includes("orlando")) {
           items = [
-            { id: 'orl1', name: 'Magic Kingdom Park', address: 'Walt Disney World Resort, Orlando, FL', distance_m: 5000, category: ['tourism.attraction'] },
-            { id: 'orl2', name: 'Universal Studios Florida', address: 'Universal Blvd, Orlando, FL', distance_m: 8000, category: ['tourism.attraction'] },
-            { id: 'orl3', name: 'Icon Park', address: 'International Dr, Orlando, FL', distance_m: 2000, category: ['tourism.sight'] },
+            { id: 'orl1', name: 'Magic Kingdom Park', address: 'Walt Disney World Resort, Orlando, FL', distance_m: null, category: ['tourism.attraction'] },
+            { id: 'orl2', name: 'Universal Studios Florida', address: 'Universal Blvd, Orlando, FL', distance_m: null, category: ['tourism.attraction'] },
+            { id: 'orl3', name: 'Icon Park', address: 'International Dr, Orlando, FL', distance_m: null, category: ['tourism.sight'] },
           ];
         }
       }
@@ -1087,13 +1090,11 @@ export function registerRoutes(app: Express) {
       res.json({ center: { lat: centerLat, lon: centerLon }, total: items.length, items });
     } catch (error: any) {
       console.error("destinations/highlights error:", error?.message || error);
-      
-      // Critical fallback even on error
-      const mockItems = [
-        { id: 'mock1', name: 'Ponto de Interesse Local', address: 'Consulte o nosso guia para detalhes', distance_m: 0, category: ['tourism.sight'] },
-        { id: 'mock2', name: 'Experiência Recomenda', address: 'Dica exclusiva Michels Travel', distance_m: 0, category: ['tourism.sight'] },
-      ];
-      res.json({ center: { lat: 0, lon: 0 }, total: mockItems.length, items: mockItems });
+
+      // Fail-closed (QA 26/nov, rodada 2): sem dado real, lista vazia.
+      // O cliente esconde o bloco quando items está vazio — nunca
+      // exibir lugares inventados como se fossem resultado da busca.
+      res.json({ center: { lat: 0, lon: 0 }, total: 0, items: [] });
     }
   });
 

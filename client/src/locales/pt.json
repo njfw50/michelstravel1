@@ -109,7 +109,12 @@
     "messages": "Mensagens",
     "help": "Ajuda",
     "sub_brand": "Opção eficiente",
-    "packages": "Pacotes"
+    "packages": "Pacotes",
+    "mobile_flights": "Voos",
+    "mobile_trips": "Viagens",
+    "mobile_messages": "Chat",
+    "mobile_profile": "Perfil",
+    "menu": "Menu"
   },
   "login": {
     "title": "Crie Sua Conta ou Faça Seu Login",

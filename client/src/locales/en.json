@@ -101,7 +101,12 @@
     "messages": "Messages",
     "help": "Help",
     "sub_brand": "Efficient choice",
-    "packages": "Packages"
+    "packages": "Packages",
+    "mobile_flights": "Flights",
+    "mobile_trips": "Trips",
+    "mobile_messages": "Chat",
+    "mobile_profile": "Profile",
+    "menu": "Menu"
   },
   "login": {
     "title": "Create Account or Sign In",
