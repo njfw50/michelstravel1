@@ -32,5 +32,30 @@
       "tag": "v1",
       "new_sqlite_classes": ["MichelsTravelContainer"]
     }
-  ]
+  ],
+  // Previews (Workers Builds): sem este bloco o `npx wrangler preview`
+  // falha ("needs a `previews` block") — foi a causa do build 5b970bd8.
+  // Cada Preview ganha namespace de Durable Object + app de Container
+  // ISOLADOS (não herdam os de produção); vars com valores seguros p/ preview.
+  "previews": {
+    "vars": {
+      "NODE_ENV": "preview",
+      "PORT": "5000"
+    },
+    "containers": [
+      {
+        "class_name": "MichelsTravelContainer",
+        "image": "./Dockerfile",
+        "instance_type": "standard-1"
+      }
+    ],
+    "durable_objects": {
+      "bindings": [
+        {
+          "name": "MICHELS_TRAVEL_CONTAINER",
+          "class_name": "MichelsTravelContainer"
+        }
+      ]
+    }
+  }
 }
