@@ -100,7 +100,8 @@
     "profile": "My Profile",
     "messages": "Messages",
     "help": "Help",
-    "sub_brand": "Efficient choice"
+    "sub_brand": "Efficient choice",
+    "packages": "Packages"
   },
   "login": {
     "title": "Create Account or Sign In",
@@ -167,7 +168,10 @@
     "elite_travel": "Elite Travel Management",
     "regional_support": "Regional Support Active",
     "whatsapp_support": "WhatsApp Support",
-    "secure_email": "Secure Email"
+    "secure_email": "Secure Email",
+    "registered": "Agency registered in New Jersey since 2023",
+    "how_you_buy": "How you buy",
+    "follow_more": "Instagram and Facebook — coming soon here"
   },
   "home": {
     "board": {
@@ -222,7 +226,8 @@
       "exchange": "Exchange Rate",
       "status": "Flight Status",
       "monitoring": "Live Monitoring",
-      "access": "Access Dashboard"
+      "access": "Access Dashboard",
+      "desc": "Weather, exchange rates, flight status and other useful planning tools — all in one place."
     },
     "intel": {
       "badge": "Live Insights",
@@ -296,7 +301,7 @@
     },
     "search": {
       "badge": "Search live flights",
-      "title": "Where do you want to travel?",
+      "title": "Traveling well starts here.",
       "desc": "Find and book your flight right now. Smart real-time comparison for the best prices on the market.",
       "tag": "Availability validated before payment"
     },
@@ -355,7 +360,11 @@
       "desc": "Explore the most incredible destinations for prices that fit your family's budget.",
       "btn_guide": "View travel guide",
       "from": "From",
-      "btn_open": "Open fare"
+      "btn_open": "Open fare",
+      "provenance": "Deals from our curation: each card's fare was verified on the date shown. Fares change — we reconfirm everything before issuing.",
+      "verified_on": "Verified on {date}",
+      "stops_one": "1 stop",
+      "stops_many": "{count} stops"
     },
     "bot": {
       "badge": "Mia inside sales",
@@ -370,6 +379,12 @@
       "msg2": "I can refine the route, compare options, and keep a human agent available if needed.",
       "whatsapp_badge": "WhatsApp",
       "whatsapp_desc": "One tap away from directors of Michels Travel, unifying security and practicality."
+    },
+    "trust": {
+      "f1": "Travel agency registered in New Jersey since 2023",
+      "f2": "Support in Portuguese, English and Spanish",
+      "f3": "Fares verified at the source before publishing",
+      "f4": "Human support on WhatsApp, from booking to boarding"
     }
   },
   "search": {
@@ -402,7 +417,8 @@
     "departure_date": "Departure Date",
     "multi_city_add": "+ Add Flight",
     "validation_error": "Search Error",
-    "fill_all_fields": "Please fill all fields for this leg"
+    "fill_all_fields": "Please fill all fields for this leg",
+    "return_before_departure": "The return cannot be before departure. Please pick another date."
   },
   "class": {
     "economy": "Economy",
@@ -647,7 +663,14 @@
     "more_chronicles": "See more chronicles",
     "mia_guide_prompt": "Want a personalized AI guide?",
     "mia_guide_desc": "Our AI Mia can design an exclusive itinerary based on your traveler profile right now.",
-    "talk_to_mia": "Talk to Mia"
+    "talk_to_mia": "Talk to Mia",
+    "hero_title": "Explore the Unexplainable.",
+    "advanced_filters": "Advanced Filters",
+    "pulse_note": "Live weather and flight-board fare — no invented numbers.",
+    "seo_title": "Elite Travel Guide",
+    "seo_desc": "Explore the world with expert curation. Exclusive tips, hidden destinations and premium itineraries.",
+    "best_fare": "Best Fare",
+    "liked": "Liked it?"
   },
   "checkout": {
     "success_title": "Payment Confirmed!",
@@ -898,5 +921,42 @@
     "reason_characters": "We identified characters that may not be accepted by airline systems.",
     "reason_spacing": "We adjusted the spacing to follow the international aviation standard.",
     "reason_case": "We corrected uppercase letters to ensure correct reading at check-in."
+  },
+  "packages": {
+    "badge": "Flight + hotel packages",
+    "title": "Packages ready to travel",
+    "subtitle": "Flight and hotel together, one fixed price for 2 travelers — verified on TAAP on the date shown on each card. No surprises at payment.",
+    "seo_title": "Travel packages — Michels Travel",
+    "seo_desc": "Flight + hotel packages with a fixed price for 2 travelers, verified on Expedia TAAP. Porto, Lisbon, Holy Land, Orlando and more.",
+    "provenance_line": "Prices verified on Expedia TAAP — each card shows its verification date.",
+    "back_home": "Back to the home page",
+    "empty": "No packages available right now — talk to us on WhatsApp.",
+    "footer_note": "Prices are the total for 2 travelers, flights and hotel included, as verified on TAAP. Taxes and conditions are reconfirmed before issuing — the final amount is always confirmed with you before any payment.",
+    "nights": "nights",
+    "hotel": "Hotel included",
+    "includes_flights": "Round-trip flights for {count} travelers",
+    "includes_hotel": "Hotel included — {nights} nights",
+    "total_for_2": "Total for 2 travelers",
+    "verified_on": "Price verified on {date}",
+    "reconfirm": "Price to reconfirm",
+    "reconfirm_desc": "Last verified: {date}. The price may have changed — ask for a reconfirmation on WhatsApp before deciding.",
+    "cta_buy": "I want to buy",
+    "cta_reconfirm": "Ask for reconfirmation",
+    "note": "Nothing is charged here — you talk to us on WhatsApp and confirm everything before paying."
+  },
+  "security": {
+    "badge": "Safe purchase",
+    "title": "How you buy safely",
+    "desc": "No fine print and no promise we cannot prove. This is what is true about buying with Michel's Travel:",
+    "i1": "Travel agency registered in New Jersey since 2023.",
+    "i2": "Operating with Cruise Brothers, an IATA-accredited agency.",
+    "i3": "Issued via Expedia (TAAP) and directly with the airline.",
+    "i4": "Booking reference you can check on the airline's website.",
+    "i5": "Card payment with receipt.",
+    "i6": "Real customer reviews on Google.",
+    "note": "We do not use government seals or certificates that do not exist. If you have any doubt about your purchase, talk to a human — not a bot.",
+    "cta": "Talk to a human on WhatsApp",
+    "whatsapp_topic": "Question about purchase safety",
+    "whatsapp_details": "I came from the safety page of the website."
   }
 }

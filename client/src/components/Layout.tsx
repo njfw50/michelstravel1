@@ -1,3 +1,18 @@
+/* ────────────────────────────────────────────────────────────────────
+   Layout — redesign 2027.
+   - Logo oficial 3D 2027 (/logo-3d-2027.png) DIRETO, quadrado, sem
+     card, sem borda, sem arredondar (LOGO_LOCK; o .brand-mark-shell
+     antigo arredondava o logo — removido do uso). Fallback p/
+     /favicon.png se o arquivo novo não estiver no public/.
+   - Menu inferior do celular: rótulos 8px → 12px (Parte 2, Fase B
+     item 7 — mínimo de legibilidade).
+   - Rodapé: completo — contato, WhatsApp, redes (só YouTube com URL
+     confirmada; Instagram/Facebook entram quando o dono confirmar
+     os perfis), aviso de agência registrada em NJ desde 2023.
+     NUNCA endereço residencial.
+   - Selos do rodapé viraram lista factual de texto ("Como você
+     compra"), não selos de certificação. Sem selo de governo.
+   ──────────────────────────────────────────────────────────────────── */
 import { Link, useLocation } from "wouter";
 import {
   User,
@@ -17,6 +32,8 @@ import {
   MessageCircle,
   Headphones,
   LayoutDashboard,
+  Youtube,
+  MapPin,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -55,30 +72,30 @@ function LanguageSwitcher({ variant = "navbar" }: { variant?: "navbar" | "footer
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-	        <Button
-	          variant="ghost"
-	          size="sm"
-	          disabled={isLoading}
-	          className={cn(
-	            "h-10 md:h-11 gap-2 md:gap-3 rounded-xl md:rounded-2xl px-2 md:px-4 text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-xl",
-	            variant === "navbar"
-	              ? "bg-white/5 border border-white/5 text-white/80 hover:bg-white/10 hover:text-white"
-	              : "border border-white/10 bg-slate-900/40 text-white/80 hover:bg-blue-600 hover:text-white",
-	            isLoading && "opacity-50 grayscale",
-	          )}
-	          data-testid="button-language-switcher"
-	        >
-	          <Globe className={cn("h-3.5 w-3.5 md:h-4 md:w-4 text-blue-400", isLoading && "animate-spin")} />
-	          <span className="min-w-[1.2em] md:min-w-[1.5em] text-center">{isLoading ? "..." : current.flag}</span>
-	        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={isLoading}
+          className={cn(
+            "h-10 gap-2 rounded-xl px-3 text-[11px] font-extrabold uppercase tracking-widest transition-all duration-300 shadow-xl md:h-11 md:gap-3 md:rounded-2xl md:px-4 md:text-xs",
+            variant === "navbar"
+              ? "border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
+              : "border border-white/10 bg-slate-900/40 text-white/80 hover:bg-blue-600 hover:text-white",
+            isLoading && "opacity-50 grayscale",
+          )}
+          data-testid="button-language-switcher"
+        >
+          <Globe className={cn("h-4 w-4 text-[#E8B65D]", isLoading && "animate-spin")} />
+          <span className="min-w-[1.5em] text-center">{isLoading ? "..." : current.flag}</span>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align={variant === "footer" ? "start" : "end"}
         sideOffset={12}
-        className="min-w-[180px] rounded-[28px] border border-white/10 bg-slate-950/95 backdrop-blur-3xl p-3 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)]"
+        className="min-w-[180px] rounded-[28px] border border-white/10 bg-slate-950/95 p-3 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] backdrop-blur-3xl"
       >
-        <div className="px-4 py-2 mb-1">
-           <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Select Language</span>
+        <div className="mb-1 px-4 py-2">
+          <span className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-slate-500">Select Language</span>
         </div>
         {LANG_OPTIONS.map((lang) => (
           <DropdownMenuItem
@@ -86,17 +103,19 @@ function LanguageSwitcher({ variant = "navbar" }: { variant?: "navbar" | "footer
             disabled={isLoading}
             onClick={() => setLanguage(lang.code)}
             className={cn(
-              "cursor-pointer gap-4 rounded-xl py-3.5 px-4 text-[10px] font-black uppercase tracking-widest transition-all",
-              language === lang.code 
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30" 
+              "cursor-pointer gap-4 rounded-xl px-4 py-3.5 text-[12px] font-extrabold uppercase tracking-widest transition-all",
+              language === lang.code
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
                 : "text-slate-400 hover:bg-white/10 hover:text-white focus:bg-white/10 focus:text-white",
             )}
             data-testid={`button-switch-lang-${lang.code}`}
           >
-            <div className={cn(
-              "flex h-7 w-7 items-center justify-center rounded-lg text-[10px] font-black",
-              language === lang.code ? "bg-white/20 text-white" : "bg-slate-900 text-slate-500"
-            )}>
+            <div
+              className={cn(
+                "flex h-7 w-7 items-center justify-center rounded-lg text-[11px] font-extrabold",
+                language === lang.code ? "bg-white/20 text-white" : "bg-slate-900 text-slate-500",
+              )}
+            >
               {lang.flag}
             </div>
             <span className="flex-1">{lang.label}</span>
@@ -118,7 +137,7 @@ function UnreadBadge() {
 
   return (
     <span
-      className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-black text-white shadow-lg"
+      className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-extrabold text-white shadow-lg"
       data-testid="badge-unread"
     >
       {data.count > 9 ? "9+" : data.count}
@@ -127,7 +146,10 @@ function UnreadBadge() {
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const brandMark = "/favicon.png?v=20260402b";
+  /* Logo 3D oficial 2027. Se o arquivo não estiver publicado, o
+     fallback é o favicon atual — nunca quebrar o header. */
+  const brandMark = "/logo-3d-2027.png";
+  const brandMarkFallback = "/favicon.png?v=20260402b";
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
@@ -187,6 +209,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const navLinks = [
     { href: "/", label: t("nav.flights") },
+    { href: "/pacotes", label: t("nav.packages") },
     { href: "/senior", label: t("results.senior_badge") },
     { href: "/my-trips", label: t("nav.my_trips") || "My Trips" },
     { href: "/about", label: t("footer.about") },
@@ -194,26 +217,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white selection:bg-blue-600/30 selection:text-white flex flex-col">
+    <div className="flex min-h-screen flex-col bg-[#FBF7EF] text-[#101E42] selection:bg-[#FA5F52]/20 selection:text-[#101E42]">
       <header className="fixed inset-x-0 top-0 z-40 transition-all duration-500">
-	        <div className={cn(
-	          "container mx-auto px-2 md:px-6 transition-all duration-500",
-	          scrolled ? "pt-2 md:pt-4" : "pt-4 md:pt-10"
-	        )}>
-		          <div
-		            className={cn(
-		              "flex items-center justify-between gap-2 md:gap-4 rounded-full md:rounded-[32px] border border-white/10 px-2 py-1.5 shadow-2xl backdrop-blur-3xl transition-all duration-500 md:px-6 md:py-4",
-		              scrolled ? "bg-slate-900/90 scale-100" : "bg-slate-900/60 scale-[1.01] md:scale-[1.02]",
-		            )}
-		          >
+        <div className={cn("container mx-auto px-2 transition-all duration-500 md:px-6", scrolled ? "pt-2 md:pt-4" : "pt-4 md:pt-10")}>
+          <div
+            className={cn(
+              "flex items-center justify-between gap-2 rounded-full border border-white/10 px-2 py-1.5 shadow-2xl backdrop-blur-3xl transition-all duration-500 md:gap-4 md:rounded-[32px] md:px-6 md:py-4",
+              scrolled ? "bg-slate-900/90 scale-100" : "bg-slate-900/60 scale-[1.01] md:scale-[1.02]",
+            )}
+          >
             <div className="flex min-w-0 flex-1 items-center gap-8 md:gap-12">
-              <Link href="/" className="group flex shrink-0 items-center gap-5">
-		                <div className="brand-mark-shell brand-mark-shell--header h-10 w-10 md:h-20 md:w-20 shadow-2xl border border-white/20">
-	                  <img src={brandMark} alt="Michels Travel" className="transition-transform duration-700 group-hover:scale-110" />
-	                </div>
+              <Link href="/" className="group flex shrink-0 items-center gap-4">
+                <img
+                  src={brandMark}
+                  alt="Michels Travel"
+                  className="mt-logo h-11 w-11 transition-transform duration-700 group-hover:scale-105 md:h-14 md:w-14"
+                  onError={(e) => {
+                    if (e.currentTarget.src.indexOf("favicon.png") === -1) {
+                      e.currentTarget.src = brandMarkFallback;
+                    }
+                  }}
+                />
                 <div className="hidden min-w-0 xl:block">
-                  <span className="block whitespace-nowrap text-lg font-black uppercase tracking-[0.25em] text-white">Michels Travel</span>
-                  <span className="block whitespace-nowrap text-[10px] font-black uppercase tracking-[0.3em] text-blue-400/80">{t("nav.sub_brand") || "Opcao eficiente"}</span>
+                  <span className="block whitespace-nowrap text-lg font-extrabold uppercase tracking-[0.25em] text-white">
+                    Michels Travel
+                  </span>
+                  <span className="block whitespace-nowrap text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#E8B65D]">
+                    {t("nav.sub_brand") || "Opcao eficiente"}
+                  </span>
                 </div>
               </Link>
 
@@ -223,7 +254,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     key={link.href}
                     href={link.href}
                     className={cn(
-                      "relative whitespace-nowrap rounded-2xl px-3.5 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-300",
+                      "relative whitespace-nowrap rounded-2xl px-3.5 py-2.5 text-[11px] font-extrabold uppercase tracking-[0.15em] transition-all duration-300",
                       location === link.href
                         ? "bg-blue-600 text-white shadow-xl shadow-blue-600/20"
                         : "text-slate-400 hover:bg-white/5 hover:text-white",
@@ -235,13 +266,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </nav>
             </div>
 
-		            <div className="flex shrink-0 items-center gap-1.5 md:gap-8 border-l border-white/5 pl-1.5 md:pl-8">
-	              <LanguageSwitcher variant="navbar" />
-	              <div className="hidden items-center gap-4 md:flex">
+            <div className="flex shrink-0 items-center gap-1.5 border-l border-white/5 pl-1.5 md:gap-8 md:pl-8">
+              <LanguageSwitcher variant="navbar" />
+              <div className="hidden items-center gap-4 md:flex">
                 {user ? (
                   <>
                     <Link href="/messages" data-testid="button-messages-nav">
-                      <Button variant="ghost" size="icon" className="relative h-11 w-11 rounded-2xl bg-white/5 border border-white/5 text-slate-400 hover:bg-blue-600 hover:text-white transition-all shadow-xl">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="relative h-11 w-11 rounded-2xl border border-white/5 bg-white/5 text-slate-400 shadow-xl transition-all hover:bg-blue-600 hover:text-white"
+                      >
                         <MessageSquare className="h-5 w-5" />
                         <UnreadBadge />
                       </Button>
@@ -250,43 +285,62 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
-                          className="h-11 gap-3 rounded-2xl border border-white/10 bg-white/5 px-2 pr-5 text-white shadow-xl hover:bg-white/10 transition-all"
+                          className="h-11 gap-3 rounded-2xl border border-white/10 bg-white/5 px-2 pr-5 text-white shadow-xl transition-all hover:bg-white/10"
                           data-testid="button-user-menu"
                         >
                           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg">
                             <User className="h-4 w-4" />
                           </div>
-                          <span className="text-[10px] font-black uppercase tracking-widest">{(user.displayName || '').split(' ')[0] || "User"}</span>
+                          <span className="text-[11px] font-extrabold uppercase tracking-widest">
+                            {(user.displayName || "").split(" ")[0] || "User"}
+                          </span>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-64 rounded-[32px] border border-white/10 bg-slate-950 backdrop-blur-3xl p-3 shadow-2xl shadow-black/80">
-                        <DropdownMenuItem className="cursor-pointer gap-3 rounded-xl py-4 px-5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 focus:bg-white/5" onClick={() => setLocation("/profile")} data-testid="button-profile">
+                      <DropdownMenuContent
+                        align="end"
+                        className="w-64 rounded-[32px] border border-white/10 bg-slate-950 p-3 shadow-2xl shadow-black/80 backdrop-blur-3xl"
+                      >
+                        <DropdownMenuItem
+                          className="cursor-pointer gap-3 rounded-xl px-5 py-4 text-[11px] font-extrabold uppercase tracking-widest text-slate-400 hover:bg-white/5 focus:bg-white/5"
+                          onClick={() => setLocation("/profile")}
+                          data-testid="button-profile"
+                        >
                           <User className="h-4 w-4" /> {t("nav.profile") || "My Profile"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer gap-3 rounded-xl py-4 px-5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 focus:bg-white/5" onClick={() => setLocation("/my-trips")} data-testid="button-my-trips">
+                        <DropdownMenuItem
+                          className="cursor-pointer gap-3 rounded-xl px-5 py-4 text-[11px] font-extrabold uppercase tracking-widest text-slate-400 hover:bg-white/5 focus:bg-white/5"
+                          onClick={() => setLocation("/my-trips")}
+                          data-testid="button-my-trips"
+                        >
                           <Briefcase className="h-4 w-4" /> {t("nav.my_trips") || "My Trips"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer gap-3 rounded-xl py-4 px-5 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 focus:bg-white/5" onClick={() => setLocation("/messages")} data-testid="button-messages-dropdown">
+                        <DropdownMenuItem
+                          className="cursor-pointer gap-3 rounded-xl px-5 py-4 text-[11px] font-extrabold uppercase tracking-widest text-slate-400 hover:bg-white/5 focus:bg-white/5"
+                          onClick={() => setLocation("/messages")}
+                          data-testid="button-messages-dropdown"
+                        >
                           <MessageSquare className="h-4 w-4" /> {t("nav.messages") || "Messages"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer gap-3 rounded-xl py-4 px-5 mt-2 border-t border-white/5 text-red-500 hover:bg-red-500/10 focus:bg-red-500/10" onClick={() => logout()} data-testid="button-logout">
+                        <DropdownMenuItem
+                          className="mt-2 cursor-pointer gap-3 rounded-xl border-t border-white/5 px-5 py-4 text-red-500 hover:bg-red-500/10 focus:bg-red-500/10"
+                          onClick={() => logout()}
+                          data-testid="button-logout"
+                        >
                           <LogOut className="h-4 w-4" /> {t("nav.logout")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </>
-	                ) : (
-	                  <Button
-	                    onClick={() => openLoginDialog()}
-	                    className="h-10 md:h-11 whitespace-nowrap rounded-xl md:rounded-2xl bg-blue-600 px-4 md:px-8 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-2xl shadow-blue-600/30 hover:bg-blue-500 transition-all hover:scale-105 active:scale-95"
-	                    data-testid="button-signin"
-	                  >
-	                    {t("nav.signin")}
-	                  </Button>
-	                )}
+                ) : (
+                  <Button
+                    onClick={() => openLoginDialog()}
+                    className="h-10 whitespace-nowrap rounded-xl bg-blue-600 px-4 text-[11px] font-extrabold uppercase tracking-[0.2em] text-white shadow-2xl shadow-blue-600/30 transition-all hover:scale-105 hover:bg-blue-500 active:scale-95 md:h-11 md:rounded-2xl md:px-8 md:text-xs"
+                    data-testid="button-signin"
+                  >
+                    {t("nav.signin")}
+                  </Button>
+                )}
               </div>
-
-
             </div>
           </div>
         </div>
@@ -298,41 +352,57 @@ export function Layout({ children }: { children: React.ReactNode }) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed inset-0 z-[90] flex items-center justify-center px-4 bg-slate-950/95 backdrop-blur-2xl"
+            className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/95 px-4 backdrop-blur-2xl"
           >
-            <div className="w-full max-w-sm rounded-[40px] border border-white/10 bg-slate-900/80 p-6 shadow-2xl shadow-black/80 space-y-2">
-                <div className="flex justify-between items-center mb-6 px-2">
-                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Navigation</span>
-                  <button onClick={() => setIsMobileMenuOpen(false)} className="h-10 w-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10">
-                    <X className="h-5 w-5 text-white" />
-                  </button>
-                </div>
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={cn(
-                      "flex items-center gap-4 rounded-[24px] py-4 px-6 text-sm font-black uppercase tracking-[0.2em] transition-all",
-                      location === link.href ? "bg-blue-600 text-white shadow-xl shadow-blue-600/20" : "text-slate-400 hover:bg-white/5 hover:text-white",
-                    )}
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full bg-current opacity-40" />
-                    {link.label}
-                  </Link>
-                ))}
-                
-                <div className="pt-6 space-y-3">
-                  {user ? (
-                    <Button onClick={() => { setIsMobileMenuOpen(false); logout(); }} variant="ghost" className="w-full h-14 rounded-[24px] text-red-500 hover:bg-red-500/10 font-black uppercase tracking-widest text-xs">
-                       Logout
-                    </Button>
-                  ) : (
-                    <Button onClick={() => { setIsMobileMenuOpen(false); openLoginDialog(); }} className="w-full h-14 rounded-[24px] bg-blue-600 text-white font-black uppercase tracking-[0.2em] shadow-2xl shadow-blue-600/30 text-xs">
-                      {t("nav.signin")}
-                    </Button>
+            <div className="w-full max-w-sm space-y-2 rounded-[40px] border border-white/10 bg-slate-900/80 p-6 shadow-2xl shadow-black/80">
+              <div className="mb-6 flex items-center justify-between px-2">
+                <span className="text-[11px] font-extrabold uppercase tracking-[0.4em] text-slate-500">Navigation</span>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={cn(
+                    "flex items-center gap-4 rounded-[24px] px-6 py-4 text-sm font-extrabold uppercase tracking-[0.2em] transition-all",
+                    location === link.href ? "bg-blue-600 text-white shadow-xl shadow-blue-600/20" : "text-slate-400 hover:bg-white/5 hover:text-white",
                   )}
-                </div>
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-current opacity-40" />
+                  {link.label}
+                </Link>
+              ))}
+
+              <div className="space-y-3 pt-6">
+                {user ? (
+                  <Button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      logout();
+                    }}
+                    variant="ghost"
+                    className="h-14 w-full rounded-[24px] text-xs font-extrabold uppercase tracking-widest text-red-500 hover:bg-red-500/10"
+                  >
+                    Logout
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      openLoginDialog();
+                    }}
+                    className="h-14 w-full rounded-[24px] bg-blue-600 text-xs font-extrabold uppercase tracking-[0.2em] text-white shadow-2xl shadow-blue-600/30"
+                  >
+                    {t("nav.signin")}
+                  </Button>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
@@ -340,124 +410,223 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <LoginDialog open={loginDialogOpen} onOpenChange={handleLoginDialogChange} authError={authError} />
 
-      <main className="flex-1 pt-20 md:pt-40 pb-24 md:pb-0 relative">
-        {children}
-      </main>
+      <main className="relative flex-1 pb-24 pt-20 md:pb-0 md:pt-40">{children}</main>
 
-      <footer className="bg-slate-950 border-t border-white/5 relative z-10">
+      <footer className="relative z-10 border-t border-white/5 bg-[#060D24] text-white">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="grid grid-cols-1 gap-16 py-24 md:grid-cols-12 md:gap-12">
-            <div className="space-y-8 md:col-span-5">
-              <div className="flex flex-col items-center sm:items-start gap-5">
-                  <div className="flex items-center gap-4 group">
-                    <div className="h-10 w-10 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 group-hover:bg-blue-600 group-hover:text-white transition-all duration-500">
-                      <Sparkles className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="text-[10px] font-black uppercase tracking-[0.35em] text-blue-400/80">{t("footer.premium_partner")}</div>
-                      <div className="text-xl font-black tracking-tight text-white uppercase">{t("footer.elite_travel")}</div>
-                    </div>
+          <div className="grid grid-cols-1 gap-12 py-16 md:grid-cols-12 md:gap-12 md:py-20">
+            <div className="space-y-6 md:col-span-4">
+              <div className="flex items-center gap-4">
+                <img
+                  src={brandMark}
+                  alt="Michels Travel"
+                  className="mt-logo h-14 w-14"
+                  onError={(e) => {
+                    if (e.currentTarget.src.indexOf("favicon.png") === -1) {
+                      e.currentTarget.src = brandMarkFallback;
+                    }
+                  }}
+                />
+                <div>
+                  <div className="text-[11px] font-extrabold uppercase tracking-[0.35em] text-[#E8B65D]">
+                    {t("footer.premium_partner")}
+                  </div>
+                  <div className="text-xl font-extrabold uppercase tracking-tight text-white">
+                    {t("footer.elite_travel")}
                   </div>
                 </div>
-              <p className="max-w-md text-sm leading-relaxed font-bold text-slate-500 uppercase tracking-tight">{t("footer.slogan")}</p>
-              <div className="flex flex-wrap gap-3">
-                {[
-                  { icon: ShieldCheck, label: t("footer.seal_ssl") },
-                  { icon: Shield, label: t("footer.seal_stripe") },
-                  { icon: Award, label: t("footer.seal_iata") },
-                ].map((seal) => (
-                  <div key={seal.label} className="inline-flex items-center gap-3 rounded-2xl border border-white/5 bg-white/5 px-5 py-2.5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 shadow-xl transition-all hover:bg-white/10 hover:text-white">
-                    <seal.icon className="h-3.5 w-3.5 text-blue-400" />
-                    {seal.label}
-                  </div>
-                ))}
+              </div>
+              <p className="max-w-md text-sm font-semibold leading-relaxed text-slate-400">{t("footer.slogan")}</p>
+              {/* Agência registrada em NJ desde 2023 — fato verificável,
+                  sempre visível no rodapé. */}
+              <p className="inline-flex items-center gap-2 rounded-full border border-[#E8B65D]/30 bg-[#E8B65D]/10 px-4 py-2 text-[12px] font-extrabold uppercase tracking-widest text-[#E8B65D]">
+                <MapPin className="h-4 w-4" />
+                {t("footer.registered")}
+              </p>
+              <div className="flex flex-wrap gap-3 pt-2">
+                <a
+                  href="https://www.youtube.com/@MichelsTravelUSA"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-[12px] font-extrabold uppercase tracking-widest text-slate-300 transition-all hover:bg-white/10 hover:text-white"
+                >
+                  <Youtube className="h-4 w-4 text-[#FA5F52]" />
+                  YouTube
+                </a>
+                <span className="inline-flex items-center gap-2 rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-2.5 text-[12px] font-extrabold uppercase tracking-widest text-slate-500">
+                  {t("footer.follow_more")}
+                </span>
               </div>
             </div>
 
             <div className="md:col-span-2">
-              <h4 className="mb-8 text-[10px] font-black uppercase tracking-[0.4em] text-white/50">{t("footer.company")}</h4>
-              <ul className="space-y-4 text-xs font-black uppercase tracking-[0.2em] text-slate-400">
-                <li><Link href="/about" className="transition-colors hover:text-blue-400">{t("footer.about")}</Link></li>
-                <li><Link href="/blog" className="transition-colors hover:text-blue-400">Travel Hub</Link></li>
-                <li><Link href="/assistance" className="transition-colors hover:text-blue-400">Corporate</Link></li>
+              <h4 className="mb-6 text-[12px] font-extrabold uppercase tracking-[0.3em] text-white/50">
+                {t("footer.company")}
+              </h4>
+              <ul className="space-y-4 text-[12px] font-extrabold uppercase tracking-[0.15em] text-slate-400">
+                <li>
+                  <Link href="/about" className="transition-colors hover:text-[#E8B65D]">
+                    {t("footer.about")}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/pacotes" className="transition-colors hover:text-[#E8B65D]">
+                    {t("nav.packages")}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/blog" className="transition-colors hover:text-[#E8B65D]">
+                    Travel Hub
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/seguranca" className="transition-colors hover:text-[#E8B65D]">
+                    {t("security.badge")}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/assistance" className="transition-colors hover:text-[#E8B65D]">
+                    Corporate
+                  </Link>
+                </li>
               </ul>
             </div>
 
-            <div className="md:col-span-12 lg:col-span-5">
-              <h4 className="mb-8 text-[10px] font-black uppercase tracking-[0.4em] text-white/50">{t("footer.contact_title")}</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                 <div className="space-y-3">
-                    <a href={`https://wa.me/${AGENCY_WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="flex items-center gap-4 group/item">
-                      <div className="h-8 w-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 group-hover/item:bg-emerald-500 group-hover/item:text-white transition-all">
-                        <MessageCircle className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <span className="block text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">{t("footer.whatsapp_support")}</span>
-                        <span className="block text-[11px] font-bold text-slate-300">{AGENCY_WHATSAPP_DISPLAY}</span>
-                      </div>
-                    </a>
-                 </div>
-                 <div className="space-y-3">
-                    <span className="block text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">Secure Email</span>
-                    <a href={`mailto:${AGENCY_EMAIL}`} className="block text-xs sm:text-sm md:text-base font-black text-white hover:text-blue-400 transition-colors tracking-tight whitespace-nowrap">{AGENCY_EMAIL}</a>
-                 </div>
-              </div>
-              <div className="mt-10 p-6 rounded-[32px] bg-white/5 border border-white/5 flex items-center justify-between group cursor-pointer hover:bg-blue-600 transition-all duration-500">
-                  <div className="flex items-center gap-4 group/item">
-                    <div className="h-8 w-8 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
-                      <ShieldCheck className="h-4 w-4" />
-                    </div>
+            {/* Como você compra — fatos, não selos. */}
+            <div className="md:col-span-3">
+              <h4 className="mb-6 text-[12px] font-extrabold uppercase tracking-[0.3em] text-white/50">
+                {t("footer.how_you_buy")}
+              </h4>
+              <ul className="space-y-4">
+                {[
+                  { icon: ShieldCheck, label: t("footer.seal_nj"), sub: t("footer.seal_nj_sub") },
+                  { icon: Award, label: t("footer.seal_iata"), sub: t("footer.seal_iata_sub") },
+                  { icon: Shield, label: t("footer.seal_stripe"), sub: t("footer.seal_stripe_sub") },
+                  { icon: Headphones, label: t("footer.seal_ssl"), sub: t("footer.seal_ssl_sub") },
+                ].map((row) => (
+                  <li key={row.label} className="flex items-start gap-3">
+                    <row.icon className="mt-0.5 h-4 w-4 shrink-0 text-[#E8B65D]" />
                     <div>
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 group-hover:text-white">{t("footer.regional_support")}</span>
+                      <p className="text-[12px] font-extrabold uppercase tracking-widest text-slate-200">{row.label}</p>
+                      <p className="text-[12px] font-medium leading-relaxed text-slate-500">{row.sub}</p>
                     </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="md:col-span-3">
+              <h4 className="mb-6 text-[12px] font-extrabold uppercase tracking-[0.3em] text-white/50">
+                {t("footer.contact_title")}
+              </h4>
+              <div className="space-y-5">
+                <a
+                  href={`https://wa.me/${AGENCY_WHATSAPP_NUMBER}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group/item flex items-center gap-4"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 transition-all group-hover/item:bg-emerald-500 group-hover/item:text-white">
+                    <MessageCircle className="h-5 w-5" />
                   </div>
-                 <LanguageSwitcher variant="footer" />
+                  <div>
+                    <span className="block text-[11px] font-extrabold uppercase tracking-[0.25em] text-slate-500">
+                      {t("footer.whatsapp_support")}
+                    </span>
+                    <span className="block text-[13px] font-bold text-slate-200">{AGENCY_WHATSAPP_DISPLAY}</span>
+                  </div>
+                </a>
+                <div>
+                  <span className="block text-[11px] font-extrabold uppercase tracking-[0.25em] text-slate-500">
+                    {t("footer.secure_email")}
+                  </span>
+                  <a
+                    href={`mailto:${AGENCY_EMAIL}`}
+                    className="block text-[13px] font-extrabold tracking-tight text-white transition-colors hover:text-[#E8B65D] sm:text-sm"
+                  >
+                    {AGENCY_EMAIL}
+                  </a>
+                </div>
+                <a
+                  href={footerWhatsAppHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-cta-coral flex h-14 items-center justify-center gap-3 rounded-2xl px-6 text-[12px] font-extrabold uppercase tracking-widest transition-transform hover:scale-[1.02] active:scale-95"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  {t("footer.contact_cta")}
+                </a>
+              </div>
+              <div className="mt-8">
+                <LanguageSwitcher variant="footer" />
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8 py-10 border-t border-white/5">
-              <div className="flex items-center gap-6">
-                <span className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-700">&copy; {new Date().getFullYear()} Michels Travel &bull; {t("footer.elite_travel")}</span>
-              </div>
-              <div className="flex items-center gap-6 pb-20 md:pb-0">
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 px-6 py-2 rounded-full border border-white/5 shadow-xl">
-                  {t("footer.motto") || "Atendimento claro e suporte humano"}
-                </span>
-              </div>
+          <div className="flex flex-col items-center justify-between gap-6 border-t border-white/5 py-8 md:flex-row">
+            <span className="text-center text-[12px] font-extrabold uppercase tracking-[0.2em] text-slate-500 md:text-left">
+              &copy; {new Date().getFullYear()} Michels Travel &bull; {t("footer.elite_travel")}
+            </span>
+            <span className="rounded-full border border-white/5 px-5 py-2 text-[12px] font-extrabold uppercase tracking-[0.2em] text-slate-400 shadow-xl">
+              {t("footer.motto") || "Atendimento claro e suporte humano"}
+            </span>
           </div>
         </div>
       </footer>
 
-      {/* Premium Mobile Bottom Navigation Bar */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-slate-950/90 backdrop-blur-2xl border-t border-white/10 pb-safe pt-1 shadow-[0_-20px_40px_rgba(0,0,0,0.8)]">
+      {/* Mobile Bottom Navigation — rótulos 12px (mínimo legível). */}
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-slate-950/90 pb-safe pt-1 shadow-[0_-20px_40px_rgba(0,0,0,0.8)] backdrop-blur-2xl md:hidden">
         <div className="flex items-center justify-around px-2 py-3">
-          <Link href="/" className={cn("flex flex-col items-center gap-1.5 transition-all", isHome ? "text-blue-500 scale-110" : "text-slate-500 hover:text-slate-300")}>
-             <Globe className="h-5 w-5" />
-             <span className="text-[8px] font-black uppercase tracking-widest">Voos</span>
-          </Link>
-          <Link href="/my-trips" className={cn("flex flex-col items-center gap-1.5 transition-all", location === "/my-trips" ? "text-blue-500 scale-110" : "text-slate-500 hover:text-slate-300")}>
-             <Briefcase className="h-5 w-5" />
-             <span className="text-[8px] font-black uppercase tracking-widest">Viagens</span>
-          </Link>
-          <Link href="/messages" className={cn("flex flex-col items-center gap-1.5 relative transition-all", location === "/messages" ? "text-blue-500 scale-110" : "text-slate-500 hover:text-slate-300")}>
-             <MessageSquare className="h-5 w-5" />
-             <UnreadBadge />
-             <span className="text-[8px] font-black uppercase tracking-widest">Chat</span>
-          </Link>
-          <Link href="/profile" className={cn("flex flex-col items-center gap-1.5 transition-all", location === "/profile" ? "text-blue-500 scale-110" : "text-slate-500 hover:text-slate-300")}>
-             <User className="h-5 w-5" />
-             <span className="text-[8px] font-black uppercase tracking-widest">Perfil</span>
-          </Link>
-          <button 
-            onClick={() => setIsMobileMenuOpen(true)} 
+          <Link
+            href="/"
             className={cn(
               "flex flex-col items-center gap-1.5 transition-all",
-              isMobileMenuOpen ? "text-blue-500 scale-110" : "text-slate-500 hover:text-slate-300"
+              isHome ? "scale-110 text-blue-500" : "text-slate-500 hover:text-slate-300",
             )}
           >
-             <Menu className="h-5 w-5" />
-             <span className="text-[8px] font-black uppercase tracking-widest">Menu</span>
+            <Globe className="h-5 w-5" />
+            <span className="text-xs font-extrabold uppercase tracking-widest">Voos</span>
+          </Link>
+          <Link
+            href="/my-trips"
+            className={cn(
+              "flex flex-col items-center gap-1.5 transition-all",
+              location === "/my-trips" ? "scale-110 text-blue-500" : "text-slate-500 hover:text-slate-300",
+            )}
+          >
+            <Briefcase className="h-5 w-5" />
+            <span className="text-xs font-extrabold uppercase tracking-widest">Viagens</span>
+          </Link>
+          <Link
+            href="/messages"
+            className={cn(
+              "relative flex flex-col items-center gap-1.5 transition-all",
+              location === "/messages" ? "scale-110 text-blue-500" : "text-slate-500 hover:text-slate-300",
+            )}
+          >
+            <MessageSquare className="h-5 w-5" />
+            <UnreadBadge />
+            <span className="text-xs font-extrabold uppercase tracking-widest">Chat</span>
+          </Link>
+          <Link
+            href="/profile"
+            className={cn(
+              "flex flex-col items-center gap-1.5 transition-all",
+              location === "/profile" ? "scale-110 text-blue-500" : "text-slate-500 hover:text-slate-300",
+            )}
+          >
+            <User className="h-5 w-5" />
+            <span className="text-xs font-extrabold uppercase tracking-widest">Perfil</span>
+          </Link>
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className={cn(
+              "flex flex-col items-center gap-1.5 transition-all",
+              isMobileMenuOpen ? "scale-110 text-blue-500" : "text-slate-500 hover:text-slate-300",
+            )}
+          >
+            <Menu className="h-5 w-5" />
+            <span className="text-xs font-extrabold uppercase tracking-widest">Menu</span>
           </button>
         </div>
       </div>

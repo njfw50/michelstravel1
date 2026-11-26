@@ -30,6 +30,8 @@ import Booking from "@/pages/Booking";
 import AdminDashboard from "@/pages/AdminDashboard";
 import BlogList from "@/pages/BlogList";
 import BlogPost from "@/pages/BlogPost";
+import Packages from "@/pages/Packages";
+import Security from "@/pages/Security";
 import About from "@/pages/About";
 import IronboundNewark from "@/pages/IronboundNewark";
 import BrazilFlightsNewark from "@/pages/BrazilFlightsNewark";
@@ -97,6 +99,8 @@ function Router() {
 
       <Route path="/blog" component={() => <Layout><BlogList /></Layout>} />
       <Route path="/blog/:slug" component={() => <Layout><BlogPost /></Layout>} />
+      <Route path="/pacotes" component={() => <Layout><Packages /></Layout>} />
+      <Route path="/seguranca" component={() => <Layout><Security /></Layout>} />
       
       <Route path="/my-trips" component={() => <Layout><MyTrips /></Layout>} />
       <Route path="/eticket/:reference" component={ETicket} />

@@ -100,7 +100,8 @@
     "profile": "Mi Perfil",
     "messages": "Mensajes",
     "help": "Ayuda",
-    "sub_brand": "Opción eficiente"
+    "sub_brand": "Opción eficiente",
+    "packages": "Paquetes"
   },
   "login": {
     "title": "Cree Su Cuenta o Inicie Sesión",
@@ -167,7 +168,10 @@
     "elite_travel": "Gestión de Viajes Elite",
     "regional_support": "Soporte Regional Activo",
     "whatsapp_support": "Soporte vía WhatsApp",
-    "secure_email": "Correo Seguro"
+    "secure_email": "Correo Seguro",
+    "registered": "Agencia registrada en New Jersey desde 2023",
+    "how_you_buy": "Cómo compras",
+    "follow_more": "Instagram y Facebook — próximamente aquí"
   },
   "home": {
     "board": {
@@ -222,7 +226,8 @@
       "exchange": "Tipo de Cambio",
       "status": "Estado de Vuelo",
       "monitoring": "Monitoreo en Vivo",
-      "access": "Acceder al Panel"
+      "access": "Acceder al Panel",
+      "desc": "Clima, cambio, estado del vuelo y otras herramientas útiles para planificar — todo en un solo lugar."
     },
     "intel": {
       "badge": "Insights en Vivo",
@@ -296,7 +301,7 @@
     },
     "search": {
       "badge": "Buscar vuelos en vivo",
-      "title": "¿A dónde desea viajar?",
+      "title": "Viajar bien empieza aquí.",
       "desc": "Encuentre y reserve su vuelo ahora mismo. Comparación inteligente en tiempo real para los mejores precios del mercado.",
       "tag": "Disponibilidad validada antes del pago"
     },
@@ -355,7 +360,11 @@
       "desc": "Explore los destinos más increíbles por precios que se ajustan al presupuesto de su familia.",
       "btn_guide": "Ver guía de viaje",
       "from": "Desde",
-      "btn_open": "Abrir tarifa"
+      "btn_open": "Abrir tarifa",
+      "provenance": "Ofertas de nuestra curaduría: la tarifa de cada tarjeta fue verificada en la fecha indicada. Las tarifas cambian — reconfirmamos todo antes de emitir.",
+      "verified_on": "Verificado el {date}",
+      "stops_one": "1 parada",
+      "stops_many": "{count} paradas"
     },
     "bot": {
       "badge": "Mia dentro de la venta",
@@ -370,6 +379,12 @@
       "msg2": "Puedo refinar la ruta, comparar opciones y mantener un humano disponible si lo necesita.",
       "whatsapp_badge": "WhatsApp",
       "whatsapp_desc": "Con solo un toque, hable en tiempo real con directores de Michels Travel."
+    },
+    "trust": {
+      "f1": "Agencia registrada en New Jersey desde 2023",
+      "f2": "Atención en portugués, inglés y español",
+      "f3": "Tarifas verificadas en la fuente antes de publicar",
+      "f4": "Soporte humano por WhatsApp, de la reserva al embarque"
     }
   },
   "search": {
@@ -402,7 +417,8 @@
     "departure_date": "Fecha de Salida",
     "multi_city_add": "+ Añadir Tramo",
     "validation_error": "Error en la Búsqueda",
-    "fill_all_fields": "Por favor, complete todos los campos del tramo"
+    "fill_all_fields": "Por favor, complete todos los campos del tramo",
+    "return_before_departure": "La vuelta no puede ser antes de la ida. Elige otra fecha."
   },
   "class": {
     "economy": "Clase Económica",
@@ -874,6 +890,50 @@
     "more_chronicles": "Ver más crónicas",
     "mia_guide_prompt": "¿Quieres una guía AI personalizada?",
     "mia_guide_desc": "Nuestra IA Mia puede diseñar un itinerario exclusivo basado en tu perfil viajero ahora mismo.",
-    "talk_to_mia": "Hablar con Mia"
+    "talk_to_mia": "Hablar con Mia",
+    "hero_title": "Explora lo Inexplicable.",
+    "advanced_filters": "Filtros Avanzados",
+    "pulse_note": "Clima en vivo y tarifa del tablero de vuelos — sin números inventados.",
+    "seo_title": "Guía de Viajes de Élite",
+    "seo_desc": "Explora el mundo con curaduría de especialistas. Consejos exclusivos, destinos secretos e itinerarios premium.",
+    "best_fare": "Mejor Tarifa",
+    "liked": "¿Te gustó?"
+  },
+  "packages": {
+    "badge": "Paquetes vuelo + hotel",
+    "title": "Paquetes listos para viajar",
+    "subtitle": "Vuelo y hotel juntos, con precio cerrado para 2 personas — verificado en TAAP en la fecha indicada en cada tarjeta. Sin sorpresas al pagar.",
+    "seo_title": "Paquetes de viaje — Michels Travel",
+    "seo_desc": "Paquetes vuelo + hotel con precio cerrado para 2 personas, verificados en Expedia TAAP. Oporto, Lisboa, Tierra Santa, Orlando y más.",
+    "provenance_line": "Precios verificados en Expedia TAAP — cada tarjeta muestra su fecha de verificación.",
+    "back_home": "Volver a la página inicial",
+    "empty": "No hay paquetes disponibles en este momento — háblanos por WhatsApp.",
+    "footer_note": "Los valores son el total para 2 personas, con vuelos y hotel incluidos, según lo verificado en TAAP. Impuestos y condiciones se reconfirman antes de emitir — el monto final siempre se confirma contigo antes de cualquier pago.",
+    "nights": "noches",
+    "hotel": "Hotel incluido",
+    "includes_flights": "Vuelos de ida y vuelta para {count} personas",
+    "includes_hotel": "Hotel incluido — {nights} noches",
+    "total_for_2": "Total para 2 personas",
+    "verified_on": "Precio verificado el {date}",
+    "reconfirm": "Precio a reconfirmar",
+    "reconfirm_desc": "Última verificación: {date}. El precio puede haber cambiado — pide la reconfirmación por WhatsApp antes de decidir.",
+    "cta_buy": "Quiero comprar",
+    "cta_reconfirm": "Pedir reconfirmación",
+    "note": "Aquí no se cobra nada — hablas con nosotros por WhatsApp y confirmas todo antes de pagar."
+  },
+  "security": {
+    "badge": "Compra segura",
+    "title": "Cómo compras con seguridad",
+    "desc": "Sin letra pequeña y sin promesas que no se pueden probar. Esto es lo que es verdad sobre comprar con Michel's Travel:",
+    "i1": "Agencia registrada en New Jersey desde 2023.",
+    "i2": "Operación con Cruise Brothers, agencia acreditada por IATA.",
+    "i3": "Emisión por Expedia (TAAP) y directo con la aerolínea.",
+    "i4": "Código de reserva verificable en el sitio de la aerolínea.",
+    "i5": "Pago con tarjeta y recibo.",
+    "i6": "Reseñas reales de clientes en Google.",
+    "note": "No usamos sellos de gobierno ni certificados que no existen. Si tienes cualquier duda sobre tu compra, habla con un humano — no con un robot.",
+    "cta": "Hablar con un humano por WhatsApp",
+    "whatsapp_topic": "Duda sobre la seguridad de la compra",
+    "whatsapp_details": "Llegué desde la página de seguridad del sitio."
   }
 }

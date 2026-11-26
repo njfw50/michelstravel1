@@ -11,6 +11,15 @@ export default {
         sm: ".1875rem", /* 3px */
       },
       colors: {
+        // ── Michel's Travel 2027 (ATA MT-DESIGN-2027-001) ──
+        coral: { DEFAULT: "#FA5F52", deep: "#E2483D" },
+        gold: "#E8B65D",
+        ember: "#E58B48",
+        bronze: "#C59265",
+        champagne: "#E9D7B7",
+        navy: { 950: "#060D24", 900: "#0B1B3A", 800: "#12244D" },
+        paper: { DEFAULT: "#FBF7EF", 2: "#F5EDDD" },
+        ink: { DEFAULT: "#101E42", soft: "#3D4A6B", mute: "#6B7594" },
         // Flat / base colors (regular buttons)
         background: "hsl(var(--background) / <alpha-value>)",
         foreground: "hsl(var(--foreground) / <alpha-value>)",
@@ -84,6 +93,7 @@ export default {
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
+        display: ["Outfit", "var(--font-display)", "sans-serif"],
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
       },

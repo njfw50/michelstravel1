@@ -108,7 +108,8 @@
     "profile": "Perfil",
     "messages": "Mensagens",
     "help": "Ajuda",
-    "sub_brand": "Opção eficiente"
+    "sub_brand": "Opção eficiente",
+    "packages": "Pacotes"
   },
   "login": {
     "title": "Crie Sua Conta ou Faça Seu Login",
@@ -175,7 +176,10 @@
     "elite_travel": "Gestão de Viagens Elite",
     "regional_support": "Suporte Regional Ativo",
     "whatsapp_support": "Suporte via WhatsApp",
-    "secure_email": "E-mail Seguro"
+    "secure_email": "E-mail Seguro",
+    "registered": "Agência registrada em New Jersey desde 2023",
+    "how_you_buy": "Como você compra",
+    "follow_more": "Instagram e Facebook — em breve aqui"
   },
   "home": {
     "board": {
@@ -230,7 +234,8 @@
       "exchange": "Taxa de Câmbio",
       "status": "Status de Voo",
       "monitoring": "Monitoramento ao Vivo",
-      "access": "Acessar Painel"
+      "access": "Acessar Painel",
+      "desc": "Clima, câmbio, status de voo e outras ferramentas úteis para planejar — tudo num só lugar."
     },
     "intel": {
       "badge": "Insights ao Vivo",
@@ -304,7 +309,7 @@
     },
     "search": {
       "badge": "Buscar voos ao vivo",
-      "title": "Para onde deseja viajar?",
+      "title": "Viajar bem começa aqui.",
       "desc": "Encontre e reserve seu voo agora mesmo. Comparação inteligente em tempo real para os melhores preços do mercado.",
       "tag": "Disponibilidade validada antes do pagamento"
     },
@@ -363,7 +368,11 @@
       "desc": "Explore os destinos mais incríveis por preços que cabem no bolso da sua família. Selecionamos passagens aéreas e rotas estratégicas focando na perfeita aliança entre excelência, baixo preço de cotação e exclusividade antes de subirem de preço.",
       "btn_guide": "Ver guia de viagem",
       "from": "A partir de",
-      "btn_open": "Abrir tarifa"
+      "btn_open": "Abrir tarifa",
+      "provenance": "Ofertas da nossa curadoria: o preço de cada cartão foi verificado na data indicada. Tarifas mudam — reconfirmamos tudo antes de emitir.",
+      "verified_on": "Verificado em {date}",
+      "stops_one": "1 parada",
+      "stops_many": "{count} paradas"
     },
     "bot": {
       "badge": "Mia dentro da venda",
@@ -378,6 +387,12 @@
       "msg2": "Posso refinar a rota, comparar opcoes e manter um humano disponivel se voce precisar.",
       "whatsapp_badge": "WhatsApp",
       "whatsapp_desc": "Com apenas um toque você conversa em tempo real com diretores da Michels Travel, unificando a segurança das agências do passado à praticidade premium do futuro."
+    },
+    "trust": {
+      "f1": "Agência registrada em New Jersey desde 2023",
+      "f2": "Atendimento em português, inglês e espanhol",
+      "f3": "Preços verificados na fonte antes de publicar",
+      "f4": "Suporte humano no WhatsApp, do início ao embarque"
     }
   },
   "search": {
@@ -415,7 +430,8 @@
     "departure_date": "Data de Partida",
     "multi_city_add": "+ Adicionar Trecho",
     "validation_error": "Erro na Busca",
-    "fill_all_fields": "Por favor, preencha todos os campos do trecho"
+    "fill_all_fields": "Por favor, preencha todos os campos do trecho",
+    "return_before_departure": "A volta não pode ser antes da ida. Escolha outra data."
   },
   "class": {
     "economy": "Classe Econômica",
@@ -719,7 +735,14 @@
     "more_chronicles": "Ver mais crônicas",
     "mia_guide_prompt": "Quer um guia AI personalizado?",
     "mia_guide_desc": "Nossa IA Mia pode desenhar um roteiro exclusivo baseado no seu perfil viajante agora mesmo.",
-    "talk_to_mia": "Falar com Mia"
+    "talk_to_mia": "Falar com Mia",
+    "hero_title": "Explore o Inexplicável.",
+    "advanced_filters": "Filtros Avançados",
+    "pulse_note": "Clima ao vivo e tarifa do quadro de voos — sem números inventados.",
+    "seo_title": "Guia de Viagens de Elite",
+    "seo_desc": "Explore o mundo com curadoria de especialistas. Dicas exclusivas, destinos secretos e roteiros premium.",
+    "best_fare": "Melhor Tarifa",
+    "liked": "Gostou?"
   },
   "checkout": {
     "success_title": "Pagamento Confirmado!",
@@ -1072,5 +1095,42 @@
     "reason_characters": "Identificamos caracteres que podem não ser aceitos pelos sistemas das companhias aéreas.",
     "reason_spacing": "Ajustamos o espaçamento para seguir o padrão internacional de aviação.",
     "reason_case": "Corrigimos as letras maiúsculas para garantir a leitura correta no check-in."
+  },
+  "packages": {
+    "badge": "Pacotes voo + hotel",
+    "title": "Pacotes prontos para viajar",
+    "subtitle": "Voo e hotel juntos, com preço fechado para 2 pessoas — verificado no TAAP na data indicada em cada cartão. Sem surpresa na hora de pagar.",
+    "seo_title": "Pacotes de viagem — Michels Travel",
+    "seo_desc": "Pacotes voo + hotel com preço fechado para 2 pessoas, verificados no Expedia TAAP. Porto, Lisboa, Terra Santa, Orlando e mais.",
+    "provenance_line": "Preços verificados no Expedia TAAP — a data de cada verificação está no cartão do pacote.",
+    "back_home": "Voltar para a página inicial",
+    "empty": "Nenhum pacote disponível no momento — fale com a gente no WhatsApp.",
+    "footer_note": "Os valores são o total para 2 pessoas, com voos e hotel incluídos, conforme verificado no TAAP. Taxas e condições são reconfirmadas antes da emissão — o valor final é sempre confirmado com você antes de qualquer pagamento.",
+    "nights": "noites",
+    "hotel": "Hotel incluído",
+    "includes_flights": "Passagens aéreas ida e volta para {count} pessoas",
+    "includes_hotel": "Hotel incluído — {nights} noites",
+    "total_for_2": "Total para 2 pessoas",
+    "verified_on": "Preço verificado em {date}",
+    "reconfirm": "Preço a reconfirmar",
+    "reconfirm_desc": "Última verificação: {date}. O preço pode ter mudado — peça a reconfirmação no WhatsApp antes de decidir.",
+    "cta_buy": "Quero comprar",
+    "cta_reconfirm": "Pedir reconfirmação",
+    "note": "Nada é cobrado por aqui — você fala com a gente no WhatsApp e confirma tudo antes de pagar."
+  },
+  "security": {
+    "badge": "Compra segura",
+    "title": "Como você compra com segurança",
+    "desc": "Sem letra miúda e sem promessa que não se pode provar. Isto é o que é verdade sobre comprar com a Michel's Travel:",
+    "i1": "Agência registrada em New Jersey desde 2023.",
+    "i2": "Operação com a Cruise Brothers, agência credenciada IATA.",
+    "i3": "Emissão pela Expedia (TAAP) e direto com a companhia aérea.",
+    "i4": "Código da reserva (localizador) conferível no site da companhia.",
+    "i5": "Pagamento no cartão com recibo.",
+    "i6": "Avaliações reais de clientes no Google.",
+    "note": "Não usamos selos de governo nem certificados que não existem. Se tiver qualquer dúvida sobre a sua compra, fale com um humano — não com um robô.",
+    "cta": "Falar com um humano no WhatsApp",
+    "whatsapp_topic": "Dúvida sobre segurança da compra",
+    "whatsapp_details": "Cheguei pela página de segurança do site."
   }
 }

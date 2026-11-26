@@ -96,6 +96,8 @@ export function useFlightSearch(params: FlightSearchQuery) {
 
       return data;
     },
+    retry: 2, // Container frio (Parte 3-C): tenta de novo sozinho antes de mostrar erro.
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 8000),
     enabled: isEnabled,
   });
 }

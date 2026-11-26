@@ -1,0 +1,124 @@
+{
+  "packages": [
+    {
+      "dates": {
+        "end": "2027-01-17",
+        "start": "2027-01-10"
+      },
+      "destination": "Porto",
+      "destinationCode": "OPO",
+      "destinationCountry": "Portugal",
+      "hotel": {
+        "name": "Crowne Plaza Porto by IHG",
+        "rating": 9.2,
+        "ratingScale": 10,
+        "stars": 5
+      },
+      "id": "porto-jan-2027",
+      "image": "generic-sunset-wing",
+      "imageNote": "Foto genérica de viagem (asa ao pôr do sol) até a direção de arte entregar a foto real do Porto — nunca usar foto de outro destino como se fosse o Porto.",
+      "nights": 7,
+      "price": {
+        "amount": 2130.4,
+        "currency": "USD"
+      },
+      "travelers": 2,
+      "verifiedAt": "2026-11-25",
+      "verifiedSource": "Expedia TAAP"
+    },
+    {
+      "dates": {
+        "end": "2027-01-15",
+        "start": "2027-01-08"
+      },
+      "destination": "Orlando",
+      "destinationCode": "MCO",
+      "destinationCountry": "Estados Unidos",
+      "hotel": {
+        "name": "DoubleTree by Hilton at the Entrance to Universal Orlando",
+        "rating": 8.6,
+        "ratingScale": 10,
+        "stars": 4
+      },
+      "id": "orlando-jan-2027",
+      "image": "orlando",
+      "nights": 7,
+      "price": {
+        "amount": 1389.64,
+        "currency": "USD"
+      },
+      "travelers": 2,
+      "verifiedAt": "2026-11-24",
+      "verifiedSource": "Expedia TAAP"
+    },
+    {
+      "dates": {
+        "end": "2027-01-12",
+        "start": "2027-01-05"
+      },
+      "destination": "Lisboa",
+      "destinationCode": "LIS",
+      "destinationCountry": "Portugal",
+      "hotel": {
+        "name": "Dorma Saldanha",
+        "rating": 9.2,
+        "ratingScale": 10,
+        "stars": 4
+      },
+      "id": "lisboa-jan-2027",
+      "image": "lisboa",
+      "nights": 7,
+      "price": {
+        "amount": 1870.84,
+        "currency": "USD"
+      },
+      "travelers": 2,
+      "verifiedAt": "2026-11-18",
+      "verifiedSource": "Expedia TAAP"
+    },
+    {
+      "dates": {
+        "end": "2027-01-12",
+        "start": "2027-01-05"
+      },
+      "destination": "Terra Santa (Tel Aviv)",
+      "destinationCode": "TLV",
+      "destinationCountry": "Israel",
+      "hotel": {
+        "name": "Crowne Plaza Tel Aviv City Center",
+        "rating": 8.8,
+        "ratingScale": 10,
+        "stars": 4
+      },
+      "id": "terra-santa-jan-2027",
+      "image": "generic-sunset-wing",
+      "imageNote": "Foto genérica de viagem (asa ao pôr do sol) até a direção de arte entregar a foto real de Tel Aviv — nunca usar foto de outro destino como se fosse Tel Aviv.",
+      "nights": 7,
+      "price": {
+        "amount": 3445.09,
+        "currency": "USD"
+      },
+      "travelers": 2,
+      "verifiedAt": "2026-11-20",
+      "verifiedSource": "Expedia TAAP",
+      "nightsNote": "ATENÇÃO — divergência na fonte: o briefing dizia 6 noites para 5–12/jan/2027, mas 5→12/jan são 7 noites. Noites corrigidas para 7 pela conta das datas; CONFIRMAR no TAAP no recheck antes de apresentar."
+    }
+  ],
+  "pending": [
+    {
+      "destination": "Londres",
+      "destinationCode": "LON",
+      "destinationCountry": "Reino Unido",
+      "id": "londres-nov-2026",
+      "note": "Existe no drip diário (11/nov/2026, US$ 5.967,99) mas SEM detalhe de hotel confirmado. NÃO entra na vitrine até confirmarem hotel, datas e nova verificação no TAAP.",
+      "price": {
+        "amount": 5967.99,
+        "currency": "USD"
+      }
+    }
+  ],
+  "source": "Expedia TAAP",
+  "sourceNote": "Preços de pacotes (voo + hotel) verificados no Expedia TAAP. Nenhum preço entra aqui sem data de verificação. Ver rotina diária em docs/packages-daily-refresh.md.",
+  "updatedAt": "2026-11-26",
+  "version": 1
+}

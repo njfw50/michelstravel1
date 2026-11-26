@@ -100,6 +100,21 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
     }
   }, [defaultValues]);
 
+  /* Calendário (Parte 3-A): a volta nunca pode ser anterior à ida.
+     Quando a ida muda para depois da volta já escolhida, a volta é
+     limpa — nunca segue um intervalo inválido para a busca. */
+  const handleDepartureSelect = (next: Date | undefined) => {
+    setDate(next);
+    if (next && returnDate && returnDate < next) setReturnDate(undefined);
+  };
+  const handleReturnSelect = (next: Date | undefined) => {
+    if (next && date && next < date) {
+      toast({ title: t("search.validation_error"), description: t("search.return_before_departure"), variant: "destructive" });
+      return;
+    }
+    setReturnDate(next);
+  };
+
   const classLabel = (id: string) => t(`class.${id}`);
   const appendExtraSearchParams = (params: URLSearchParams) => {
     if (!extraSearchParams) return;
@@ -291,7 +306,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                         </button>
                       </PopoverTrigger>
                       <PopoverContent className="p-0 border border-white/10 bg-slate-950 shadow-2xl rounded-3xl overflow-hidden" align="start">
-                        <Calendar mode="single" selected={date} onSelect={setDate} disabled={(d) => d < new Date()} className="bg-slate-950 text-white" />
+                        <Calendar mode="single" selected={date} onSelect={handleDepartureSelect} disabled={(d) => d < new Date()} className="bg-slate-950 text-white" />
                       </PopoverContent>
                     </Popover>
                   </div>
@@ -314,7 +329,7 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                         </button>
                       </PopoverTrigger>
                       <PopoverContent className="p-0 border border-white/10 bg-slate-950 shadow-2xl rounded-3xl overflow-hidden" align="start">
-                        <Calendar mode="single" selected={returnDate} onSelect={setReturnDate} disabled={(d) => (date ? d < date : d < new Date())} className="bg-slate-950 text-white" />
+                        <Calendar mode="single" selected={returnDate} onSelect={handleReturnSelect} disabled={(d) => (date ? d < date : d < new Date())} className="bg-slate-950 text-white" />
                       </PopoverContent>
                     </Popover>
                   </div>
@@ -453,9 +468,9 @@ export function FlightSearchForm({ className, isCompact = false, defaultValues, 
                         <div className="space-y-6">
                           <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{t("search.select_travelers")}</p>
                           {[
-                            { label: t("search.adults"), description: "12+ anos", val: adults, set: setAdults, min: 1 },
-                            { label: t("search.children"), description: "2-11 anos", val: children, set: setChildren, min: 0 },
-                            { label: t("search.infants"), description: "0-2 anos", val: infants, set: setInfants, min: 0 }
+                            { label: t("search.adults"), description: t("search.adults_desc"), val: adults, set: setAdults, min: 1 },
+                            { label: t("search.children"), description: t("search.children_desc"), val: children, set: setChildren, min: 0 },
+                            { label: t("search.infants"), description: t("search.infants_desc"), val: infants, set: setInfants, min: 0 }
                           ].map(p => (
                             <div key={p.label} className="flex justify-between items-center">
                               <div>

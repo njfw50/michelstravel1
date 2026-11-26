@@ -40,6 +40,7 @@ export function LocationSearch({
   const debouncedQuery = useDebounce(query, 500);
   const [results, setResults] = useState<Place[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [openUp, setOpenUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const selectedRef = useRef(false);
@@ -82,6 +83,14 @@ export function LocationSearch({
     onChange(place.iataCode);
     setIsOpen(false);
   };
+
+  /* Autocomplete (Parte 3-B): abre para CIMA quando não há espaço
+     abaixo na viewport — nunca corta a lista fora da tela. */
+  useEffect(() => {
+    if (!isOpen) return;
+    const rect = wrapperRef.current?.getBoundingClientRect();
+    if (rect) setOpenUp(window.innerHeight - rect.bottom < 340);
+  }, [isOpen, results.length]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -139,7 +148,9 @@ export function LocationSearch({
 
       {isOpen && results.length > 0 && (
         <div className={cn(
-          "absolute top-full left-0 right-0 mt-3 z-[200] max-h-80 overflow-y-auto rounded-3xl p-3 border border-white/10 shadow-2xl backdrop-blur-3xl",
+          openUp
+            ? "absolute bottom-full left-0 right-0 mb-3 z-[200] max-h-80 overflow-y-auto rounded-3xl p-3 border border-white/10 shadow-2xl backdrop-blur-3xl"
+            : "absolute top-full left-0 right-0 mt-3 z-[200] max-h-80 overflow-y-auto rounded-3xl p-3 border border-white/10 shadow-2xl backdrop-blur-3xl",
           dark ? "bg-slate-950/95 shadow-black/80" : "bg-white/95 border-slate-100 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.15)]"
         )}>
           <div className="space-y-1.5">

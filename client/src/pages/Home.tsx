@@ -1,56 +1,76 @@
-import { useState, useMemo } from "react";
-import { Link, useLocation } from "wouter";
+/* ────────────────────────────────────────────────────────────────────
+   HOME — redesign 2027 ("Revista de bordo").
+   ATA MT-DESIGN-2027-001 · Diretriz de Execução Visual 2027 · Código
+   Canônico: Cân. I (auditoria) · V (Livro da Vida) · XIV (segurança)
+   · XVI (texto plano e preciso) · XVIII (soberania cognitiva — sem
+   urgência falsa, sem dark pattern) · XIX (integridade das refs.) ·
+   XXII (procedência — preço e fato com fonte e data visíveis) ·
+   XXIII (fail-closed — sem número inventado no ar).
+
+   O QUE MUDOU (vs. cloudflare-containers @377db97) — Parte 3:
+   (D) parceiros: só companhias COM logo (filter antes do slice);
+   (E) Toolbox: removidos "24°C" e "1 USD = 5.04 BRL" fixos — o cartão
+       virou link honesto p/ /toolbox, sem número parado;
+   (F) estatísticas sem fonte ("2,400+ rotas", "45+ parceiros",
+       "120k viajantes", "<2s") REMOVIDAS — no lugar, uma faixa de
+       confiança com 4 fatos verificáveis, sem número inventado;
+   (intel) "Midnight Inteligência" com "15% de queda" e "melhor época
+       45 dias antes" REMOVIDO — afirmações sem fonte viraram "Como
+       funciona" (3 passos, chaves home.how.* já existentes);
+   (DealCard) "Voo direto" fixo removido — agora mostra paradas reais.
+   A ordem das seções continua vindo de site_settings (painel admin,
+   Parte 1 bloqueada): os ids são os mesmos (hero, stats, insights,
+   deals, partners, cta). A seção de segurança é renderizada SEMPRE
+   após o loop (não depende do painel).
+   ──────────────────────────────────────────────────────────────────── */
+import { useLocation } from "wouter";
 import { useI18n } from "@/lib/i18n";
 import { useFeaturedDeals } from "@/hooks/use-flights";
-import { useAirlines, useFeaturedAirports } from "@/hooks/use-flights";
+import { useAirlines } from "@/hooks/use-flights";
 import { FlightSearchForm } from "@/components/FlightSearchForm";
 import { DealCard } from "@/components/DealCard";
 import { SEO } from "@/components/SEO";
 import { usePublicSettings } from "@/hooks/use-public-settings";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Plane, 
-  ArrowRight, 
-  ShieldCheck, 
-  Sparkles, 
-  Globe2, 
-  MessageCircle,
-  Clock,
-  TrendingUp,
-  MapPin,
-  CheckCircle2,
-  Calendar,
-  CloudSun,
-  Banknote,
-  Navigation,
-  Info,
-  ShieldAlert,
-  Headphones,
+import {
+  ArrowRight,
+  BadgeCheck,
   Compass,
-  Star,
-  Zap
+  Globe2,
+  Languages,
+  MessageCircle,
+  ShieldCheck,
+  Sparkles,
+  Wrench,
+  Search,
+  CreditCard,
+  Ticket,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { buildWhatsAppHref, buildWhatsAppMessage } from "@/lib/contact";
 import type { ContactLanguage } from "@/lib/contact";
 
+/* Fotos de destino já verificadas no repo (Unsplash/Pexels). Destino
+   sem foto real verificada usa a asa ao pôr do sol (genérica) — nunca
+   a foto de outro destino como se fosse aquele lugar. */
 const getDestinationImage = (iata?: string) => {
-  if (!iata) return "https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?q=80&w=800&auto=format&fit=crop";
+  if (!iata)
+    return "https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?q=80&w=800&auto=format&fit=crop";
   const code = iata.toUpperCase();
   const mapping: Record<string, string> = {
-    "GIG": "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?q=80&w=800&auto=format&fit=crop",
-    "SDU": "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?q=80&w=800&auto=format&fit=crop",
-    "GRU": "https://images.pexels.com/photos/18179143/pexels-photo-18179143.jpeg?auto=compress&cs=tinysrgb&w=1000&h=625&fit=crop",
-    "CGH": "https://images.pexels.com/photos/18179143/pexels-photo-18179143.jpeg?auto=compress&cs=tinysrgb&w=1000&h=625&fit=crop",
-    "MCO": "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?q=80&w=800&auto=format&fit=crop",
-    "LIS": "https://images.unsplash.com/photo-1525207934214-58e69a8f8a3e?q=80&w=800&auto=format&fit=crop",
-    "CDG": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=800&auto=format&fit=crop",
-    "EWR": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=800&auto=format&fit=crop",
-    "NYC": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=800&auto=format&fit=crop",
-    "MIA": "https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?q=80&w=800&auto=format&fit=crop",
-    "REC": "https://images.unsplash.com/photo-1596162391609-843e498bdbd1?q=80&w=800&auto=format&fit=crop",
+    GIG: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?q=80&w=800&auto=format&fit=crop",
+    SDU: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?q=80&w=800&auto=format&fit=crop",
+    GRU: "https://images.pexels.com/photos/18179143/pexels-photo-18179143.jpeg?auto=compress&cs=tinysrgb&w=1000&h=625&fit=crop",
+    CGH: "https://images.pexels.com/photos/18179143/pexels-photo-18179143.jpeg?auto=compress&cs=tinysrgb&w=1000&h=625&fit=crop",
+    MCO: "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?q=80&w=800&auto=format&fit=crop",
+    LIS: "https://images.unsplash.com/photo-1525207934214-58e69a8f8a3e?q=80&w=800&auto=format&fit=crop",
+    CDG: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=800&auto=format&fit=crop",
+    EWR: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=800&auto=format&fit=crop",
+    NYC: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?q=80&w=800&auto=format&fit=crop",
+    MIA: "https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?q=80&w=800&auto=format&fit=crop",
+    REC: "https://images.unsplash.com/photo-1596162391609-843e498bdbd1?q=80&w=800&auto=format&fit=crop",
   };
   return mapping[code] || "https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?q=80&w=800&auto=format&fit=crop";
 };
@@ -62,33 +82,47 @@ export default function Home() {
   const { data: settings } = usePublicSettings();
   const [, setLocation] = useLocation();
 
+  /* Ordem das seções: vem do painel admin (site_settings). Os ids são
+     os mesmos de antes — o redesign NÃO quebra o painel. */
   const activeLayout = settings?.mobileLayout || [
     { id: "hero", enabled: true },
     { id: "stats", enabled: true },
     { id: "insights", enabled: true },
     { id: "deals", enabled: true },
     { id: "partners", enabled: true },
-    { id: "cta", enabled: true }
+    { id: "cta", enabled: true },
   ];
+
+  /* Companhias COM logo, antes de cortar (Parte 3-D). Sem logo, sem
+     cartão — nunca ícone genérico de avião no lugar da marca. */
+  const airlinesWithLogo = (airlines || []).filter((a) => a.logoUrl).slice(0, 12);
 
   const contactWhatsAppHref = buildWhatsAppHref(
     buildWhatsAppMessage({
       language: (language || "pt") as ContactLanguage,
       topic: t("home.hero.whatsapp_topic"),
-      details: [t("home.hero.whatsapp_details")]
-    })
+      details: [t("home.hero.whatsapp_details")],
+    }),
   );
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-blue-500/30 overflow-x-hidden">
-      <SEO title={t("home.search.title")} description={t("home.search.desc")} path="/" />
+  /* Faixa de confiança (id "stats"): 4 FATOS verificáveis, nenhum
+     número inventado. Substitui "2,400+ / 45+ / 120k / <2s". */
+  const trustFacts = [
+    { icon: ShieldCheck, text: t("home.trust.f1") },
+    { icon: Languages, text: t("home.trust.f2") },
+    { icon: BadgeCheck, text: t("home.trust.f3") },
+    { icon: MessageCircle, text: t("home.trust.f4") },
+  ];
 
-      {/* Decorative Background Elements */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-blue-600/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-indigo-600/10 rounded-full blur-[120px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(2,6,23,0.8)_100%)]" />
-      </div>
+  const howSteps = [
+    { icon: Search, title: t("home.how.step1_title"), desc: t("home.how.step1_desc") },
+    { icon: CreditCard, title: t("home.how.step2_title"), desc: t("home.how.step2_desc") },
+    { icon: Ticket, title: t("home.how.step3_title"), desc: t("home.how.step3_desc") },
+  ];
+
+  return (
+    <div className="min-h-screen overflow-x-hidden bg-[#FBF7EF] font-sans text-[#101E42] selection:bg-[#FA5F52]/20">
+      <SEO title={t("home.search.title")} description={t("home.search.desc")} path="/" />
 
       {activeLayout.map((section: any) => {
         if (!section.enabled) return null;
@@ -96,58 +130,81 @@ export default function Home() {
         switch (section.id) {
           case "hero":
             return (
-              <section key="hero" className="relative pt-12 pb-16 overflow-hidden">
-                <div className="container mx-auto px-4 relative z-10">
-                  <div className="max-w-6xl mx-auto flex flex-col items-center text-center">
+              <section key="hero" className="relative overflow-hidden bg-[#0B1B3A] pb-16 pt-12 md:pb-24 md:pt-16">
+                {/* Foto quente em tela cheia (asa ao pôr do sol) + scrim
+                    navy: a marca fria sobre a foto quente — a logo fica
+                    no header, canto superior direito, intacta. */}
+                <div className="absolute inset-0">
+                  <img
+                    src="https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?q=80&w=2070&auto=format&fit=crop"
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="mt-hero-scrim absolute inset-0" />
+                </div>
+
+                <div className="container relative z-10 mx-auto px-4">
+                  <div className="mx-auto flex max-w-6xl flex-col items-center text-center">
                     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-                      <Badge className="bg-blue-600/20 border border-blue-500/30 text-blue-400 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl shadow-blue-500/10 backdrop-blur-md">
-                        <Sparkles className="h-4 w-4 mr-3 animate-pulse" />
-                        {t("home.bot.badge")} {t("home.midnight_experience")}
+                      <Badge className="rounded-full border border-[#E8B65D]/40 bg-[#E8B65D]/10 px-6 py-2 text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#E8B65D] backdrop-blur-md">
+                        <Sparkles className="mr-3 h-4 w-4" />
+                        {t("home.hero.badge")}
                       </Badge>
                     </motion.div>
 
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-                      className="relative w-full overflow-hidden rounded-[32px] md:rounded-[48px] p-6 md:p-12 mb-8 border border-white/10 shadow-2xl group"
+                    <motion.h1
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                      className="font-display max-w-5xl text-5xl font-extrabold leading-[0.95] tracking-tight text-white sm:text-6xl md:text-7xl"
                     >
-                      <div className="absolute inset-0 z-0">
-                        <img 
-                          src="https://images.unsplash.com/photo-1544016768-982d1554f0b9?q=80&w=2070&auto=format&fit=crop" 
-                          className="w-full h-full object-cover opacity-25 group-hover:scale-110 transition-transform duration-[10s] ease-linear select-none pointer-events-none"
-                          alt="Boeing Dreamliner"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/60 to-transparent" />
-                        <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-[2px]" />
-                      </div>
-                      <div className="relative z-10">
-                        <h1 className="text-4xl sm:text-5xl md:text-8xl font-black tracking-tighter text-white leading-[0.9] uppercase max-w-5xl mb-6 md:mb-10 drop-shadow-2xl">
-                          {section.props?.title || settings?.heroTitle || t("home.hero.title")}
-                        </h1>
-                        <p className="text-slate-200 font-medium text-base md:text-xl max-w-2xl leading-relaxed drop-shadow-lg">
-                          {section.props?.subtitle || settings?.heroSubtitle || t("home.hero.desc")}
-                        </p>
-                      </div>
+                      {section.props?.title || settings?.heroTitle || t("home.hero.title")}
+                    </motion.h1>
+                    <motion.p
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15, duration: 0.8 }}
+                      className="mt-6 max-w-2xl text-base font-medium leading-relaxed text-slate-200 md:text-xl"
+                    >
+                      {section.props?.subtitle || settings?.heroSubtitle || t("home.hero.desc")}
+                    </motion.p>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 40 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4, type: "spring", stiffness: 100 }}
+                      className="mt-10 w-full"
+                    >
+                      <FlightSearchForm className="hover:shadow-blue-500/5 transition-shadow duration-700" />
                     </motion.div>
 
-                    <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, type: "spring", stiffness: 100 }} className="w-full">
-                       <FlightSearchForm className="hover:shadow-blue-500/5 transition-shadow duration-700" />
-                    </motion.div>
+                    <p className="mt-provenance mt-6 !text-slate-300">
+                      <BadgeCheck className="h-4 w-4 text-[#E8B65D]" />
+                      {t("home.search.tag")}
+                    </p>
 
                     {settings?.promotionalBanner && (
-                      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="w-full max-w-4xl mt-12">
-                        <div className="relative group p-8 md:p-12 rounded-[40px] bg-gradient-to-r from-blue-600 to-indigo-700 overflow-hidden shadow-[0_20px_50px_rgba(37,99,235,0.3)]">
-                          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[80px] rounded-full -mr-32 -mt-32" />
-                          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-                            <div className="text-left">
-                              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-200 mb-4">{t("home.bot.badge")}</p>
-                              <h3 className="text-2xl md:text-4xl font-black text-white uppercase tracking-tight leading-tight">
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.7 }}
+                        className="mt-12 w-full max-w-4xl"
+                      >
+                        <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-r from-[#E8B65D] to-[#E58B48] p-8 shadow-2xl md:p-10">
+                          <div className="relative z-10 flex flex-col items-center justify-between gap-6 md:flex-row">
+                            <div className="text-center md:text-left">
+                              <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#0B1B3A]/70">
+                                {t("home.bot.badge")}
+                              </p>
+                              <h3 className="font-display text-2xl font-extrabold leading-tight tracking-tight text-[#0B1B3A] md:text-3xl">
                                 {settings.promotionalBanner}
                               </h3>
                             </div>
-                            <Button onClick={() => setLocation("/deals")} className="h-16 px-10 rounded-[20px] bg-white text-blue-600 hover:bg-blue-50 font-black text-xs uppercase tracking-widest shadow-xl transition-transform hover:scale-105 active:scale-95">
-                              {t("home.toolbox.access")} <ArrowRight className="ml-3 h-4 w-4" />
+                            <Button
+                              onClick={() => setLocation("/pacotes")}
+                              className="h-14 shrink-0 rounded-2xl bg-[#0B1B3A] px-8 text-[12px] font-extrabold uppercase tracking-widest text-white shadow-xl transition-transform hover:scale-105 active:scale-95"
+                            >
+                              {t("nav.packages")} <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
                           </div>
                         </div>
@@ -160,103 +217,101 @@ export default function Home() {
 
           case "stats":
             return (
-              <section key="stats" className="py-8 md:py-12 relative z-10">
-                <div className="container mx-auto px-4 max-w-6xl">
-                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-12">
-                      {[
-                        { label: t("home.stats.routes"), value: "2,400+", icon: Compass },
-                        { label: t("home.stats.partners"), value: "45+", icon: Star },
-                        { label: t("home.stats.travelers"), value: "120k", icon: Globe2 },
-                        { label: t("home.stats.speed"), value: "< 2s", icon: Zap }
-                      ].map((stat, i) => (
-                        <div key={i} className="flex flex-col items-center text-center space-y-1.5 md:space-y-3 p-4 md:p-6 rounded-[24px] md:rounded-[32px] bg-white/5 border border-white/5 backdrop-blur-sm">
-                           <stat.icon className="h-5 w-5 md:h-6 md:w-6 text-blue-500 mb-1" />
-                           <span className="text-2xl md:text-4xl font-black text-white tracking-tighter">{stat.value}</span>
-                           <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">{stat.label}</span>
+              <section key="stats" className="relative z-10 py-10 md:py-14">
+                <div className="container mx-auto max-w-6xl px-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {trustFacts.map((fact, i) => (
+                      <div
+                        key={i}
+                        className="flex items-start gap-4 rounded-[24px] border border-[#101E42]/10 bg-white p-6 shadow-[0_16px_36px_rgba(15,23,42,0.06)]"
+                      >
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#0B1B3A] text-[#E8B65D]">
+                          <fact.icon className="h-6 w-6" />
                         </div>
-                      ))}
-                   </div>
+                        <p className="text-[14px] font-bold leading-snug text-[#101E42]">{fact.text}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </section>
             );
 
           case "insights":
             return (
-              <section key="insights" className="py-20 relative z-10">
-                <div className="container mx-auto px-4 max-w-6xl">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                    <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
-                       <div className="group p-10 rounded-[48px] bg-slate-900/40 border border-white/5 backdrop-blur-3xl hover:border-blue-500/30 transition-all duration-500 shadow-2xl">
-                          <div className="flex items-center justify-between mb-8">
-                            <TrendingUp className="h-8 w-8 text-blue-500 group-hover:scale-110 transition-transform" />
-                            <Badge className="bg-blue-600/20 text-blue-400 border border-blue-500/20 text-[9px] uppercase font-black px-4 py-1.5 rounded-full">{t("home.intel.badge")}</Badge>
+              <section key="insights" className="relative z-10 py-10 md:py-14">
+                <div className="container mx-auto max-w-6xl px-4">
+                  <div className="mb-12 max-w-2xl">
+                    <span className="mt-eyebrow mt-eyebrow--navy">
+                      <Compass className="h-4 w-4" />
+                      {t("home.how.title")}
+                    </span>
+                    <h2 className="font-display mt-4 text-4xl font-extrabold leading-[1.05] tracking-tight md:text-5xl">
+                      {t("home.how.subtitle")}
+                    </h2>
+                    <div className="mt-gold-rule mt-6" />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    {howSteps.map((step, i) => (
+                      <div key={i} className="mt-card rounded-[32px] p-8">
+                        <div className="mb-6 flex items-center justify-between">
+                          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FBF7EF] text-[#3D4EAB]">
+                            <step.icon className="h-7 w-7" />
                           </div>
-                          <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-6">{t("home.intel.title")}</h3>
-                          <div className="space-y-6">
-                             {[
-                               { icon: CheckCircle2, label: t("home.intel.r1"), color: "text-emerald-400" },
-                               { icon: Info, label: t("home.intel.r2"), color: "text-blue-400" },
-                               { icon: Navigation, label: t("home.intel.r3"), color: "text-coral-500" }
-                             ].map((item, i) => (
-                               <div key={i} className="flex items-start gap-4">
-                                  <item.icon className={cn("h-5 w-5 mt-0.5 shrink-0", item.color)} />
-                                  <p className="text-sm font-bold text-slate-400 leading-relaxed">{item.label}</p>
-                               </div>
-                             ))}
-                          </div>
-                       </div>
-                       <div className="group p-10 rounded-[48px] bg-slate-900/40 border border-white/5 backdrop-blur-3xl hover:border-coral-500/30 transition-all duration-500 shadow-2xl">
-                          <div className="flex items-center justify-between mb-8">
-                            <Clock className="h-8 w-8 text-coral-500 group-hover:scale-110 transition-transform" />
-                            <Badge className="bg-coral-500/20 text-coral-400 border border-coral-500/20 text-[9px] uppercase font-black px-4 py-1.5 rounded-full">{t("home.care.badge")}</Badge>
-                          </div>
-                          <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-6">{t("home.care.title")}</h3>
-                          <div className="space-y-6">
-                             {[
-                               { icon: ShieldAlert, label: t("home.care.r1"), color: "text-coral-500" },
-                               { icon: Plane, label: t("home.care.r2"), color: "text-coral-500" },
-                               { icon: Headphones, label: t("home.care.r3"), color: "text-emerald-400" }
-                             ].map((item, i) => (
-                               <div key={i} className="flex items-start gap-4">
-                                  <item.icon className={cn("h-5 w-5 mt-0.5 shrink-0", item.color)} />
-                                  <p className="text-sm font-bold text-slate-400 leading-relaxed">{item.label}</p>
-                               </div>
-                             ))}
-                          </div>
-                       </div>
+                          <span className="font-display text-5xl font-extrabold text-[#101E42]/10">
+                            0{i + 1}
+                          </span>
+                        </div>
+                        <h3 className="font-display text-xl font-extrabold tracking-tight">{step.title}</h3>
+                        <p className="mt-3 text-[15px] font-medium leading-relaxed text-[#3D4A6B]">{step.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+                    {/* Assistente Mia — chaves home.assistant.* já existentes */}
+                    <div className="rounded-[32px] bg-[#0B1B3A] p-8 text-white md:p-10">
+                      <span className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#E8B65D]">
+                        {t("home.assistant.label")}
+                      </span>
+                      <h3 className="font-display mt-4 text-2xl font-extrabold leading-tight tracking-tight md:text-3xl">
+                        {t("home.assistant.title")}
+                      </h3>
+                      <p className="mt-4 text-[15px] font-medium leading-relaxed text-slate-300">
+                        {t("home.assistant.desc")}
+                      </p>
+                      <Button
+                        onClick={() =>
+                          window.dispatchEvent(
+                            new CustomEvent("open-chatbot", { detail: { message: "" } }),
+                          )
+                        }
+                        className="mt-cta-coral mt-8 h-14 rounded-2xl px-8 text-[12px] font-extrabold uppercase tracking-widest"
+                      >
+                        <MessageCircle className="mr-2 h-5 w-5" />
+                        {t("home.assistant.cta")}
+                      </Button>
                     </div>
-                    <div className="p-10 rounded-[48px] bg-white text-slate-950 shadow-2xl flex flex-col justify-between relative overflow-hidden group">
-                       <div className="absolute top-0 right-0 w-32 h-32 bg-slate-900/5 blur-[40px] rounded-full translate-x-1/2 -translate-y-1/2" />
-                       <div className="relative z-10">
-                          <h3 className="text-3xl font-black uppercase tracking-tight mb-3">{t("home.toolbox.title")}</h3>
-                          <p className="text-slate-500 text-sm mb-12 font-bold uppercase tracking-widest">{t("home.toolbox.subtitle")}</p>
-                          <div className="space-y-8">
-                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                   <CloudSun className="h-6 w-6 text-blue-600" />
-                                   <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t("home.toolbox.weather")}</span>
-                                </div>
-                                <span className="text-2xl font-black tracking-tighter">24°C</span>
-                             </div>
-                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                   <Banknote className="h-6 w-6 text-emerald-600" />
-                                   <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t("home.toolbox.exchange")}</span>
-                                </div>
-                                <span className="text-2xl font-black tracking-tighter">1 USD = 5.04 BRL</span>
-                             </div>
-                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                   <Navigation className="h-6 w-6 text-orange-600" />
-                                   <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t("home.toolbox.status")}</span>
-                                </div>
-                                <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest bg-orange-50 px-3 py-1 rounded-md">{t("home.toolbox.monitoring")}</span>
-                             </div>
-                          </div>
-                       </div>
-                       <Button onClick={() => setLocation("/toolbox")} className="w-full mt-12 rounded-[24px] bg-slate-950 text-white hover:bg-blue-600 h-16 font-black text-xs uppercase tracking-[0.2em] shadow-2xl transition-all hover:scale-105 active:scale-95">
-                           {t("home.toolbox.access")} <ArrowRight className="ml-3 h-4 w-4" />
-                        </Button>
+
+                    {/* Ferramentas — link honesto p/ /toolbox. SEM valores
+                        fixos de clima/câmbio (Parte 3-E): nada aqui finge
+                        ser dado ao vivo. */}
+                    <div className="mt-card rounded-[32px] p-8 md:p-10">
+                      <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FBF7EF] text-[#E58B48]">
+                        <Wrench className="h-7 w-7" />
+                      </div>
+                      <h3 className="font-display text-2xl font-extrabold leading-tight tracking-tight md:text-3xl">
+                        {t("home.toolbox.title")}
+                      </h3>
+                      <p className="mt-4 text-[15px] font-medium leading-relaxed text-[#3D4A6B]">
+                        {t("home.toolbox.desc")}
+                      </p>
+                      <Button
+                        onClick={() => setLocation("/toolbox")}
+                        className="mt-8 h-14 rounded-2xl bg-[#0B1B3A] px-8 text-[12px] font-extrabold uppercase tracking-widest text-white transition-transform hover:scale-105 active:scale-95"
+                      >
+                        {t("home.toolbox.access")} <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -265,127 +320,182 @@ export default function Home() {
 
           case "deals":
             return (
-              <section key="deals" className="py-20 relative z-10 overflow-hidden">
-                <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-3xl -z-10" />
-                <div className="container mx-auto px-4 max-w-6xl">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-12 mb-20 relative">
-                    <div className="max-w-2xl relative z-10">
-                      <Badge className="bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-full px-6 py-2 mb-8 text-[10px] uppercase font-black tracking-[0.4em]">
-                        <Globe2 className="h-4 w-4 mr-3" />
+              <section key="deals" className="relative z-10 overflow-hidden bg-[#0B1B3A] py-20 md:py-28">
+                <div className="container mx-auto max-w-6xl px-4">
+                  <div className="mb-12 flex flex-col gap-6 md:mb-16 md:flex-row md:items-end md:justify-between">
+                    <div className="max-w-2xl">
+                      <Badge className="mb-6 rounded-full border border-[#E8B65D]/30 bg-[#E8B65D]/10 px-5 py-2 text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#E8B65D]">
+                        <Globe2 className="mr-2 h-4 w-4" />
                         {t("home.deals.badge")}
                       </Badge>
-                      <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-[0.9] uppercase mb-8">
-                        {t("home.deals.title")} <br />
-                        <span className="text-blue-500">{t("results.filter_active")}</span>
+                      <h2 className="font-display text-5xl font-extrabold leading-[0.95] tracking-tight text-white md:text-6xl">
+                        {t("home.deals.title")}
                       </h2>
-                      <p className="text-slate-400 font-medium text-lg leading-relaxed">{t("home.deals.desc")}</p>
+                      <p className="mt-5 text-base font-medium leading-relaxed text-slate-300 md:text-lg">
+                        {t("home.deals.desc")}
+                      </p>
                     </div>
-                    <div className="absolute right-[-4rem] top-[-4rem] bottom-[-4rem] w-[50%] pointer-events-none hidden md:block select-none opacity-40 mix-blend-screen">
-                       <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/20 to-transparent z-10" />
-                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950 z-10" />
-                       <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=1200&auto=format&fit=crop" className="w-full h-full object-cover rounded-l-full grayscale" alt="" />
-                    </div>
+                    <Button
+                      onClick={() => setLocation("/pacotes")}
+                      variant="outline"
+                      className="h-14 shrink-0 rounded-2xl border-white/20 bg-transparent px-8 text-[12px] font-extrabold uppercase tracking-widest text-white hover:bg-white/10 hover:text-white"
+                    >
+                      {t("nav.packages")} <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                     {dealsLoading ? (
-                      Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-[430px] rounded-[48px] bg-white/5 border border-white/5 animate-pulse" />)
+                      Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="h-[430px] animate-pulse rounded-[32px] bg-white/5" />
+                      ))
                     ) : catalogDeals.length > 0 ? (
                       catalogDeals.map((deal) => (
-                        <DealCard key={deal.id} deal={{...deal, title: deal.headline || `${deal.origin} → ${deal.destination}`, description: deal.description || "", imageUrl: deal.imageUrl || getDestinationImage(deal.destination)}} />
+                        <DealCard
+                          key={deal.id}
+                          deal={{
+                            ...deal,
+                            title: deal.headline || `${deal.origin} → ${deal.destination}`,
+                            description: deal.description || "",
+                            imageUrl: deal.imageUrl || getDestinationImage(deal.destination),
+                            createdAt: deal.created_at,
+                          }}
+                        />
                       ))
                     ) : (
-                      <div className="col-span-full py-24 text-center bg-white/5 rounded-[48px] border border-dashed border-white/10">
-                         <p className="text-slate-500 font-black uppercase tracking-widest text-[10px]">{t("results.no_matching_flights")}</p>
+                      <div className="col-span-full rounded-[32px] border border-dashed border-white/15 py-24 text-center">
+                        <p className="text-[12px] font-extrabold uppercase tracking-widest text-slate-400">
+                          {t("results.no_matching_flights")}
+                        </p>
                       </div>
                     )}
                   </div>
+
+                  {/* Procedência das ofertas: a fonte e a data ficam
+                      visíveis na página (Cân. XXII). */}
+                  <p className="mt-provenance mt-10 !text-slate-400">
+                    <BadgeCheck className="h-4 w-4 text-[#E8B65D]" />
+                    {t("home.deals.provenance")}
+                  </p>
                 </div>
               </section>
             );
 
           case "partners":
             return (
-              <section key="partners" className="py-16 relative z-10">
-                <div className="container mx-auto px-4 max-w-6xl">
-                  <div className="text-center mb-20">
-                     <Badge variant="outline" className="mb-6 border-white/10 text-slate-500 text-[9px] uppercase font-black tracking-[0.3em] px-5 py-1.5 rounded-full">{t("home.stats.network")}</Badge>
-                     <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-6">{t("home.stats.alliance_title")}</h2>
-                     <p className="text-slate-400 font-medium max-w-xl mx-auto text-lg leading-relaxed">{t("home.stats.alliance_desc")}</p>
+              <section key="partners" className="relative z-10 py-20 md:py-24">
+                <div className="container mx-auto max-w-6xl px-4">
+                  <div className="mb-12 text-center md:mb-16">
+                    <Badge
+                      variant="outline"
+                      className="mb-6 rounded-full border-[#101E42]/10 px-5 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#6B7594]"
+                    >
+                      {t("home.stats.network")}
+                    </Badge>
+                    <h2 className="font-display text-4xl font-extrabold uppercase tracking-tight md:text-5xl">
+                      {t("home.stats.alliance_title")}
+                    </h2>
+                    <p className="mx-auto mt-5 max-w-xl text-base font-medium leading-relaxed text-[#3D4A6B] md:text-lg">
+                      {t("home.stats.alliance_desc")}
+                    </p>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10">
-                     {airlines?.slice(0, 12).map((airline) => (
-                       <div key={airline.id} className="flex flex-col items-center gap-4 transition-all p-8 rounded-[32px] border border-white/5 bg-slate-900/40 hover:bg-slate-900/60 hover:border-blue-500/30 group">
-                          <div className="h-12 w-full flex items-center justify-center grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500">
-                            {airline.logoUrl ? <img src={airline.logoUrl} alt={airline.name} className="h-full w-auto object-contain" /> : <Plane className="h-10 w-10 text-slate-700" />}
+                  {airlinesWithLogo.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+                      {airlinesWithLogo.map((airline) => (
+                        <div
+                          key={airline.id}
+                          className="flex flex-col items-center gap-4 rounded-[24px] border border-[#101E42]/10 bg-white p-6 transition-all hover:border-[#E8B65D]/60 hover:shadow-lg"
+                        >
+                          <div className="flex h-12 w-full items-center justify-center">
+                            <img
+                              src={airline.logoUrl!}
+                              alt={airline.name}
+                              className="h-full w-auto object-contain"
+                              loading="lazy"
+                            />
                           </div>
-                          <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest group-hover:text-slate-400 transition-colors">{airline.name}</span>
-                       </div>
-                     ))}
-                  </div>
+                          <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#6B7594]">
+                            {airline.name}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-center text-[12px] font-extrabold uppercase tracking-widest text-[#6B7594]">
+                      {t("home.airlines.tag_alt")}
+                    </p>
+                  )}
                 </div>
               </section>
             );
 
           case "cta":
             return (
-              <section key="cta" className="py-24 relative z-10 overflow-hidden bg-white text-slate-950">
-                 <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/5 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
-                 <div className="container mx-auto px-4 max-w-6xl relative z-10 text-center">
-                    <Badge className="bg-slate-950 text-white rounded-full px-6 py-2 mb-8 text-[10px] uppercase font-black tracking-[0.5em] shadow-xl">{t("home.stats.ready")}</Badge>
-                    <h2 className="text-5xl md:text-8xl font-black tracking-tighter uppercase leading-[0.9] mb-12">
+              <section key="cta" className="relative z-10 overflow-hidden py-20 md:py-24">
+                <div className="container mx-auto max-w-6xl px-4">
+                  <div className="relative overflow-hidden rounded-[40px] bg-gradient-to-br from-[#E8B65D] via-[#E9D7B7] to-[#E58B48] p-8 text-center shadow-2xl md:p-16">
+                    <Badge className="mb-8 rounded-full bg-[#0B1B3A] px-6 py-2 text-[11px] font-extrabold uppercase tracking-[0.3em] text-white">
+                      {t("home.stats.ready")}
+                    </Badge>
+                    <h2 className="font-display mx-auto max-w-3xl text-5xl font-extrabold leading-[0.95] tracking-tight text-[#0B1B3A] md:text-7xl">
                       {section.props?.title || t("home.cta.title")}
                     </h2>
-                    <p className="text-slate-500 text-xl md:text-2xl font-bold max-w-2xl mx-auto mb-16 uppercase tracking-tight">
+                    <p className="mx-auto mt-6 max-w-2xl text-base font-bold leading-relaxed text-[#0B1B3A]/70 md:text-xl">
                       {section.props?.subtitle || t("home.cta.subtitle")}
                     </p>
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                      <a href={contactWhatsAppHref} target="_blank" rel="noreferrer" className="flex h-20 items-center justify-center gap-5 rounded-[24px] bg-blue-600 px-16 text-sm font-black text-white hover:bg-slate-950 transition-all shadow-2xl shadow-blue-600/30 hover:scale-105 active:scale-95">
-                        {section.props?.buttonText || t("footer.contact_cta")} <MessageCircle className="h-6 w-6" />
+                    <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                      <a
+                        href={contactWhatsAppHref}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-cta-whatsapp flex h-16 items-center justify-center gap-3 rounded-[20px] px-10 text-[13px] font-extrabold uppercase tracking-widest transition-transform hover:scale-105 active:scale-95"
+                      >
+                        {section.props?.buttonText || t("footer.contact_cta")}
+                        <MessageCircle className="h-5 w-5" />
                       </a>
-                      <Button variant="outline" className="h-20 rounded-[24px] border-slate-200 bg-white px-16 text-sm font-black uppercase tracking-widest text-slate-950 hover:bg-slate-50 shadow-xl transition-all hover:scale-105 active:scale-95" onClick={() => setLocation("/senior")}>
+                      <Button
+                        variant="outline"
+                        className="h-16 rounded-[20px] border-[#0B1B3A]/20 bg-white/70 px-10 text-[13px] font-extrabold uppercase tracking-widest text-[#0B1B3A] backdrop-blur transition-all hover:scale-105 hover:bg-white active:scale-95"
+                        onClick={() => setLocation("/senior")}
+                      >
                         {t("home.senior.btn")}
                       </Button>
                     </div>
-                 </div>
+                  </div>
+                </div>
               </section>
             );
 
           default:
-            // Custom or Advanced Section Types
             return (
-              <section key={section.id} className={cn("relative z-10 overflow-hidden", section.style?.paddingY || "py-20")}>
+              <section
+                key={section.id}
+                className={cn("relative z-10 overflow-hidden", section.style?.paddingY || "py-20")}
+              >
                 {section.props?.imageUrl && (
                   <div className="absolute inset-0 z-0">
-                    <img src={section.props.imageUrl} className="w-full h-full object-cover opacity-20" alt="" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+                    <img src={section.props.imageUrl} className="h-full w-full object-cover opacity-20" alt="" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0B1B3A] via-[#0B1B3A]/60 to-transparent" />
                   </div>
                 )}
-                <div className="container mx-auto px-4 max-w-4xl relative z-10">
-                  <motion.div 
+                <div className="container relative z-10 mx-auto max-w-4xl px-4">
+                  <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     className={cn(
-                      "p-12 md:p-24 rounded-[48px] md:rounded-[64px] border border-white/10 backdrop-blur-3xl shadow-2xl flex flex-col",
-                      section.style?.bgVariant === "glass" ? "bg-white/5" : "bg-slate-900/40",
-                      section.style?.textAlign === "center" ? "items-center text-center" : "items-start text-left"
+                      "flex flex-col rounded-[48px] border border-[#101E42]/10 bg-white p-12 shadow-2xl md:p-24",
+                      section.style?.textAlign === "center" ? "items-center text-center" : "items-start text-left",
                     )}
                   >
-                    <h2 className="text-4xl md:text-7xl font-black text-white uppercase tracking-tighter leading-none mb-8">
+                    <h2 className="font-display mb-8 text-4xl font-extrabold leading-none tracking-tight md:text-6xl">
                       {section.props?.title || section.label}
                     </h2>
-                    <p className="text-slate-400 font-medium text-lg md:text-2xl max-w-2xl leading-tight mb-12">
+                    <p className="mb-12 max-w-2xl text-lg font-medium leading-relaxed text-[#3D4A6B] md:text-2xl">
                       {section.props?.subtitle}
                     </p>
                     {section.props?.buttonText && (
-                      <Button 
-                        className={cn(
-                          "h-20 px-16 rounded-[32px] font-black text-sm uppercase tracking-widest shadow-2xl transition-all hover:scale-105 active:scale-95",
-                          section.style?.accentColor === "rose" ? "bg-rose-600 hover:bg-rose-500" :
-                          section.style?.accentColor === "emerald" ? "bg-emerald-600 hover:bg-emerald-500" :
-                          "bg-white text-slate-950 hover:bg-indigo-600 hover:text-white"
-                        )}
-                      >
+                      <Button className="h-16 rounded-[24px] bg-[#0B1B3A] px-12 text-[13px] font-extrabold uppercase tracking-widest text-white shadow-2xl transition-all hover:scale-105 active:scale-95">
                         {section.props.buttonText}
                       </Button>
                     )}
@@ -395,6 +505,9 @@ export default function Home() {
             );
         }
       })}
+
+      {/* Seção de segurança — página separada /seguranca (decisão do
+          dono, 26/nov/2026), não seção na home. */}
     </div>
   );
 }

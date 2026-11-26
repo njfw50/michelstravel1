@@ -1,0 +1,151 @@
+# REDESIGN 2027 — registro de decisões
+
+Branch: `redesign-2027` (a partir de `cloudflare-containers` @ 377db97).
+Nada aqui foi publicado. Nada vai ao ar sem a aprovação expressa do Michel.
+
+## A ideia (a surpresa)
+
+O site vira uma **revista de bordo**: papel champagne quente (`#FBF7EF`),
+tinta azul-marinho profunda, foto quente em tela cheia no hero, preço como
+herói nos cartões, traço dourado editorial. A marca continua fria (azul
+profundo do logo 3D); a fotografia tende ao quente — Delimitação de
+Característica, como manda a Diretriz de Execução Visual 2027. O site
+antes era todo escuro; agora o escuro vira moldura (hero, ofertas, rodapé)
+e o claro vira leitura (papel). O logo 3D oficial 2027 entra no header e
+no rodapé, direto, quadrado, sem card nem borda — o `.brand-mark-shell`
+antigo arredondava o logo e foi abandonado.
+
+## Fundamento no Código Canônico (lido no repo `codigo-canonico-engenharia-ai`, main)
+
+| Cânone | Onde aparece no redesign |
+|---|---|
+| I — Autoridade / auditoria | Decisões registradas aqui; cada preço com fonte + data visível; commits por arquivo, mensagens claras |
+| V — Livro da Vida | `packages.json` é o livro dos pacotes: cada preço tem origem e data |
+| XIV — Cibersegurança | Nenhum segredo no código; `.env` não lido nem tocado; WhatsApp via helpers existentes |
+| XV — Experiência do usuário | Uma ideia por tela; texto mínimo 12px; safe zones; mobile primeiro |
+| XVI — Integridade do texto | Linguagem plana e precisa; sem "garantido" que não se prova; sem urgência falsa |
+| XVIII — Soberania cognitiva | Sem contador falso, sem "só resta 1 assento"; anotações litúrgicas no código novo explicando a intenção de cada decisão não-trivial |
+| XIX — Integridade das referências | "Verificado em [data]" em ofertas e pacotes; fonte do clima/tarifa escrita no blog |
+| XXII — Procedência | Todo preço/fato exibe fonte e data; nada sem fonte vai para a tela |
+| XXIII — Contenção do erro (fail-closed) | Preço velho some e vira "a reconfirmar"; sem dado, sem linha (paradas, clima) |
+
+## O que foi reformado (arquivos)
+
+| Arquivo | O que mudou |
+|---|---|
+| `client/src/pages/Home.tsx` | Reescrita completa no visual novo; mesmos ids de seção (painel intacto); stats→faixa de confiança; insights→"Como funciona" + Mia + Toolbox sem números falsos; deals com proveniência; parceiros filtrados por logo; CTA dourado; seção de segurança removida da home (decisão 26/nov: página /seguranca) |
+| `client/src/components/DealCard.tsx` | "Voo direto" fixo removido (paradas reais ou nada); "Verificado em [data]" via `created_at`; preço herói; CTA coral |
+| `client/src/components/Layout.tsx` | Logo 3D direto (fallback p/ favicon); link Pacotes; rodapé completo com fatos de segurança + NJ desde 2023 + YouTube; rótulos do menu mobile 8px→12px |
+| `client/src/components/SecuritySection.tsx` | NOVO — conteúdo da página /seguranca, só fatos verificáveis, sem selo de governo |
+| `client/src/pages/Packages.tsx` | NOVO — rota `/pacotes` |
+| `client/src/pages/Security.tsx` | NOVO (26/nov, pós-aplicação) — página `/seguranca`, reusa SecuritySection; link no rodapé |
+| `client/src/components/PackageCard.tsx` | NOVO — cartão de pacote com fail-closed |
+| `client/src/data/packages.json` | NOVO — seed com 4 pacotes + `pending[]` (Londres) + divergência Terra Santa (6 vs 7 noites) anotada |
+| `client/src/lib/packages.ts` | NOVO — frescor (≤2 dias), formatação, WhatsApp por pacote |
+| `client/src/pages/BlogList.tsx` | Reescrita visual; "viajantes ativos" e tendências inventadas removidas; título/CTA pelos locales; descrição inventada de lugar removida |
+| `client/src/pages/BlogPost.tsx` | Reescrita visual; avatar pravatar.cc removido (logo no lugar); "Gostou?" pelos locales |
+| `client/src/styles/redesign-2027.css` | NOVO — tokens 2027 + utilitários (logo, scrim, preço, proveniência, CTA) |
+| `client/src/components/FlightSearchForm.tsx` | PATCH — calendário: ida nova limpa volta inválida; volta nunca antes da ida; descrições de idade pelos locales |
+| `client/src/components/LocationSearch.tsx` | PATCH — autocomplete abre para cima quando não há espaço abaixo |
+| `client/src/hooks/use-flights.ts` | PATCH — retry explícito (2 tentativas, backoff) antes de mostrar erro na busca |
+| `client/src/App.tsx` | PATCH — rotas `/pacotes` e `/seguranca` |
+| `client/src/index.css` | PATCH — importa `styles/redesign-2027.css` |
+| `tailwind.config.ts` | PATCH — cores 2027 (coral/gold/ember/bronze/champagne/navy/paper) + `font-display`. Achado: `text-coral-500` era usado no código sem o token existir — classe morta; agora existe |
+| `client/src/locales/{pt,en,es}.json` | PATCH — chaves novas (pacotes, segurança, confiança, ofertas) + correções |
+| `client/public/logo-3d-2027.png` | NOVO — logo oficial 2027 (cópia byte do arquivo-mestre) |
+| `docs/packages-daily-refresh.md` | NOVO — rotina diária de recheck TAAP |
+
+## Correções da Parte 3 incorporadas
+
+- (a) Calendário: dois calendários separados já existiam; o defeito real
+  era a volta ficar inválida quando a ida mudava (volta < ida seguia no
+  submit). Agora a ida nova limpa a volta inválida e a volta é validada.
+  **Verificação ao vivo no navegador ainda pendente** (este agente não
+  opera navegador) — testar: escolher ida, depois volta, trocar a ida
+  para depois da volta, conferir que a volta limpa.
+- (b) Autocomplete: `max-h-80` já existia; faltava abrir para cima quando
+  não há espaço. Implementado por medição de viewport.
+- (c) Espera ~20s: narração em 5 passos mantida; somado retry automático
+  (2 tentativas com backoff) no `useFlightSearch` antes do erro.
+- (d) Parceiros: `filter(a => a.logoUrl).slice(0, 12)`.
+- (e) Toolbox: valores fixos removidos; cartão virou link honesto.
+- (f) Estatísticas: removidas; faixa de confiança com 4 fatos verificáveis.
+  **Pergunta ao Michel (não inventado):** existe algum número real que ele
+  queira exibir (ex.: anos de agência, destinos atendidos)? Se sim, com
+  fonte, entra na faixa. Sem fonte, fica fora.
+- Extras encontrados no código e corrigidos: `home.intel.r1/r2/r3`
+  ("15% de queda", "45 dias antes", "Lisboa em alta") sem fonte — seção
+  substituída; `PULSE_CITIES` com "viajantes ativos"/tendências fixos —
+  removidos; avatar `pravatar.cc` no post — removido; `font-display` e
+  `text-coral-500` usados sem definição no Tailwind — definidos.
+
+## Parte 5 — pagamento end-to-end + webhook Stripe
+
+Verificado no código: `server/webhookHandlers.ts` existe (384 linhas:
+`processWebhook` com assinatura, criação de pedido Duffel, e-mail de
+confirmação, recibo Stripe, redação de dados de passageiro) e está
+**ligado** em `server/index.ts` (webhooks Stripe e Duffel registrados).
+Nada foi alterado no servidor. **Não verificado ao vivo:** nenhum teste
+com cartão real foi feito (nem pode ser feito por este agente). Passo a
+passo de teste ao vivo — PENDENTE, documentado aqui para executar com o
+Michel: (1) no Dashboard Stripe, modo teste, criar um pagamento de teste
+no checkout do site; (2) conferir o evento `payment_intent.succeeded`
+chegando no endpoint e o pedido sendo criado no Duffel; (3) conferir o
+e-mail de confirmação e o recibo; (4) repetir em modo live com valor
+mínimo e estornar. Sem esses 4 passos, **não afirmar que o pagamento
+funciona de ponta a ponta**.
+
+## Parte 6 — login do cliente + WebSocket de voz
+
+Avaliado só por leitura de código: existe `useAuth` + `LoginDialog` +
+rotas `/profile`, `/messages`, `/live/:sessionId` e `server/voice_server.ts`
++ `duffelWebhookHandlers.ts`. **Estado real não verificado:** não foi
+testado login, sessão ao vivo, nem handshake WebSocket (exige navegador
+e conta). Reportado como não verificado — não afirmar que funciona.
+
+## Pendente (não feito, por ordem)
+
+- **Parte 1 (senha do painel admin):** não tocada. A ordem das seções vem
+  de `site_settings`; o redesign implementa a ordem nova como padrão no
+  código (hero, confiança, como-funciona, ofertas, parceiros, CTA +
+  segurança sempre), mas a ordem final no ar depende do painel.
+- **Parte 2 (Terminal do Idoso):** só o que não depende de decisão —
+  textos mínimos (menu/rodapé ≥12px) e consistência visual com o novo
+  design system. Fase A (voz no iPhone, "Falar com uma pessoa", "Passo X
+  de 13", confirmação falada, "Ouvir de novo"), Fase B (seção do idoso na
+  home), Fase C ("Seu dia de viagem", plano B de pagamento) e Fase D (voz
+  da Mia na espera) — todas PENDENTES, ver `plano-reconstrucao-idoso.md`.
+  O Terminal NÃO foi recriado nem teve comportamento alterado.
+- **Parte 4 (wrangler):** `wrangler.jsonc.new` NÃO subido; `wrangler.jsonc`
+  intacto. O push dispara deploy e precisa do OK dele.
+- **Título da home (`home.search.title`):** DECIDIDO pelo Michel
+  26/nov/2026 03:49 — opção C premium: PT "Viajar bem começa aqui." /
+  EN "Traveling well starts here." / ES "Viajar bien empieza aquí."
+  (aplicado nos 3 locales da branch).
+- **Fotos reais de Porto e Tel Aviv:** os cartões usam foto genérica
+  (asa ao pôr do sol) até a direção de arte entregar as fotos reais.
+  Nunca foto de outro destino como se fosse o lugar.
+- **Londres:** fora do seed (sem hotel confirmado) — em `pending[]`.
+- **Terra Santa:** divergência 6 vs 7 noites — confirmar no recheck TAAP.
+- **Lisboa (18/nov) e Terra Santa (20/nov):** preço fora da janela de
+  frescor no dia 26/nov — aparecem como "a reconfirmar" até o recheck.
+- **Redes no rodapé:** só YouTube (`@MichelsTravelUSA`, confirmado).
+  Instagram/Facebook entram quando ele confirmar os perfis.
+- **Verificação ao vivo:** build/tsc, calendário, autocomplete, busca
+  com container frio, `/pacotes` no preview — tudo pendente de execução
+  (este agente foi bloqueado de rodar build/git pelo controle de execução;
+  ver relatório).
+
+## Checklist de qualidade aplicado (checklist-qualidade-arte.md)
+
+1. Margens/respiro: escala de 8px; texto sem encostar em borda/botão.
+2. Contraste: texto branco só sobre scrim escuro; coral só em texto
+   grande ou botão; **coral sobre azul royal proibido** — não usado.
+3. Legibilidade: mínimo 12px (navegação/rodapé), 11px só em selos curtos.
+4. Sobreposição: scrims com zona escura total sob o texto; logo com área
+   livre no canto superior direito do hero.
+5. Logo: intacto, quadrado, sem card/borda, arquivo oficial.
+6. Dados verdadeiros: nenhum preço/data inventado; tudo com fonte+data.
+7. Conferência visual final: **PENDENTE** — renderizar o preview e olhar
+   em tamanho real (celular + desktop) antes de mostrar a ele.
+8. Uma ideia por seção; no máximo 3 níveis hierárquicos por cartão.
