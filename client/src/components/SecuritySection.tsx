@@ -59,13 +59,13 @@ export function SecuritySection() {
         </motion.div>
 
         <div className="mt-16 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {ITEMS.map((item, i) => (
+          {ITEMS.map((item) => (
             <motion.div
               key={item.key}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.3, ease: "easeOut", delay: i * 0.05 }}
+              transition={{ duration: 0.3, ease: "easeOut", delay: 0 }}
               className="flex items-start gap-4 rounded-[24px] border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
             >
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E8B65D]/15 text-[#E8B65D]">

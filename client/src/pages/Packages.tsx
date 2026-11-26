@@ -27,7 +27,7 @@ export default function Packages() {
       {/* Hero editorial — foto quente local, título grande, preço como
           herói fica para os cartões abaixo; aqui a promessa é clara e
           plana. */}
-      <section className="relative overflow-hidden bg-[#0B1B3A] pb-16 pt-12 md:pb-24 md:pt-20">
+      <section className="relative overflow-hidden bg-[#0B1B3A] pb-6 pt-6 md:pb-24 md:pt-20">
         <div className="absolute inset-0">
           <img
             src="/images/hero-jet-sunset.jpg"
@@ -47,10 +47,10 @@ export default function Packages() {
             <PackageIcon className="h-4 w-4" />
             {t("packages.badge")}
           </span>
-          <h1 className="font-display mt-6 max-w-3xl text-5xl font-extrabold leading-[0.95] tracking-tight text-white md:text-7xl">
+          <h1 className="font-display mt-6 max-w-3xl text-[2rem] font-extrabold leading-[1.1] tracking-tight text-white md:text-7xl md:leading-[0.95]">
             {t("packages.title")}
           </h1>
-          <p className="mt-6 max-w-2xl text-base font-medium leading-relaxed text-white [text-shadow:0_2px_16px_rgba(6,13,36,0.9)] md:text-xl">
+          <p className="mt-4 max-w-2xl text-sm font-medium leading-snug text-white mt-hero-subtitle md:mt-6 md:text-xl md:leading-relaxed">
             {t("packages.subtitle")}
           </p>
           <p className="mt-provenance mt-8 !text-slate-400">

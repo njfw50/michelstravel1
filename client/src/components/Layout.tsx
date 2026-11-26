@@ -210,7 +210,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navLinks = [
     { href: "/", label: t("nav.flights") },
     { href: "/pacotes", label: t("nav.packages") },
-    { href: "/senior", label: t("results.senior_badge") },
+    { href: "/senior", label: t("nav.senior") },
     { href: "/my-trips", label: t("nav.my_trips") || "My Trips" },
     { href: "/about", label: t("footer.about") },
     { href: "/blog", label: t("nav.blog") },
@@ -226,7 +226,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               scrolled ? "bg-slate-900/90 scale-100" : "bg-slate-900/80 scale-[1.01] md:scale-[1.02]",
             )}
           >
-            <div className="flex min-w-0 flex-1 items-center gap-8 md:gap-12">
+            <div className="flex min-w-0 flex-1 items-center gap-6 md:gap-8">
               <Link href="/" className="group flex shrink-0 items-center gap-4">
                 <img
                   src={brandMark}
@@ -238,7 +238,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     }
                   }}
                 />
-                <div className="hidden min-w-0 xl:block">
+                <div className="hidden min-w-0 2xl:block">
                   <span className="block whitespace-nowrap text-lg font-extrabold uppercase tracking-[0.25em] text-white">
                     Michels Travel
                   </span>
@@ -248,13 +248,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </div>
               </Link>
 
-              <nav className="hidden min-w-0 items-center lg:flex">
+              {/* Rodada 3 (re-QA item 8): o nav só aparece em xl+ (em lg
+                  ele estourava o cabeçalho) e com rótulos curtos — "Blog"
+                  em vez de "Outras Informações" (18 caracteres) e "Sênior"
+                  em vez de "Consultoria Premium" (19). Medido no código:
+                  o nav PT somava ~826px e o cabeçalho estourava ~57px
+                  em 1920px; agora sobra margem em todos os idiomas. */}
+              <nav className="hidden min-w-0 items-center xl:flex">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     className={cn(
-                      "relative whitespace-nowrap rounded-2xl px-3.5 py-2.5 text-[11px] font-extrabold uppercase tracking-[0.15em] transition-all duration-300",
+                      "relative whitespace-nowrap rounded-2xl px-3 py-2.5 text-[11px] font-extrabold uppercase tracking-[0.15em] transition-all duration-300",
                       location === link.href
                         ? "bg-blue-600 text-white shadow-xl shadow-blue-600/20"
                         : "text-slate-300 hover:bg-white/5 hover:text-white",
@@ -266,7 +272,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </nav>
             </div>
 
-            <div className="flex shrink-0 items-center gap-1.5 border-l border-white/5 pl-1.5 md:gap-8 md:pl-8">
+            <div className="flex shrink-0 items-center gap-1.5 border-l border-white/5 pl-1.5 md:gap-4 md:pl-4">
               <LanguageSwitcher variant="navbar" />
               <div className="hidden items-center gap-4 md:flex">
                 {user ? (

@@ -186,7 +186,7 @@ export default function Home() {
         switch (section.id) {
           case "hero":
             return (
-              <section key="hero" className="relative overflow-hidden bg-[#0B1B3A] pb-16 pt-12 md:pb-24 md:pt-16">
+              <section key="hero" className="relative overflow-hidden bg-[#0B1B3A] pb-6 pt-6 md:pb-24 md:pt-16">
                 {/* Foto quente em tela cheia (asa ao pôr do sol) + scrim
                     navy: a marca fria sobre a foto quente — a logo fica
                     no header, canto superior direito, intacta. */}
@@ -209,11 +209,15 @@ export default function Home() {
                       initial={{ opacity: 0, y: -20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, ease: "easeOut" }}
-                      className="mb-8"
+                      className="mb-6 md:mb-8"
                     >
-                      <Badge className="rounded-full border border-[#E8B65D]/40 bg-[#E8B65D]/10 px-6 py-2 text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#E8B65D] backdrop-blur-md">
-                        <Sparkles className="mr-3 h-4 w-4" />
-                        {t("home.hero.badge")}
+                      {/* Rodada 3 (26/nov): no celular o selo longo
+                          quebrava em 2 linhas dentro da pílula — versão
+                          curta só no mobile (badge_short), 10px/0.1em. */}
+                      <Badge className="rounded-full border border-[#E8B65D]/40 bg-[#E8B65D]/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#E8B65D] backdrop-blur-md md:px-6 md:py-2 md:text-[11px] md:tracking-[0.3em]">
+                        <Sparkles className="mr-2 h-3.5 w-3.5 md:mr-3 md:h-4 md:w-4" />
+                        <span className="md:hidden">{t("home.hero.badge_short")}</span>
+                        <span className="hidden md:inline">{t("home.hero.badge")}</span>
                       </Badge>
                     </motion.div>
 
@@ -221,19 +225,24 @@ export default function Home() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, ease: "easeOut" }}
-                      className="font-display max-w-5xl text-5xl font-extrabold leading-[0.95] tracking-tight text-white sm:text-6xl md:text-7xl"
+                      className="font-display max-w-5xl text-[2rem] font-extrabold leading-[1.1] tracking-tight text-white sm:text-6xl md:text-7xl md:leading-[0.95]"
                     >
                       {/* Título decidido pelo dono (26/nov, opção C) — o
                           locale manda: o site_settings do banco ainda
                           guarda o título legado em inglês ("Find Your
-                          Next Adventure") e ele NÃO pode vencer. */}
+                          Next Adventure") e ele NÃO pode vencer.
+                          Rodada 3 (26/nov): 48px no celular = 3 linhas
+                          e o herói dominando a tela (print do dono no
+                          Galaxy S26 FE) — 32px (2rem, ~44% dos 72px do
+                          desktop; proporção 40–50% recomendada pelo
+                          Gemini) e leading 1.1; desktop intacto. */}
                       {t("home.hero.title")}
                     </motion.h1>
                     <motion.p
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.05, duration: 0.3, ease: "easeOut" }}
-                      className="mt-6 max-w-2xl text-base font-medium leading-relaxed text-white [text-shadow:0_2px_16px_rgba(6,13,36,0.9)] md:text-xl"
+                      className="mt-4 max-w-2xl text-sm font-medium leading-snug text-white mt-hero-subtitle md:mt-6 md:text-xl md:leading-relaxed"
                     >
                       {/* Idem: o subtítulo legado do banco ("Best prices
                           on flights worldwide.") não pode vencer. */}
@@ -244,7 +253,7 @@ export default function Home() {
                       initial={{ opacity: 0, y: 40 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.05, duration: 0.3, ease: "easeOut" }}
-                      className="mt-10 w-full"
+                      className="mt-8 w-full md:mt-10"
                     >
                       <FlightSearchForm className="hover:shadow-blue-500/5 transition-shadow duration-700" />
                     </motion.div>

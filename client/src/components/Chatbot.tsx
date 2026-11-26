@@ -58,6 +58,7 @@ export function Chatbot() {
   const [agentMode, setAgentMode] = useState(false);
   const [status, setStatus] = useState<ChatbotStatus | null>(null);
   const [showPulse, setShowPulse] = useState(true);
+  const [pastHero, setPastHero] = useState(false);
   const [lastAdminMsgId, setLastAdminMsgId] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -82,6 +83,54 @@ export function Chatbot() {
   useEffect(() => {
     loadStatus();
   }, [loadStatus]);
+
+  // Rodada 3 (26/nov, re-QA item 5): o gatilho de 300px só limpava o
+  // topo — a bolha fixa cobre controles em QUALQUER posição de rolagem
+  // (Origem, datas, RESERVE AGORA, cartões, rodapé). No celular, na
+  // home ela só aparece depois do widget de busca (herói ~1110px no
+  // QA: gatilho 1100px); nas demais páginas, após 300px. No desktop
+  // aparece sempre. Com o chat aberto a bolha (X) nunca some. E o
+  // usuário pode recolhê-la para um ponto "?" de 24px (na sessão).
+  const [miaCollapsed, setMiaCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return sessionStorage.getItem("mt-mia-collapsed") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const collapseMia = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setMiaCollapsed(true);
+    try {
+      sessionStorage.setItem("mt-mia-collapsed", "1");
+    } catch {
+      /* armazenamento indisponível — some só nesta página */
+    }
+  };
+  const restoreMia = () => {
+    setMiaCollapsed(false);
+    try {
+      sessionStorage.removeItem("mt-mia-collapsed");
+    } catch {
+      /* ignore */
+    }
+  };
+  useEffect(() => {
+    const onScroll = () => {
+      const isMobile = window.innerWidth < 768;
+      const isHome = window.location.pathname === "/";
+      const threshold = !isMobile ? 0 : isHome ? 1100 : 300;
+      setPastHero(!isMobile || window.scrollY > threshold);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
 
   useEffect(() => {
     if (escalated && sessionId && isOpen) {
@@ -373,24 +422,48 @@ export function Chatbot() {
         )}
       </AnimatePresence>
 
-	      <button
-	        onClick={handleOpen}
-	        className={cn("fixed bottom-28 md:bottom-6 right-4 md:right-6 z-[95] h-14 w-14 md:h-16 md:w-16 rounded-[20px] md:rounded-[24px] flex items-center justify-center shadow-2xl transition-all group active:scale-95", 
-	          isOpen ? "bg-slate-900 border border-white/10 text-white rotate-90" : "bg-blue-600 text-white hover:scale-110"
-	        )}
-	      >
-        {isOpen ? <X className="h-7 w-7" /> : (
-          <div className="relative">
-            <MessageCircle className="h-8 w-8 group-hover:scale-110 transition-transform" />
-            {showPulse && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                <span className="relative inline-flex h-4 w-4 rounded-full bg-red-500 shadow-md" />
-              </span>
-            )}
-          </div>
-        )}
-      </button>
+      {miaCollapsed && !isOpen ? (
+        <button
+          onClick={restoreMia}
+          aria-label="Abrir assistente Mia"
+          className={cn(
+            "fixed bottom-24 right-4 z-[95] flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-[11px] font-extrabold text-white shadow-2xl transition-all hover:scale-110 md:bottom-6 md:right-6",
+            !pastHero ? "mt-fab-hidden-mobile" : "",
+          )}
+        >
+          ?
+        </button>
+      ) : (
+        <button
+          onClick={handleOpen}
+          className={cn(
+            "fixed bottom-24 right-4 z-[95] flex h-11 w-11 items-center justify-center rounded-[16px] shadow-2xl transition-all group active:scale-95 md:bottom-6 md:right-6 md:h-16 md:w-16 md:rounded-[24px]",
+            isOpen ? "bg-slate-900 border border-white/10 text-white rotate-90" : "bg-blue-600 text-white hover:scale-110",
+            !pastHero && !isOpen ? "mt-fab-hidden-mobile" : "",
+          )}
+        >
+          {isOpen ? <X className="h-7 w-7" /> : (
+            <div className="relative">
+              <MessageCircle className="h-6 w-6 transition-transform group-hover:scale-110 md:h-8 md:w-8" />
+              {showPulse && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                  <span className="relative inline-flex h-4 w-4 rounded-full bg-red-500 shadow-md" />
+                </span>
+              )}
+            </div>
+          )}
+          {!isOpen && (
+            <span
+              onClick={collapseMia}
+              aria-label="Recolher assistente"
+              className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full border border-white/20 bg-slate-900 text-[10px] font-extrabold leading-none text-white shadow-lg"
+            >
+              ×
+            </span>
+          )}
+        </button>
+      )}
     </>
   );
 }

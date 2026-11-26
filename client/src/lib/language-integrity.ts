@@ -28,10 +28,11 @@ export function useLanguageIntegrity(options: IntegrityOptions = {}) {
        if (onViolation) onViolation("document_mismatch");
     }
 
-    // Sincroniza atributos globais
-    document.documentElement.lang = currentLang === "pt" ? "pt-BR" : currentLang === "es" ? "es" : "en";
-    document.body.setAttribute("lang", currentLang === "pt" ? "pt-BR" : currentLang === "es" ? "es" : "en");
-    
+    // Rodada 3 (re-QA item a): este hook NÃO escreve mais os atributos
+    // de idioma — a sincronização é do i18n (setLanguage síncrono +
+    // layout effect). Antes, este efeito escrevia DEPOIS de ler o valor
+    // velho (efeito de filho roda antes do pai) e o aviso disparava a
+    // cada troca. Aqui só verifica; as metatags continuam por aqui.
     // Configura metatags de idioma dinamicamente para SEO e Acessibilidade
     const metaNames = ["language", "content-language"];
     metaNames.forEach(name => {

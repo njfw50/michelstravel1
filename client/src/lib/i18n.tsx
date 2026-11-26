@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
+import React, { createContext, useContext, useEffect, useLayoutEffect, useState, useCallback, useMemo } from "react";
 
 // 1. Automatic Typing: TS reads your JSON to determine available keys
 import pt from "../locales/pt.json";
@@ -21,6 +21,20 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
+// Sincroniza o idioma do documento — o ÚNICO lugar que escreve
+// documentElement.lang / body[lang]. Rodada 3 (re-QA item a): antes,
+// dois efeitos escreviam (i18n + useLanguageIntegrity) e o da
+// integridade lia ANTES do outro (efeito de filho roda antes do pai),
+// então a cada troca ele avisava "Doc=pt, Escolhido=en" e o atributo
+// ficava uma troca atrás. Agora a troca é síncrona em setLanguage e o
+// layout effect cobre a primeira pintura.
+function applyDocumentLang(lang: Language) {
+  if (typeof document === "undefined") return;
+  const tag = lang === "pt" ? "pt-BR" : lang;
+  document.documentElement.lang = tag;
+  document.body.setAttribute("lang", tag);
+}
+
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   // Safe initialization for SSR and Browser
   const [language, setLanguageState] = useState<Language>(() => {
@@ -34,9 +48,13 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    document.documentElement.lang = language === "pt" ? "pt-BR" : language;
+  // Layout effect: roda ANTES da pintura — a primeira tela já nasce
+  // com o lang certo, sem o flash de idioma errado.
+  useLayoutEffect(() => {
+    applyDocumentLang(language);
+  }, [language]);
 
+  useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "michels-travel-lang" && e.newValue) {
         const newLang = e.newValue as Language;
@@ -51,6 +69,9 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   }, [language]);
 
   const setLanguage = useCallback((lang: Language) => {
+    // Síncrono: o documento já está no idioma novo antes do React
+    // re-renderizar — nada lê o atributo velho depois da troca.
+    applyDocumentLang(lang);
     setIsLoading(true);
     setLanguageState(lang);
     localStorage.setItem("michels-travel-lang", lang);

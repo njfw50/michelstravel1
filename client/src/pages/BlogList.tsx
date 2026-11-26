@@ -148,15 +148,30 @@ export default function BlogList() {
     fetchPulse().finally(() => setPulseLoading(false));
   }, []);
 
-  const activeDest = pulseData[activeTab] || PULSE_CITIES.find((c) => c.id === activeTab) || PULSE_CITIES[0];
+  // Rodada 3 (26/nov, re-QA item 1): a cidade ativa NUNCA cai para a
+  // entrada estática — sem dado real ela nem é listada. Cidades sem
+  // clima/tarifa após o carregamento somem das abas; o clima pode
+  // falhar de forma transitória (wttr.in) e o quadro de voos é 500 no
+  // preview sem banco — nesses casos o bloco mostra só o que é real.
+  const citiesWithData = PULSE_CITIES.filter((c) => pulseData[c.id]?.weather || pulseData[c.id]?.price);
+  const activeCity = citiesWithData.find((c) => c.id === activeTab) || citiesWithData[0];
+  const activeDest =
+    (activeCity && pulseData[activeCity.id]) ||
+    PULSE_CITIES.find((c) => c.id === activeTab) ||
+    PULSE_CITIES[0];
 
   // Fail-closed (QA 26/nov, rodada 2): o Pulso só existe quando há
   // dado real (clima ou tarifa) em ao menos uma cidade. Sem dado,
   // a seção some inteira em vez de exibir "--°C" / "---" e abas vazias.
   const hasPulseData = Object.values(pulseData).some((d: any) => d?.weather || d?.price);
 
+  // Rodada 3 (26/nov): sem condição NÃO há texto — a string de
+  // carregamento ("CARREGANDO CRÔNICA...") era um fallback com nome
+  // errado: ela aparecia DEPOIS do carregamento, quando o clima
+  // falhava, e o QA lia como widget travado. Carregando, o esqueleto
+  // já cobre o lugar; depois, sem dado, não há linha de condição.
   const conditionText = (condition?: string) => {
-    if (!condition) return t("blog.loading_chronicle");
+    if (!condition) return "";
     if ((language || "pt") === "en") return condition;
     const hit = WEATHER_CONDITIONS[condition];
     if (!hit) return condition;
@@ -206,7 +221,7 @@ export default function BlogList() {
             <h1 className="font-display mb-4 bg-gradient-to-b from-white via-white to-white/40 bg-clip-text text-3xl font-extrabold leading-tight tracking-tight text-transparent md:text-8xl md:leading-none">
               {t("blog.hero_title")}
             </h1>
-            <p className="mx-auto mb-10 max-w-2xl text-lg font-medium leading-relaxed text-white [text-shadow:0_2px_16px_rgba(6,13,36,0.9)] md:text-xl">
+            <p className="mx-auto mb-10 max-w-2xl text-lg font-medium leading-relaxed text-white mt-hero-subtitle md:text-xl">
               {t("blog.curated_destinations")}
             </p>
 
@@ -250,7 +265,9 @@ export default function BlogList() {
           </div>
 
           <div className="no-scrollbar flex gap-2 overflow-x-auto rounded-[28px] border border-[#101E42]/10 bg-white p-1.5 shadow-sm">
-            {PULSE_CITIES.map((city) => (
+            {/* Rodada 3: depois de carregar, só as cidades COM dado real
+                ganham aba — aba sem dado era o que exibia "--°C". */}
+            {(pulseLoading ? PULSE_CITIES : citiesWithData).map((city) => (
               <button
                 key={city.id}
                 onClick={() => setActiveTab(city.id)}
@@ -272,7 +289,7 @@ export default function BlogList() {
                 {pulseLoading ? (
                   <span className="inline-block h-12 w-36 animate-pulse rounded-2xl bg-[#101E42]/10 align-middle md:h-20" />
                 ) : (
-                  activeDest.weather || "--°C"
+                  activeDest.weather || ""
                 )}
               </p>
               <p className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#E58B48]">
@@ -292,15 +309,17 @@ export default function BlogList() {
             </div>
           </div>
 
+          {/* Rodada 3: sem tarifa real não há bloco de tarifa — o "---"
+              era exibido sempre no preview, onde o quadro de voos é 500
+              (sem banco). Carregando, o esqueleto cobre o lugar. */}
+          {(pulseLoading || activeDest.price) && (
           <div className="mt-8 flex items-center justify-center gap-8 border-t border-[#101E42]/10 pt-6 md:justify-end md:border-t-0 md:pt-0">
             <div className="flex flex-col items-center gap-1 md:items-end">
               <p className="text-xl font-extrabold text-[#101E42] md:text-2xl">
                 {pulseLoading ? (
                   <span className="inline-block h-6 w-20 animate-pulse rounded-lg bg-[#101E42]/10" />
-                ) : activeDest.price ? (
-                  `${activeDest.price} ${activeDest.currency}`
                 ) : (
-                  "---"
+                  `${activeDest.price} ${activeDest.currency}`
                 )}
               </p>
               <p className="text-[11px] font-extrabold uppercase tracking-widest text-[#E58B48]">
@@ -308,6 +327,7 @@ export default function BlogList() {
               </p>
             </div>
           </div>
+          )}
         </Card>
         </>)}
 

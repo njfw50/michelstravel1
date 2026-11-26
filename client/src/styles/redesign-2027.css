@@ -87,11 +87,27 @@
    o canto superior direito (onde vai o logo) contra escurecimento
    excessivo — vinheta assimétrica, cf. Diretriz §3.6.
    Rodada 2 (QA 26/nov): zona intermediária reforçada (0.55→0.8 aos
-   40%) — o subtítulo caía sobre o céu claro da foto e não lia. */
+   40%) — o subtítulo caía sobre o céu claro da foto e não lia.
+   Rodada 3 (re-QA item 4): 40% 0.8→0.85 e 65% 0.5→0.6 — o céu claro
+   ainda vencia o scrim na altura do subtítulo. */
 .mt-hero-scrim {
   background:
     linear-gradient(180deg, rgba(6, 13, 36, 0.42) 0%, rgba(6, 13, 36, 0) 26%),
-    linear-gradient(0deg, rgba(6, 13, 36, 0.94) 0%, rgba(6, 13, 36, 0.8) 40%, rgba(6, 13, 36, 0.5) 65%, rgba(6, 13, 36, 0) 88%);
+    linear-gradient(0deg, rgba(6, 13, 36, 0.94) 0%, rgba(6, 13, 36, 0.85) 40%, rgba(6, 13, 36, 0.6) 62%, rgba(6, 13, 36, 0) 88%);
+}
+
+/* Subtítulo do herói (Home, /pacotes, /blog) — Rodada 3 (re-QA item 4):
+   a sombra única `[text-shadow:0_2px_16px_rgba(6,13,36,0.9)]` EXISTIA
+   no CSS compilado, mas um blur de 16px sozinho é difuso demais sobre
+   o céu claro: o QA lia "sem sombra efetiva". Sombra em 3 camadas —
+   núcleo fechado de 1px (borda nítida na letra), halo de 10px e brilho
+   de 24px — em classe real (não propriedade arbitrária do Tailwind),
+   para a regra existir garantida no CSS compilado. */
+.mt-hero-subtitle {
+  text-shadow:
+    0 1px 3px rgba(6, 13, 36, 0.95),
+    0 2px 10px rgba(6, 13, 36, 0.9),
+    0 6px 24px rgba(6, 13, 36, 0.75);
 }
 
 /* Scrim inferior p/ texto branco sobre foto (cards de destino). O
@@ -189,4 +205,19 @@ html {
 
 section[id] {
   scroll-margin-top: 8rem;
+}
+
+/* Bolha da Mia no celular (Rodada 3, 26/nov): a bolha fixa cobria a
+   aba "MÚLTIPLOS DESTINOS" da busca no topo da página (print do
+   dono) — posição fixa sempre cobre algum controle ali. No celular
+   ela só aparece após 300px de rolagem (classe aplicada pelo
+   Chatbot.tsx, gatilho scrollY > 300, recomendação do Gemini); no
+   desktop aparece sempre. Regra em CSS puro (não depende da
+   variante max-md: do Tailwind). */
+@media (max-width: 767px) {
+  .mt-fab-hidden-mobile {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(1rem);
+  }
 }
