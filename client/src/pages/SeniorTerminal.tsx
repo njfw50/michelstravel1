@@ -9,6 +9,7 @@ import FlightBaggageHighlights from "@/components/FlightBaggageHighlights";
 import { useDebounce } from "@/hooks/use-debounce";
 import SeniorCardImage from "@/components/SeniorCardImage";
 import { useI18n } from "@/lib/i18n";
+import { speakNaturally, stopNaturalSpeech, type VoiceLang } from "@/lib/senior-voice";
 
 type FlowStep = "greeting" | "ask_class" | "ask_passengers" | "ask_origin" | "destination" | "dates" | "ask_return_intention" | "return_date" | "ask_multi_intention" | "searching" | "offer" | "collect_details" | "checkout";
 
@@ -321,12 +322,14 @@ export default function SeniorTerminal() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
+  // Rodada 6: voz natural (ver @/lib/senior-voice) — melhor voz
+  // pt-BR/en-US/es-ES do aparelho (Natural/Neural > Google >
+  // Microsoft > Luciana), rate/pitch por idioma (Gemini) e fala em
+  // frases com pausas (500ms fim de frase, 250ms vírgula). Antes:
+  // voz padrão do sistema, rate 0.95 fixo, sem pitch, tudo de uma
+  // vez. Um speak novo cancela o anterior, como antes.
   const speak = (text: string) => {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = langVoice[lang];
-    utterance.rate = 0.95;
-    window.speechSynthesis.speak(utterance);
+    speakNaturally(text, langVoice[lang] as VoiceLang);
   };
 
   const [visitorId] = useState(() => {
@@ -387,7 +390,8 @@ export default function SeniorTerminal() {
 
     recognition.onstart = () => {
       setIsListening(true);
-      window.speechSynthesis.cancel();
+      // Cala a Mia enquanto ouve (cancela fala + pausas pendentes).
+      stopNaturalSpeech();
     };
 
     recognition.onresult = async (event: any) => {
@@ -696,7 +700,7 @@ export default function SeniorTerminal() {
       <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 overflow-hidden relative pb-32">
         
          {step === "greeting" && (
-           <div className="w-full max-w-2xl text-center space-y-8 animate-in slide-in-from-right duration-500">
+           <div className="w-full max-w-2xl text-center space-y-8 mt-senior-step">
              <div className="h-24 w-24 sm:h-40 sm:w-40 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-blue-500/30 shadow-lg">
                <Plane className="h-12 w-12 sm:h-20 sm:w-20" />
              </div>
@@ -709,7 +713,7 @@ export default function SeniorTerminal() {
          )}
   
          {step === "ask_class" && (
-           <div className="w-full max-w-5xl text-center space-y-6 animate-in slide-in-from-right duration-500">
+           <div className="w-full max-w-5xl text-center space-y-6 mt-senior-step">
              <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">{t.chooseClass as string}</h2>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <Button onClick={() => { setCabinClass("economy"); setStep("ask_passengers"); speak(t.v_askPassengers as string); }} className="h-24 text-2xl font-bold rounded-2xl bg-slate-800 hover:bg-blue-600 text-white border border-slate-700 shadow-md">{t.economy as string}</Button>
@@ -721,7 +725,7 @@ export default function SeniorTerminal() {
          )}
 
          {step === "ask_passengers" && (
-           <div className="w-full max-w-5xl text-center space-y-8 animate-in slide-in-from-right duration-500">
+           <div className="w-full max-w-5xl text-center space-y-8 mt-senior-step">
               <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">{t.howMany as string}</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -769,7 +773,7 @@ export default function SeniorTerminal() {
          )}
 
          {step === "ask_origin" && (
-           <div className="w-full max-w-4xl text-center space-y-6 animate-in slide-in-from-right duration-500">
+           <div className="w-full max-w-4xl text-center space-y-6 mt-senior-step">
              <h2 className="text-3xl sm:text-5xl font-bold text-white mb-4">{currentLeg > 1 ? (t.fromCityN as any)(currentLeg) : t.fromCity as string}</h2>
              <div className="relative">
                 <Input value={originQuery} onChange={(e) => { setOriginQuery(e.target.value); setOriginIata(""); }} placeholder={t.originPH as string} className="h-20 sm:h-32 text-2xl sm:text-4xl text-center rounded-2xl border-4 border-slate-600 bg-slate-800 text-white focus:border-blue-400" />
@@ -791,7 +795,7 @@ export default function SeniorTerminal() {
          )}
 
          {step === "destination" && (
-           <div className="w-full max-w-4xl text-center space-y-6 animate-in slide-in-from-right duration-500">
+           <div className="w-full max-w-4xl text-center space-y-6 mt-senior-step">
              <h2 className="text-3xl sm:text-5xl font-bold text-white mb-4">{currentLeg > 1 ? (t.toCityN as any)(currentLeg) : t.toCity as string}</h2>
              <div className="relative">
                <Input value={destQuery} onChange={(e) => { setDestQuery(e.target.value); setDestIata(""); }} placeholder={t.destPH as string} className="h-20 sm:h-32 text-2xl sm:text-4xl text-center rounded-2xl border-4 border-slate-600 bg-slate-800 text-white focus:border-emerald-400" />
@@ -813,7 +817,7 @@ export default function SeniorTerminal() {
          )}
 
          {step === "dates" && (
-           <div className="w-full max-w-4xl text-center space-y-8 animate-in slide-in-from-right duration-500">
+           <div className="w-full max-w-4xl text-center space-y-8 mt-senior-step">
              <h2 className="text-3xl sm:text-5xl font-bold text-white mb-8">{currentLeg > 1 ? (t.dateN as any)(currentLeg) : t.dateIda as string}</h2>
              <Input type="date" value={travelDate} onChange={(e) => setTravelDate(e.target.value)} className="h-20 sm:h-32 w-full max-w-2xl text-2xl sm:text-5xl text-center rounded-2xl border-4 border-slate-600 bg-slate-800 text-white focus:border-blue-400 mx-auto" />
              <Button onClick={handleDateNext} disabled={!travelDate} className="h-16 px-12 text-xl font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg">
@@ -823,7 +827,7 @@ export default function SeniorTerminal() {
          )}
 
          {step === "ask_return_intention" && (
-           <div className="w-full max-w-4xl text-center space-y-8 animate-in slide-in-from-right duration-500">
+           <div className="w-full max-w-4xl text-center space-y-8 mt-senior-step">
              <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">{t.wantReturn as string}</h2>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <Button onClick={() => { setTripType("round-trip"); setStep("return_date"); speak(t.v_yesReturn as string); }} className="h-24 text-2xl font-bold rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md">{t.yesReturn as string}</Button>
@@ -833,7 +837,7 @@ export default function SeniorTerminal() {
          )}
 
          {step === "return_date" && (
-           <div className="w-full max-w-4xl text-center space-y-8 animate-in slide-in-from-right duration-500">
+           <div className="w-full max-w-4xl text-center space-y-8 mt-senior-step">
              <h2 className="text-3xl sm:text-5xl font-bold text-white mb-8">{t.returnDate as string}</h2>
              <Input type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} className="h-20 sm:h-32 w-full max-w-2xl text-2xl sm:text-5xl text-center rounded-2xl border-4 border-emerald-600 bg-slate-800 text-white mx-auto" />
              <Button onClick={() => { if (!returnDate) return; handleSearchFlights(); }} disabled={!returnDate} className="h-16 px-12 text-xl font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-full shadow-lg">
@@ -843,7 +847,7 @@ export default function SeniorTerminal() {
          )}
 
          {step === "ask_multi_intention" && (
-            <div className="w-full max-w-4xl text-center space-y-8 animate-in slide-in-from-right duration-500">
+            <div className="w-full max-w-4xl text-center space-y-8 mt-senior-step">
              <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">{(t.multiQ as any)(destIata)}</h2>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <Button onClick={() => { setTripType("multi-city"); setLegs(prev => [...prev, { originQuery, originIata, destQuery, destIata, travelDate }]); setCurrentLeg(c => c + 1); setStep("destination"); setOriginIata(destIata); setOriginQuery(destQuery); setDestIata(""); setDestQuery(""); setTravelDate(""); speak((t.v_multiNext as any)(destIata)); }} className="h-24 text-2xl font-bold rounded-2xl bg-purple-600 hover:bg-purple-500 text-white shadow-md">{t.yesMulti as string}</Button>
@@ -853,7 +857,7 @@ export default function SeniorTerminal() {
          )}
 
          {step === "searching" && (
-           <div className="w-full max-w-2xl text-center space-y-12 animate-in zoom-in duration-500">
+           <div className="w-full max-w-2xl text-center space-y-12 mt-senior-step">
              <div className="relative h-32 w-32 sm:h-48 sm:w-48 mx-auto flex items-center justify-center">
                <Plane className="h-12 w-12 sm:h-20 sm:w-20 text-blue-400 animate-pulse" />
              </div>
@@ -863,7 +867,7 @@ export default function SeniorTerminal() {
          )}
 
          {step === "offer" && fetchedFlights.length > 0 && (
-           <div className="w-full max-w-[1400px] text-center space-y-8 animate-in slide-in-from-bottom duration-700 pb-20">
+           <div className="w-full max-w-[1400px] text-center space-y-8 mt-senior-step pb-20">
              <h2 className="text-3xl sm:text-5xl font-bold text-white mb-8">
                {(tripType === "round-trip" || tripType === "multi-city") && !selectedOutboundSlice ? t.chooseOutbound as string : (tripType === "round-trip" || tripType === "multi-city") && selectedOutboundSlice ? t.chooseReturn as string : t.chooseFlight as string}
              </h2>
@@ -924,7 +928,7 @@ export default function SeniorTerminal() {
          )}
 
          {step === "collect_details" && (
-           <div className="w-full max-w-3xl animate-in slide-in-from-right duration-500 pb-20">
+           <div className="w-full max-w-3xl mt-senior-step pb-20">
              <div className="flex justify-center mb-6">
                <div className="h-20 w-20 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center border-4 border-blue-500/30 shadow-lg">
                  <User className="h-10 w-10" />
@@ -956,7 +960,7 @@ export default function SeniorTerminal() {
          )}
 
          {step === "checkout" && bookingData && (
-           <div className="w-full max-w-3xl text-center space-y-12 animate-in slide-in-from-bottom duration-500">
+           <div className="w-full max-w-3xl text-center space-y-12 mt-senior-step">
              <h2 className="text-3xl sm:text-5xl font-bold text-white mb-8">{t.cardData as string}</h2>
              <div className="bg-white rounded-[40px] p-8 border-4 border-emerald-500 text-left shadow-2xl">
                <PaymentForm 

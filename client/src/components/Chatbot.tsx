@@ -132,6 +132,45 @@ export function Chatbot() {
     };
   }, []);
 
+  // Rodada 6 (26/nov, re-QA 5 defeito 2): a bolha fixa cobria botões
+  // e textos — a borda do botão "TALK TO MIA" no /blog e o slogan
+  // do rodapé no /seguranca. Quando o rodapé ou o cartão
+  // [data-mia-cta] está visível, a bolha (e o ponto "?" recolhido)
+  // some — o cartão já tem o próprio botão de falar com a Mia e o
+  // rodapé tem WhatsApp. Os limiares de rolagem (1100px home /
+  // 300px demais páginas) continuam valendo; com o chat aberto, o
+  // botão X fica visível para fechar.
+  const [fabObscured, setFabObscured] = useState(false);
+  useEffect(() => {
+    const visible = new Set<Element>();
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) visible.add(e.target);
+          else visible.delete(e.target);
+        });
+        setFabObscured(visible.size > 0);
+      },
+      { threshold: 0 },
+    );
+    let observed: Element[] = [];
+    const observeAll = () => {
+      observed.forEach((el) => io.unobserve(el));
+      observed = Array.from(document.querySelectorAll("footer, [data-mia-cta]"));
+      observed.forEach((el) => io.observe(el));
+      if (observed.length === 0) setFabObscured(false);
+    };
+    // O DOM da rota monta depois do efeito — observa no próximo
+    // quadro, de novo aos 300ms e a cada mudança de rota.
+    const raf = requestAnimationFrame(observeAll);
+    const timer = window.setTimeout(observeAll, 300);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(timer);
+      io.disconnect();
+    };
+  }, [location]);
+
   useEffect(() => {
     if (escalated && sessionId && isOpen) {
       const poll = async () => {
@@ -428,7 +467,7 @@ export function Chatbot() {
           aria-label="Abrir assistente Mia"
           className={cn(
             "fixed bottom-24 right-4 z-[95] flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-[11px] font-extrabold text-white shadow-2xl transition-all hover:scale-110 md:bottom-6 md:right-6",
-            !pastHero ? "mt-fab-hidden-mobile" : "",
+            !pastHero || fabObscured ? "mt-fab-hidden-mobile mt-fab-hidden" : "",
           )}
         >
           ?
@@ -440,6 +479,7 @@ export function Chatbot() {
             "fixed bottom-24 right-4 z-[95] flex h-11 w-11 items-center justify-center rounded-[16px] shadow-2xl transition-all group active:scale-95 md:bottom-6 md:right-6 md:h-16 md:w-16 md:rounded-[24px]",
             isOpen ? "bg-slate-900 border border-white/10 text-white rotate-90" : "bg-blue-600 text-white hover:scale-110",
             !pastHero && !isOpen ? "mt-fab-hidden-mobile" : "",
+            fabObscured && !isOpen ? "mt-fab-hidden" : "",
           )}
         >
           {isOpen ? <X className="h-7 w-7" /> : (

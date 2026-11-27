@@ -222,51 +222,53 @@ section[id] {
   }
 }
 
-/* Topo mobile sem pílula (Rodada 4, 26/nov — defeito 1: o dono
-   confirmou que a pílula escura flutuante do topo não integra ao
-   desenho "revista de bordo"; a barra inferior NÃO era o problema
-   e NÃO muda nesta rodada — o re-QA 3 a listou por engano).
-   Ordem expressa do dono (19:20): a alteração de estilo é
-   autorizada dentro do processo canônico para alcançar o resultado
-   razoável. Âncora — Diretriz 2027: logo DIRETO na foto, sem
-   moldura, com clareamento localizado atrás dele (+0.25 a +0.60 EV);
-   seletor de idioma leve/translúcido. Recomendação Gemini
-   (gemini-3.5-flash): logo 44px, halo radial creme 76px (+0.45 EV),
-   seletor creme 72% + blur 12px + borda dourada 40%, ao rolar banda
-   creme 91% + blur 16px + linha dourada. Só <768px — o desktop
-   mantém a pílula escura com navegação intacta. */
-
-/* Clareamento localizado atrás do logo no celular — o halo radial
-   creme (+0.45 EV) destaca o quadrado azul escuro sobre foto escura
-   ou faixa navy; sobre céu claro e papel creme ele some (mesma
-   família cromática), sem sujar o desenho. */
-.mt-logo-halo {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 76px;
-  height: 76px;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(
-    circle,
-    rgba(251, 247, 239, 0.48) 0%,
-    rgba(251, 247, 239, 0.18) 45%,
-    rgba(251, 247, 239, 0) 75%
-  );
-  border-radius: 9999px;
+/* Bolha da Mia escondida por obstrução (Rodada 6, 26/nov, re-QA 5
+   defeito 2): quando o rodapé ou o cartão [data-mia-cta] está
+   visível, a bolha some para nunca cobrir botões ou texto. Vale em
+   TODOS os viewports (a versão -mobile acima só vale <768px e
+   continua cuidando dos limiares de rolagem). */
+.mt-fab-hidden {
+  opacity: 0;
   pointer-events: none;
+  transform: translateY(1rem);
 }
 
-@media (max-width: 767px) {
-  /* Topo rolado no celular: banda de papel creme 91% + blur + linha
-     dourada — o topo deixa de ser transparente e vira faixa editorial.
-     Sem sombra (a pílula escura some 100%). */
-  .mt-header-scrolled {
-    background-color: rgba(251, 247, 239, 0.91);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    /* Rodada 5: a linha dourada de 1px a 50% era indistinguível
-       sobre o creme (re-QA desvio 2) — 2px a 85%, visível. */
-    border-bottom: 2px solid rgba(232, 182, 93, 0.85);
+/* Barra do topo — Rodada 6 (26/nov, ordem do dono 20:45): escura e
+   opaca desde o scroll 0, FULL-WIDTH (edge to edge) e cantos
+   quadrados, no celular E no computador. Cor #0B1B3A (navy profundo
+   da marca — mesma família do slate-900 #0F172A da pílula original,
+   azulado para o quadrado azul-marinho do logo #00144C se fundir com
+   a barra). O topo transparente, a faixa creme ao rolar
+   (.mt-header-scrolled), o halo creme (.mt-logo-halo) e a linha
+   dourada das rodadas 4–5 foram REMOVIDOS — a especificação nova os
+   supera. A barra inferior NÃO muda. A recomendação de cor do Gemini
+   NÃO foi obtida nesta rodada (API 503 / timeout em 4 tentativas);
+   a cor foi decidida a partir das medições do re-QA 5 ao vivo
+   (barra #3E4352 no scroll 0, #262D3F ao rolar, logo #00144C) —
+   ver ata da rodada 6. */
+
+/* Transição suave entre os passos do Terminal Senior (Rodada 6,
+   ordem do dono 20:45 — "transições suaves"): fade + subida de 8px
+   em 350ms, sem troca brusca de tela. Substitui o slide lateral de
+   500ms (animate-in slide-in-from-right), que sacudia a tela a cada
+   pergunta. Aplica-se ao contêiner de cada um dos 13 passos. */
+@keyframes mt-senior-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mt-senior-step {
+  animation: mt-senior-step-in 350ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mt-senior-step {
+    animation-duration: 1ms;
   }
 }

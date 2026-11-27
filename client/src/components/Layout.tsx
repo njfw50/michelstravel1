@@ -79,17 +79,17 @@ function LanguageSwitcher({ variant = "navbar" }: { variant?: "navbar" | "footer
           className={cn(
             "h-[34px] gap-1.5 rounded-[17px] px-3.5 text-[11px] font-extrabold uppercase tracking-widest transition-all duration-300 md:h-11 md:gap-3 md:rounded-2xl md:px-4 md:text-xs",
             variant === "navbar"
-              ? /* Rodada 4: cápsula leve creme no celular (Gemini:
-                   creme 72% + blur 12px + borda dourada 40%, texto
-                   navy 8.4:1); no desktop volta o botão escuro da
-                   pílula, intacto. */
-                "border border-[#E8B65D]/40 bg-[#FBF7EF]/70 text-[#0B1B3A] shadow-sm backdrop-blur-md hover:bg-[#FBF7EF]/90 md:border-white/10 md:bg-white/5 md:text-white/80 md:shadow-xl md:backdrop-blur-none md:hover:bg-white/10 md:hover:text-white"
+              ? /* Rodada 6: barra escura opaca e full-width nos dois
+                   viewports — o seletor volta a ser o botão escuro em
+                   todo lugar (a cápsula creme da rodada 4 era para o
+                   topo transparente e está superada). */
+                "border border-white/10 bg-white/5 text-white/80 shadow-xl hover:bg-white/10 hover:text-white"
               : "border border-white/10 bg-slate-900/40 text-white/80 shadow-xl hover:bg-blue-600 hover:text-white",
             isLoading && "opacity-50 grayscale",
           )}
           data-testid="button-language-switcher"
         >
-          <Globe className={cn("h-4 w-4", variant === "navbar" ? "text-[#0B1B3A] md:text-[#E8B65D]" : "text-[#E8B65D]", isLoading && "animate-spin")} />
+          <Globe className={cn("h-4 w-4", "text-[#E8B65D]", isLoading && "animate-spin")} />
           <span className="min-w-[1.5em] text-center">{isLoading ? "..." : current.flag}</span>
         </Button>
       </DropdownMenuTrigger>
@@ -159,7 +159,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [location, setLocation] = useLocation();
-  const [scrolled, setScrolled] = useState(false);
   const { t, language } = useI18n();
   const isHome = location === "/";
   const easyModeLabel =
@@ -171,16 +170,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
       details: [language === "en" ? "Page: Footer" : language === "es" ? "Página: Rodapé" : "Página: Rodapé"],
     }),
   );
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 40);
-    // Rodada 5: aplica o estado inicial (posição restaurada) — sem
-    // isso, carregar a página já rolada deixava a banda creme fora
-    // até o primeiro evento de scroll.
-    handleScroll();
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   useEffect(() => {
     const syncFromUrl = () => {
@@ -226,32 +215,28 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-[#FBF7EF] text-[#101E42] selection:bg-[#FA5F52]/20 selection:text-[#101E42]">
-      {/* Rodada 4 (26/nov, defeito 1): sem pílula no celular — o topo é
-          uma faixa transparente com o logo DIRETO na foto (Diretriz
-          2027: sem moldura, clareamento localizado atrás do logo) e o
-          seletor de idioma como cápsula leve creme; ao rolar, banda
-          creme 91% + linha dourada (classe .mt-header-scrolled, só
-          <768px). O desktop mantém a pílula escura com navegação
-          intacta. A barra inferior NÃO muda nesta rodada (o re-QA 3 a
-          listou por engano; o defeito real é o topo, confirmado pelo
-          dono, com autorização expressa dele para a alteração de
-          estilo dentro do processo canônico). */}
-      <header className={cn("fixed inset-x-0 top-0 z-40 border-b border-transparent transition-all duration-500", scrolled && "mt-header-scrolled")}>
-        <div className={cn("container mx-auto px-5 pt-[calc(8px+env(safe-area-inset-top,0px))] transition-all duration-500 md:px-6", scrolled ? "md:pt-4" : "md:pt-10")}>
-          <div
-            className={cn(
-              "flex items-center justify-between gap-2 rounded-none border-0 bg-transparent px-2 py-1.5 shadow-none transition-all duration-500 md:gap-4 md:rounded-[32px] md:border md:border-white/10 md:px-6 md:py-4 md:shadow-2xl md:backdrop-blur-3xl",
-              scrolled ? "md:bg-slate-900/90 md:scale-100" : "md:bg-slate-900/80 md:scale-[1.02]",
-            )}
-          >
+      {/* Rodada 6 (26/nov, ordem do dono 20:45): "Mantém a cor da
+          barra principal que estava mais a adapta a toda a cabeça da
+          tela sem os arredondamentos. Melhora a cor a combinação com
+          o logo pra ele nao.ficar destoante." — a barra volta a ser
+          escura e opaca desde o scroll 0, agora FULL-WIDTH (edge to
+          edge, sem margens flutuantes) e com cantos QUADRADOS
+          (border-radius 0), no celular E no computador. A cor é o
+          navy profundo #0B1B3A — mesma família do slate-900
+          (#0F172A) da pílula original, mas azulado para o quadrado
+          azul-marinho do logo (#00144C) se fundir com a barra em vez
+          de formar um bloco mais escuro dentro dela (defeito medido
+          pelo re-QA 5: barra #3E4352 no scroll 0, #262D3F ao rolar).
+          O topo transparente, a faixa creme ao rolar, o halo creme e
+          a linha dourada das rodadas 4–5 estão SUPERADOS e foram
+          removidos. A barra inferior NÃO muda (ordem dele, 19:21). */}
+      <header className="fixed inset-x-0 top-0 z-40">
+        <div className="flex items-center justify-between gap-2 border-b border-white/10 bg-[#0B1B3A] px-5 pb-2 pt-[calc(8px+env(safe-area-inset-top,0px))] md:gap-4 md:px-6 md:py-4">
             <div className="flex min-w-0 flex-1 items-center gap-6 md:gap-8">
               <Link href="/" className="group flex shrink-0 items-center gap-4">
-                {/* Halo de clareamento localizado atrás do logo no
-                    celular (Diretriz 2027, +0.45 EV, classe
-                    .mt-logo-halo) — some no desktop (md:hidden), onde
-                    a pílula escura continua. */}
+                {/* Rodada 6: sem halo — a barra é navy escuro opaco e
+                    o quadrado azul-marinho do logo se funde com ela. */}
                 <span className="relative flex shrink-0 items-center justify-center">
-                  <span aria-hidden="true" className="mt-logo-halo md:hidden" />
                   <img
                     src={brandMark}
                     alt="Michels Travel"
@@ -373,7 +358,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 )}
               </div>
             </div>
-          </div>
         </div>
       </header>
 

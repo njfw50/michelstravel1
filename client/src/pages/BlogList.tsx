@@ -106,41 +106,57 @@ export default function BlogList() {
 
   useEffect(() => {
     const fetchPulse = async () => {
-      const newData: Record<string, any> = {};
-
-      await Promise.all(
+      // Rodada 6: clima e quadro de voos em PARALELO (antes o quadro
+      // esperava o clima terminar) — o portão é a TARIFA; o clima
+      // preenche quando chega. Enquanto as duas não assentaram, a
+      // seção NÃO renderiza (showPulse exige !pulseLoading &&
+      // hasFareData) — nada de esqueleto por ~6s.
+      const weatherPromise = Promise.all(
         PULSE_CITIES.map(async (dest) => {
           try {
             const res = await fetch(`/api/external/weather/${dest.id}`);
             if (res.ok) {
               const weather = await res.json();
-              newData[dest.id] = { ...dest, weather: `${weather.temp}°C`, condition: weather.condition };
+              return { id: dest.id, weather: `${weather.temp}°C`, condition: weather.condition };
             }
           } catch (e) {
             console.error("Failed to fetch weather for", dest.id);
           }
+          return null;
         }),
       );
 
-      try {
-        const flightRes = await fetch("/api/flight-board");
-        if (flightRes.ok) {
-          const flights = await flightRes.json();
-          PULSE_CITIES.forEach((dest) => {
-            const flight = flights.find(
-              (f: any) =>
-                f.destinationCity?.toLowerCase().includes(dest.id.replace("-", " ")) ||
-                f.destinationCity?.toLowerCase().includes(dest.display.toLowerCase()),
-            );
-            if (flight && newData[dest.id]) {
-              newData[dest.id].price = flight.price;
-              newData[dest.id].currency = flight.currency;
-            }
-          });
+      // A tarifa vem do /api/flight-board (busca Duffel ao vivo),
+      // NÃO do /api/public/flight-deals (ofertas do banco, 500 no
+      // preview sem DB). Sem quadro, sem tarifa, sem Pulso.
+      const flightPromise = (async (): Promise<any[]> => {
+        try {
+          const flightRes = await fetch("/api/flight-board");
+          if (flightRes.ok) return await flightRes.json();
+        } catch (e) {
+          console.error("Failed to fetch flight board", e);
         }
-      } catch (e) {
-        console.error("Failed to fetch flight board", e);
-      }
+        return [];
+      })();
+
+      const [weatherRows, flights] = await Promise.all([weatherPromise, flightPromise]);
+      const newData: Record<string, any> = {};
+      weatherRows.forEach((row) => {
+        if (!row) return;
+        const dest = PULSE_CITIES.find((d) => d.id === row.id);
+        if (dest) newData[row.id] = { ...dest, weather: row.weather, condition: row.condition };
+      });
+      PULSE_CITIES.forEach((dest) => {
+        const flight = flights.find(
+          (f: any) =>
+            f.destinationCity?.toLowerCase().includes(dest.id.replace("-", " ")) ||
+            f.destinationCity?.toLowerCase().includes(dest.display.toLowerCase()),
+        );
+        if (flight && newData[dest.id]) {
+          newData[dest.id].price = flight.price;
+          newData[dest.id].currency = flight.currency;
+        }
+      });
 
       setPulseData(newData);
     };
@@ -148,23 +164,24 @@ export default function BlogList() {
     fetchPulse().finally(() => setPulseLoading(false));
   }, []);
 
-  // Rodada 5 (26/nov, re-QA item 1): o portão do Pulso é UM valor —
-  // showPulseBlock — e a <section> some POR INTEIRO sem ele.
-  // Causa-raiz apurada: o render ao vivo do QA no desktop era o
-  // build e2b4fb3 (portão por CLIMA, hasPulseData — clima presente
-  // bastava), não o 473488f (portão por TARIFA). Prova: o JS ao vivo
-  // é byte-idêntico ao 473488f (md5 igual) e o quadro de voos é 500
-  // no preview — com o portão por tarifa a seção já sumia; a sessão
-  // do QA no desktop foi servida em cache com o build anterior (a
-  // primeira carga no celular também mostrou a pílula velha).
+  // Rodada 6 (26/nov, re-QA 5 defeito 1): o portão do Pulso é UM
+  // valor — showPulse — e a <section> some POR INTEIRO sem ele.
+  // Regra: o Pulso SÓ existe depois que o quadro de voos carregou
+  // COM SUCESSO com tarifa real. Enquanto carrega, a seção NÃO
+  // renderiza — nem título, nem abas, nem esqueleto, nem bloco de
+  // tarifa. O portão da rodada 5 (pulseLoading || hasFareData)
+  // mostrava o cartão esqueleto por ~6s a cada carga fresca e a
+  // cada troca de idioma — e a primeira carga em EN chegou a exibir
+  // uma tarifa (Lisboa $1.245) vinda do /api/flight-board, que
+  // busca o Duffel ao vivo e tem cache de 15 min em memória no
+  // servidor; o cliente NÃO tem tarifa estática (o "1,245" do JS
+  // compilado é a cor rgba(241,245,249)). Ver ata da rodada 6.
   // O endurecimento aqui é estrutural: activeDest NUNCA mais cai
   // para a entrada estática — só dado buscado (clima + tarifa)
   // pode aparecer no cartão.
   const citiesWithFare = PULSE_CITIES.filter((c) => pulseData[c.id]?.price);
   const hasFareData = citiesWithFare.length > 0;
   const showPulse = !pulseLoading && hasFareData;
-  // Esqueleto enquanto carrega; depois, SÓ com tarifa real.
-  const showPulseBlock = pulseLoading || hasFareData;
   // Rodada 3: a cidade ativa NUNCA cai para a entrada estática.
   // Carregando, activeCity é undefined e o esqueleto cobre o lugar;
   // depois, só cidades COM tarifa ganham aba — a aba destacada é
@@ -174,11 +191,9 @@ export default function BlogList() {
     : undefined;
   const highlightedTab = activeCity?.id ?? activeTab;
   const activeDest = activeCity ? pulseData[activeCity.id] : undefined;
-  // Nome da aba durante o carregamento (rótulo, não dado): o cartão
-  // mostra o esqueleto, mas o nome da cidade vem da aba ativa.
-  const activeDisplay =
-    activeDest?.display ??
-    (pulseLoading ? PULSE_CITIES.find((c) => c.id === activeTab)?.display ?? "" : "");
+  // Nome da cidade ativa — só existe quando há dado buscado; sem
+  // tarifa, o bloco nem renderiza, então não há rótulo de fallback.
+  const activeDisplay = activeDest?.display ?? "";
 
   // Rodada 3 (26/nov): sem condição NÃO há texto — a string de
   // carregamento ("CARREGANDO CRÔNICA...") era um fallback com nome
@@ -193,7 +208,7 @@ export default function BlogList() {
     return (language || "pt") === "es" ? hit.es : hit.pt;
   };
 
-  const { data: highlights, isLoading: loadingHighlights } = useDestinationHighlights({
+  const { data: highlights } = useDestinationHighlights({
     city: selectedDest.city,
     country: selectedDest.country,
     lang: language || "pt",
@@ -203,10 +218,13 @@ export default function BlogList() {
   // `highlights` (usar `highlights?.items` direto depois do portão
   // vira erro TS2339 — o tipo estreita para `never`).
   const hasHighlightItems = (highlights?.items?.length ?? 0) > 0;
-  // Rodada 5: a seção some POR INTEIRO quando não há Pulso (sem
-  // tarifa) nem destaques — nunca um bloco vazio com padding.
-  const showHighlights = loadingHighlights || hasHighlightItems;
-  const showPulseSection = showPulseBlock || showHighlights;
+  // Rodada 6: os destaques também só existem com itens reais da API
+  // — enquanto carrega sem dado, nada renderiza (o esqueleto de 6
+  // cartões da rodada 4 saía junto com o Pulso a cada troca de
+  // idioma; ao trocar o idioma com dado anterior, os cartões do
+  // idioma anterior ficam visíveis via placeholderData no hook).
+  const showHighlights = hasHighlightItems;
+  const showPulseSection = showPulse || showHighlights;
 
   const featuredPost = posts?.[0];
   const remainingPosts =
@@ -225,11 +243,10 @@ export default function BlogList() {
         path="/blog"
       />
 
-      {/* Hero Section — Rodada 5: o herói sangra sob o header fixo
-          no celular (-mt-20, só <768px): a foto chega ao topo da
-          tela e o logo fica DIRETO nela com o halo; o conteúdo
-          compensa com pt-16 para não subir para baixo do header. */}
-      <section className="relative -mt-20 flex h-[60vh] items-center justify-center overflow-hidden bg-[#0B1B3A] md:mt-0 md:h-[70vh]">
+      {/* Hero Section — Rodada 6: o bleed (-mt-20) da rodada 5 está
+          SUPERADO — a barra do topo voltou a ser escura e opaca,
+          então o herói começa abaixo dela. */}
+      <section className="relative flex h-[60vh] items-center justify-center overflow-hidden bg-[#0B1B3A] md:h-[70vh]">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 z-10 bg-gradient-to-b from-[#0B1B3A]/40 via-[#0B1B3A]/85 to-[#0B1B3A]" />
           <img
@@ -239,7 +256,7 @@ export default function BlogList() {
           />
         </div>
 
-        <div className="container relative z-20 px-4 pt-16 text-center md:pt-0">
+        <div className="container relative z-20 px-4 text-center">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeOut" }}>
             <Badge className="mb-6 rounded-full border border-[#E8B65D]/30 bg-[#E8B65D]/10 px-4 py-1.5 text-xs font-extrabold uppercase tracking-[0.3em] text-[#E8B65D] backdrop-blur-md">
               {t("blog.elite_experience")}
@@ -278,10 +295,12 @@ export default function BlogList() {
           (fail-closed, rodada 4): o clima sozinho deixava o cartão
           com ~70% de branco no desktop. O bloco de destaques abaixo
           tem regra própria. */}
-      {/* Rodada 5: a seção some POR INTEIRO sem Pulso nem destaques. */}
+      {/* Rodada 6: a seção some POR INTEIRO sem Pulso (com tarifa
+          real) nem destaques — nunca um bloco vazio com padding, nem
+          esqueleto enquanto carrega. */}
       {showPulseSection ? (
       <section className="container mx-auto px-4 py-20">
-        {showPulseBlock ? (
+        {showPulse ? (
         <>
         <div className="mb-12 flex flex-col items-end justify-between gap-6 md:flex-row">
           <div className="max-w-xl">
@@ -294,10 +313,10 @@ export default function BlogList() {
           </div>
 
           <div className="no-scrollbar flex gap-2 overflow-x-auto rounded-[28px] border border-[#101E42]/10 bg-white p-1.5 shadow-sm">
-            {/* Rodada 4: depois de carregar, só as cidades COM tarifa
-                ganham aba — a aba ativa é sempre uma delas
-                (highlightedTab). */}
-            {(pulseLoading ? PULSE_CITIES : citiesWithFare).map((city) => (
+            {/* Rodada 6: só as cidades COM tarifa ganham aba — o
+                bloco só renderiza com tarifa real, então a lista
+                nunca é a estática PULSE_CITIES. */}
+            {citiesWithFare.map((city) => (
               <button
                 key={city.id}
                 onClick={() => setActiveTab(city.id)}
@@ -315,19 +334,14 @@ export default function BlogList() {
         <Card className="group relative mb-12 overflow-hidden rounded-[32px] border border-[#101E42]/10 bg-white p-8 shadow-[0_22px_48px_rgba(15,23,42,0.08)] md:p-14">
           <div className="flex flex-1 flex-col items-center gap-6 md:flex-row md:items-center md:gap-12">
             <div className="flex flex-col items-center gap-1 md:items-start">
+              {/* Rodada 6: sem esqueleto — o bloco só renderiza com
+                  dado real carregado; pulseLoading aqui é sempre
+                  falso (ver showPulse). */}
               <p className="font-display text-5xl font-extrabold tracking-tight text-[#101E42] md:text-8xl">
-                {pulseLoading ? (
-                  <span className="inline-block h-12 w-36 animate-pulse rounded-2xl bg-[#101E42]/10 align-middle md:h-20" />
-                ) : (
-                  activeDest?.weather || ""
-                )}
+                {activeDest?.weather || ""}
               </p>
               <p className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#E58B48]">
-                {pulseLoading ? (
-                  <span className="inline-block h-3 w-28 animate-pulse rounded-full bg-[#101E42]/10" />
-                ) : (
-                  conditionText(activeDest?.condition)
-                )}
+                {conditionText(activeDest?.condition)}
               </p>
             </div>
 
@@ -339,18 +353,14 @@ export default function BlogList() {
             </div>
           </div>
 
-          {/* Rodada 3: sem tarifa real não há bloco de tarifa — o "---"
-              era exibido sempre no preview, onde o quadro de voos é 500
-              (sem banco). Carregando, o esqueleto cobre o lugar. */}
-          {(pulseLoading || activeDest?.price) && (
+          {/* Rodada 6: sem tarifa real não há bloco de tarifa — e sem
+              esqueleto enquanto carrega (o bloco inteiro só existe
+              com tarifa real; ver showPulse). */}
+          {activeDest?.price && (
           <div className="mt-8 flex items-center justify-center gap-8 border-t border-[#101E42]/10 pt-6 md:justify-end md:border-t-0 md:pt-0">
             <div className="flex flex-col items-center gap-1 md:items-end">
               <p className="text-xl font-extrabold text-[#101E42] md:text-2xl">
-                {pulseLoading ? (
-                  <span className="inline-block h-6 w-20 animate-pulse rounded-lg bg-[#101E42]/10" />
-                ) : (
-                  `${activeDest?.price ?? ""} ${activeDest?.currency ?? ""}`
-                )}
+                {`${activeDest?.price ?? ""} ${activeDest?.currency ?? ""}`}
               </p>
               <p className="text-[11px] font-extrabold uppercase tracking-widest text-[#E58B48]">
                 {t("blog.best_fare") || "Melhor Tarifa"}
@@ -363,8 +373,9 @@ export default function BlogList() {
 
         {/* Highlights from Destinations tab — fail-closed (QA 26/nov):
             sem itens da API (preview sem banco), o bloco some em vez
-            de mostrar abas vazias e contadores "0". */}
-        {!loadingHighlights && (!highlights?.items || highlights.items.length === 0) ? null : (
+            de mostrar abas vazias e contadores "0". Rodada 6: sem
+            esqueleto enquanto carrega — só itens reais. */}
+        {showHighlights && (
         <div className="mb-12">
           <div className="no-scrollbar mb-8 flex gap-2 overflow-x-auto rounded-[28px] border border-[#101E42]/10 bg-white p-1.5 shadow-sm">
             {HIGHLIGHT_DESTINATIONS.map((d) => (
@@ -385,16 +396,11 @@ export default function BlogList() {
 
           <motion.div layout className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             <AnimatePresence mode="wait">
-              {/* Rodada 4: o esqueleto só aparece na primeira carga
-                  (sem dado); ao trocar o idioma, os cartões do idioma
-                  anterior ficam visíveis (placeholderData no hook) —
-                  sem flash cinza. */}
-              {loadingHighlights && !hasHighlightItems ? (
-                Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-[200px] animate-pulse rounded-[32px] border border-[#101E42]/10 bg-white" />
-                ))
-              ) : (
-                highlights?.items?.map((place, idx) => (
+              {/* Rodada 6: sem esqueleto — enquanto carrega sem dado,
+                  nada renderiza; ao trocar o idioma, os cartões do
+                  idioma anterior ficam visíveis (placeholderData no
+                  hook). */}
+              {highlights?.items?.map((place, idx) => (
                   <motion.div
                     key={place.id}
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -453,8 +459,7 @@ export default function BlogList() {
                       </div>
                     </Card>
                   </motion.div>
-                ))
-              )}
+                ))}
             </AnimatePresence>
           </motion.div>
         </div>
@@ -541,7 +546,10 @@ export default function BlogList() {
 
             {/* Side Column */}
             <div className="space-y-6 lg:col-span-4">
-              <Card className="group relative overflow-hidden rounded-[32px] border-0 bg-gradient-to-br from-[#0B1B3A] to-[#12244D] p-8">
+              <Card
+                data-mia-cta
+                className="group relative overflow-hidden rounded-[32px] border-0 bg-gradient-to-br from-[#0B1B3A] to-[#12244D] p-8"
+              >
                 <div className="absolute -right-16 -top-16 h-32 w-32 rounded-full bg-[#E8B65D]/20 blur-[50px] transition-transform duration-700 group-hover:scale-150" />
                 <Sparkles className="mb-6 h-10 w-10 text-[#E8B65D]" />
                 <h4 className="mb-4 text-left text-xl font-extrabold leading-tight text-white">{t("blog.mia_guide_prompt")}</h4>
