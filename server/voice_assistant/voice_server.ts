@@ -1,12 +1,12 @@
 import express from 'express';
 import type { Request, Response } from 'express';
-import WebSocket from 'ws';
+import WebSocket, { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import twilio from 'twilio';
 
 const app = express();
 const server = createServer(app);
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocketServer({ server });
 
 const PORT = process.env.VOICE_PORT || 5050;
 const OPENAI_API_KEY = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;

@@ -89,6 +89,15 @@ type DealSearchOffer = {
   destination?: string;
 };
 
+function formatBytes(bytes: number) {
+  if (!Number.isFinite(bytes) || bytes < 0) return "—";
+  const units = ["B", "KiB", "MiB", "GiB", "TiB"];
+  let value = bytes;
+  let index = 0;
+  while (value >= 1024 && index < units.length - 1) { value /= 1024; index++; }
+  return `${value.toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
+}
+
 function formatCurrency(amount: number, currency = "USD") {
   try {
     return new Intl.NumberFormat("en-US", {

@@ -39,7 +39,7 @@ export function SocialStudio() {
   const { toast } = useToast();
 
   const [activeMode, setActiveMode] = useState<"copy" | "banner">("copy");
-  const [bannerTemplate, setBannerTemplate] = useState<"modern" | "classic" | "luxury">("modern");
+  const [bannerTemplate, setBannerTemplate] = useState<"modern" | "classic" | "luxury" | "sunset">("modern");
   const [generatedRules, setGeneratedRules] = useState<string>("");
 
   const selectedDeal = deals?.find(d => d.id === selectedDealId);
