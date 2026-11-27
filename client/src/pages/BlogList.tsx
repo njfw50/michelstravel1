@@ -148,22 +148,26 @@ export default function BlogList() {
     fetchPulse().finally(() => setPulseLoading(false));
   }, []);
 
-  // Rodada 3 (26/nov, re-QA item 1): a cidade ativa NUNCA cai para a
-  // entrada estática — sem dado real ela nem é listada. Cidades sem
-  // clima/tarifa após o carregamento somem das abas; o clima pode
-  // falhar de forma transitória (wttr.in) e o quadro de voos é 500 no
-  // preview sem banco — nesses casos o bloco mostra só o que é real.
-  const citiesWithData = PULSE_CITIES.filter((c) => pulseData[c.id]?.weather || pulseData[c.id]?.price);
-  const activeCity = citiesWithData.find((c) => c.id === activeTab) || citiesWithData[0];
+  // Rodada 4 (26/nov, re-QA item 2): o Pulso só existe quando há
+  // TARIFA real — o clima sozinho deixava o cartão gigante com ~70%
+  // de espaço branco no desktop (o quadro de voos é 500 no preview
+  // sem banco). Sem tarifa em nenhuma cidade, a seção some inteira
+  // (fail-closed): nunca um cartão vazio/inacabado. O clima continua
+  // dentro do cartão completo, junto com a tarifa.
+  const citiesWithFare = PULSE_CITIES.filter((c) => pulseData[c.id]?.price);
+  const hasFareData = citiesWithFare.length > 0;
+  // Rodada 3: a cidade ativa NUNCA cai para a entrada estática.
+  // Carregando, activeCity é undefined e o esqueleto cobre o lugar;
+  // depois, só cidades COM tarifa ganham aba — a aba destacada é
+  // sempre uma delas (highlightedTab corrige a aba inicial sem tarifa).
+  const activeCity = pulseLoading
+    ? undefined
+    : citiesWithFare.find((c) => c.id === activeTab) || citiesWithFare[0];
+  const highlightedTab = activeCity?.id ?? activeTab;
   const activeDest =
     (activeCity && pulseData[activeCity.id]) ||
     PULSE_CITIES.find((c) => c.id === activeTab) ||
     PULSE_CITIES[0];
-
-  // Fail-closed (QA 26/nov, rodada 2): o Pulso só existe quando há
-  // dado real (clima ou tarifa) em ao menos uma cidade. Sem dado,
-  // a seção some inteira em vez de exibir "--°C" / "---" e abas vazias.
-  const hasPulseData = Object.values(pulseData).some((d: any) => d?.weather || d?.price);
 
   // Rodada 3 (26/nov): sem condição NÃO há texto — a string de
   // carregamento ("CARREGANDO CRÔNICA...") era um fallback com nome
@@ -184,6 +188,10 @@ export default function BlogList() {
     lang: language || "pt",
     limit: 6,
   });
+  // Rodada 4: calculado ANTES do portão da seção estreitar o tipo de
+  // `highlights` (usar `highlights?.items` direto depois do portão
+  // vira erro TS2339 — o tipo estreita para `never`).
+  const hasHighlightItems = (highlights?.items?.length ?? 0) > 0;
 
   const featuredPost = posts?.[0];
   const remainingPosts =
@@ -247,12 +255,13 @@ export default function BlogList() {
         </div>
       </section>
 
-      {/* Destination Pulse — só dados reais (clima + quadro de voos).
-          Sem dado real após o carregamento, o bloco do Pulso some
-          inteiro (fail-closed, QA 26/nov rodada 2) — nunca "--°C" /
-          "---". O bloco de destaques abaixo tem regra própria. */}
+      {/* Destination Pulse — só com TARIFA real (clima + quadro de
+          voos). Sem tarifa após o carregamento, o bloco some inteiro
+          (fail-closed, rodada 4): o clima sozinho deixava o cartão
+          com ~70% de branco no desktop. O bloco de destaques abaixo
+          tem regra própria. */}
       <section className="container mx-auto px-4 py-20">
-        {!pulseLoading && !hasPulseData ? null : (
+        {!pulseLoading && !hasFareData ? null : (
         <>
         <div className="mb-12 flex flex-col items-end justify-between gap-6 md:flex-row">
           <div className="max-w-xl">
@@ -265,15 +274,16 @@ export default function BlogList() {
           </div>
 
           <div className="no-scrollbar flex gap-2 overflow-x-auto rounded-[28px] border border-[#101E42]/10 bg-white p-1.5 shadow-sm">
-            {/* Rodada 3: depois de carregar, só as cidades COM dado real
-                ganham aba — aba sem dado era o que exibia "--°C". */}
-            {(pulseLoading ? PULSE_CITIES : citiesWithData).map((city) => (
+            {/* Rodada 4: depois de carregar, só as cidades COM tarifa
+                ganham aba — a aba ativa é sempre uma delas
+                (highlightedTab). */}
+            {(pulseLoading ? PULSE_CITIES : citiesWithFare).map((city) => (
               <button
                 key={city.id}
                 onClick={() => setActiveTab(city.id)}
                 className={cn(
                   "whitespace-nowrap rounded-full px-6 py-3 text-xs font-extrabold uppercase tracking-widest transition-all",
-                  activeTab === city.id ? "bg-[#0B1B3A] text-white shadow-lg" : "text-[#6B7594] hover:bg-[#FBF7EF] hover:text-[#101E42]",
+                  highlightedTab === city.id ? "bg-[#0B1B3A] text-white shadow-lg" : "text-[#6B7594] hover:bg-[#FBF7EF] hover:text-[#101E42]",
                 )}
               >
                 {city.display}
@@ -355,7 +365,11 @@ export default function BlogList() {
 
           <motion.div layout className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             <AnimatePresence mode="wait">
-              {loadingHighlights ? (
+              {/* Rodada 4: o esqueleto só aparece na primeira carga
+                  (sem dado); ao trocar o idioma, os cartões do idioma
+                  anterior ficam visíveis (placeholderData no hook) —
+                  sem flash cinza. */}
+              {loadingHighlights && !hasHighlightItems ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="h-[200px] animate-pulse rounded-[32px] border border-[#101E42]/10 bg-white" />
                 ))

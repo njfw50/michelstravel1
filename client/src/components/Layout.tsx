@@ -77,15 +77,19 @@ function LanguageSwitcher({ variant = "navbar" }: { variant?: "navbar" | "footer
           size="sm"
           disabled={isLoading}
           className={cn(
-            "h-10 gap-2 rounded-xl px-3 text-[11px] font-extrabold uppercase tracking-widest transition-all duration-300 shadow-xl md:h-11 md:gap-3 md:rounded-2xl md:px-4 md:text-xs",
+            "h-[34px] gap-1.5 rounded-[17px] px-3.5 text-[11px] font-extrabold uppercase tracking-widest transition-all duration-300 md:h-11 md:gap-3 md:rounded-2xl md:px-4 md:text-xs",
             variant === "navbar"
-              ? "border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"
-              : "border border-white/10 bg-slate-900/40 text-white/80 hover:bg-blue-600 hover:text-white",
+              ? /* Rodada 4: cápsula leve creme no celular (Gemini:
+                   creme 72% + blur 12px + borda dourada 40%, texto
+                   navy 8.4:1); no desktop volta o botão escuro da
+                   pílula, intacto. */
+                "border border-[#E8B65D]/40 bg-[#FBF7EF]/70 text-[#0B1B3A] shadow-sm backdrop-blur-md hover:bg-[#FBF7EF]/90 md:border-white/10 md:bg-white/5 md:text-white/80 md:shadow-xl md:backdrop-blur-none md:hover:bg-white/10 md:hover:text-white"
+              : "border border-white/10 bg-slate-900/40 text-white/80 shadow-xl hover:bg-blue-600 hover:text-white",
             isLoading && "opacity-50 grayscale",
           )}
           data-testid="button-language-switcher"
         >
-          <Globe className={cn("h-4 w-4 text-[#E8B65D]", isLoading && "animate-spin")} />
+          <Globe className={cn("h-4 w-4", variant === "navbar" ? "text-[#0B1B3A] md:text-[#E8B65D]" : "text-[#E8B65D]", isLoading && "animate-spin")} />
           <span className="min-w-[1.5em] text-center">{isLoading ? "..." : current.flag}</span>
         </Button>
       </DropdownMenuTrigger>
@@ -218,26 +222,43 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-[#FBF7EF] text-[#101E42] selection:bg-[#FA5F52]/20 selection:text-[#101E42]">
-      <header className="fixed inset-x-0 top-0 z-40 transition-all duration-500">
-        <div className={cn("container mx-auto px-2 transition-all duration-500 md:px-6", scrolled ? "pt-2 md:pt-4" : "pt-4 md:pt-10")}>
+      {/* Rodada 4 (26/nov, defeito 1): sem pílula no celular — o topo é
+          uma faixa transparente com o logo DIRETO na foto (Diretriz
+          2027: sem moldura, clareamento localizado atrás do logo) e o
+          seletor de idioma como cápsula leve creme; ao rolar, banda
+          creme 91% + linha dourada (classe .mt-header-scrolled, só
+          <768px). O desktop mantém a pílula escura com navegação
+          intacta. A barra inferior NÃO muda nesta rodada (o re-QA 3 a
+          listou por engano; o defeito real é o topo, confirmado pelo
+          dono, com autorização expressa dele para a alteração de
+          estilo dentro do processo canônico). */}
+      <header className={cn("fixed inset-x-0 top-0 z-40 border-b border-transparent transition-all duration-500", scrolled && "mt-header-scrolled")}>
+        <div className={cn("container mx-auto px-5 pt-[calc(8px+env(safe-area-inset-top,0px))] transition-all duration-500 md:px-6", scrolled ? "md:pt-4" : "md:pt-10")}>
           <div
             className={cn(
-              "flex items-center justify-between gap-2 rounded-full border border-white/10 px-2 py-1.5 shadow-2xl backdrop-blur-3xl transition-all duration-500 md:gap-4 md:rounded-[32px] md:px-6 md:py-4",
-              scrolled ? "bg-slate-900/90 scale-100" : "bg-slate-900/80 scale-[1.01] md:scale-[1.02]",
+              "flex items-center justify-between gap-2 rounded-none border-0 bg-transparent px-2 py-1.5 shadow-none transition-all duration-500 md:gap-4 md:rounded-[32px] md:border md:border-white/10 md:px-6 md:py-4 md:shadow-2xl md:backdrop-blur-3xl",
+              scrolled ? "md:bg-slate-900/90 md:scale-100" : "md:bg-slate-900/80 md:scale-[1.02]",
             )}
           >
             <div className="flex min-w-0 flex-1 items-center gap-6 md:gap-8">
               <Link href="/" className="group flex shrink-0 items-center gap-4">
-                <img
-                  src={brandMark}
-                  alt="Michels Travel"
-                  className="mt-logo h-14 w-14 transition-transform duration-700 group-hover:scale-105 xl:h-20 xl:w-20"
-                  onError={(e) => {
-                    if (e.currentTarget.src.indexOf("favicon.png") === -1) {
-                      e.currentTarget.src = brandMarkFallback;
-                    }
-                  }}
-                />
+                {/* Halo de clareamento localizado atrás do logo no
+                    celular (Diretriz 2027, +0.45 EV, classe
+                    .mt-logo-halo) — some no desktop (md:hidden), onde
+                    a pílula escura continua. */}
+                <span className="relative flex shrink-0 items-center justify-center">
+                  <span aria-hidden="true" className="mt-logo-halo md:hidden" />
+                  <img
+                    src={brandMark}
+                    alt="Michels Travel"
+                    className="mt-logo relative z-10 h-11 w-11 transition-transform duration-700 group-hover:scale-105 md:h-14 md:w-14 xl:h-20 xl:w-20"
+                    onError={(e) => {
+                      if (e.currentTarget.src.indexOf("favicon.png") === -1) {
+                        e.currentTarget.src = brandMarkFallback;
+                      }
+                    }}
+                  />
+                </span>
                 <div className="hidden min-w-0 2xl:block">
                   <span className="block whitespace-nowrap text-lg font-extrabold uppercase tracking-[0.25em] text-white">
                     Michels Travel
@@ -272,7 +293,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </nav>
             </div>
 
-            <div className="flex shrink-0 items-center gap-1.5 border-l border-white/5 pl-1.5 md:gap-4 md:pl-4">
+            <div className="flex shrink-0 items-center gap-1.5 border-l-0 pl-0 md:gap-4 md:border-l md:border-white/5 md:pl-4">
               <LanguageSwitcher variant="navbar" />
               <div className="hidden items-center gap-4 md:flex">
                 {user ? (

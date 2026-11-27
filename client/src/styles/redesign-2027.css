@@ -221,3 +221,50 @@ section[id] {
     transform: translateY(1rem);
   }
 }
+
+/* Topo mobile sem pílula (Rodada 4, 26/nov — defeito 1: o dono
+   confirmou que a pílula escura flutuante do topo não integra ao
+   desenho "revista de bordo"; a barra inferior NÃO era o problema
+   e NÃO muda nesta rodada — o re-QA 3 a listou por engano).
+   Ordem expressa do dono (19:20): a alteração de estilo é
+   autorizada dentro do processo canônico para alcançar o resultado
+   razoável. Âncora — Diretriz 2027: logo DIRETO na foto, sem
+   moldura, com clareamento localizado atrás dele (+0.25 a +0.60 EV);
+   seletor de idioma leve/translúcido. Recomendação Gemini
+   (gemini-3.5-flash): logo 44px, halo radial creme 76px (+0.45 EV),
+   seletor creme 72% + blur 12px + borda dourada 40%, ao rolar banda
+   creme 91% + blur 16px + linha dourada. Só <768px — o desktop
+   mantém a pílula escura com navegação intacta. */
+
+/* Clareamento localizado atrás do logo no celular — o halo radial
+   creme (+0.45 EV) destaca o quadrado azul escuro sobre foto escura
+   ou faixa navy; sobre céu claro e papel creme ele some (mesma
+   família cromática), sem sujar o desenho. */
+.mt-logo-halo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 76px;
+  height: 76px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    rgba(251, 247, 239, 0.48) 0%,
+    rgba(251, 247, 239, 0.18) 45%,
+    rgba(251, 247, 239, 0) 75%
+  );
+  border-radius: 9999px;
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  /* Topo rolado no celular: banda de papel creme 91% + blur + linha
+     dourada — o topo deixa de ser transparente e vira faixa editorial.
+     Sem sombra (a pílula escura some 100%). */
+  .mt-header-scrolled {
+    background-color: rgba(251, 247, 239, 0.91);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom-color: rgba(232, 182, 93, 0.5);
+  }
+}

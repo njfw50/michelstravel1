@@ -47,5 +47,9 @@ export function useDestinationHighlights(params: Params) {
     },
     enabled: Boolean(city),
     staleTime: 1000 * 60 * 30, // 30 min cache
+    // Rodada 4: sem flash cinza ao trocar o idioma — os cartões do
+    // idioma anterior ficam visíveis enquanto o novo carrega (o
+    // esqueleto só aparece na primeira carga, sem dado algum).
+    placeholderData: (previousData) => previousData,
   });
 }
