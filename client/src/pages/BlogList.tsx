@@ -148,26 +148,37 @@ export default function BlogList() {
     fetchPulse().finally(() => setPulseLoading(false));
   }, []);
 
-  // Rodada 4 (26/nov, re-QA item 2): o Pulso só existe quando há
-  // TARIFA real — o clima sozinho deixava o cartão gigante com ~70%
-  // de espaço branco no desktop (o quadro de voos é 500 no preview
-  // sem banco). Sem tarifa em nenhuma cidade, a seção some inteira
-  // (fail-closed): nunca um cartão vazio/inacabado. O clima continua
-  // dentro do cartão completo, junto com a tarifa.
+  // Rodada 5 (26/nov, re-QA item 1): o portão do Pulso é UM valor —
+  // showPulseBlock — e a <section> some POR INTEIRO sem ele.
+  // Causa-raiz apurada: o render ao vivo do QA no desktop era o
+  // build e2b4fb3 (portão por CLIMA, hasPulseData — clima presente
+  // bastava), não o 473488f (portão por TARIFA). Prova: o JS ao vivo
+  // é byte-idêntico ao 473488f (md5 igual) e o quadro de voos é 500
+  // no preview — com o portão por tarifa a seção já sumia; a sessão
+  // do QA no desktop foi servida em cache com o build anterior (a
+  // primeira carga no celular também mostrou a pílula velha).
+  // O endurecimento aqui é estrutural: activeDest NUNCA mais cai
+  // para a entrada estática — só dado buscado (clima + tarifa)
+  // pode aparecer no cartão.
   const citiesWithFare = PULSE_CITIES.filter((c) => pulseData[c.id]?.price);
   const hasFareData = citiesWithFare.length > 0;
+  const showPulse = !pulseLoading && hasFareData;
+  // Esqueleto enquanto carrega; depois, SÓ com tarifa real.
+  const showPulseBlock = pulseLoading || hasFareData;
   // Rodada 3: a cidade ativa NUNCA cai para a entrada estática.
   // Carregando, activeCity é undefined e o esqueleto cobre o lugar;
   // depois, só cidades COM tarifa ganham aba — a aba destacada é
   // sempre uma delas (highlightedTab corrige a aba inicial sem tarifa).
-  const activeCity = pulseLoading
-    ? undefined
-    : citiesWithFare.find((c) => c.id === activeTab) || citiesWithFare[0];
+  const activeCity = showPulse
+    ? citiesWithFare.find((c) => c.id === activeTab) || citiesWithFare[0]
+    : undefined;
   const highlightedTab = activeCity?.id ?? activeTab;
-  const activeDest =
-    (activeCity && pulseData[activeCity.id]) ||
-    PULSE_CITIES.find((c) => c.id === activeTab) ||
-    PULSE_CITIES[0];
+  const activeDest = activeCity ? pulseData[activeCity.id] : undefined;
+  // Nome da aba durante o carregamento (rótulo, não dado): o cartão
+  // mostra o esqueleto, mas o nome da cidade vem da aba ativa.
+  const activeDisplay =
+    activeDest?.display ??
+    (pulseLoading ? PULSE_CITIES.find((c) => c.id === activeTab)?.display ?? "" : "");
 
   // Rodada 3 (26/nov): sem condição NÃO há texto — a string de
   // carregamento ("CARREGANDO CRÔNICA...") era um fallback com nome
@@ -192,6 +203,10 @@ export default function BlogList() {
   // `highlights` (usar `highlights?.items` direto depois do portão
   // vira erro TS2339 — o tipo estreita para `never`).
   const hasHighlightItems = (highlights?.items?.length ?? 0) > 0;
+  // Rodada 5: a seção some POR INTEIRO quando não há Pulso (sem
+  // tarifa) nem destaques — nunca um bloco vazio com padding.
+  const showHighlights = loadingHighlights || hasHighlightItems;
+  const showPulseSection = showPulseBlock || showHighlights;
 
   const featuredPost = posts?.[0];
   const remainingPosts =
@@ -210,8 +225,11 @@ export default function BlogList() {
         path="/blog"
       />
 
-      {/* Hero Section */}
-      <section className="relative flex h-[60vh] items-center justify-center overflow-hidden bg-[#0B1B3A] md:h-[70vh]">
+      {/* Hero Section — Rodada 5: o herói sangra sob o header fixo
+          no celular (-mt-20, só <768px): a foto chega ao topo da
+          tela e o logo fica DIRETO nela com o halo; o conteúdo
+          compensa com pt-16 para não subir para baixo do header. */}
+      <section className="relative -mt-20 flex h-[60vh] items-center justify-center overflow-hidden bg-[#0B1B3A] md:mt-0 md:h-[70vh]">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 z-10 bg-gradient-to-b from-[#0B1B3A]/40 via-[#0B1B3A]/85 to-[#0B1B3A]" />
           <img
@@ -221,7 +239,7 @@ export default function BlogList() {
           />
         </div>
 
-        <div className="container relative z-20 px-4 text-center">
+        <div className="container relative z-20 px-4 pt-16 text-center md:pt-0">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: "easeOut" }}>
             <Badge className="mb-6 rounded-full border border-[#E8B65D]/30 bg-[#E8B65D]/10 px-4 py-1.5 text-xs font-extrabold uppercase tracking-[0.3em] text-[#E8B65D] backdrop-blur-md">
               {t("blog.elite_experience")}
@@ -260,8 +278,10 @@ export default function BlogList() {
           (fail-closed, rodada 4): o clima sozinho deixava o cartão
           com ~70% de branco no desktop. O bloco de destaques abaixo
           tem regra própria. */}
+      {/* Rodada 5: a seção some POR INTEIRO sem Pulso nem destaques. */}
+      {showPulseSection ? (
       <section className="container mx-auto px-4 py-20">
-        {!pulseLoading && !hasFareData ? null : (
+        {showPulseBlock ? (
         <>
         <div className="mb-12 flex flex-col items-end justify-between gap-6 md:flex-row">
           <div className="max-w-xl">
@@ -299,14 +319,14 @@ export default function BlogList() {
                 {pulseLoading ? (
                   <span className="inline-block h-12 w-36 animate-pulse rounded-2xl bg-[#101E42]/10 align-middle md:h-20" />
                 ) : (
-                  activeDest.weather || ""
+                  activeDest?.weather || ""
                 )}
               </p>
               <p className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#E58B48]">
                 {pulseLoading ? (
                   <span className="inline-block h-3 w-28 animate-pulse rounded-full bg-[#101E42]/10" />
                 ) : (
-                  conditionText(activeDest.condition)
+                  conditionText(activeDest?.condition)
                 )}
               </p>
             </div>
@@ -314,7 +334,7 @@ export default function BlogList() {
             <div className="h-px w-20 bg-[#101E42]/10 md:h-20 md:w-px" />
 
             <div className="text-center md:text-left">
-              <h3 className="font-display mb-2 text-3xl font-extrabold tracking-tight md:text-5xl">{activeDest.display}</h3>
+              <h3 className="font-display mb-2 text-3xl font-extrabold tracking-tight md:text-5xl">{activeDisplay}</h3>
               <p className="text-[12px] font-semibold leading-relaxed text-[#6B7594]">{t("blog.pulse_note")}</p>
             </div>
           </div>
@@ -322,14 +342,14 @@ export default function BlogList() {
           {/* Rodada 3: sem tarifa real não há bloco de tarifa — o "---"
               era exibido sempre no preview, onde o quadro de voos é 500
               (sem banco). Carregando, o esqueleto cobre o lugar. */}
-          {(pulseLoading || activeDest.price) && (
+          {(pulseLoading || activeDest?.price) && (
           <div className="mt-8 flex items-center justify-center gap-8 border-t border-[#101E42]/10 pt-6 md:justify-end md:border-t-0 md:pt-0">
             <div className="flex flex-col items-center gap-1 md:items-end">
               <p className="text-xl font-extrabold text-[#101E42] md:text-2xl">
                 {pulseLoading ? (
                   <span className="inline-block h-6 w-20 animate-pulse rounded-lg bg-[#101E42]/10" />
                 ) : (
-                  `${activeDest.price} ${activeDest.currency}`
+                  `${activeDest?.price ?? ""} ${activeDest?.currency ?? ""}`
                 )}
               </p>
               <p className="text-[11px] font-extrabold uppercase tracking-widest text-[#E58B48]">
@@ -339,7 +359,7 @@ export default function BlogList() {
           </div>
           )}
         </Card>
-        </>)}
+        </>) : null}
 
         {/* Highlights from Destinations tab — fail-closed (QA 26/nov):
             sem itens da API (preview sem banco), o bloco some em vez
@@ -440,6 +460,7 @@ export default function BlogList() {
         </div>
         )}
       </section>
+      ) : null}
 
       {/* The Magazine - Blog Section */}
       <section className="border-y border-[#101E42]/10 bg-white py-24">

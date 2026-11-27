@@ -174,6 +174,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
+    // Rodada 5: aplica o estado inicial (posição restaurada) — sem
+    // isso, carregar a página já rolada deixava a banda creme fora
+    // até o primeiro evento de scroll.
+    handleScroll();
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);

@@ -26,8 +26,10 @@ export default function Packages() {
 
       {/* Hero editorial — foto quente local, título grande, preço como
           herói fica para os cartões abaixo; aqui a promessa é clara e
-          plana. */}
-      <section className="relative overflow-hidden bg-[#0B1B3A] pb-6 pt-6 md:pb-24 md:pt-20">
+          plana. Rodada 5: o herói sangra sob o header fixo no celular
+          (-mt-20, só <768px) para a foto chegar ao topo da tela; o
+          conteúdo compensa com pt-24; no desktop nada muda. */}
+      <section className="relative -mt-20 overflow-hidden bg-[#0B1B3A] pb-6 pt-24 md:mt-0 md:pb-24 md:pt-20">
         <div className="absolute inset-0">
           <img
             src="/images/hero-jet-sunset.jpg"

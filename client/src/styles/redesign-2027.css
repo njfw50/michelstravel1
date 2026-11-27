@@ -265,6 +265,8 @@ section[id] {
     background-color: rgba(251, 247, 239, 0.91);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border-bottom-color: rgba(232, 182, 93, 0.5);
+    /* Rodada 5: a linha dourada de 1px a 50% era indistinguível
+       sobre o creme (re-QA desvio 2) — 2px a 85%, visível. */
+    border-bottom: 2px solid rgba(232, 182, 93, 0.85);
   }
 }

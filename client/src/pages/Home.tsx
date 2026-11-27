@@ -185,8 +185,15 @@ export default function Home() {
 
         switch (section.id) {
           case "hero":
+            // Rodada 5 (26/nov, re-QA desvio 2): o <main> tem pt-20 no
+            // celular e empurrava o herói 80px para baixo — o header
+            // transparente ficava sobre papel creme (banda creme já
+            // no scroll 0, logo fora da foto, halo invisível). O herói
+            // sangra sob o header (-mt-20, só no celular) e o
+            // conteúdo compensa com pt-24 (o topo do conteúdo fica
+            // onde estava, ~96px); no desktop nada muda.
             return (
-              <section key="hero" className="relative overflow-hidden bg-[#0B1B3A] pb-6 pt-6 md:pb-24 md:pt-16">
+              <section key="hero" className="relative -mt-20 overflow-hidden bg-[#0B1B3A] pb-6 pt-24 md:mt-0 md:pb-24 md:pt-16">
                 {/* Foto quente em tela cheia (asa ao pôr do sol) + scrim
                     navy: a marca fria sobre a foto quente — a logo fica
                     no header, canto superior direito, intacta. */}
