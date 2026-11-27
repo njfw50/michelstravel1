@@ -1,0 +1,33 @@
+name: Mia 2027 - validation
+
+on:
+  pull_request:
+    branches: [redesign-2027]
+    paths:
+      - 'client/src/components/Chatbot.tsx'
+      - 'client/src/hooks/use-mia-voice.ts'
+      - 'server/services/serviceAi.ts'
+      - '.github/workflows/mia-validation.yml'
+  push:
+    branches: [mia-2027-concierge]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mia-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  canonical-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run audit
