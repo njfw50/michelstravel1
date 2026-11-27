@@ -1,3 +1,4 @@
+import { registerMiaRealtimeRoutes } from "./routes/mia_realtime";
 import { webhookRouter } from './controllers/webhookController';
 import express, { type Express, type Request, type Response, type NextFunction } from 'express';
 import { storage } from './storage';
@@ -94,6 +95,7 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
  * This function registers the other Stripe routes and API routes that need parsed JSON
  */
 export function registerRoutes(app: Express) {
+  registerMiaRealtimeRoutes(app);
   // Start the deals automation loop (every 6 hours)
   import('./services/deals-automation').then(mod => {
     mod.runDealsAutomation().catch(console.error);
