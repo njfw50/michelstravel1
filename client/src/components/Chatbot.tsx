@@ -39,7 +39,7 @@ interface ChatMessage {
 }
 
 interface ChatbotStatus {
-  provider: "gemini" | "cerebras" | "none";
+  provider: string;
   available: boolean;
   agentMode: "ai" | "basic";
   label: string;
@@ -56,6 +56,14 @@ export function Chatbot() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [escalated, setEscalated] = useState(false);
   const [agentMode, setAgentMode] = useState(false);
+  const sendingRef = useRef(false);
+  const sessionPromiseRef = useRef<Promise<number | null> | null>(null);
+  const locale = language === "en" ? "en" : language === "es" ? "es" : "pt";
+  const copy = {
+    pt: { subtitle: "Concierge de viagens", ready: "IA disponível", basic: "Atendimento básico", checking: "Verificando conexão", flight: "Buscar voos", plan: "Planejar viagem", bags: "Bagagens", flightPrompt: "Quero pesquisar voos. Pergunte os dados necessários.", planPrompt: "Ajude-me a planejar uma viagem. Pergunte sobre destino, datas e orçamento.", bagsPrompt: "Preciso de ajuda com bagagem e regras da companhia aérea.", suggestions: "Como posso ajudar?", disclaimer: "A Mia é uma IA. Confirme preços e condições antes de reservar." },
+    en: { subtitle: "Travel concierge", ready: "AI available", basic: "Basic assistance", checking: "Checking connection", flight: "Find flights", plan: "Plan a trip", bags: "Baggage", flightPrompt: "I want to search flights. Ask for the necessary details.", planPrompt: "Help me plan a trip. Ask about destination, dates and budget.", bagsPrompt: "I need help with baggage and airline rules.", suggestions: "How can I help?", disclaimer: "Mia is AI. Confirm prices and conditions before booking." },
+    es: { subtitle: "Concierge de viajes", ready: "IA disponible", basic: "Asistencia básica", checking: "Comprobando conexión", flight: "Buscar vuelos", plan: "Planear viaje", bags: "Equipaje", flightPrompt: "Quiero buscar vuelos. Pregunta los datos necesarios.", planPrompt: "Ayúdame a planear un viaje. Pregunta por destino, fechas y presupuesto.", bagsPrompt: "Necesito ayuda con equipaje y normas de la aerolínea.", suggestions: "¿Cómo puedo ayudar?", disclaimer: "Mia es IA. Confirma precios y condiciones antes de reservar." },
+  }[locale];
   const [status, setStatus] = useState<ChatbotStatus | null>(null);
   const [showPulse, setShowPulse] = useState(true);
   const [pastHero, setPastHero] = useState(false);
@@ -157,7 +165,9 @@ export function Chatbot() {
     }
   }, [escalated, sessionId, isOpen, lastAdminMsgId]);
 
-  const createSession = useCallback(async () => {
+  const createSession = useCallback(async (): Promise<number | null> => {
+    if (sessionPromiseRef.current) return sessionPromiseRef.current;
+    const pending = (async () => {
     try {
       let visitorId = localStorage.getItem("michels-chatbot-visitor") || Math.random().toString(36).substring(2, 12);
       localStorage.setItem("michels-chatbot-visitor", visitorId);
@@ -167,10 +177,17 @@ export function Chatbot() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ visitorId, language: language || "pt" }),
       });
+      if (!res.ok) return null;
       const data = await res.json();
+      if (!Number.isSafeInteger(data.sessionId) || data.sessionId <= 0) return null;
       setSessionId(data.sessionId);
-      return data.sessionId;
+      return data.sessionId as number;
     } catch { return null; }
+    })();
+    sessionPromiseRef.current = pending;
+    const id = await pending;
+    if (!id) sessionPromiseRef.current = null;
+    return id;
   }, [language]);
 
   const requestContext = useMemo(() => buildLiveSessionRequestContext(location, window.location.search), [location]);
@@ -182,7 +199,7 @@ export function Chatbot() {
     if (sessionId) return sessionId;
     const id = await createSession();
     if (id && chatMessages.length === 0) {
-      setChatMessages([{ id: -1, role: "assistant", content: getGreeting() }]);
+      setChatMessages(prev => prev.length ? prev : [{ id: -1, role: "assistant", content: getGreeting() }]);
     }
     return id;
   }, [chatMessages.length, createSession, sessionId]);
@@ -192,12 +209,16 @@ export function Chatbot() {
     return t("chatbot.greeting");
   };
 
-  const sendMessage = useCallback(async (overrideContent?: string) => {
+  const sendMessage = useCallback(async (overrideContent?: string, useAgent?: boolean) => {
     const messageContent = (overrideContent ?? input).trim();
-    if (!messageContent || isStreaming) return;
-
-    let currentSessionId = sessionId || await createSession();
-    if (!currentSessionId) return;
+    if (!messageContent || sendingRef.current) return;
+    sendingRef.current = true;
+    const currentSessionId = sessionId || await createSession();
+    if (!currentSessionId) {
+      sendingRef.current = false;
+      setChatMessages(prev => [...prev, { id: Date.now(), role: "assistant", content: t("chatbot.error_message") }]);
+      return;
+    }
 
     setChatMessages(prev => [...prev, { id: Date.now(), role: "user", content: messageContent }]);
     setInput("");
@@ -207,7 +228,7 @@ export function Chatbot() {
     setChatMessages(prev => [...prev, { id: assistantMsgId, role: "assistant", content: "" }]);
 
     try {
-      const res = await fetch(agentMode ? "/api/chatbot/agent-message" : "/api/chatbot/message", {
+      const res = await fetch((useAgent ?? agentMode) ? "/api/chatbot/agent-message" : "/api/chatbot/message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -229,16 +250,20 @@ export function Chatbot() {
       let fullContent = "";
       let collectedFlights: FlightResult[] = [];
 
+      const decoder = new TextDecoder();
+      let pending = "";
+      let completed = false;
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = new TextDecoder().decode(value);
-        const lines = chunk.split("\n");
+        pending += done ? decoder.decode() : decoder.decode(value, { stream: true });
+        const lines = pending.split("\n");
+        pending = done ? "" : (lines.pop() ?? "");
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
           try {
             const event = JSON.parse(line.slice(6));
+            if (event.error) continue;
+            if (event.done) completed = true;
             if (event.type === "action" && event.action?.type === "prefill_booking_form") {
               emitChatbotBookingPrefill(event.action.payload);
             }
@@ -259,23 +284,34 @@ export function Chatbot() {
             if (event.done && event.escalated) setEscalated(true);
           } catch { }
         }
+        if (done) break;
+      }
+      if (!completed) throw new Error("Incomplete response");
+      if (!fullContent && collectedFlights.length === 0) {
+        setChatMessages(prev => prev.map(m => m.id === assistantMsgId ? { ...m, content: t("chatbot.error_message") } : m));
       }
     } catch (error) {
-      setChatMessages(prev => prev.map(m => m.id === assistantMsgId ? { ...m, content: t("chatbot.error_message") } : m));
+      setChatMessages(prev => prev.map(m => m.id === assistantMsgId ? { ...m, content: m.content ? m.content + "\n\n" + t("chatbot.error_message") : t("chatbot.error_message") } : m));
     } finally {
+      sendingRef.current = false;
       setIsStreaming(false);
     }
-  }, [input, isStreaming, sessionId, createSession, agentMode, requestContext.serviceMode]);
+  }, [input, sessionId, createSession, agentMode, requestContext.serviceMode, t]);
 
   useEffect(() => {
     const handleOpenExternal = (e: any) => {
-      handleOpen();
-      if (e.detail?.message) {
-        sendMessage(e.detail.message);
+      void handleOpen();
+      if (typeof e.detail?.message === "string") {
+        if (e.type === "open-chatbot" || e.detail.autoSend === true) void sendMessage(e.detail.message);
+        else setInput(e.detail.message);
       }
     };
     window.addEventListener("open-chatbot", handleOpenExternal);
-    return () => window.removeEventListener("open-chatbot", handleOpenExternal);
+    window.addEventListener("michels:open-chatbot", handleOpenExternal);
+    return () => {
+      window.removeEventListener("open-chatbot", handleOpenExternal);
+      window.removeEventListener("michels:open-chatbot", handleOpenExternal);
+    };
   }, [handleOpen, sendMessage]);
 
   const handleRequestLiveSession = async () => {
@@ -307,21 +343,22 @@ export function Chatbot() {
             initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.95 }}
-            className="fixed bottom-28 md:bottom-24 right-2 md:right-8 z-[100] w-[380px] max-w-[calc(100vw-1rem)]"
+            role="region" aria-label="Mia — travel concierge"
+            className="fixed bottom-28 md:bottom-24 right-2 md:right-8 z-[100] w-[440px] max-w-[calc(100vw-1rem)]"
           >
-            <div className="flex flex-col h-[600px] max-h-[80vh] md:max-h-[80vh] bg-slate-950/90 backdrop-blur-3xl border border-white/10 rounded-[32px] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]">
+            <div className="flex flex-col h-[680px] max-h-[min(76dvh,calc(100dvh-8rem))] bg-slate-950/90 backdrop-blur-3xl border border-white/10 rounded-[32px] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]">
               {/* Header */}
-              <div className="flex items-center justify-between p-6 bg-slate-900/50 border-b border-white/5">
+              <div className="flex items-center justify-between p-4 md:p-5 bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 border-b border-white/10">
                 <div className="flex items-center gap-4">
                   <div className="relative">
                     <div className="h-12 w-12 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center">
                       <Bot className="h-6 w-6 text-blue-400" />
                     </div>
-                    <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 border-2 border-slate-950 shadow-lg" />
+                    <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-slate-950 shadow-lg" style={{ backgroundColor: status?.available ? "#34d399" : "#94a3b8" }} aria-hidden="true" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-white uppercase tracking-widest">Mia &bull; Midnight</h3>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-0.5">{t("chatbot.status_online")}</p>
+                    <h3 className="text-sm font-black text-white uppercase tracking-widest">MIA 2027</h3>
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-0.5">{copy.subtitle} · {status ? (status.available ? copy.ready : copy.basic) : copy.checking}</p>
                   </div>
                 </div>
                 <Button size="icon" variant="ghost" onClick={() => setIsOpen(false)} className="h-10 w-10 rounded-xl text-slate-400 hover:bg-white/5 hover:text-white transition-all" title={t("chatbot.close")}>
@@ -330,7 +367,7 @@ export function Chatbot() {
               </div>
 
               {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-5 space-y-5 scrollbar-hide">
                 {chatMessages.map((msg) => (
                   <div key={msg.id} className={cn("flex gap-3", msg.role === "user" ? "flex-row-reverse" : "flex-row")}>
                     <div className={cn("h-8 w-8 rounded-xl flex items-center justify-center shrink-0 shadow-lg", 
@@ -339,7 +376,7 @@ export function Chatbot() {
                       {msg.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                     </div>
                     <div className="max-w-[85%] space-y-3">
-                      <div className={cn("rounded-2xl px-4 py-3 text-sm font-bold leading-relaxed shadow-xl", 
+                      <div className={cn("rounded-2xl px-4 py-3 text-sm font-medium leading-relaxed whitespace-pre-wrap break-words shadow-xl", 
                         msg.role === "user" 
                           ? "bg-blue-600 text-white rounded-tr-none" 
                           : "bg-white/5 border border-white/5 text-slate-200 rounded-tl-none backdrop-blur-md"
@@ -381,11 +418,21 @@ export function Chatbot() {
                     </div>
                   </div>
                 ))}
+                {chatMessages.length <= 1 && !isStreaming && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-slate-300">{copy.suggestions}</p>
+                    {[[copy.flight, copy.flightPrompt, true], [copy.plan, copy.planPrompt, false], [copy.bags, copy.bagsPrompt, false]].map(([label, prompt, flight]) => (
+                      <button key={String(label)} type="button" onClick={() => { if (flight) setAgentMode(true); void sendMessage(String(prompt), Boolean(flight)); }} className="w-full flex items-center justify-between rounded-xl border border-blue-400/20 bg-blue-500/10 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-400">
+                        {String(label)} <ArrowRight className="h-4 w-4 text-cyan-300" />
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
 
               {/* Action Bar */}
-              <div className="p-6 bg-slate-900/30 border-t border-white/5 space-y-4">
+              <div className="p-3 md:p-4 bg-slate-900/60 border-t border-white/10 space-y-3">
                  <div className="flex items-center gap-3">
                     <button onClick={handleRequestLiveSession} disabled={requestingLive} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl border border-blue-500/20 bg-blue-500/5 text-blue-400 hover:bg-blue-600 hover:text-white transition-all text-[9px] font-black uppercase tracking-widest shadow-xl">
                        {requestingLive ? <Loader2 className="h-4 w-4 animate-spin" /> : <MonitorPlay className="h-4 w-4" />}
@@ -407,14 +454,14 @@ export function Chatbot() {
                       placeholder={t("chatbot.placeholder")}
                       className="h-14 bg-white/5 border-white/10 rounded-2xl pl-5 pr-14 text-white placeholder:text-slate-700 focus:border-blue-500/50 transition-all font-bold"
                     />
-                    <Button size="icon" onClick={() => sendMessage()} disabled={!input.trim() || isStreaming} className="absolute right-2 top-2 h-10 w-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-xl transition-all">
+                    <Button size="icon" aria-label={t("chatbot.placeholder")} onClick={() => sendMessage()} disabled={!input.trim() || isStreaming} className="absolute right-2 top-2 h-10 w-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-xl transition-all">
                        {isStreaming ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
                     </Button>
                  </div>
                  
                  <div className="flex items-center justify-center gap-1.5">
                     <ShieldCheck className="h-3 w-3 text-emerald-500" />
-                    <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{t("chatbot.secure_badge")}</span>
+                    <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{copy.disclaimer}</span>
                  </div>
               </div>
             </div>
