@@ -49,7 +49,7 @@ export function Chatbot() {
   const { t, language } = useI18n();
   const [location, navigate] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [sessionId, setSessionId] = useState<number | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [requestingLive, setRequestingLive] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -57,7 +57,7 @@ export function Chatbot() {
   const [escalated, setEscalated] = useState(false);
   const [agentMode, setAgentMode] = useState(false);
   const sendingRef = useRef(false);
-  const sessionPromiseRef = useRef<Promise<number | null> | null>(null);
+  const sessionPromiseRef = useRef<Promise<string | null> | null>(null);
   const locale = language === "en" ? "en" : language === "es" ? "es" : "pt";
   const copy = {
     pt: { subtitle: "Concierge de viagens", ready: "IA disponível", basic: "Atendimento básico", checking: "Verificando conexão", flight: "Buscar voos", plan: "Planejar viagem", bags: "Bagagens", flightPrompt: "Quero pesquisar voos. Pergunte os dados necessários.", planPrompt: "Ajude-me a planejar uma viagem. Pergunte sobre destino, datas e orçamento.", bagsPrompt: "Preciso de ajuda com bagagem e regras da companhia aérea.", suggestions: "Como posso ajudar?", disclaimer: "A Mia é uma IA. Confirme preços e condições antes de reservar." },
@@ -165,7 +165,7 @@ export function Chatbot() {
     }
   }, [escalated, sessionId, isOpen, lastAdminMsgId]);
 
-  const createSession = useCallback(async (): Promise<number | null> => {
+  const createSession = useCallback(async (): Promise<string | null> => {
     if (sessionPromiseRef.current) return sessionPromiseRef.current;
     const pending = (async () => {
     try {
@@ -179,9 +179,9 @@ export function Chatbot() {
       });
       if (!res.ok) return null;
       const data = await res.json();
-      if (!Number.isSafeInteger(data.sessionId) || data.sessionId <= 0) return null;
+      if (typeof data.sessionId !== "string" || !data.sessionId.trim()) return null;
       setSessionId(data.sessionId);
-      return data.sessionId as number;
+      return data.sessionId as string;
     } catch { return null; }
     })();
     sessionPromiseRef.current = pending;
