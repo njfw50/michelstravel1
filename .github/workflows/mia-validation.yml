@@ -6,6 +6,12 @@ on:
     paths:
       - 'client/src/components/Chatbot.tsx'
       - 'client/src/hooks/use-mia-voice.ts'
+      - 'client/src/hooks/use-mia-realtime.ts'
+      - 'server/routes/mia_realtime.ts'
+      - 'server/routes/mia_realtime.test.ts'
+      - 'src/index.ts'
+      - 'wrangler.jsonc'
+      - 'docs/mia-realtime-pilot.md'
       - 'server/services/serviceAi.ts'
       - '.github/workflows/mia-validation.yml'
   push:
@@ -31,3 +37,5 @@ jobs:
           node-version: '22'
       - run: npm ci
       - run: npm run audit
+      - name: Voice route regression (isolated upstream, NOT live voice QA)
+        run: npx --no-install tsx --test server/routes/mia_realtime.test.ts

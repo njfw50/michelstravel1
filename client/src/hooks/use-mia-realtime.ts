@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type Status = "idle" | "connecting" | "connected" | "error";
-type Call = { pc?: RTCPeerConnection; stream?: MediaStream; audio?: HTMLAudioElement; timer?: ReturnType<typeof setTimeout>; abort: AbortController; requested: boolean };
+type Call = { pc?: RTCPeerConnection; stream?: MediaStream; audio?: HTMLAudioElement; timer?: ReturnType<typeof setTimeout>; abort: AbortController; requested: boolean; requestId: string };
 export function useMiaRealtime(active: boolean, language: string) {
   const [available, setAvailable] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
@@ -16,7 +16,7 @@ export function useMiaRealtime(active: boolean, language: string) {
       c.stream?.getTracks().forEach(t => t.stop());
       c.pc?.close();
       if (c.audio) { c.audio.pause(); c.audio.srcObject = null; }
-      if (c.requested) void fetch("/api/mia/realtime/stop", { method: "POST", credentials: "same-origin", keepalive: true }).catch(() => {});
+      if (c.requested) void fetch("/api/mia/realtime/stop", { method: "POST", credentials: "same-origin", keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ requestId: c.requestId }) }).catch(() => {});
     }
     setMuted(false);
     setStatus(failed ? "error" : "idle");
@@ -33,7 +33,7 @@ export function useMiaRealtime(active: boolean, language: string) {
   }, [active, language, stop]);
   const start = async () => {
     if (!available || !active || call.current) return;
-    const c: Call = { abort: new AbortController(), requested: false };
+    const c: Call = { abort: new AbortController(), requested: false, requestId: crypto.randomUUID() };
     call.current = c;
     setStatus("connecting");
     c.timer = setTimeout(() => { if (call.current === c) stop(true); }, 45_000);
@@ -71,7 +71,7 @@ export function useMiaRealtime(active: boolean, language: string) {
       const res = await fetch("/api/mia/realtime/start", {
         method: "POST", credentials: "same-origin", signal: c.abort.signal,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sdp: offer.sdp, language, consent: true }),
+        body: JSON.stringify({ sdp: offer.sdp, language, consent: true, requestId: c.requestId }),
       });
       if (!res.ok) throw new Error("Voice unavailable");
       const answer = await res.json();

@@ -19,7 +19,10 @@ export interface Env {
   MICHELS_TRAVEL_CONTAINER: DurableObjectNamespace<MichelsTravelContainer>;
   // Plain vars from wrangler.jsonc — literal types match what
   // `wrangler types` generates in worker-configuration.d.ts.
-  NODE_ENV: "production";
+  NODE_ENV: "production" | "preview";
+  MIA_REALTIME_ENABLED?: string;
+  MIA_REALTIME_API_KEY?: string;
+  MIA_REALTIME_MODEL?: string;
   PORT: "5000";
   // Worker secrets (Fase 2) — names only; values live in Cloudflare.
   ADMIN_PASSWORD: string;
@@ -58,6 +61,10 @@ export class MichelsTravelContainer extends Container<Env> {
   envVars: Record<string, string> = {
     NODE_ENV: "production",
     PORT: "5000",
+    // Voice is opt-in and preview-only. Never forward its credential in production.
+    MIA_REALTIME_ENABLED: this.env.NODE_ENV === "preview" && this.env.MIA_REALTIME_ENABLED === "true" ? "true" : "false",
+    MIA_REALTIME_API_KEY: this.env.NODE_ENV === "preview" && this.env.MIA_REALTIME_ENABLED === "true" ? this.env.MIA_REALTIME_API_KEY ?? "" : "",
+    MIA_REALTIME_MODEL: this.env.MIA_REALTIME_MODEL ?? "",
     ADMIN_PASSWORD: this.env.ADMIN_PASSWORD,
     AI_INTEGRATIONS_OPENAI_API_KEY: this.env.AI_INTEGRATIONS_OPENAI_API_KEY,
     AI_INTEGRATIONS_OPENAI_BASE_URL: this.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
