@@ -25,7 +25,7 @@ export function useMiaRealtime(active: boolean, language: string) {
     if (!active) { stop(); return; }
     const abort = new AbortController();
     setAvailable(false);
-    if (window.isSecureContext && window.RTCPeerConnection && navigator.mediaDevices?.getUserMedia) {
+    if (window.isSecureContext && typeof window.RTCPeerConnection === "function" && typeof navigator.mediaDevices?.getUserMedia === "function") {
       void fetch("/api/mia/realtime/status", { signal: abort.signal, credentials: "same-origin" })
         .then(r => r.ok ? r.json() : null).then(x => { if (!abort.signal.aborted) setAvailable(x?.available === true); }).catch(() => {});
     }
