@@ -1,0 +1,6 @@
+# MIA 2027 — Stage 2
+Administrative pilot only, disabled by default. Set MIA_REALTIME_ENABLED=true and configure a dedicated MIA_REALTIME_API_KEY as a server secret in an isolated preview. Optional MIA_REALTIME_MODEL defaults to gpt-realtime-2.1. No key is embedded in browser code. No production activation is authorized by this change.
+
+The WebRTC voice conversation is separate from the text conversation and has no booking tools or shared history. No app-side voice transcript is persisted. The provider processes audio. One call per server process, 30-second start cooldown, server hangup after five minutes, client close after 4m30s. In-memory limits are not distributed limits; configure project-level spend controls and durable session management before public release. A failed upstream hangup blocks another call until process recovery or successful retry.
+
+QA: check disabled status and unauthenticated denial, same-origin checks, microphone permission denial, disconnect and mute, interruption, session expiry, text fallback, no false fares/booking claims, and absence of API credentials in network responses. Real provider/browser QA and secret configuration are pending. No live tools until an authorized server-side orchestration layer is implemented.

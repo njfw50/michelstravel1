@@ -12,6 +12,7 @@ import { emitChatbotBookingPrefill } from "@/lib/chatbot";
 import { cn } from "@/lib/utils";
 import { Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { useMiaVoice } from "@/hooks/use-mia-voice";
+import { useMiaRealtime } from "@/hooks/use-mia-realtime";
 
 interface FlightResult {
   id: string;
@@ -74,6 +75,13 @@ export function Chatbot() {
   const voice = useMiaVoice(locale === "pt" ? "pt-BR" : locale === "es" ? "es-US" : "en-US", isOpen, text => {
     setInput(previous => [previous.trim(), text].filter(Boolean).join(" "));
   });
+  const realtime = useMiaRealtime(isOpen, locale);
+  const realtimeActive = realtime.status === "connecting" || realtime.status === "connected";
+  const liveCopy = {
+    pt: { start: "Conversar ao vivo (piloto)", stop: "Encerrar voz", mute: "Silenciar", unmute: "Ativar microfone", connecting: "Conectando...", connected: "Voz IA conectada", error: "Voz indisponível. Continue pelo texto.", notice: "Ao iniciar, você autoriza o envio de áudio à OpenAI. Não compartilhe dados sensíveis. A voz oferece orientação geral; use o texto para consultar ofertas." },
+    en: { start: "Live conversation (pilot)", stop: "End voice", mute: "Mute", unmute: "Unmute", connecting: "Connecting...", connected: "AI voice connected", error: "Voice unavailable. Continue by text.", notice: "Starting sends audio to OpenAI. Do not share sensitive data. Voice provides general guidance; use text for live offers." },
+    es: { start: "Conversación en vivo (piloto)", stop: "Finalizar voz", mute: "Silenciar", unmute: "Activar micrófono", connecting: "Conectando...", connected: "Voz IA conectada", error: "Voz no disponible. Continúa por texto.", notice: "Al iniciar, autorizas enviar audio a OpenAI. No compartas datos sensibles. La voz ofrece orientación general; usa el texto para ofertas." },
+  }[locale];
   const lastAssistant = [...chatMessages].reverse().find(message => message.role === "assistant" && message.id !== -1 && message.content.trim());
   const [status, setStatus] = useState<ChatbotStatus | null>(null);
   const [showPulse, setShowPulse] = useState(true);
@@ -229,6 +237,7 @@ export function Chatbot() {
     const messageContent = (overrideContent ?? input).trim();
     if (!messageContent || sendingRef.current) return;
     sendingRef.current = true;
+    realtime.stop();
     voice.stopListening();
     voice.stopSpeaking();
     const currentSessionId = sessionId || await createSession();
@@ -314,7 +323,7 @@ export function Chatbot() {
       sendingRef.current = false;
       setIsStreaming(false);
     }
-  }, [input, sessionId, createSession, agentMode, requestContext.serviceMode, t, voice.stopListening, voice.stopSpeaking]);
+  }, [input, sessionId, createSession, agentMode, requestContext.serviceMode, t, voice.stopListening, voice.stopSpeaking, realtime.stop]);
 
   useEffect(() => {
     const handleOpenExternal = (e: any) => {
@@ -464,7 +473,19 @@ export function Chatbot() {
                     </button>
                  </div>
 
-                 {(voice.canDictate || voice.canSpeak) && (
+                 {realtime.available && (
+                   <div className="rounded-xl border border-cyan-400/30 bg-cyan-500/10 p-3 space-y-2">
+                     <p className="text-[10px] text-slate-200">{liveCopy.notice}</p>
+                     <div className="flex gap-2">
+                       <button type="button" disabled={isStreaming} onClick={() => { if (realtimeActive) realtime.stop(); else { voice.stopListening(); voice.stopSpeaking(); void realtime.start(); } }} className="flex-1 min-h-10 rounded-lg bg-blue-600 text-white text-xs font-semibold px-2">
+                         {realtimeActive ? liveCopy.stop : liveCopy.start}
+                       </button>
+                       {realtime.status === "connected" && <button type="button" aria-pressed={realtime.muted} onClick={realtime.toggleMute} className="rounded-lg border border-cyan-400/30 text-white text-xs px-3">{realtime.muted ? liveCopy.unmute : liveCopy.mute}</button>}
+                     </div>
+                     <p role="status" className="text-xs text-cyan-200">{realtime.status === "connecting" ? liveCopy.connecting : realtime.status === "connected" ? liveCopy.connected : realtime.status === "error" ? liveCopy.error : ""}</p>
+                   </div>
+                 )}
+                 {!realtimeActive && (voice.canDictate || voice.canSpeak) && (
                    <div className="space-y-1">
                      <div className="flex gap-2">
                        {voice.canDictate && <button type="button" disabled={isStreaming} aria-pressed={voice.listening} onClick={voice.dictate} className={cn("flex-1 min-h-10 rounded-xl border px-2 flex items-center justify-center gap-2 text-xs text-white disabled:opacity-40", voice.listening ? "border-rose-400 bg-rose-600/20" : "border-cyan-400/30 bg-cyan-500/10")}>
