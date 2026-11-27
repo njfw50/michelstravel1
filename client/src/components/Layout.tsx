@@ -77,13 +77,13 @@ function LanguageSwitcher({ variant = "navbar" }: { variant?: "navbar" | "footer
           size="sm"
           disabled={isLoading}
           className={cn(
-            "h-[34px] gap-1.5 rounded-[17px] px-3.5 text-[11px] font-extrabold uppercase tracking-widest transition-all duration-300 md:h-11 md:gap-3 md:rounded-2xl md:px-4 md:text-xs",
+            "h-11 gap-1.5 rounded-[22px] px-3.5 text-[11px] font-extrabold uppercase tracking-widest transition-all duration-300 md:gap-3 md:rounded-2xl md:px-4 md:text-xs",
             variant === "navbar"
               ? /* Rodada 6: barra escura opaca e full-width nos dois
                    viewports — o seletor volta a ser o botão escuro em
                    todo lugar (a cápsula creme da rodada 4 era para o
                    topo transparente e está superada). */
-                "border border-white/10 bg-white/5 text-white/80 shadow-xl hover:bg-white/10 hover:text-white"
+                "border border-white/10 bg-[#172644] text-[#F1F5F9] shadow-xl hover:bg-white/10 hover:text-white"
               : "border border-white/10 bg-slate-900/40 text-white/80 shadow-xl hover:bg-blue-600 hover:text-white",
             isLoading && "opacity-50 grayscale",
           )}
@@ -229,9 +229,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
           pelo re-QA 5: barra #3E4352 no scroll 0, #262D3F ao rolar).
           O topo transparente, a faixa creme ao rolar, o halo creme e
           a linha dourada das rodadas 4–5 estão SUPERADOS e foram
-          removidos. A barra inferior NÃO muda (ordem dele, 19:21). */}
+          removidos. A barra inferior NÃO muda (ordem dele, 19:21).
+          Rodada 7 (26/nov, ordem dele 22:34 — aplicar o parecer do
+          ChatGPT, diretor de arte): logo maior — 72px no celular e
+          88px no desktop (44px era pequeno para o detalhe do 3D);
+          altura da barra 88px/104px (logo + 8px em cima e embaixo);
+          filete dourado discreto de 1px rgba(232,182,93,0.30) no
+          lugar do white/10; seletor de idioma #172644 / #F1F5F9;
+          hover dos links dourado #E8B65D; controles com 44px de
+          altura mínima. O ChatGPT julgou pela especificação e NÃO
+          viu o preview — a palavra final é o re-QA + o celular do
+          dono. */}
       <header className="fixed inset-x-0 top-0 z-40">
-        <div className="flex items-center justify-between gap-2 border-b border-white/10 bg-[#0B1B3A] px-5 pb-2 pt-[calc(8px+env(safe-area-inset-top,0px))] md:gap-4 md:px-6 md:py-4">
+        <div className="flex items-center justify-between gap-2 border-b border-[rgba(232,182,93,0.30)] bg-[#0B1B3A] px-5 pb-2 pt-[calc(8px+env(safe-area-inset-top,0px))] md:gap-4 md:px-8 md:py-2">
             <div className="flex min-w-0 flex-1 items-center gap-6 md:gap-8">
               <Link href="/" className="group flex shrink-0 items-center gap-4">
                 {/* Rodada 6: sem halo — a barra é navy escuro opaco e
@@ -240,7 +250,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <img
                     src={brandMark}
                     alt="Michels Travel"
-                    className="mt-logo relative z-10 h-11 w-11 transition-transform duration-700 group-hover:scale-105 md:h-14 md:w-14 xl:h-20 xl:w-20"
+                    className="mt-logo relative z-10 h-[72px] w-[72px] transition-transform duration-700 group-hover:scale-105 md:h-[88px] md:w-[88px]"
                     onError={(e) => {
                       if (e.currentTarget.src.indexOf("favicon.png") === -1) {
                         e.currentTarget.src = brandMarkFallback;
@@ -270,10 +280,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     key={link.href}
                     href={link.href}
                     className={cn(
-                      "relative whitespace-nowrap rounded-2xl px-3 py-2.5 text-[11px] font-extrabold uppercase tracking-[0.15em] transition-all duration-300",
+                      "relative whitespace-nowrap rounded-2xl px-3 py-3.5 text-[11px] font-extrabold uppercase tracking-[0.15em] transition-all duration-300",
                       location === link.href
                         ? "bg-blue-600 text-white shadow-xl shadow-blue-600/20"
-                        : "text-slate-300 hover:bg-white/5 hover:text-white",
+                        : "text-slate-300 hover:bg-white/5 hover:text-[#E8B65D]",
                     )}
                   >
                     {link.label}
