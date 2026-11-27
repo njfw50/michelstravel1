@@ -33,7 +33,7 @@ interface FlightResult {
 }
 
 interface ChatMessage {
-  id: number;
+  id: number | string;
   role: "user" | "assistant" | "admin";
   content: string;
   createdAt?: string;
@@ -78,9 +78,7 @@ export function Chatbot() {
   const [status, setStatus] = useState<ChatbotStatus | null>(null);
   const [showPulse, setShowPulse] = useState(true);
   const [pastHero, setPastHero] = useState(false);
-  const [lastAdminMsgId, setLastAdminMsgId] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -152,29 +150,36 @@ export function Chatbot() {
   }, []);
 
   useEffect(() => {
-    if (escalated && sessionId && isOpen) {
-      const poll = async () => {
-        try {
-          const res = await fetch(`/api/chatbot/poll/${sessionId}?afterId=${lastAdminMsgId}`);
-          if (res.ok) {
-            const newMsgs = await res.json();
-            if (newMsgs.length > 0) {
-              const mapped: ChatMessage[] = newMsgs.map((m: any) => ({
-                id: m.id,
-                role: "admin",
-                content: m.content,
-                createdAt: m.createdAt,
-              }));
-              setChatMessages(prev => [...prev, ...mapped]);
-              setLastAdminMsgId(newMsgs[newMsgs.length - 1].id);
-            }
-          }
-        } catch { }
-      };
-      pollIntervalRef.current = setInterval(poll, 3000);
-      return () => { if (pollIntervalRef.current) clearInterval(pollIntervalRef.current); };
-    }
-  }, [escalated, sessionId, isOpen, lastAdminMsgId]);
+    if (!escalated || !sessionId || !isOpen) return;
+    const controller = new AbortController();
+    let busy = false;
+    const poll = async () => {
+      if (busy || controller.signal.aborted) return;
+      busy = true;
+      try {
+        // Message IDs are random UUIDs, not chronological numeric cursors.
+        const res = await fetch(`/api/chatbot/poll/${encodeURIComponent(sessionId)}`, { signal: controller.signal });
+        if (!res.ok || controller.signal.aborted) return;
+        const rows: unknown = await res.json();
+        if (!Array.isArray(rows) || controller.signal.aborted) return;
+        const mapped: ChatMessage[] = rows
+          .filter(m => typeof m?.id === "string" && typeof m.content === "string")
+          .map(m => ({ id: m.id, role: "admin", content: m.content, createdAt: m.createdAt }));
+        setChatMessages(prev => {
+          const seen = new Set(prev.map(m => m.id));
+          return [...prev, ...mapped.filter(m => {
+            if (seen.has(m.id)) return false;
+            seen.add(m.id);
+            return true;
+          })];
+        });
+      } catch { /* retry on next interval */ }
+      finally { busy = false; }
+    };
+    void poll();
+    const timer = setInterval(poll, 3000);
+    return () => { controller.abort(); clearInterval(timer); };
+  }, [escalated, sessionId, isOpen]);
 
   const createSession = useCallback(async (): Promise<string | null> => {
     if (sessionPromiseRef.current) return sessionPromiseRef.current;
