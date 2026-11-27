@@ -10,6 +10,8 @@ import { useLocation } from "wouter";
 import { buildLiveSessionRequestContext, getLiveSessionTheme, isSeniorServiceMode } from "@/lib/live-session-context";
 import { emitChatbotBookingPrefill } from "@/lib/chatbot";
 import { cn } from "@/lib/utils";
+import { Mic, MicOff, Volume2, VolumeX } from "lucide-react";
+import { useMiaVoice } from "@/hooks/use-mia-voice";
 
 interface FlightResult {
   id: string;
@@ -64,6 +66,15 @@ export function Chatbot() {
     en: { subtitle: "Travel concierge", ready: "AI available", basic: "Basic assistance", checking: "Checking connection", flight: "Find flights", plan: "Plan a trip", bags: "Baggage", flightPrompt: "I want to search flights. Ask for the necessary details.", planPrompt: "Help me plan a trip. Ask about destination, dates and budget.", bagsPrompt: "I need help with baggage and airline rules.", suggestions: "How can I help?", disclaimer: "Mia is AI. Confirm prices and conditions before booking." },
     es: { subtitle: "Concierge de viajes", ready: "IA disponible", basic: "Asistencia básica", checking: "Comprobando conexión", flight: "Buscar vuelos", plan: "Planear viaje", bags: "Equipaje", flightPrompt: "Quiero buscar vuelos. Pregunta los datos necesarios.", planPrompt: "Ayúdame a planear un viaje. Pregunta por destino, fechas y presupuesto.", bagsPrompt: "Necesito ayuda con equipaje y normas de la aerolínea.", suggestions: "¿Cómo puedo ayudar?", disclaimer: "Mia es IA. Confirma precios y condiciones antes de reservar." },
   }[locale];
+  const voiceCopy = {
+    pt: { mic: "Ditar mensagem", stopMic: "Parar microfone", listen: "Ouvir resposta", stopAudio: "Parar áudio", note: "A voz é processada pelo navegador ou pelo serviço de voz dele. Não dite dados sensíveis. Revise o texto antes de enviar.", error: "Voz indisponível. Continue por texto." },
+    en: { mic: "Dictate message", stopMic: "Stop microphone", listen: "Read response aloud", stopAudio: "Stop audio", note: "Voice is processed by your browser or its speech service. Avoid sensitive information. Review the text before sending.", error: "Voice unavailable. Continue by text." },
+    es: { mic: "Dictar mensaje", stopMic: "Detener micrófono", listen: "Escuchar respuesta", stopAudio: "Detener audio", note: "El navegador o su servicio de voz procesa el audio. No dictes datos sensibles. Revisa el texto antes de enviarlo.", error: "Voz no disponible. Continúa por texto." },
+  }[locale];
+  const voice = useMiaVoice(locale === "pt" ? "pt-BR" : locale === "es" ? "es-US" : "en-US", isOpen, text => {
+    setInput(previous => [previous.trim(), text].filter(Boolean).join(" "));
+  });
+  const lastAssistant = [...chatMessages].reverse().find(message => message.role === "assistant" && message.id !== -1 && message.content.trim());
   const [status, setStatus] = useState<ChatbotStatus | null>(null);
   const [showPulse, setShowPulse] = useState(true);
   const [pastHero, setPastHero] = useState(false);
@@ -213,6 +224,8 @@ export function Chatbot() {
     const messageContent = (overrideContent ?? input).trim();
     if (!messageContent || sendingRef.current) return;
     sendingRef.current = true;
+    voice.stopListening();
+    voice.stopSpeaking();
     const currentSessionId = sessionId || await createSession();
     if (!currentSessionId) {
       sendingRef.current = false;
@@ -296,7 +309,7 @@ export function Chatbot() {
       sendingRef.current = false;
       setIsStreaming(false);
     }
-  }, [input, sessionId, createSession, agentMode, requestContext.serviceMode, t]);
+  }, [input, sessionId, createSession, agentMode, requestContext.serviceMode, t, voice.stopListening, voice.stopSpeaking]);
 
   useEffect(() => {
     const handleOpenExternal = (e: any) => {
@@ -446,11 +459,25 @@ export function Chatbot() {
                     </button>
                  </div>
 
+                 {(voice.canDictate || voice.canSpeak) && (
+                   <div className="space-y-1">
+                     <div className="flex gap-2">
+                       {voice.canDictate && <button type="button" disabled={isStreaming} aria-pressed={voice.listening} onClick={voice.dictate} className={cn("flex-1 min-h-10 rounded-xl border px-2 flex items-center justify-center gap-2 text-xs text-white disabled:opacity-40", voice.listening ? "border-rose-400 bg-rose-600/20" : "border-cyan-400/30 bg-cyan-500/10")}>
+                         {voice.listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />} {voice.listening ? voiceCopy.stopMic : voiceCopy.mic}
+                       </button>}
+                       {voice.canSpeak && <button type="button" disabled={!lastAssistant || isStreaming} aria-pressed={voice.speaking} onClick={() => voice.speaking ? voice.stopSpeaking() : lastAssistant && voice.speak(lastAssistant.content.replace(/^\[ESCALATE\]\s*/, ""))} className="flex-1 min-h-10 rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-2 flex items-center justify-center gap-2 text-xs text-white disabled:opacity-40">
+                         {voice.speaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />} {voice.speaking ? voiceCopy.stopAudio : voiceCopy.listen}
+                       </button>}
+                     </div>
+                     <p className="text-[10px] leading-snug text-slate-300">{voiceCopy.note}</p>
+                     {voice.error && <p role="status" className="text-xs text-amber-300">{voiceCopy.error}</p>}
+                   </div>
+                 )}
                  <div className="relative">
                     <Input 
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                      onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && sendMessage()}
                       placeholder={t("chatbot.placeholder")}
                       className="h-14 bg-white/5 border-white/10 rounded-2xl pl-5 pr-14 text-white placeholder:text-slate-700 focus:border-blue-500/50 transition-all font-bold"
                     />
@@ -482,7 +509,8 @@ export function Chatbot() {
         </button>
       ) : (
         <button
-          onClick={handleOpen}
+          onClick={() => isOpen ? setIsOpen(false) : void handleOpen()}
+          aria-label={isOpen ? t("chatbot.close") : "Mia"}
           className={cn(
             "fixed bottom-24 right-4 z-[95] flex h-11 w-11 items-center justify-center rounded-[16px] shadow-2xl transition-all group active:scale-95 md:bottom-6 md:right-6 md:h-16 md:w-16 md:rounded-[24px]",
             isOpen ? "bg-slate-900 border border-white/10 text-white rotate-90" : "bg-blue-600 text-white hover:scale-110",
